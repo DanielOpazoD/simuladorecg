@@ -1,0 +1,530 @@
+[
+  {
+    "id": "sinus",
+    "nombre": "Ritmo sinusal",
+    "categoria": "Ritmos",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "brady",
+    "nombre": "Bradicardia sinusal",
+    "categoria": "Ritmos",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "tachy",
+    "nombre": "Taquicardia sinusal",
+    "categoria": "Ritmos",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "rsa",
+    "nombre": "Arritmia sinusal respiratoria",
+    "categoria": "Ritmos",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "af",
+    "nombre": "Fibrilación auricular",
+    "categoria": "Ritmos",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "af_fast",
+    "nombre": "FA con respuesta rápida",
+    "categoria": "Ritmos",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "af_slow",
+    "nombre": "FA con respuesta lenta",
+    "categoria": "Ritmos",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "flutter",
+    "nombre": "Flutter auricular 2:1",
+    "categoria": "Ritmos",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Ondas F simplificadas; conducción variable y circuito de reentrada no modelados."
+  },
+  {
+    "id": "flutter3",
+    "nombre": "Flutter auricular 3:1",
+    "categoria": "Ritmos",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "svt",
+    "nombre": "Taquicardia supraventricular regular",
+    "categoria": "Ritmos",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "No distingue AVNRT de AVRT; pseudo-r′ y pseudo-S no ajustadas de forma específica."
+  },
+  {
+    "id": "junctional",
+    "nombre": "Ritmo de la unión",
+    "categoria": "Ritmos",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "pac",
+    "nombre": "Extrasístole auricular",
+    "categoria": "Ectopia",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "pvc",
+    "nombre": "Extrasístole ventricular",
+    "categoria": "Ectopia",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "No modela penetración retrógrada ni disociación auricular durante la ectopia."
+  },
+  {
+    "id": "bigeminy",
+    "nombre": "Bigeminismo ventricular",
+    "categoria": "Ectopia",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "trigeminy",
+    "nombre": "Trigeminismo ventricular",
+    "categoria": "Ectopia",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "couplet",
+    "nombre": "Dupla ventricular",
+    "categoria": "Ectopia",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "idioventricular",
+    "nombre": "Ritmo idioventricular",
+    "categoria": "Ritmos ventriculares",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "aivr",
+    "nombre": "Ritmo idioventricular acelerado",
+    "categoria": "Ritmos ventriculares",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "vt",
+    "nombre": "Taquicardia ventricular monomórfica",
+    "categoria": "Ritmos ventriculares",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Sin latidos de captura o fusión; una sola morfología representativa."
+  },
+  {
+    "id": "torsades",
+    "nombre": "Taquicardia ventricular polimórfica",
+    "categoria": "Ritmos ventriculares",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Aproximación visual. No reproduce QT previo ni inicio corto–largo–corto; no equivale a diagnóstico validado de torsades."
+  },
+  {
+    "id": "vf",
+    "nombre": "Fibrilación ventricular",
+    "categoria": "Ritmos ventriculares",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Suma oscilatoria sintética; transición gruesa a fina no modelada."
+  },
+  {
+    "id": "asystole",
+    "nombre": "Asistolia",
+    "categoria": "Ritmos ventriculares",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "av1",
+    "nombre": "BAV de primer grado",
+    "categoria": "Conducción AV",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "wenckebach",
+    "nombre": "BAV Mobitz I · Wenckebach",
+    "categoria": "Conducción AV",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "mobitz2",
+    "nombre": "BAV de segundo grado Mobitz II",
+    "categoria": "Conducción AV",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "av21",
+    "nombre": "Bloqueo AV 2:1",
+    "categoria": "Conducción AV",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "highav",
+    "nombre": "Bloqueo AV de alto grado",
+    "categoria": "Conducción AV",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "complete",
+    "nombre": "BAV completo · escape de la unión",
+    "categoria": "Conducción AV",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "complete_v",
+    "nombre": "BAV completo · escape ventricular",
+    "categoria": "Conducción AV",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "rbbb",
+    "nombre": "Bloqueo completo de rama derecha",
+    "categoria": "Conducción intraventricular",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "irbbb",
+    "nombre": "Bloqueo incompleto de rama derecha",
+    "categoria": "Conducción intraventricular",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "lbbb",
+    "nombre": "Bloqueo completo de rama izquierda",
+    "categoria": "Conducción intraventricular",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "lafb",
+    "nombre": "Hemibloqueo anterior izquierdo",
+    "categoria": "Conducción intraventricular",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Reproduce eje; detalle qR/rS de todos los fascículos es aproximado."
+  },
+  {
+    "id": "lpfb",
+    "nombre": "Hemibloqueo posterior izquierdo",
+    "categoria": "Conducción intraventricular",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Reproduce eje; no demuestra criterios clínicos excluyentes de HBPI."
+  },
+  {
+    "id": "bifascicular",
+    "nombre": "BRD + hemibloqueo anterior izquierdo",
+    "categoria": "Conducción intraventricular",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "bifascicular_pr",
+    "nombre": "Bifascicular + BAV de primer grado",
+    "categoria": "Conducción intraventricular",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "wpw",
+    "nombre": "Preexcitación ventricular",
+    "categoria": "Conducción intraventricular",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Delta aproximada; sin vías accesorias anatómicas ni circuito AVRT."
+  },
+  {
+    "id": "inferior",
+    "nombre": "Lesión inferior · predominio en III",
+    "categoria": "Isquemia y ST",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "inferior_lcx",
+    "nombre": "Lesión inferior · predominio en II",
+    "categoria": "Isquemia y ST",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "anterior",
+    "nombre": "Lesión anterior",
+    "categoria": "Isquemia y ST",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "lateral",
+    "nombre": "Lesión lateral",
+    "categoria": "Isquemia y ST",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "posterior",
+    "nombre": "Patrón de lesión posterior",
+    "categoria": "Isquemia y ST",
+    "estado": "aproximado",
+    "estrategia": "local",
+    "limitacion": "Corrección local de R; V7–V9 pendientes."
+  },
+  {
+    "id": "rv_infarct",
+    "nombre": "Lesión ventricular derecha",
+    "categoria": "Isquemia y ST",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "V3R–V4R pendientes; no reproduce todos los criterios territoriales."
+  },
+  {
+    "id": "diffuse",
+    "nombre": "ST descendido difuso + aVR elevado",
+    "categoria": "Isquemia y ST",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "subendo",
+    "nombre": "Patrón de isquemia subendocárdica",
+    "categoria": "Isquemia y ST",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "wellens_a",
+    "nombre": "Patrón de Wellens · tipo A",
+    "categoria": "Isquemia y ST",
+    "estado": "aproximado",
+    "estrategia": "local",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "wellens_b",
+    "nombre": "Patrón de Wellens · tipo B",
+    "categoria": "Isquemia y ST",
+    "estado": "aproximado",
+    "estrategia": "local",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "de_winter",
+    "nombre": "Patrón de de Winter",
+    "categoria": "Isquemia y ST",
+    "estado": "aproximado",
+    "estrategia": "local",
+    "limitacion": "No garantiza ST↑ en aVR; patrón parcial señalado como aproximado."
+  },
+  {
+    "id": "sgarbossa",
+    "nombre": "BRI con lesión concordante",
+    "categoria": "Isquemia y ST",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Caso ilustrativo; sin cálculo automático de score ni ajuste de criterio proporcional."
+  },
+  {
+    "id": "pericarditis",
+    "nombre": "Patrón de pericarditis",
+    "categoria": "Isquemia y ST",
+    "estado": "aproximado",
+    "estrategia": "local",
+    "limitacion": "Dipolo único no garantiza elevación en todas las derivaciones; no diagnostica pericarditis."
+  },
+  {
+    "id": "rv_acute",
+    "nombre": "Sobrecarga aguda del ventrículo derecho",
+    "categoria": "Sobrecarga",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "No reproduce S1Q3T3 de forma consistente; ECG no confirma ni excluye TEP."
+  },
+  {
+    "id": "rv_chronic",
+    "nombre": "Hipertrofia del ventrículo derecho",
+    "categoria": "Sobrecarga",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Criterios de voltaje individuales no validados; no modela anatomía real."
+  },
+  {
+    "id": "lvh",
+    "nombre": "Hipertrofia del ventrículo izquierdo",
+    "categoria": "Sobrecarga",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Los criterios Sokolow-Lyon/Cornell no se calculan automáticamente."
+  },
+  {
+    "id": "aai",
+    "nombre": "Estimulación auricular AAI",
+    "categoria": "Marcapasos",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Estimulación capturada a frecuencia fija; sensado, demanda y fallos pendientes."
+  },
+  {
+    "id": "vvi",
+    "nombre": "Estimulación ventricular VVI",
+    "categoria": "Marcapasos",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Estimulación capturada a frecuencia fija; sensado, demanda y fallos pendientes."
+  },
+  {
+    "id": "ddd",
+    "nombre": "Estimulación secuencial DDD",
+    "categoria": "Marcapasos",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Secuencia fija; no simula demanda, PVARP, seguimiento ni límite superior."
+  },
+  {
+    "id": "hyperk",
+    "nombre": "Hiperpotasemia · T prominente",
+    "categoria": "Otros patrones",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Sin relación concentración–ECG, ni evolución a onda sinusoidal."
+  },
+  {
+    "id": "hypok",
+    "nombre": "Hipopotasemia · onda U",
+    "categoria": "Otros patrones",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "El delineador puede confundir T y U; QT automático no fiable."
+  },
+  {
+    "id": "longqt",
+    "nombre": "QT prolongado",
+    "categoria": "Otros patrones",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "shortqt",
+    "nombre": "QT corto",
+    "categoria": "Otros patrones",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+  },
+  {
+    "id": "lowvoltage",
+    "nombre": "Bajo voltaje",
+    "categoria": "Otros patrones",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "La etiología y la alternancia eléctrica no están modeladas."
+  },
+  {
+    "id": "pending_0",
+    "nombre": "Brugada tipo 1",
+    "categoria": "Pendientes",
+    "estado": "pendiente",
+    "estrategia": "pending",
+    "limitacion": "Requiere modelo morfológico específico y criterios de aceptación adicionales."
+  },
+  {
+    "id": "pending_1",
+    "nombre": "Hipotermia · onda de Osborn",
+    "categoria": "Pendientes",
+    "estado": "pendiente",
+    "estrategia": "pending",
+    "limitacion": "Requiere modelo morfológico específico y criterios de aceptación adicionales."
+  },
+  {
+    "id": "pending_2",
+    "nombre": "Efecto digitálico",
+    "categoria": "Pendientes",
+    "estado": "pendiente",
+    "estrategia": "pending",
+    "limitacion": "Requiere modelo morfológico específico y criterios de aceptación adicionales."
+  },
+  {
+    "id": "pending_3",
+    "nombre": "Alternancia eléctrica",
+    "categoria": "Pendientes",
+    "estado": "pendiente",
+    "estrategia": "pending",
+    "limitacion": "Requiere modelo morfológico específico y criterios de aceptación adicionales."
+  },
+  {
+    "id": "pending_4",
+    "nombre": "Dextrocardia",
+    "categoria": "Pendientes",
+    "estado": "pendiente",
+    "estrategia": "pending",
+    "limitacion": "Requiere modelo morfológico específico y criterios de aceptación adicionales."
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "referenceReader": "WFDB Python 4.3.1",
+  "records": 8,
+  "channels": 96,
+  "annotationEventsMatched": 6474,
+  "physicalSamplesCompared": 480000,
+  "sampleAgreement": "exact float64 before Float32 conversion",
+  "annotationAgreement": "exact symbols and sample indices",
+  "detectorEvaluated": false
+}

@@ -1,0 +1,4486 @@
+{
+  "version": "1.2.0",
+  "date": "2026-09-24",
+  "method": "10 seconds; deterministic seed; synthetic references are engineering supports, not patient annotations.",
+  "qtCases": [
+    {
+      "hr": 40,
+      "qtc": 410,
+      "referenceQT": 469.33283944686605,
+      "measured": {
+        "hr": 40,
+        "pr": 156,
+        "qrs": 90,
+        "qt": 469.9999999999998,
+        "qtcF": 410.58281842606027,
+        "axis": 55.21227065462915
+      },
+      "errorQT": 0.6671605531337264
+    },
+    {
+      "hr": 60,
+      "qtc": 410,
+      "referenceQT": 410,
+      "measured": {
+        "hr": 60,
+        "pr": 156,
+        "qrs": 90,
+        "qt": 403.9999999999999,
+        "qtcF": 403.9999999999999,
+        "axis": 55.19012924947015
+      },
+      "errorQT": -6.000000000000114
+    },
+    {
+      "hr": 72,
+      "qtc": 410,
+      "referenceQT": 385.82477184122166,
+      "measured": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 92,
+        "qt": 376,
+        "qtcF": 399.4531295710474,
+        "axis": 55.17283979210083
+      },
+      "errorQT": -9.824771841221661
+    },
+    {
+      "hr": 100,
+      "qtc": 410,
+      "referenceQT": 345.80739277371714,
+      "measured": {
+        "hr": 100.00000000000003,
+        "pr": 154,
+        "qrs": 90,
+        "qt": 338,
+        "qtcF": 400.74331230588047,
+        "axis": 55.16510297384684
+      },
+      "errorQT": -7.80739277371714
+    },
+    {
+      "hr": 40,
+      "qtc": 650,
+      "referenceQT": 744.0642576596658,
+      "measured": {
+        "hr": 40,
+        "pr": 156,
+        "qrs": 90,
+        "qt": 734,
+        "qtcF": 641.2080611164433,
+        "axis": 55.20920479591598
+      },
+      "errorQT": -10.064257659665827
+    }
+  ],
+  "analyticCases": [
+    {
+      "name": "linear",
+      "measured": {
+        "hr": 60,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 398,
+        "qtcF": 398,
+        "axis": 46.99608805717719
+      }
+    },
+    {
+      "name": "biphasicT",
+      "measured": {
+        "hr": 60,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 478,
+        "qtcF": 478,
+        "axis": 46.99608805717719
+      }
+    },
+    {
+      "name": "separateU",
+      "measured": {
+        "hr": 60,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 398,
+        "qtcF": 398,
+        "axis": 46.99608805717719
+      }
+    },
+    {
+      "name": "noiseOnly",
+      "measured": {
+        "hr": null,
+        "pr": null,
+        "qrs": null,
+        "qt": null,
+        "qtcF": null,
+        "axis": null
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "sinus",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.81418622223384,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.8232777546051,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 92,
+        "qt": 378,
+        "qtcF": 401.8993999174257,
+        "axis": 55.165313136087775
+      },
+      "presented": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 92,
+        "qt": 378,
+        "qtcF": 401.8993999174257,
+        "axis": 55.165313136087775
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.014000000000000012
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.0079709072348777
+        }
+      }
+    },
+    {
+      "id": "brady",
+      "reference": {
+        "hr": 44.96859779557017,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 451.24920465122784,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 44.96859779557017,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 451.2608674040364,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 44.9678800856531,
+        "pr": 154,
+        "qrs": 92,
+        "qt": 451.99999999999994,
+        "qtcF": 410.3958389498528,
+        "axis": 55.191453333455684
+      },
+      "presented": {
+        "hr": 44.9678800856531,
+        "pr": 154,
+        "qrs": 92,
+        "qt": 451.99999999999994,
+        "qtcF": 410.3958389498528,
+        "axis": 55.191453333455684
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 7,
+          "total": 7,
+          "spread": 0.02400000000000002
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 6,
+          "total": 6,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 6,
+          "total": 6,
+          "spread": 0
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 6,
+          "total": 6,
+          "spread": 1.000000000000341
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 6,
+          "total": 6,
+          "spread": 0.008464370562933254
+        }
+      }
+    },
+    {
+      "id": "tachy",
+      "reference": {
+        "hr": 124.92916799585683,
+        "pr": null,
+        "qrs": 90,
+        "qt": 321.0158991290516,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 124.949269383462,
+        "pr": 140,
+        "qrs": 90,
+        "qt": 321.02379611436305,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 124.91781722550954,
+        "pr": null,
+        "qrs": 92,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.15822523724819
+      },
+      "presented": {
+        "hr": 124.91781722550954,
+        "pr": null,
+        "qrs": 92,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.15822523724819
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 19,
+          "total": 19,
+          "spread": 0.00880000000000003
+        },
+        "pr": {
+          "status": "unavailable",
+          "reason": "P no reconocible o sin relación AV estable.",
+          "count": 0,
+          "total": 18,
+          "spread": null
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 18,
+          "total": 18,
+          "spread": 0.5999999999999943
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "T superpuesta, débil o sin retorno claro.",
+          "count": 0,
+          "total": 18,
+          "spread": null
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 18,
+          "total": 18,
+          "spread": 0.019807570873908276
+        }
+      }
+    },
+    {
+      "id": "rsa",
+      "reference": {
+        "hr": 68.8566875155852,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 393.198063892438,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 68.85668751558518,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 393.21765399104294,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 68.85471654808356,
+        "pr": 154,
+        "qrs": 92,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.17089524439734
+      },
+      "presented": {
+        "hr": 68.85471654808356,
+        "pr": 154,
+        "qrs": 92,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.17089524439734
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.20999999999999996
+        },
+        "pr": {
+          "status": "review",
+          "reason": "No se separa la T: la onda atribuida a P podría ser repolarización previa.",
+          "count": 9,
+          "total": 9,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 9,
+          "total": 9,
+          "spread": 2
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "RR irregular: no se resume QT/QTc.",
+          "count": 0,
+          "total": 9,
+          "spread": null
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 9,
+          "total": 9,
+          "spread": 0.02558511359645621
+        }
+      }
+    },
+    {
+      "id": "af",
+      "reference": {
+        "hr": 74.2742644719077,
+        "pr": null,
+        "qrs": 90,
+        "qt": 360.2271454511132,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 74.2742644719077,
+        "pr": null,
+        "qrs": 90,
+        "qt": 359.65414412111204,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 74.4724865535788,
+        "pr": null,
+        "qrs": 92,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.24823399826437
+      },
+      "presented": {
+        "hr": 74.4724865535788,
+        "pr": null,
+        "qrs": 92,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.24823399826437
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 12,
+          "total": 12,
+          "spread": 0.7360000000000001
+        },
+        "pr": {
+          "status": "unavailable",
+          "reason": "P no reconocible o sin relación AV estable.",
+          "count": 0,
+          "total": 11,
+          "spread": null
+        },
+        "qrs": {
+          "status": "review",
+          "reason": "Un límite difiere hasta 17 ms de su referencia sintética. Revisa ese trazado.",
+          "count": 11,
+          "total": 11,
+          "spread": 10
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "RR irregular: no se resume QT/QTc.",
+          "count": 0,
+          "total": 11,
+          "spread": null
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 11,
+          "total": 11,
+          "spread": 3.7964082806281567
+        }
+      }
+    },
+    {
+      "id": "af_fast",
+      "reference": {
+        "hr": 123.06785352379146,
+        "pr": null,
+        "qrs": 90,
+        "qt": 311.86264164503433,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 123.06785352379148,
+        "pr": null,
+        "qrs": 90,
+        "qt": 312.40950804783,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 123.40333405499027,
+        "pr": null,
+        "qrs": 92,
+        "qt": null,
+        "qtcF": null,
+        "axis": 56.3706423201578
+      },
+      "presented": {
+        "hr": 123.40333405499027,
+        "pr": null,
+        "qrs": 92,
+        "qt": null,
+        "qtcF": null,
+        "axis": 56.3706423201578
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 19,
+          "total": 19,
+          "spread": 0.3351999999999999
+        },
+        "pr": {
+          "status": "unavailable",
+          "reason": "P no reconocible o sin relación AV estable.",
+          "count": 0,
+          "total": 18,
+          "spread": null
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 18,
+          "total": 18,
+          "spread": 4
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "RR irregular: no se resume QT/QTc.",
+          "count": 0,
+          "total": 18,
+          "spread": null
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 18,
+          "total": 18,
+          "spread": 7.169626051497914
+        }
+      }
+    },
+    {
+      "id": "af_slow",
+      "reference": {
+        "hr": 35.17487581299416,
+        "pr": null,
+        "qrs": 90,
+        "qt": 444.5414823052655,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 37.844069485033636,
+        "pr": null,
+        "qrs": 90,
+        "qt": 444.5414823052655,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 35.07131166705636,
+        "pr": null,
+        "qrs": 95,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.93388432743177
+      },
+      "presented": {
+        "hr": 35.07131166705636,
+        "pr": null,
+        "qrs": 95,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.93388432743177
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 5,
+          "total": 5,
+          "spread": 1.0008000000000001
+        },
+        "pr": {
+          "status": "unavailable",
+          "reason": "P no reconocible o sin relación AV estable.",
+          "count": 0,
+          "total": 4,
+          "spread": null
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 4,
+          "total": 4,
+          "spread": 4.800000000000011
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "RR irregular: no se resume QT/QTc.",
+          "count": 0,
+          "total": 4,
+          "spread": null
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 4,
+          "total": 4,
+          "spread": 2.568154636622019
+        }
+      }
+    },
+    {
+      "id": "flutter",
+      "reference": {
+        "hr": 149.9999999999999,
+        "pr": null,
+        "qrs": 90,
+        "qt": null,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 149.99999999999986,
+        "pr": null,
+        "qrs": 90,
+        "qt": 302.09058288851173,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 149.99999999999994,
+        "pr": null,
+        "qrs": 102,
+        "qt": null,
+        "qtcF": null,
+        "axis": 70.92990839920549
+      },
+      "presented": {
+        "hr": 149.99999999999994,
+        "pr": null,
+        "qrs": 102,
+        "qt": null,
+        "qtcF": null,
+        "axis": 70.92990839920549
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 23,
+          "total": 23,
+          "spread": 0
+        },
+        "pr": {
+          "status": "unavailable",
+          "reason": "P no reconocible o sin relación AV estable.",
+          "count": 0,
+          "total": 22,
+          "spread": null
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 22,
+          "total": 22,
+          "spread": 0
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "T superpuesta, débil o sin retorno claro.",
+          "count": 0,
+          "total": 22,
+          "spread": null
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 22,
+          "total": 22,
+          "spread": 0.008258518802904291
+        }
+      }
+    },
+    {
+      "id": "flutter3",
+      "reference": {
+        "hr": 100.00000000000006,
+        "pr": null,
+        "qrs": 90,
+        "qt": null,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 100.00000000000006,
+        "pr": null,
+        "qrs": 90,
+        "qt": 345.8073927737172,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 100.00000000000003,
+        "pr": 236,
+        "qrs": 100,
+        "qt": null,
+        "qtcF": null,
+        "axis": 70.75530802721187
+      },
+      "presented": {
+        "hr": 100.00000000000003,
+        "pr": null,
+        "qrs": 100,
+        "qt": null,
+        "qtcF": null,
+        "axis": 70.75530802721187
+      },
+      "rejected": {
+        "pr": 236
+      },
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 15,
+          "total": 15,
+          "spread": 0
+        },
+        "pr": {
+          "status": "unavailable",
+          "reason": "Hay un candidato de P/PR atribuido a un QRS sin asociación AV en el modelo. No se acepta el PR global; revisa los candidatos con calibres.",
+          "count": 14,
+          "total": 14,
+          "spread": 0
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 14,
+          "total": 14,
+          "spread": 0
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "T superpuesta, débil o sin retorno claro.",
+          "count": 0,
+          "total": 14,
+          "spread": null
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 14,
+          "total": 14,
+          "spread": 0.007840451761211398
+        }
+      }
+    },
+    {
+      "id": "svt",
+      "reference": {
+        "hr": 184.9999999999999,
+        "pr": null,
+        "qrs": 90,
+        "qt": null,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 184.9999999999999,
+        "pr": null,
+        "qrs": 90,
+        "qt": 281.6936328624331,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 184.98830533701897,
+        "pr": null,
+        "qrs": 86,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.182261584022854
+      },
+      "presented": {
+        "hr": 184.98830533701897,
+        "pr": null,
+        "qrs": 86,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.182261584022854
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 29,
+          "total": 29,
+          "spread": 0.0020000000000000018
+        },
+        "pr": {
+          "status": "unavailable",
+          "reason": "P no reconocible o sin relación AV estable.",
+          "count": 0,
+          "total": 28,
+          "spread": null
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 28,
+          "total": 28,
+          "spread": 2
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "T superpuesta, débil o sin retorno claro.",
+          "count": 0,
+          "total": 28,
+          "spread": null
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 28,
+          "total": 28,
+          "spread": 0.19556657691744306
+        }
+      }
+    },
+    {
+      "id": "junctional",
+      "reference": {
+        "hr": 48,
+        "pr": null,
+        "qrs": 90,
+        "qt": 441.65911145653615,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 48,
+        "pr": null,
+        "qrs": 90,
+        "qt": 441.65911145653615,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 48,
+        "pr": null,
+        "qrs": 154,
+        "qt": 442.00000000000006,
+        "qtcF": 410.3164528913697,
+        "axis": 44.64354943355943
+      },
+      "presented": {
+        "hr": 48,
+        "pr": null,
+        "qrs": null,
+        "qt": null,
+        "qtcF": null,
+        "axis": null
+      },
+      "rejected": {
+        "qrs": 154,
+        "axis": 44.64354943355943,
+        "qt": 442.00000000000006
+      },
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 7,
+          "total": 7,
+          "spread": 0
+        },
+        "pr": {
+          "status": "unavailable",
+          "reason": "P no reconocible o sin relación AV estable.",
+          "count": 0,
+          "total": 6,
+          "spread": null
+        },
+        "qrs": {
+          "status": "unavailable",
+          "reason": "Candidato 154: discrepa 64 ms de la referencia sintética. Medida retirada; utiliza calibres.",
+          "count": 6,
+          "total": 6,
+          "spread": 0
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "El QT requiere un inicio QRS aceptable.",
+          "count": 6,
+          "total": 6,
+          "spread": 6.821210263296962e-13
+        },
+        "axis": {
+          "status": "unavailable",
+          "reason": "El eje requiere límites QRS aceptables.",
+          "count": 6,
+          "total": 6,
+          "spread": 0.0012294349132275784
+        }
+      }
+    },
+    {
+      "id": "pac",
+      "reference": {
+        "hr": 77.42832279985109,
+        "pr": null,
+        "qrs": 90,
+        "qt": 384.7227790564855,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 77.42832279985109,
+        "pr": null,
+        "qrs": 90,
+        "qt": 384.7227790564855,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 77.43600774360077,
+        "pr": 154,
+        "qrs": 92,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.16307095740217
+      },
+      "presented": {
+        "hr": 77.43600774360077,
+        "pr": null,
+        "qrs": 92,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.16307095740217
+      },
+      "rejected": {
+        "pr": 154
+      },
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 12,
+          "total": 12,
+          "spread": 0.3505999999999999
+        },
+        "pr": {
+          "status": "unavailable",
+          "reason": "La referencia presenta PR variable o ausencia de asociación AV; no se acepta un PR global.",
+          "count": 9,
+          "total": 11,
+          "spread": 0.4000000000000057
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 11,
+          "total": 11,
+          "spread": 0
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "RR irregular: no se resume QT/QTc.",
+          "count": 0,
+          "total": 11,
+          "spread": null
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.08759399885423136
+        }
+      }
+    },
+    {
+      "id": "pvc",
+      "reference": {
+        "hr": 74.93143259381722,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 387.41031946677145,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 74.93143259381723,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 386.74225066278916,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 74.02422611036339,
+        "pr": 154,
+        "qrs": 92,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.157648183480546
+      },
+      "presented": {
+        "hr": 74.02422611036339,
+        "pr": 154,
+        "qrs": 92,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.157648183480546
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.25
+        },
+        "pr": {
+          "status": "review",
+          "reason": "No se separa la T: la onda atribuida a P podría ser repolarización previa.",
+          "count": 9,
+          "total": 10,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 6.399999999999977
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "RR irregular: no se resume QT/QTc.",
+          "count": 0,
+          "total": 10,
+          "spread": null
+        },
+        "axis": {
+          "status": "review",
+          "reason": "Dispersión entre latidos: revisa el trazado.",
+          "count": 10,
+          "total": 10,
+          "spread": 12.062624025701808
+        }
+      }
+    },
+    {
+      "id": "bigeminy",
+      "reference": {
+        "hr": 70,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 393.9174882287649,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 70,
+        "pr": 160,
+        "qrs": 150,
+        "qt": 393.20449207220025,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 70.01166861143524,
+        "pr": null,
+        "qrs": 92,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.109249819294746
+      },
+      "presented": {
+        "hr": 70.01166861143524,
+        "pr": null,
+        "qrs": 92,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.109249819294746
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.5020000000000001
+        },
+        "pr": {
+          "status": "unavailable",
+          "reason": "P no reconocible o sin relación AV estable.",
+          "count": 0,
+          "total": 9,
+          "spread": null
+        },
+        "qrs": {
+          "status": "review",
+          "reason": "Dispersión entre latidos: revisa el trazado.",
+          "count": 9,
+          "total": 9,
+          "spread": 64.4
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "RR irregular: no se resume QT/QTc.",
+          "count": 0,
+          "total": 9,
+          "spread": null
+        },
+        "axis": {
+          "status": "review",
+          "reason": "Dispersión entre latidos: revisa el trazado.",
+          "count": 9,
+          "total": 9,
+          "spread": 119.99626181286854
+        }
+      }
+    },
+    {
+      "id": "trigeminy",
+      "reference": {
+        "hr": 69.35576485123154,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 388.4651214964194,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 69.35576485123153,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 388.44867085619137,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 70.1530612244898,
+        "pr": 154,
+        "qrs": 92,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.113949767388476
+      },
+      "presented": {
+        "hr": 70.1530612244898,
+        "pr": 154,
+        "qrs": 92,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.113949767388476
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.4840000000000001
+        },
+        "pr": {
+          "status": "review",
+          "reason": "No se separa la T: la onda atribuida a P podría ser repolarización previa.",
+          "count": 7,
+          "total": 10,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "review",
+          "reason": "Dispersión entre latidos: revisa el trazado.",
+          "count": 10,
+          "total": 10,
+          "spread": 62.2
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "RR irregular: no se resume QT/QTc.",
+          "count": 0,
+          "total": 10,
+          "spread": null
+        },
+        "axis": {
+          "status": "review",
+          "reason": "Dispersión entre latidos: revisa el trazado.",
+          "count": 10,
+          "total": 10,
+          "spread": 120.01397364044095
+        }
+      }
+    },
+    {
+      "id": "couplet",
+      "reference": {
+        "hr": 81.74338101143697,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 383.644723868749,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 85.26404839818352,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 383.6048257261409,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 80.75370121130553,
+        "pr": 154,
+        "qrs": 92,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.15318137771078
+      },
+      "presented": {
+        "hr": 80.75370121130553,
+        "pr": 154,
+        "qrs": 92,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.15318137771078
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 12,
+          "total": 12,
+          "spread": 0.24760000000000004
+        },
+        "pr": {
+          "status": "review",
+          "reason": "No se separa la T: la onda atribuida a P podría ser repolarización previa.",
+          "count": 9,
+          "total": 11,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "review",
+          "reason": "Dispersión entre latidos: revisa el trazado.",
+          "count": 11,
+          "total": 11,
+          "spread": 62
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "RR irregular: no se resume QT/QTc.",
+          "count": 0,
+          "total": 11,
+          "spread": null
+        },
+        "axis": {
+          "status": "review",
+          "reason": "Dispersión entre latidos: revisa el trazado.",
+          "count": 11,
+          "total": 11,
+          "spread": 120.03631426576976
+        }
+      }
+    },
+    {
+      "id": "idioventricular",
+      "reference": {
+        "hr": 32,
+        "pr": null,
+        "qrs": 170,
+        "qt": null,
+        "axis": -65
+      },
+      "windowReference": {
+        "hr": 32,
+        "pr": null,
+        "qrs": 170,
+        "qt": 505.5734752377463,
+        "axis": -65
+      },
+      "raw": {
+        "hr": 32.00341369746106,
+        "pr": null,
+        "qrs": 175,
+        "qt": null,
+        "qtcF": null,
+        "axis": -64.93540151766945
+      },
+      "presented": {
+        "hr": 32.00341369746106,
+        "pr": null,
+        "qrs": 175,
+        "qt": null,
+        "qtcF": null,
+        "axis": -64.93540151766945
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 5,
+          "total": 5,
+          "spread": 0.0019999999999997797
+        },
+        "pr": {
+          "status": "unavailable",
+          "reason": "P no reconocible o sin relación AV estable.",
+          "count": 0,
+          "total": 4,
+          "spread": null
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 4,
+          "total": 4,
+          "spread": 2
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "T superpuesta, débil o sin retorno claro.",
+          "count": 0,
+          "total": 4,
+          "spread": null
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 4,
+          "total": 4,
+          "spread": 0.000051386925719043575
+        }
+      }
+    },
+    {
+      "id": "aivr",
+      "reference": {
+        "hr": 77.99999999999994,
+        "pr": null,
+        "qrs": 150,
+        "qt": 375.66673410041335,
+        "axis": -65
+      },
+      "windowReference": {
+        "hr": 77.99999999999996,
+        "pr": null,
+        "qrs": 150,
+        "qt": 375.66673410041335,
+        "axis": -65
+      },
+      "raw": {
+        "hr": 78.00650054171182,
+        "pr": null,
+        "qrs": 154,
+        "qt": 379.9999999999999,
+        "qtcF": 414.59114455514276,
+        "axis": -64.93435727951396
+      },
+      "presented": {
+        "hr": 78.00650054171182,
+        "pr": null,
+        "qrs": 154,
+        "qt": 379.9999999999999,
+        "qtcF": 414.59114455514276,
+        "axis": -64.93435727951396
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 12,
+          "total": 12,
+          "spread": 0.0020000000000000018
+        },
+        "pr": {
+          "status": "unavailable",
+          "reason": "P no reconocible o sin relación AV estable.",
+          "count": 0,
+          "total": 11,
+          "spread": null
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 11,
+          "total": 11,
+          "spread": 2
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 11,
+          "total": 11,
+          "spread": 2.000000000000682
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.0002851841155688817
+        }
+      }
+    },
+    {
+      "id": "vt",
+      "reference": {
+        "hr": 169.99999999999994,
+        "pr": null,
+        "qrs": 165,
+        "qt": null,
+        "axis": -65
+      },
+      "windowReference": {
+        "hr": 169.99999999999991,
+        "pr": null,
+        "qrs": 165,
+        "qt": 289.7463450786251,
+        "axis": -65
+      },
+      "raw": {
+        "hr": 170.00871839581512,
+        "pr": null,
+        "qrs": 170,
+        "qt": null,
+        "qtcF": null,
+        "axis": -64.93207579152715
+      },
+      "presented": {
+        "hr": 170.00871839581512,
+        "pr": null,
+        "qrs": null,
+        "qt": null,
+        "qtcF": null,
+        "axis": null
+      },
+      "rejected": {
+        "qrs": 170,
+        "axis": -64.93207579152715
+      },
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 26,
+          "total": 26,
+          "spread": 0.0020000000000000018
+        },
+        "pr": {
+          "status": "unavailable",
+          "reason": "P no reconocible o sin relación AV estable.",
+          "count": 0,
+          "total": 25,
+          "spread": null
+        },
+        "qrs": {
+          "status": "unavailable",
+          "reason": "Al menos un límite del latido discrepa 123 ms de su referencia sintética. Medida retirada; los candidatos crudos se conservan para revisión.",
+          "count": 25,
+          "total": 25,
+          "spread": 119.2
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "T superpuesta, débil o sin retorno claro.",
+          "count": 0,
+          "total": 25,
+          "spread": null
+        },
+        "axis": {
+          "status": "unavailable",
+          "reason": "El eje requiere límites QRS aceptables.",
+          "count": 25,
+          "total": 25,
+          "spread": 11.752142600763115
+        }
+      }
+    },
+    {
+      "id": "torsades",
+      "reference": {
+        "hr": 209.9999999999997,
+        "pr": null,
+        "qrs": 160,
+        "qt": null,
+        "axis": -65
+      },
+      "windowReference": {
+        "hr": 209.99999999999972,
+        "pr": null,
+        "qrs": 160,
+        "qt": 362.24856580459226,
+        "axis": -65
+      },
+      "raw": {
+        "hr": 187.41921585523488,
+        "pr": null,
+        "qrs": 56,
+        "qt": null,
+        "qtcF": null,
+        "axis": 103.5586223445323
+      },
+      "presented": {
+        "hr": null,
+        "pr": null,
+        "qrs": null,
+        "qt": null,
+        "qtcF": null,
+        "axis": null
+      },
+      "rejected": {
+        "hr": 187.41921585523488,
+        "qrs": 56,
+        "axis": 103.5586223445323
+      },
+      "evidence": {
+        "hr": {
+          "status": "unavailable",
+          "reason": "Detección discordante: 0 candidatos sin QRS correspondiente y 3 QRS omitidos entre los extremos observados. Usa calibres.",
+          "count": 29,
+          "total": 29,
+          "spread": 0.14040000000000002
+        },
+        "pr": {
+          "status": "unavailable",
+          "reason": "La detección ventricular no supera la auditoría: puede incluir P, T o espigas.",
+          "count": 0,
+          "total": 28,
+          "spread": null
+        },
+        "qrs": {
+          "status": "unavailable",
+          "reason": "La detección ventricular no supera la auditoría: puede incluir P, T o espigas.",
+          "count": 28,
+          "total": 28,
+          "spread": 158
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "La detección ventricular no supera la auditoría: puede incluir P, T o espigas.",
+          "count": 0,
+          "total": 28,
+          "spread": null
+        },
+        "axis": {
+          "status": "unavailable",
+          "reason": "La detección ventricular no supera la auditoría: puede incluir P, T o espigas.",
+          "count": 28,
+          "total": 28,
+          "spread": 243.04320709947504
+        }
+      }
+    },
+    {
+      "id": "vf",
+      "reference": {
+        "hr": 0,
+        "pr": null,
+        "qrs": null,
+        "qt": null,
+        "axis": null
+      },
+      "windowReference": {
+        "hr": 0,
+        "pr": null,
+        "qrs": null,
+        "qt": null,
+        "axis": null
+      },
+      "raw": {
+        "hr": 194.11396368190356,
+        "pr": null,
+        "qrs": null,
+        "qt": null,
+        "qtcF": null,
+        "axis": null
+      },
+      "presented": {
+        "hr": null,
+        "pr": null,
+        "qrs": null,
+        "qt": null,
+        "qtcF": null,
+        "axis": null
+      },
+      "rejected": {
+        "hr": 194.11396368190356
+      },
+      "evidence": {
+        "hr": {
+          "status": "unavailable",
+          "reason": "Detección discordante: 32 candidatos sin QRS correspondiente y 0 QRS omitidos entre los extremos observados. Usa calibres.",
+          "count": 31,
+          "total": 31,
+          "spread": 0.15
+        },
+        "pr": {
+          "status": "unavailable",
+          "reason": "La detección ventricular no supera la auditoría: puede incluir P, T o espigas.",
+          "count": 0,
+          "total": 0,
+          "spread": null
+        },
+        "qrs": {
+          "status": "unavailable",
+          "reason": "La detección ventricular no supera la auditoría: puede incluir P, T o espigas.",
+          "count": 0,
+          "total": 0,
+          "spread": null
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "La detección ventricular no supera la auditoría: puede incluir P, T o espigas.",
+          "count": 0,
+          "total": 0,
+          "spread": null
+        },
+        "axis": {
+          "status": "unavailable",
+          "reason": "La detección ventricular no supera la auditoría: puede incluir P, T o espigas.",
+          "count": 0,
+          "total": 0,
+          "spread": null
+        }
+      }
+    },
+    {
+      "id": "asystole",
+      "reference": {
+        "hr": 0,
+        "pr": null,
+        "qrs": null,
+        "qt": null,
+        "axis": null
+      },
+      "windowReference": {
+        "hr": 0,
+        "pr": null,
+        "qrs": null,
+        "qt": null,
+        "axis": null
+      },
+      "raw": {
+        "hr": null,
+        "pr": null,
+        "qrs": null,
+        "qt": null,
+        "qtcF": null,
+        "axis": null
+      },
+      "presented": {
+        "hr": null,
+        "pr": null,
+        "qrs": null,
+        "qt": null,
+        "qtcF": null,
+        "axis": null
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "unavailable",
+          "reason": "No hay un ritmo ventricular delineable.",
+          "count": 0,
+          "total": 0,
+          "spread": null
+        },
+        "pr": {
+          "status": "unavailable",
+          "reason": "No hay asociación AV estable.",
+          "count": 0,
+          "total": 0,
+          "spread": null
+        },
+        "qrs": {
+          "status": "unavailable",
+          "reason": "Límites QRS no reconocibles.",
+          "count": 0,
+          "total": 0,
+          "spread": null
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "Final de T no reconocible.",
+          "count": 0,
+          "total": 0,
+          "spread": null
+        },
+        "axis": {
+          "status": "unavailable",
+          "reason": "QRS no delineable.",
+          "count": 0,
+          "total": 0,
+          "spread": null
+        }
+      }
+    },
+    {
+      "id": "av1",
+      "reference": {
+        "hr": 72.03675812688736,
+        "pr": 260,
+        "qrs": 90,
+        "qt": 385.8104162317546,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 260,
+        "qrs": 90,
+        "qt": 385.8232777546051,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 72.04610951008645,
+        "pr": 254,
+        "qrs": 92,
+        "qt": 376,
+        "qtcF": 399.933241967737,
+        "axis": 55.18052087001013
+      },
+      "presented": {
+        "hr": 72.04610951008645,
+        "pr": 254,
+        "qrs": 92,
+        "qt": 376,
+        "qtcF": 399.933241967737,
+        "axis": 55.18052087001013
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.01419999999999999
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 9,
+          "total": 9,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 9,
+          "total": 9,
+          "spread": 0
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 9,
+          "total": 9,
+          "spread": 2
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 9,
+          "total": 9,
+          "spread": 0.021539303569824142
+        }
+      }
+    },
+    {
+      "id": "wenckebach",
+      "reference": {
+        "hr": 55.045871559633014,
+        "pr": null,
+        "qrs": 90,
+        "qt": 420.10062208304197,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 55.045871559633014,
+        "pr": null,
+        "qrs": 90,
+        "qt": 419.56715375751725,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 55.045871559633035,
+        "pr": null,
+        "qrs": 90,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.1882921959068
+      },
+      "presented": {
+        "hr": 55.045871559633035,
+        "pr": null,
+        "qrs": 90,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.1882921959068
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 8,
+          "total": 8,
+          "spread": 0.64
+        },
+        "pr": {
+          "status": "unavailable",
+          "reason": "P no reconocible o sin relación AV estable.",
+          "count": 0,
+          "total": 7,
+          "spread": null
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 7,
+          "total": 7,
+          "spread": 0
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "RR irregular: no se resume QT/QTc.",
+          "count": 0,
+          "total": 7,
+          "spread": null
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 7,
+          "total": 7,
+          "spread": 0.024462421818199687
+        }
+      }
+    },
+    {
+      "id": "mobitz2",
+      "reference": {
+        "hr": 54.54545454545452,
+        "pr": 180,
+        "qrs": 140,
+        "qt": 420.806590781677,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 54.54545454545452,
+        "pr": 180,
+        "qrs": 140,
+        "qt": 420.806590781677,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 54.545454545454554,
+        "pr": 176,
+        "qrs": 142,
+        "qt": null,
+        "qtcF": null,
+        "axis": 54.474424500604755
+      },
+      "presented": {
+        "hr": 54.545454545454554,
+        "pr": 176,
+        "qrs": 142,
+        "qt": null,
+        "qtcF": null,
+        "axis": 54.474424500604755
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 8,
+          "total": 8,
+          "spread": 0.8
+        },
+        "pr": {
+          "status": "review",
+          "reason": "No se separa la T: la onda atribuida a P podría ser repolarización previa.",
+          "count": 7,
+          "total": 7,
+          "spread": 0
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 7,
+          "total": 7,
+          "spread": 0
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "RR irregular: no se resume QT/QTc.",
+          "count": 0,
+          "total": 7,
+          "spread": null
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 7,
+          "total": 7,
+          "spread": 0.026302168220986744
+        }
+      }
+    },
+    {
+      "id": "av21",
+      "reference": {
+        "hr": 40.00000000000001,
+        "pr": 180,
+        "qrs": 90,
+        "qt": 468.14876184399697,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 40,
+        "pr": 180,
+        "qrs": 90,
+        "qt": 468.1709852202075,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 40,
+        "pr": 176,
+        "qrs": 90,
+        "qt": 665.9999999999997,
+        "qtcF": 581.8045895143747,
+        "axis": 55.20420548386471
+      },
+      "presented": {
+        "hr": 40,
+        "pr": 176,
+        "qrs": 90,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.20420548386471
+      },
+      "rejected": {
+        "qt": 665.9999999999997
+      },
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 5,
+          "total": 5,
+          "spread": 0
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 4,
+          "total": 4,
+          "spread": 0
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 4,
+          "total": 4,
+          "spread": 0
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "Candidato 666: discrepa 198 ms de la referencia sintética. Medida retirada; utiliza calibres.",
+          "count": 4,
+          "total": 4,
+          "spread": 4.547473508864641e-13
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 4,
+          "total": 4,
+          "spread": 0.0009671335697163386
+        }
+      }
+    },
+    {
+      "id": "highav",
+      "reference": {
+        "hr": 30.00000000000001,
+        "pr": 180,
+        "qrs": 90,
+        "qt": 515.0112706302883,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 30.00000000000001,
+        "pr": 180,
+        "qrs": 90,
+        "qt": 515.0112706302883,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 30,
+        "pr": 176,
+        "qrs": 90,
+        "qt": 583.9999999999997,
+        "qtcF": 463.52110717471396,
+        "axis": 55.21691431235047
+      },
+      "presented": {
+        "hr": 30,
+        "pr": 176,
+        "qrs": 90,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.21691431235047
+      },
+      "rejected": {
+        "qt": 583.9999999999997
+      },
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 4,
+          "total": 4,
+          "spread": 0
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 3,
+          "total": 3,
+          "spread": 0
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 3,
+          "total": 3,
+          "spread": 0
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "Candidato 584: discrepa 69 ms de la referencia sintética. Medida retirada; utiliza calibres.",
+          "count": 3,
+          "total": 3,
+          "spread": 3.410605131648481e-13
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 3,
+          "total": 3,
+          "spread": 0.0007863875176568058
+        }
+      }
+    },
+    {
+      "id": "complete",
+      "reference": {
+        "hr": 44.99999999999999,
+        "pr": null,
+        "qrs": 90,
+        "qt": 451.2633906822656,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 44.999999999999986,
+        "pr": null,
+        "qrs": 90,
+        "qt": 451.2633906822656,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 45,
+        "pr": null,
+        "qrs": 92,
+        "qt": 451.99999999999994,
+        "qtcF": 410.6008319104899,
+        "axis": 55.1968885813568
+      },
+      "presented": {
+        "hr": 45,
+        "pr": null,
+        "qrs": null,
+        "qt": null,
+        "qtcF": null,
+        "axis": null
+      },
+      "rejected": {
+        "qrs": 92,
+        "qt": 451.99999999999994,
+        "axis": 55.1968885813568
+      },
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 6,
+          "total": 6,
+          "spread": 0.0020000000000000018
+        },
+        "pr": {
+          "status": "unavailable",
+          "reason": "P no reconocible o sin relación AV estable.",
+          "count": 0,
+          "total": 5,
+          "spread": null
+        },
+        "qrs": {
+          "status": "unavailable",
+          "reason": "Al menos un límite del latido discrepa 57 ms de su referencia sintética. Medida retirada; los candidatos crudos se conservan para revisión.",
+          "count": 5,
+          "total": 5,
+          "spread": 36
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "Al menos un límite del latido discrepa 285 ms de su referencia sintética. Medida retirada; los candidatos crudos se conservan para revisión.",
+          "count": 5,
+          "total": 5,
+          "spread": 205.99999999999994
+        },
+        "axis": {
+          "status": "unavailable",
+          "reason": "El eje requiere límites QRS aceptables.",
+          "count": 5,
+          "total": 5,
+          "spread": 0.06652998637416374
+        }
+      }
+    },
+    {
+      "id": "complete_v",
+      "reference": {
+        "hr": 30,
+        "pr": null,
+        "qrs": 165,
+        "qt": 516.567630456898,
+        "axis": -65
+      },
+      "windowReference": {
+        "hr": 30,
+        "pr": null,
+        "qrs": 165,
+        "qt": 516.567630456898,
+        "axis": -65
+      },
+      "raw": {
+        "hr": 30,
+        "pr": null,
+        "qrs": 170,
+        "qt": null,
+        "qtcF": null,
+        "axis": -64.90883713486261
+      },
+      "presented": {
+        "hr": 30,
+        "pr": null,
+        "qrs": null,
+        "qt": null,
+        "qtcF": null,
+        "axis": null
+      },
+      "rejected": {
+        "qrs": 170,
+        "axis": -64.90883713486261
+      },
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 4,
+          "total": 4,
+          "spread": 0
+        },
+        "pr": {
+          "status": "unavailable",
+          "reason": "P no reconocible o sin relación AV estable.",
+          "count": 0,
+          "total": 3,
+          "spread": null
+        },
+        "qrs": {
+          "status": "unavailable",
+          "reason": "Al menos un límite del latido discrepa 45 ms de su referencia sintética. Medida retirada; los candidatos crudos se conservan para revisión.",
+          "count": 3,
+          "total": 3,
+          "spread": 33.599999999999994
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "T superpuesta, débil o sin retorno claro.",
+          "count": 0,
+          "total": 3,
+          "spread": null
+        },
+        "axis": {
+          "status": "unavailable",
+          "reason": "El eje requiere límites QRS aceptables.",
+          "count": 3,
+          "total": 3,
+          "spread": 3.290440977274102
+        }
+      }
+    },
+    {
+      "id": "rbbb",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 150,
+        "qt": 385.81418622223384,
+        "axis": 35
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 150,
+        "qt": 385.8232777546051,
+        "axis": 35
+      },
+      "raw": {
+        "hr": 72.00523674449052,
+        "pr": 156,
+        "qrs": 150,
+        "qt": 378,
+        "qtcF": 401.8993999174257,
+        "axis": 34.71154402135653
+      },
+      "presented": {
+        "hr": 72.00523674449052,
+        "pr": 156,
+        "qrs": 150,
+        "qt": 378,
+        "qtcF": 401.8993999174257,
+        "axis": 34.71154402135653
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.014000000000000012
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.19999999999998863
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.19999999999998863
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.6000000000000227
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.015826104968290622
+        }
+      }
+    },
+    {
+      "id": "irbbb",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 115,
+        "qt": 385.81418622223384,
+        "axis": 35
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 115,
+        "qt": 385.8232777546051,
+        "axis": 35
+      },
+      "raw": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 118,
+        "qt": 378,
+        "qtcF": 402.22195174120435,
+        "axis": 34.57806716334221
+      },
+      "presented": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 118,
+        "qt": 378,
+        "qtcF": 402.22195174120435,
+        "axis": 34.57806716334221
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.014000000000000012
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.006641135581105573
+        }
+      }
+    },
+    {
+      "id": "lbbb",
+      "reference": {
+        "hr": 72.03675812688736,
+        "pr": 160,
+        "qrs": 160,
+        "qt": 385.8104162317546,
+        "axis": -15
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 160,
+        "qt": 385.8232777546051,
+        "axis": -15
+      },
+      "raw": {
+        "hr": 72.04610951008645,
+        "pr": 154,
+        "qrs": 166,
+        "qt": 391.99999999999943,
+        "qtcF": 416.9516777961507,
+        "axis": -14.903938354006073
+      },
+      "presented": {
+        "hr": 72.04610951008645,
+        "pr": 154,
+        "qrs": 166,
+        "qt": 391.99999999999943,
+        "qtcF": 416.9516777961507,
+        "axis": -14.903938354006073
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.01419999999999999
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 9,
+          "total": 9,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 9,
+          "total": 9,
+          "spread": 2
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 9,
+          "total": 9,
+          "spread": 2.000000000000682
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 9,
+          "total": 9,
+          "spread": 0.0022856579734700233
+        }
+      }
+    },
+    {
+      "id": "lafb",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 100,
+        "qt": 385.81418622223384,
+        "axis": -60
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 100,
+        "qt": 385.8232777546051,
+        "axis": -60
+      },
+      "raw": {
+        "hr": 72.00523674449052,
+        "pr": 155,
+        "qrs": 102,
+        "qt": 378,
+        "qtcF": 401.8993999174257,
+        "axis": -59.44391337304779
+      },
+      "presented": {
+        "hr": 72.00523674449052,
+        "pr": 155,
+        "qrs": 102,
+        "qt": 378,
+        "qtcF": 401.8993999174257,
+        "axis": -59.44391337304779
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.014000000000000012
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.01724203597179752
+        }
+      }
+    },
+    {
+      "id": "lpfb",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 100,
+        "qt": 385.81418622223384,
+        "axis": 120
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 100,
+        "qt": 385.8232777546051,
+        "axis": 120
+      },
+      "raw": {
+        "hr": 72.0052367444905,
+        "pr": 154,
+        "qrs": 103,
+        "qt": 378,
+        "qtcF": 401.8993999174257,
+        "axis": 119.90088602232879
+      },
+      "presented": {
+        "hr": 72.0052367444905,
+        "pr": 154,
+        "qrs": 103,
+        "qt": 378,
+        "qtcF": 401.8993999174257,
+        "axis": 119.90088602232879
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.014000000000000012
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.029355347101770235
+        }
+      }
+    },
+    {
+      "id": "bifascicular",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 150,
+        "qt": 385.81418622223384,
+        "axis": -60
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 150,
+        "qt": 385.8232777546051,
+        "axis": -60
+      },
+      "raw": {
+        "hr": 72.00523674449052,
+        "pr": 156,
+        "qrs": 152,
+        "qt": 380,
+        "qtcF": 404.02585176884065,
+        "axis": -59.37769489473709
+      },
+      "presented": {
+        "hr": 72.00523674449052,
+        "pr": 156,
+        "qrs": 152,
+        "qt": 380,
+        "qtcF": 404.02585176884065,
+        "axis": -59.37769489473709
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.014000000000000012
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.04173952370265965
+        }
+      }
+    },
+    {
+      "id": "bifascicular_pr",
+      "reference": {
+        "hr": 72.03675812688736,
+        "pr": 260,
+        "qrs": 150,
+        "qt": 385.8104162317546,
+        "axis": -60
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 260,
+        "qrs": 150,
+        "qt": 385.8232777546051,
+        "axis": -60
+      },
+      "raw": {
+        "hr": 72.04610951008645,
+        "pr": 254,
+        "qrs": 152,
+        "qt": 380,
+        "qtcF": 404.18785092484063,
+        "axis": -59.40327280065071
+      },
+      "presented": {
+        "hr": 72.04610951008645,
+        "pr": 254,
+        "qrs": 152,
+        "qt": 380,
+        "qtcF": 404.18785092484063,
+        "axis": -59.40327280065071
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.01419999999999999
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 9,
+          "total": 9,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 9,
+          "total": 9,
+          "spread": 2
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 9,
+          "total": 9,
+          "spread": 2
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 9,
+          "total": 9,
+          "spread": 0.01836158325775017
+        }
+      }
+    },
+    {
+      "id": "wpw",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 100,
+        "qrs": 135,
+        "qt": 385.81418622223384,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 100,
+        "qrs": 135,
+        "qt": 385.8232777546051,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 72.0052367444905,
+        "pr": 92,
+        "qrs": 138,
+        "qt": 385,
+        "qtcF": 409.01450767248207,
+        "axis": 55.06420813766431
+      },
+      "presented": {
+        "hr": 72.0052367444905,
+        "pr": 92,
+        "qrs": 138,
+        "qt": 385,
+        "qtcF": 409.01450767248207,
+        "axis": 55.06420813766431
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.014000000000000012
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 2.000000000000796
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.007766464080788182
+        }
+      }
+    },
+    {
+      "id": "inferior",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.81418622223384,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.8232777546051,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 94,
+        "qt": 378,
+        "qtcF": 401.8993999174257,
+        "axis": 60.879409871439066
+      },
+      "presented": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 94,
+        "qt": 378,
+        "qtcF": 401.8993999174257,
+        "axis": 60.879409871439066
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.014000000000000012
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 0
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.48232349519341966
+        }
+      }
+    },
+    {
+      "id": "inferior_lcx",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.81418622223384,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.8232777546051,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 94,
+        "qt": 384.00000000000034,
+        "qtcF": 408.27875547167093,
+        "axis": 58.060459020363055
+      },
+      "presented": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 94,
+        "qt": 384.00000000000034,
+        "qtcF": 408.27875547167093,
+        "axis": 58.060459020363055
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.014000000000000012
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 6.000000000000739
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.26783136162308807
+        }
+      }
+    },
+    {
+      "id": "anterior",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.81418622223384,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.8232777546051,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 94,
+        "qt": 380,
+        "qtcF": 404.02585176884065,
+        "axis": 56.053097662333016
+      },
+      "presented": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 94,
+        "qt": 380,
+        "qtcF": 404.02585176884065,
+        "axis": 56.053097662333016
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.014000000000000012
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 4.199999999999704
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.07533164933565928
+        }
+      }
+    },
+    {
+      "id": "lateral",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.81418622223384,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.8232777546051,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 94,
+        "qt": 391,
+        "qtcF": 415.7213369516229,
+        "axis": 50.92310584923837
+      },
+      "presented": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 94,
+        "qt": 391,
+        "qtcF": 415.7213369516229,
+        "axis": 50.92310584923837
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.014000000000000012
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 2.0000000000004547
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.3785255984392748
+        }
+      }
+    },
+    {
+      "id": "posterior",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.81418622223384,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.8232777546051,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 94,
+        "qt": 378,
+        "qtcF": 401.8993999174257,
+        "axis": 55.02903557313584
+      },
+      "presented": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 94,
+        "qt": 378,
+        "qtcF": 401.8993999174257,
+        "axis": 55.02903557313584
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.014000000000000012
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.19999999999998863
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.20000000000000284
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 0
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.006943473085378571
+        }
+      }
+    },
+    {
+      "id": "rv_infarct",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.81418622223384,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.8232777546051,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 94,
+        "qt": 380,
+        "qtcF": 404.02585176884065,
+        "axis": 60.9264502090557
+      },
+      "presented": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 94,
+        "qt": 380,
+        "qtcF": 404.02585176884065,
+        "axis": 60.9264502090557
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.014000000000000012
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.19999999999998863
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.5031443254686607
+        }
+      }
+    },
+    {
+      "id": "diffuse",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.81418622223384,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.8232777546051,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 72.00523674449052,
+        "pr": 156,
+        "qrs": 94,
+        "qt": 374,
+        "qtcF": 397.6464962145958,
+        "axis": 52.78619331473442
+      },
+      "presented": {
+        "hr": 72.00523674449052,
+        "pr": 156,
+        "qrs": 94,
+        "qt": 374,
+        "qtcF": 397.6464962145958,
+        "axis": 52.78619331473442
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.014000000000000012
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.24060379178447278
+        }
+      }
+    },
+    {
+      "id": "subendo",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.81418622223384,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.8232777546051,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 72.00523674449052,
+        "pr": 156,
+        "qrs": 94,
+        "qt": 380,
+        "qtcF": 404.02585176884065,
+        "axis": 53.2316110133396
+      },
+      "presented": {
+        "hr": 72.00523674449052,
+        "pr": 156,
+        "qrs": 94,
+        "qt": 380,
+        "qtcF": 404.02585176884065,
+        "axis": 53.2316110133396
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.014000000000000012
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.19999999999998863
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.20000000000000284
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.2429099821804357
+        }
+      }
+    },
+    {
+      "id": "wellens_a",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.81418622223384,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.8232777546051,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 92,
+        "qt": 378,
+        "qtcF": 401.8993999174257,
+        "axis": 55.165313136087775
+      },
+      "presented": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 92,
+        "qt": 378,
+        "qtcF": 401.8993999174257,
+        "axis": 55.165313136087775
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.014000000000000012
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.0079709072348777
+        }
+      }
+    },
+    {
+      "id": "wellens_b",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.81418622223384,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.8232777546051,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 92,
+        "qt": 378,
+        "qtcF": 401.8993999174257,
+        "axis": 55.165313136087775
+      },
+      "presented": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 92,
+        "qt": 378,
+        "qtcF": 401.8993999174257,
+        "axis": 55.165313136087775
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.014000000000000012
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.0079709072348777
+        }
+      }
+    },
+    {
+      "id": "de_winter",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.81418622223384,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.8232777546051,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 92,
+        "qt": 376,
+        "qtcF": 399.77294806601077,
+        "axis": 55.15473129787824
+      },
+      "presented": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 92,
+        "qt": 376,
+        "qtcF": 399.77294806601077,
+        "axis": 55.15473129787824
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.014000000000000012
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.19999999999998863
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.0790701921670518
+        }
+      }
+    },
+    {
+      "id": "sgarbossa",
+      "reference": {
+        "hr": 72.03675812688736,
+        "pr": 160,
+        "qrs": 160,
+        "qt": 385.8104162317546,
+        "axis": -15
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 160,
+        "qt": 385.8232777546051,
+        "axis": -15
+      },
+      "raw": {
+        "hr": 72.04610951008645,
+        "pr": 152,
+        "qrs": 166,
+        "qt": 387.9999999999999,
+        "qtcF": 412.6970688390477,
+        "axis": -14.072282480041281
+      },
+      "presented": {
+        "hr": 72.04610951008645,
+        "pr": 152,
+        "qrs": 166,
+        "qt": 387.9999999999999,
+        "qtcF": 412.6970688390477,
+        "axis": -14.072282480041281
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.01419999999999999
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 9,
+          "total": 9,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 9,
+          "total": 9,
+          "spread": 2
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 9,
+          "total": 9,
+          "spread": 1.9999999999997726
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 9,
+          "total": 9,
+          "spread": 0.063948789504229
+        }
+      }
+    },
+    {
+      "id": "pericarditis",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.81418622223384,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.8232777546051,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 72.00523674449052,
+        "pr": 146,
+        "qrs": 102,
+        "qt": 388,
+        "qtcF": 412.5316591745005,
+        "axis": 56.54657090990554
+      },
+      "presented": {
+        "hr": 72.00523674449052,
+        "pr": 146,
+        "qrs": 102,
+        "qt": 388,
+        "qtcF": 412.5316591745005,
+        "axis": 56.54657090990554
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.014000000000000012
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.12888607321720258
+        }
+      }
+    },
+    {
+      "id": "rv_acute",
+      "reference": {
+        "hr": 109.93311057861804,
+        "pr": 160,
+        "qrs": 115,
+        "qt": 334.9907274712881,
+        "axis": 110
+      },
+      "windowReference": {
+        "hr": 109.93311057861804,
+        "pr": 160,
+        "qrs": 115,
+        "qt": 334.9948766520298,
+        "axis": 110
+      },
+      "raw": {
+        "hr": 109.93748652726882,
+        "pr": 155,
+        "qrs": 118,
+        "qt": 332,
+        "qtcF": 406.2005771493882,
+        "axis": 113.74308824348509
+      },
+      "presented": {
+        "hr": 109.93748652726882,
+        "pr": 155,
+        "qrs": 118,
+        "qt": 332,
+        "qtcF": 406.2005771493882,
+        "axis": 113.74308824348509
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 17,
+          "total": 17,
+          "spread": 0.008000000000000007
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 16,
+          "total": 16,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 16,
+          "total": 16,
+          "spread": 0
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 16,
+          "total": 16,
+          "spread": 2
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 16,
+          "total": 16,
+          "spread": 0.010839788499765746
+        }
+      }
+    },
+    {
+      "id": "rv_chronic",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.81418622223384,
+        "axis": 115
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.8232777546051,
+        "axis": 115
+      },
+      "raw": {
+        "hr": 72.0052367444905,
+        "pr": 156,
+        "qrs": 93,
+        "qt": 379,
+        "qtcF": 402.9626258431332,
+        "axis": 116.11867931333052
+      },
+      "presented": {
+        "hr": 72.0052367444905,
+        "pr": 156,
+        "qrs": 93,
+        "qt": 379,
+        "qtcF": 402.9626258431332,
+        "axis": 116.11867931333052
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.01200000000000001
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.01625242956551176
+        }
+      }
+    },
+    {
+      "id": "lvh",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.81418622223384,
+        "axis": 0
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.8232777546051,
+        "axis": 0
+      },
+      "raw": {
+        "hr": 72.0052367444905,
+        "pr": 156,
+        "qrs": 91,
+        "qt": 386.0000000000001,
+        "qtcF": 410.4052073230857,
+        "axis": 0.22144886463036073
+      },
+      "presented": {
+        "hr": 72.0052367444905,
+        "pr": 156,
+        "qrs": 91,
+        "qt": 386.0000000000001,
+        "qtcF": 410.4052073230857,
+        "axis": 0.22144886463036073
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.01200000000000001
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.19999999999998863
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 1.0231815394945443e-12
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.0031500012080641626
+        }
+      }
+    },
+    {
+      "id": "aai",
+      "reference": {
+        "hr": 60,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 410,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 60,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 410,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 60,
+        "pr": 154,
+        "qrs": 92,
+        "qt": 405.9999999999999,
+        "qtcF": 405.9999999999999,
+        "axis": 55.03749525413127
+      },
+      "presented": {
+        "hr": 60,
+        "pr": 154,
+        "qrs": 92,
+        "qt": 405.9999999999999,
+        "qtcF": 405.9999999999999,
+        "axis": 55.03749525413127
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 9,
+          "total": 9,
+          "spread": 0
+        },
+        "pr": {
+          "status": "review",
+          "reason": "Límite próximo a un estímulo breve suprimido en la copia de análisis; verifica con calibres.",
+          "count": 8,
+          "total": 8,
+          "spread": 4
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 8,
+          "total": 8,
+          "spread": 0
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 8,
+          "total": 8,
+          "spread": 6.000000000000568
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 8,
+          "total": 8,
+          "spread": 0.025980212315694473
+        }
+      }
+    },
+    {
+      "id": "vvi",
+      "reference": {
+        "hr": 60,
+        "pr": null,
+        "qrs": 165,
+        "qt": 410,
+        "axis": -65
+      },
+      "windowReference": {
+        "hr": 60,
+        "pr": null,
+        "qrs": 165,
+        "qt": 410,
+        "axis": -65
+      },
+      "raw": {
+        "hr": 60,
+        "pr": null,
+        "qrs": 166,
+        "qt": 411.99999999999994,
+        "qtcF": 411.99999999999994,
+        "axis": -65.05475929826457
+      },
+      "presented": {
+        "hr": 60,
+        "pr": null,
+        "qrs": 166,
+        "qt": 411.99999999999994,
+        "qtcF": 411.99999999999994,
+        "axis": -65.05475929826457
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 9,
+          "total": 9,
+          "spread": 0
+        },
+        "pr": {
+          "status": "unavailable",
+          "reason": "P no reconocible o sin relación AV estable.",
+          "count": 0,
+          "total": 8,
+          "spread": null
+        },
+        "qrs": {
+          "status": "review",
+          "reason": "Límite próximo a un estímulo breve suprimido en la copia de análisis; verifica con calibres.",
+          "count": 8,
+          "total": 8,
+          "spread": 0
+        },
+        "qt": {
+          "status": "review",
+          "reason": "Límite próximo a un estímulo breve suprimido en la copia de análisis; verifica con calibres.",
+          "count": 8,
+          "total": 8,
+          "spread": 3.979039320256561e-13
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 8,
+          "total": 8,
+          "spread": 0.027693000336697082
+        }
+      }
+    },
+    {
+      "id": "ddd",
+      "reference": {
+        "hr": 64.99999999999999,
+        "pr": 180,
+        "qrs": 160,
+        "qt": 399.2054741486497,
+        "axis": -65
+      },
+      "windowReference": {
+        "hr": 64.99999999999999,
+        "pr": 180,
+        "qrs": 160,
+        "qt": 399.2054741486497,
+        "axis": -65
+      },
+      "raw": {
+        "hr": 64.99133448873482,
+        "pr": 172,
+        "qrs": 162,
+        "qt": 401.99999999999926,
+        "qtcF": 412.73255821349306,
+        "axis": -65.06570724619371
+      },
+      "presented": {
+        "hr": 64.99133448873482,
+        "pr": 172,
+        "qrs": 162,
+        "qt": 401.99999999999926,
+        "qtcF": 412.73255821349306,
+        "axis": -65.06570724619371
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.0020000000000000018
+        },
+        "pr": {
+          "status": "review",
+          "reason": "Límite próximo a un estímulo breve suprimido en la copia de análisis; verifica con calibres.",
+          "count": 9,
+          "total": 9,
+          "spread": 8
+        },
+        "qrs": {
+          "status": "review",
+          "reason": "Límite próximo a un estímulo breve suprimido en la copia de análisis; verifica con calibres.",
+          "count": 9,
+          "total": 9,
+          "spread": 0.4000000000000057
+        },
+        "qt": {
+          "status": "review",
+          "reason": "Límite próximo a un estímulo breve suprimido en la copia de análisis; verifica con calibres.",
+          "count": 9,
+          "total": 9,
+          "spread": 2.0000000000002274
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 9,
+          "total": 9,
+          "spread": 0.05574360336568418
+        }
+      }
+    },
+    {
+      "id": "hyperk",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 110,
+        "qt": 385.81418622223384,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 110,
+        "qt": 385.8232777546051,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 72.00523674449052,
+        "pr": 152,
+        "qrs": 112,
+        "qt": 372,
+        "qtcF": 395.52004436318083,
+        "axis": 55.13089933759932
+      },
+      "presented": {
+        "hr": 72.00523674449052,
+        "pr": 152,
+        "qrs": 112,
+        "qt": 372,
+        "qtcF": 395.52004436318083,
+        "axis": 55.13089933759932
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.014000000000000012
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 2
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.19999999999998863
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.008709359399986738
+        }
+      }
+    },
+    {
+      "id": "hypok",
+      "reference": {
+        "hr": 59.978706470222896,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 409.9892847953546,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 59.9787064702229,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 409.99487434076696,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 59.986669628971335,
+        "pr": 154,
+        "qrs": 92,
+        "qt": 594,
+        "qtcF": 593.6045271800331,
+        "axis": 55.18515762675895
+      },
+      "presented": {
+        "hr": 59.986669628971335,
+        "pr": 154,
+        "qrs": 92,
+        "qt": null,
+        "qtcF": null,
+        "axis": 55.18515762675895
+      },
+      "rejected": {
+        "qt": 594
+      },
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 9,
+          "total": 9,
+          "spread": 0.015599999999999947
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 8,
+          "total": 8,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 8,
+          "total": 8,
+          "spread": 0.5999999999999943
+        },
+        "qt": {
+          "status": "unavailable",
+          "reason": "Candidato 594: discrepa 184 ms de la referencia sintética. Medida retirada; utiliza calibres.",
+          "count": 8,
+          "total": 8,
+          "spread": 189.7999999999996
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 8,
+          "total": 8,
+          "spread": 0.014554622691186125
+        }
+      }
+    },
+    {
+      "id": "longqt",
+      "reference": {
+        "hr": 59.978706470222896,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 539.9858872914426,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 59.9787064702229,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 539.993249131742,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 59.986669628971335,
+        "pr": 154,
+        "qrs": 92,
+        "qt": 531,
+        "qtcF": 530.6464712669994,
+        "axis": 55.171256397133675
+      },
+      "presented": {
+        "hr": 59.986669628971335,
+        "pr": 154,
+        "qrs": 92,
+        "qt": 531,
+        "qtcF": 530.6464712669994,
+        "axis": 55.171256397133675
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 9,
+          "total": 9,
+          "spread": 0.015599999999999947
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 8,
+          "total": 8,
+          "spread": 0.5999999999999943
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 8,
+          "total": 8,
+          "spread": 0.5999999999999943
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 8,
+          "total": 8,
+          "spread": 2
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 8,
+          "total": 8,
+          "spread": 0.015127785973298558
+        }
+      }
+    },
+    {
+      "id": "shortqt",
+      "reference": {
+        "hr": 59.978706470222896,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 289.9924209528118,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 59.9787064702229,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 289.99637453371327,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 59.986669628971335,
+        "pr": 154,
+        "qrs": 92,
+        "qt": 290.00000000000006,
+        "qtcF": 289.80692404412395,
+        "axis": 55.19663737410042
+      },
+      "presented": {
+        "hr": 59.986669628971335,
+        "pr": 154,
+        "qrs": 92,
+        "qt": 290.00000000000006,
+        "qtcF": 289.80692404412395,
+        "axis": 55.19663737410042
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 9,
+          "total": 9,
+          "spread": 0.015599999999999947
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 8,
+          "total": 8,
+          "spread": 2
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 8,
+          "total": 8,
+          "spread": 0.5999999999999943
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 8,
+          "total": 8,
+          "spread": 0.6000000000002501
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 8,
+          "total": 8,
+          "spread": 0.026775016597056833
+        }
+      }
+    },
+    {
+      "id": "lowvoltage",
+      "reference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.81418622223384,
+        "axis": 55
+      },
+      "windowReference": {
+        "hr": 72.00306260505415,
+        "pr": 160,
+        "qrs": 90,
+        "qt": 385.8232777546051,
+        "axis": 55
+      },
+      "raw": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 92,
+        "qt": 378,
+        "qtcF": 401.8993999174257,
+        "axis": 55.09744705214871
+      },
+      "presented": {
+        "hr": 72.00523674449052,
+        "pr": 154,
+        "qrs": 92,
+        "qt": 378,
+        "qtcF": 401.8993999174257,
+        "axis": 55.09744705214871
+      },
+      "rejected": {},
+      "evidence": {
+        "hr": {
+          "status": "usable",
+          "reason": "Frecuencia media entre complejos detectados.",
+          "count": 11,
+          "total": 11,
+          "spread": 0.014000000000000012
+        },
+        "pr": {
+          "status": "usable",
+          "reason": "Inicio de P y QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0
+        },
+        "qrs": {
+          "status": "usable",
+          "reason": "Límites QRS reproducibles.",
+          "count": 10,
+          "total": 10,
+          "spread": 0
+        },
+        "qt": {
+          "status": "usable",
+          "reason": "Retorno de amplitud o pendiente terminal; revisa T/U.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.19999999999998863
+        },
+        "axis": {
+          "status": "usable",
+          "reason": "Eje de área neta entre límites QRS.",
+          "count": 10,
+          "total": 10,
+          "spread": 0.00428663099700799
+        }
+      }
+    }
+  ]
+}

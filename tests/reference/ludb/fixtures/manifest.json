@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "dataset": "Lobachevsky University Electrocardiography Database",
+  "version": "1.0.1",
+  "source": "https://physionet.org/content/ludb/1.0.1/",
+  "doi": "https://doi.org/10.13026/eegm-h675",
+  "license": "Open Data Commons Attribution License v1.0",
+  "licenseUrl": "https://physionet.org/content/ludb/view-license/1.0.1/",
+  "licenseFile": "LICENSE-LUDB.txt",
+  "officialManifestSha256": "cccef1f3529519db8f26a333c97a6872a7d0e3e5c64a1448b76b161fd87fb75f",
+  "selection": "Frozen by record ID before detector evaluation; development 1–4, control 101–104. Convenience regression subset, not a representative clinical cohort.",
+  "splits": {
+    "development": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "control": [
+      101,
+      102,
+      103,
+      104
+    ]
+  },
+  "records": [
+    {
+      "record": "1",
+      "split": "development",
+      "metadata": "development/1.json",
+      "metadataSha256": "b62c3ea1f571b4cd49d037feed652cdb55a647761909f71da6d398bb7daa0508",
+      "signal": "development/1.dat",
+      "signalSha256": "7d669747badd7cb39f5a1e26b7f61b13fb897ce56f6a82a5f565da3c5123231e"
+    },
+    {
+      "record": "2",
+      "split": "development",
+      "metadata": "development/2.json",
+      "metadataSha256": "4eb0fa7c3930171d90737fa7c8ec808d04f392ea8e5734612c0c4c2c23b45358",
+      "signal": "development/2.dat",
+      "signalSha256": "d90c0262bed07f6dc0183ada1904831d8759d4e18135226f3b1915a28e614b36"
+    },
+    {
+      "record": "3",
+      "split": "development",
+      "metadata": "development/3.json",
+      "metadataSha256": "05c0c2809d9989c50eceb1e0190f399d4044c0f912f8ae58ec77264650750e20",
+      "signal": "development/3.dat",
+      "signalSha256": "ea6828d46f662f1201ff6f85b4350cc86ac78c83ba8a0f703628505bb73f83f4"
+    },
+    {
+      "record": "4",
+      "split": "development",
+      "metadata": "development/4.json",
+      "metadataSha256": "52453a8b72edee13d4b5d8b92064aaa97da2e0baed51e29495251acb24c505a5",
+      "signal": "development/4.dat",
+      "signalSha256": "532af05f6881ea7b342051cb5f7a94d6ac4a962f764c19b6882dcee2784def36"
+    },
+    {
+      "record": "101",
+      "split": "control",
+      "metadata": "control/101.json",
+      "metadataSha256": "8441cc3e9ca23db5443693be2df4611e9ce0f33c9de836a34c03ebb1633e52b7",
+      "signal": "control/101.dat",
+      "signalSha256": "0dc6dcabaf4e583e8ef56cf2118c81b20b0b979c386274b2be4a0de82b0eff07"
+    },
+    {
+      "record": "102",
+      "split": "control",
+      "metadata": "control/102.json",
+      "metadataSha256": "fac668a90245e4e8f52d3c5e2e0d88260c8b0a3538fd7f4dcef11aca0f168a3b",
+      "signal": "control/102.dat",
+      "signalSha256": "99342845adf7b02f9cab23e754e3ae73454a3a7f647aeb34869986926b32ce0c"
+    },
+    {
+      "record": "103",
+      "split": "control",
+      "metadata": "control/103.json",
+      "metadataSha256": "3658620e8e0866a731ac25bde9aa3b7afe9e7604b2ccf4527c8eb654b51ac59a",
+      "signal": "control/103.dat",
+      "signalSha256": "c25f78701e2f6ace553774c0ab2f8410d4e1a5a1ea2ce11411e8a008ca1a2823"
+    },
+    {
+      "record": "104",
+      "split": "control",
+      "metadata": "control/104.json",
+      "metadataSha256": "1a3cbc71e75fec044d991012eafc96efc200a5dedc48dd9059972f45c29e17a7",
+      "signal": "control/104.dat",
+      "signalSha256": "e5f4bec2fbd0e2c0ce695f5d85a3ccb8db4fbe48bdb4ee1ae5528f2333054e32"
+    }
+  ]
+}

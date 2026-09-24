@@ -1,0 +1,101 @@
+{
+  "version": "1.2.0",
+  "source": "docs/analysis-validation-all.json",
+  "method": "Post-evaluation descriptive analysis, matched by record and annotated QRS peak. Primary protocol and detector remain unchanged; no inferential or clinical accuracy claim.",
+  "splits": {
+    "development": {
+      "onsetMs": {
+        "common": {
+          "n": 27,
+          "beforeMaeMs": 42.00000000000004,
+          "afterMaeMs": 13.925925925925927
+        },
+        "added": {
+          "n": 3,
+          "maeMs": 8.666666666667044
+        },
+        "lost": {
+          "n": 0,
+          "maeMs": null
+        }
+      },
+      "offsetMs": {
+        "common": {
+          "n": 27,
+          "beforeMaeMs": 26.962962962962937,
+          "afterMaeMs": 22.296296296296273
+        },
+        "added": {
+          "n": 3,
+          "maeMs": 9.999999999999934
+        },
+        "lost": {
+          "n": 0,
+          "maeMs": null
+        }
+      },
+      "widthMs": {
+        "common": {
+          "n": 27,
+          "beforeMaeMs": 68.96296296296305,
+          "afterMaeMs": 34.148148148148174
+        },
+        "added": {
+          "n": 3,
+          "maeMs": 9.333333333333291
+        },
+        "lost": {
+          "n": 0,
+          "maeMs": null
+        }
+      }
+    },
+    "control": {
+      "onsetMs": {
+        "common": {
+          "n": 29,
+          "beforeMaeMs": 10.344827586206913,
+          "afterMaeMs": 12.137931034482776
+        },
+        "added": {
+          "n": 4,
+          "maeMs": 13.999999999999623
+        },
+        "lost": {
+          "n": 0,
+          "maeMs": null
+        }
+      },
+      "offsetMs": {
+        "common": {
+          "n": 38,
+          "beforeMaeMs": 14.157894736842177,
+          "afterMaeMs": 9.631578947368443
+        },
+        "added": {
+          "n": 4,
+          "maeMs": 13.999999999999735
+        },
+        "lost": {
+          "n": 0,
+          "maeMs": null
+        }
+      },
+      "widthMs": {
+        "common": {
+          "n": 29,
+          "beforeMaeMs": 19.9310344827586,
+          "afterMaeMs": 21.517241379310356
+        },
+        "added": {
+          "n": 4,
+          "maeMs": 22.000000000000334
+        },
+        "lost": {
+          "n": 0,
+          "maeMs": null
+        }
+      }
+    }
+  }
+}

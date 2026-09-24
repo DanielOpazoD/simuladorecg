@@ -1,0 +1,8481 @@
+{
+  "version": "1.3.0",
+  "baselineCommit": "ad5a53261a7ac170297b32e7709ec158c2ed45c4",
+  "method": "All 313 scenarios retained. ModelScopeError is reported separately with configuration and reason; it is not a detection failure. Both analyzers receive the same admitted current-version samples. Interior 0.3–9.7 s; unique QRS support match with 30 ms margin; engineering regression, not clinical validation.",
+  "expectedTotal": 313,
+  "total": 313,
+  "compared": 283,
+  "outOfScope": 30,
+  "outOfScopeByCode": {
+    "premature-before-t": 30
+  },
+  "regressions": [],
+  "groups": [
+    {
+      "key": "defaults/sinus",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/brady",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 7,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 7,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/tachy",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 19,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 19,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/rsa",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/af",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/af_fast",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 19,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 19,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/af_slow",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 5,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 5,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/flutter",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 24,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 24,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/flutter3",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 16,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 16,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/svt",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 29,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 29,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/junctional",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 7,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 7,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/pac",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 12,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 12,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/pvc",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 12,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 12,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/bigeminy",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/trigeminy",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 10,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 10,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/couplet",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 13,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 13,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/idioventricular",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 4,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 4,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/aivr",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 12,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 12,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/vt",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 27,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 27,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/torsades",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 29,
+        "fp": 0,
+        "fn": 3
+      },
+      "after": {
+        "tp": 29,
+        "fp": 0,
+        "fn": 3
+      }
+    },
+    {
+      "key": "defaults/vf",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 0,
+        "fp": 30,
+        "fn": 0
+      },
+      "after": {
+        "tp": 0,
+        "fp": 30,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/asystole",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/av1",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/wenckebach",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 9,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 9,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/mobitz2",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 9,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 9,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/av21",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 6,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 6,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/highav",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 5,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 5,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/complete",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 7,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 7,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/complete_v",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 5,
+        "fp": 10,
+        "fn": 0
+      },
+      "after": {
+        "tp": 5,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/rbbb",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/irbbb",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/lbbb",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/lafb",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/lpfb",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/bifascicular",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/bifascicular_pr",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/wpw",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/inferior",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/inferior_lcx",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/anterior",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/lateral",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/posterior",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/rv_infarct",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/diffuse",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/subendo",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/wellens_a",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/wellens_b",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/de_winter",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/sgarbossa",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/pericarditis",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/rv_acute",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 17,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 17,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/rv_chronic",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/lvh",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/aai",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 0,
+        "fp": 10,
+        "fn": 9
+      },
+      "after": {
+        "tp": 9,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/vvi",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 10,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 10,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/ddd",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 10,
+        "fp": 10,
+        "fn": 0
+      },
+      "after": {
+        "tp": 10,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/hyperk",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 11,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/hypok",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 10,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 10,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/longqt",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 10,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 10,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/shortqt",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 10,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 10,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "defaults/lowvoltage",
+      "cases": 1,
+      "compared": 1,
+      "outOfScope": 0,
+      "before": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "variation/pvc",
+      "cases": 60,
+      "compared": 51,
+      "outOfScope": 9,
+      "before": {
+        "tp": 573,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 573,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "variation/bigeminy",
+      "cases": 60,
+      "compared": 48,
+      "outOfScope": 12,
+      "before": {
+        "tp": 561,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 561,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "variation/couplet",
+      "cases": 60,
+      "compared": 51,
+      "outOfScope": 9,
+      "before": {
+        "tp": 654,
+        "fp": 0,
+        "fn": 12
+      },
+      "after": {
+        "tp": 654,
+        "fp": 0,
+        "fn": 12
+      }
+    },
+    {
+      "key": "variation/vt",
+      "cases": 12,
+      "compared": 12,
+      "outOfScope": 0,
+      "before": {
+        "tp": 150,
+        "fp": 30,
+        "fn": 0
+      },
+      "after": {
+        "tp": 150,
+        "fp": 3,
+        "fn": 0
+      }
+    },
+    {
+      "key": "variation/hyperk",
+      "cases": 12,
+      "compared": 12,
+      "outOfScope": 0,
+      "before": {
+        "tp": 150,
+        "fp": 150,
+        "fn": 0
+      },
+      "after": {
+        "tp": 150,
+        "fp": 63,
+        "fn": 0
+      }
+    },
+    {
+      "key": "variation/complete_v",
+      "cases": 12,
+      "compared": 12,
+      "outOfScope": 0,
+      "before": {
+        "tp": 150,
+        "fp": 48,
+        "fn": 0
+      },
+      "after": {
+        "tp": 150,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "variation/aai",
+      "cases": 12,
+      "compared": 12,
+      "outOfScope": 0,
+      "before": {
+        "tp": 18,
+        "fp": 150,
+        "fn": 132
+      },
+      "after": {
+        "tp": 150,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "variation/vvi",
+      "cases": 12,
+      "compared": 12,
+      "outOfScope": 0,
+      "before": {
+        "tp": 150,
+        "fp": 0,
+        "fn": 0
+      },
+      "after": {
+        "tp": 150,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    {
+      "key": "variation/ddd",
+      "cases": 12,
+      "compared": 12,
+      "outOfScope": 0,
+      "before": {
+        "tp": 147,
+        "fp": 120,
+        "fn": 0
+      },
+      "after": {
+        "tp": 147,
+        "fp": 0,
+        "fn": 0
+      }
+    }
+  ],
+  "cases": [
+    {
+      "group": "defaults",
+      "id": "sinus",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "brady",
+      "hr": 45,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "tachy",
+      "hr": 125,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 19,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 19,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "rsa",
+      "hr": 68,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "af",
+      "hr": 95,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "af_fast",
+      "hr": 145,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 19,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 19,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "af_slow",
+      "hr": 48,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 5,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 5,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "flutter",
+      "hr": 150,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 24,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 24,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "flutter3",
+      "hr": 100,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "svt",
+      "hr": 185,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 29,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 29,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "junctional",
+      "hr": 48,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "pac",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 12,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 12,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "pvc",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 12,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 12,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "bigeminy",
+      "hr": 70,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "trigeminy",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "couplet",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 13,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 13,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "idioventricular",
+      "hr": 32,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 4,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 4,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "aivr",
+      "hr": 78,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 12,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 12,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "vt",
+      "hr": 170,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 27,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 27,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "torsades",
+      "hr": 210,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 29,
+        "fn": 3,
+        "fp": 0
+      },
+      "after": {
+        "tp": 29,
+        "fn": 3,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "vf",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 0,
+        "fn": 0,
+        "fp": 30
+      },
+      "after": {
+        "tp": 0,
+        "fn": 0,
+        "fp": 30
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "asystole",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 0,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 0,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "av1",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "wenckebach",
+      "hr": 75,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "mobitz2",
+      "hr": 75,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "av21",
+      "hr": 80,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "highav",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 5,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 5,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "complete",
+      "hr": 45,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "complete_v",
+      "hr": 30,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 5,
+        "fn": 0,
+        "fp": 10
+      },
+      "after": {
+        "tp": 5,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "rbbb",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "irbbb",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "lbbb",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "lafb",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "lpfb",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "bifascicular",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "bifascicular_pr",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "wpw",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "inferior",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "inferior_lcx",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "anterior",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "lateral",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "posterior",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "rv_infarct",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "diffuse",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "subendo",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "wellens_a",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "wellens_b",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "de_winter",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "sgarbossa",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "pericarditis",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "rv_acute",
+      "hr": 110,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 17,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 17,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "rv_chronic",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "lvh",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "aai",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 0,
+        "fn": 9,
+        "fp": 10
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "vvi",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "ddd",
+      "hr": 65,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 10
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "hyperk",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 11
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "hypok",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "longqt",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "shortqt",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "defaults",
+      "id": "lowvoltage",
+      "hr": 72,
+      "coupling": 0.58,
+      "seed": 2026,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 40,
+      "coupling": 0.2,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 40,
+      "coupling": 0.2,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 40,
+      "coupling": 0.2,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 40,
+      "coupling": 0.3,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 40,
+      "coupling": 0.3,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 40,
+      "coupling": 0.3,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 40,
+      "coupling": 0.4,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 40,
+      "coupling": 0.4,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 40,
+      "coupling": 0.4,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 40,
+      "coupling": 0.75,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 40,
+      "coupling": 0.75,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 40,
+      "coupling": 0.75,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 60,
+      "coupling": 0.2,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 60,
+      "coupling": 0.2,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 60,
+      "coupling": 0.2,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 60,
+      "coupling": 0.3,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 60,
+      "coupling": 0.3,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 60,
+      "coupling": 0.3,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 60,
+      "coupling": 0.4,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 60,
+      "coupling": 0.4,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 60,
+      "coupling": 0.4,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 60,
+      "coupling": 0.75,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 60,
+      "coupling": 0.75,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 60,
+      "coupling": 0.75,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 90,
+      "coupling": 0.2,
+      "seed": 11,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "pvc",
+        "name": "Extrasístole ventricular",
+        "seed": 11,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 90,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "pvc",
+        "coupling": 0.2,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 3,
+        "beat": 4,
+        "intervalMs": 133.33333333333331
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 90,
+      "coupling": 0.2,
+      "seed": 23,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "pvc",
+        "name": "Extrasístole ventricular",
+        "seed": 23,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 90,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "pvc",
+        "coupling": 0.2,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 3,
+        "beat": 4,
+        "intervalMs": 133.33333333333331
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 90,
+      "coupling": 0.2,
+      "seed": 71,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "pvc",
+        "name": "Extrasístole ventricular",
+        "seed": 71,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 90,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "pvc",
+        "coupling": 0.2,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 3,
+        "beat": 4,
+        "intervalMs": 133.33333333333331
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 90,
+      "coupling": 0.3,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 90,
+      "coupling": 0.3,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 90,
+      "coupling": 0.3,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 90,
+      "coupling": 0.4,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 90,
+      "coupling": 0.4,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 90,
+      "coupling": 0.4,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 90,
+      "coupling": 0.75,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 90,
+      "coupling": 0.75,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 90,
+      "coupling": 0.75,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 130,
+      "coupling": 0.2,
+      "seed": 11,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "pvc",
+        "name": "Extrasístole ventricular",
+        "seed": 11,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 130,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "pvc",
+        "coupling": 0.2,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 3,
+        "beat": 4,
+        "intervalMs": 92.30769230769221
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 130,
+      "coupling": 0.2,
+      "seed": 23,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "pvc",
+        "name": "Extrasístole ventricular",
+        "seed": 23,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 130,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "pvc",
+        "coupling": 0.2,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 3,
+        "beat": 4,
+        "intervalMs": 92.30769230769221
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 130,
+      "coupling": 0.2,
+      "seed": 71,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "pvc",
+        "name": "Extrasístole ventricular",
+        "seed": 71,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 130,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "pvc",
+        "coupling": 0.2,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 3,
+        "beat": 4,
+        "intervalMs": 92.30769230769242
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 130,
+      "coupling": 0.3,
+      "seed": 11,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "pvc",
+        "name": "Extrasístole ventricular",
+        "seed": 11,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 130,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "pvc",
+        "coupling": 0.3,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 3,
+        "beat": 4,
+        "intervalMs": 138.46153846153842
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 130,
+      "coupling": 0.3,
+      "seed": 23,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "pvc",
+        "name": "Extrasístole ventricular",
+        "seed": 23,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 130,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "pvc",
+        "coupling": 0.3,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 3,
+        "beat": 4,
+        "intervalMs": 138.46153846153842
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 130,
+      "coupling": 0.3,
+      "seed": 71,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "pvc",
+        "name": "Extrasístole ventricular",
+        "seed": 71,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 130,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "pvc",
+        "coupling": 0.3,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 3,
+        "beat": 4,
+        "intervalMs": 138.46153846153842
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 130,
+      "coupling": 0.4,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 130,
+      "coupling": 0.4,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 130,
+      "coupling": 0.4,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 130,
+      "coupling": 0.75,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 130,
+      "coupling": 0.75,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "pvc",
+      "hr": 130,
+      "coupling": 0.75,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 40,
+      "coupling": 0.2,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 40,
+      "coupling": 0.2,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 40,
+      "coupling": 0.2,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 40,
+      "coupling": 0.3,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 40,
+      "coupling": 0.3,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 40,
+      "coupling": 0.3,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 40,
+      "coupling": 0.4,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 40,
+      "coupling": 0.4,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 40,
+      "coupling": 0.4,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 40,
+      "coupling": 0.75,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 40,
+      "coupling": 0.75,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 40,
+      "coupling": 0.75,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 60,
+      "coupling": 0.2,
+      "seed": 11,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "bigeminy",
+        "name": "Bigeminismo ventricular",
+        "seed": 11,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 60,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "bigeminy",
+        "coupling": 0.2,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 6,
+        "beat": 7,
+        "intervalMs": 200.00000000000017
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 60,
+      "coupling": 0.2,
+      "seed": 23,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "bigeminy",
+        "name": "Bigeminismo ventricular",
+        "seed": 23,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 60,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "bigeminy",
+        "coupling": 0.2,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 6,
+        "beat": 7,
+        "intervalMs": 200.00000000000017
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 60,
+      "coupling": 0.2,
+      "seed": 71,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "bigeminy",
+        "name": "Bigeminismo ventricular",
+        "seed": 71,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 60,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "bigeminy",
+        "coupling": 0.2,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 6,
+        "beat": 7,
+        "intervalMs": 200.00000000000017
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 60,
+      "coupling": 0.3,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 60,
+      "coupling": 0.3,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 60,
+      "coupling": 0.3,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 60,
+      "coupling": 0.4,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 60,
+      "coupling": 0.4,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 60,
+      "coupling": 0.4,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 60,
+      "coupling": 0.75,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 60,
+      "coupling": 0.75,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 60,
+      "coupling": 0.75,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 90,
+      "coupling": 0.2,
+      "seed": 11,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "bigeminy",
+        "name": "Bigeminismo ventricular",
+        "seed": 11,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 90,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "bigeminy",
+        "coupling": 0.2,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 0,
+        "beat": 1,
+        "intervalMs": 133.33333333333331
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 90,
+      "coupling": 0.2,
+      "seed": 23,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "bigeminy",
+        "name": "Bigeminismo ventricular",
+        "seed": 23,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 90,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "bigeminy",
+        "coupling": 0.2,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 0,
+        "beat": 1,
+        "intervalMs": 133.33333333333331
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 90,
+      "coupling": 0.2,
+      "seed": 71,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "bigeminy",
+        "name": "Bigeminismo ventricular",
+        "seed": 71,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 90,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "bigeminy",
+        "coupling": 0.2,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 0,
+        "beat": 1,
+        "intervalMs": 133.33333333333331
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 90,
+      "coupling": 0.3,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 90,
+      "coupling": 0.3,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 90,
+      "coupling": 0.3,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 90,
+      "coupling": 0.4,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 90,
+      "coupling": 0.4,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 90,
+      "coupling": 0.4,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 90,
+      "coupling": 0.75,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 90,
+      "coupling": 0.75,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 90,
+      "coupling": 0.75,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 130,
+      "coupling": 0.2,
+      "seed": 11,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "bigeminy",
+        "name": "Bigeminismo ventricular",
+        "seed": 11,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 130,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "bigeminy",
+        "coupling": 0.2,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 0,
+        "beat": 1,
+        "intervalMs": 92.3076923076923
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 130,
+      "coupling": 0.2,
+      "seed": 23,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "bigeminy",
+        "name": "Bigeminismo ventricular",
+        "seed": 23,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 130,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "bigeminy",
+        "coupling": 0.2,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 0,
+        "beat": 1,
+        "intervalMs": 92.3076923076923
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 130,
+      "coupling": 0.2,
+      "seed": 71,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "bigeminy",
+        "name": "Bigeminismo ventricular",
+        "seed": 71,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 130,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "bigeminy",
+        "coupling": 0.2,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 0,
+        "beat": 1,
+        "intervalMs": 92.3076923076923
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 130,
+      "coupling": 0.3,
+      "seed": 11,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "bigeminy",
+        "name": "Bigeminismo ventricular",
+        "seed": 11,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 130,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "bigeminy",
+        "coupling": 0.3,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 0,
+        "beat": 1,
+        "intervalMs": 138.46153846153854
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 130,
+      "coupling": 0.3,
+      "seed": 23,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "bigeminy",
+        "name": "Bigeminismo ventricular",
+        "seed": 23,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 130,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "bigeminy",
+        "coupling": 0.3,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 0,
+        "beat": 1,
+        "intervalMs": 138.46153846153854
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 130,
+      "coupling": 0.3,
+      "seed": 71,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "bigeminy",
+        "name": "Bigeminismo ventricular",
+        "seed": 71,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 130,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "bigeminy",
+        "coupling": 0.3,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 0,
+        "beat": 1,
+        "intervalMs": 138.46153846153854
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 130,
+      "coupling": 0.4,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 130,
+      "coupling": 0.4,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 130,
+      "coupling": 0.4,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 130,
+      "coupling": 0.75,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 130,
+      "coupling": 0.75,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "bigeminy",
+      "hr": 130,
+      "coupling": 0.75,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 40,
+      "coupling": 0.2,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 40,
+      "coupling": 0.2,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 40,
+      "coupling": 0.2,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 40,
+      "coupling": 0.3,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 40,
+      "coupling": 0.3,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 40,
+      "coupling": 0.3,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 40,
+      "coupling": 0.4,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 40,
+      "coupling": 0.4,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 40,
+      "coupling": 0.4,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 40,
+      "coupling": 0.75,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 40,
+      "coupling": 0.75,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 40,
+      "coupling": 0.75,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 7,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 60,
+      "coupling": 0.2,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 60,
+      "coupling": 0.2,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 60,
+      "coupling": 0.2,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 60,
+      "coupling": 0.3,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 60,
+      "coupling": 0.3,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 60,
+      "coupling": 0.3,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 60,
+      "coupling": 0.4,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 60,
+      "coupling": 0.4,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 60,
+      "coupling": 0.4,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 60,
+      "coupling": 0.75,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 60,
+      "coupling": 0.75,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 60,
+      "coupling": 0.75,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 11,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 90,
+      "coupling": 0.2,
+      "seed": 11,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "couplet",
+        "name": "Dupla ventricular",
+        "seed": 11,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 90,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "couplet",
+        "coupling": 0.2,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 3,
+        "beat": 4,
+        "intervalMs": 133.33333333333331
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 90,
+      "coupling": 0.2,
+      "seed": 23,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "couplet",
+        "name": "Dupla ventricular",
+        "seed": 23,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 90,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "couplet",
+        "coupling": 0.2,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 3,
+        "beat": 4,
+        "intervalMs": 133.33333333333331
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 90,
+      "coupling": 0.2,
+      "seed": 71,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "couplet",
+        "name": "Dupla ventricular",
+        "seed": 71,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 90,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "couplet",
+        "coupling": 0.2,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 3,
+        "beat": 4,
+        "intervalMs": 133.33333333333331
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 90,
+      "coupling": 0.3,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 90,
+      "coupling": 0.3,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 90,
+      "coupling": 0.3,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 90,
+      "coupling": 0.4,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 90,
+      "coupling": 0.4,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 90,
+      "coupling": 0.4,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 90,
+      "coupling": 0.75,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 90,
+      "coupling": 0.75,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 90,
+      "coupling": 0.75,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 16,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 130,
+      "coupling": 0.2,
+      "seed": 11,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "couplet",
+        "name": "Dupla ventricular",
+        "seed": 11,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 130,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "couplet",
+        "coupling": 0.2,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 3,
+        "beat": 4,
+        "intervalMs": 92.30769230769221
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 130,
+      "coupling": 0.2,
+      "seed": 23,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "couplet",
+        "name": "Dupla ventricular",
+        "seed": 23,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 130,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "couplet",
+        "coupling": 0.2,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 3,
+        "beat": 4,
+        "intervalMs": 92.30769230769221
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 130,
+      "coupling": 0.2,
+      "seed": 71,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "couplet",
+        "name": "Dupla ventricular",
+        "seed": 71,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 130,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "couplet",
+        "coupling": 0.2,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 3,
+        "beat": 4,
+        "intervalMs": 92.30769230769242
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 130,
+      "coupling": 0.3,
+      "seed": 11,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "couplet",
+        "name": "Dupla ventricular",
+        "seed": 11,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 130,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "couplet",
+        "coupling": 0.3,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 3,
+        "beat": 4,
+        "intervalMs": 138.46153846153842
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 130,
+      "coupling": 0.3,
+      "seed": 23,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "couplet",
+        "name": "Dupla ventricular",
+        "seed": 23,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 130,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "couplet",
+        "coupling": 0.3,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 3,
+        "beat": 4,
+        "intervalMs": 138.46153846153842
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 130,
+      "coupling": 0.3,
+      "seed": 71,
+      "status": "out-of-scope",
+      "configuration": {
+        "version": 1,
+        "presetId": "couplet",
+        "name": "Dupla ventricular",
+        "seed": 71,
+        "rhythm": "sinus",
+        "av": "normal",
+        "conduction": "normal",
+        "ischemia": "none",
+        "overload": "none",
+        "hr": 130,
+        "atrialRate": 80,
+        "variability": 0.012,
+        "respiratoryRate": 14,
+        "pr": 160,
+        "qrs": 90,
+        "qtc": 410,
+        "axis": 55,
+        "pAxis": 55,
+        "tAxis": 40,
+        "pAmp": 0.15,
+        "qrsAmp": 1,
+        "tAmp": 0.28,
+        "transition": 0,
+        "septalQ": true,
+        "ectopy": "couplet",
+        "coupling": 0.3,
+        "flutterRatio": 2,
+        "escape": "junctional",
+        "pacing": "DDD",
+        "st": 2,
+        "phase": "acute",
+        "stShape": "plateau",
+        "electrolyte": "none",
+        "artifacts": {
+          "baseline": 0,
+          "muscle": 0,
+          "mains": 0,
+          "loose": 0,
+          "reversed": false
+        },
+        "filter": "diagnostic",
+        "notch": 0,
+        "mainsFrequency": 50,
+        "view": {
+          "mode": "paper",
+          "format": "3x4+1",
+          "speed": 25,
+          "gain": 10,
+          "chestGain": 10,
+          "lead": "II",
+          "grid": true,
+          "palette": "paper",
+          "pxPerMm": 3.7795275590551185,
+          "fit": true,
+          "cabrera": false,
+          "duration": 30,
+          "timing": "sequential"
+        }
+      },
+      "reason": {
+        "code": "premature-before-t",
+        "message": "Fuera del alcance del modelo: la extrasístole comienza antes del soporte T previo; este motor no representa su interacción con la conducción y la repolarización. Reduce la frecuencia o aumenta el acoplamiento de ectopia. Es un límite del simulador, no un período refractario clínico.",
+        "previousBeat": 3,
+        "beat": 4,
+        "intervalMs": 138.46153846153842
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 130,
+      "coupling": 0.4,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 24,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 24,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 130,
+      "coupling": 0.4,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 24,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 24,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 130,
+      "coupling": 0.4,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 24,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 24,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 24,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 24,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 24,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 24,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 24,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 24,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 130,
+      "coupling": 0.75,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 4,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 4,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 130,
+      "coupling": 0.75,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 4,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 4,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "couplet",
+      "hr": 130,
+      "coupling": 0.75,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 4,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 4,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vt",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 8
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 1
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vt",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 8
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 1
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vt",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 8
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 1
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vt",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 2
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vt",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 2
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vt",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 2
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vt",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vt",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vt",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vt",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vt",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vt",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "hyperk",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 6
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "hyperk",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 6
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "hyperk",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 6
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "hyperk",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 9
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "hyperk",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 9
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "hyperk",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 9
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "hyperk",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 14
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "hyperk",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 14
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "hyperk",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 14
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "hyperk",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 21
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 21
+      }
+    },
+    {
+      "group": "variation",
+      "id": "hyperk",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 21
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 21
+      }
+    },
+    {
+      "group": "variation",
+      "id": "hyperk",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 21
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 21
+      }
+    },
+    {
+      "group": "variation",
+      "id": "complete_v",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 13
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "complete_v",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 13
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "complete_v",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 13
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "complete_v",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 3
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "complete_v",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 3
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "complete_v",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 3
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "complete_v",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "complete_v",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "complete_v",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "complete_v",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "complete_v",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "complete_v",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "aai",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 6
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "aai",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 6
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "aai",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 6
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "aai",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 0,
+        "fn": 9,
+        "fp": 10
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "aai",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 0,
+        "fn": 9,
+        "fp": 10
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "aai",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 0,
+        "fn": 9,
+        "fp": 10
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "aai",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 0,
+        "fn": 14,
+        "fp": 14
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "aai",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 0,
+        "fn": 14,
+        "fp": 14
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "aai",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 0,
+        "fn": 14,
+        "fp": 14
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "aai",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 0,
+        "fn": 21,
+        "fp": 20
+      },
+      "after": {
+        "tp": 21,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "aai",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 0,
+        "fn": 21,
+        "fp": 20
+      },
+      "after": {
+        "tp": 21,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "aai",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 0,
+        "fn": 21,
+        "fp": 20
+      },
+      "after": {
+        "tp": 21,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vvi",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vvi",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vvi",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vvi",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vvi",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vvi",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 10,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vvi",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vvi",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vvi",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vvi",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vvi",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "vvi",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "ddd",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 3
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "ddd",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 3
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "ddd",
+      "hr": 40,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 3
+      },
+      "after": {
+        "tp": 6,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "ddd",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 4
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "ddd",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 4
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "ddd",
+      "hr": 60,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 4
+      },
+      "after": {
+        "tp": 9,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "ddd",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 13
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "ddd",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 13
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "ddd",
+      "hr": 90,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 13
+      },
+      "after": {
+        "tp": 14,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "ddd",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 11,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 20
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "ddd",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 23,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 20
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    },
+    {
+      "group": "variation",
+      "id": "ddd",
+      "hr": 130,
+      "coupling": 0.58,
+      "seed": 71,
+      "status": "compared",
+      "before": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 20
+      },
+      "after": {
+        "tp": 20,
+        "fn": 0,
+        "fp": 0
+      }
+    }
+  ]
+}

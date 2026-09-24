@@ -139,3 +139,15 @@ Caso, semilla y versión del motor identifican un resultado. Los JSON de esquema
 El analizador de referencia usado por el barrido sigue siendo v1.1, commit `ad5a53261a7ac170297b32e7709ec158c2ed45c4`, conservado en `tests/reference/baseline-v1.1.mjs`. Comparar ambos analizadores sobre las mismas muestras admitidas de v1.3 permite vigilar detección; no constituye una nueva comparación clínica de v1.2 con v1.3.
 
 Los resultados históricos conservan sus versiones: [v1.2](docs/verificacion-v1.2.md), [v1.1](docs/verificacion-v1.1.md) y comparación v1.0→v1.1 en `docs/fidelity-before-after.json`. La congelación anterior al primer control LUDB y la corrección posterior de auditoría de v1.2 permanecen en `docs/analysis-freeze.json` y `docs/analysis-post-freeze-review.json`; no representan una nueva congelación o reserva en v1.3.
+
+## Documentación clínica y paquete de código
+
+El [informe HTML de entrega](docs/ECG_Lab_Entrega_v1.3.html) incorpora el enfoque clínico y la verificación actuales, conservando íntegra la auditoría histórica de v1.2. El [documento clínico original](docs/referencias/Revision_ECG_SCA_Simulador.md) se conserva con los matices de [enfoque-clinico.md](docs/enfoque-clinico.md).
+
+Para regenerar el paquete descargable se necesita Python 3 y Git:
+
+```bash
+python3 scripts/package-source.py
+```
+
+Incluye los archivos de proyecto visibles para Git, excluye el propio ZIP y añade un manifiesto SHA-256. Usa fechas ZIP fijas y verifica todos los archivos empaquetados. No contiene dependencias instaladas ni historia Git; esta permanece en el repositorio.

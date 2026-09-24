@@ -1,0 +1,1072 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Auditoría multidisciplinaria de ECG Lab v1.2: seis perspectivas, 48 criterios y 72 propuestas para fortalecer fidelidad, validación y experiencia visual.">
+<title>ECG Lab v1.2 · Auditoría multidisciplinaria</title>
+<style>
+:root{color-scheme:light;--ink:#172c3b;--muted:#4b6070;--teal:#006b64;--pale:#e6f3f0;--line:#cfdbdf;--paper:#fff;--bg:#f3f6f7}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:7rem}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}a{color:var(--teal);text-decoration-thickness:1px;text-underline-offset:3px}a:hover{text-decoration-thickness:2px}a:focus-visible,[tabindex]:focus-visible{outline:3px solid #ab5600;outline-offset:4px;border-radius:3px}
+.skip{position:fixed;left:1rem;top:-5rem;z-index:100;background:#fff;padding:1rem}.skip:focus{top:1rem}.shell{max-width:1180px;margin:0 auto;padding:0 36px}.hero{background:#102e3c;color:#fff;padding:58px 0 46px;border-top:6px solid #49bbaa}.eyebrow{font-size:.76rem;font-weight:750;text-transform:uppercase;letter-spacing:.12em;margin:0 0 14px}.hero .eyebrow{color:#a8e1d5}h1{font-size:clamp(2.25rem,5vw,3.7rem);line-height:1.12;letter-spacing:-.045em;margin:0 0 20px;max-width:850px}h1 span{color:#a8e1d5}.deck{max-width:850px;color:#dfebef;font-size:1.13rem;line-height:1.65}.meta{display:flex;flex-wrap:wrap;gap:10px 26px;margin-top:30px;color:#e2ecef;font-size:.85rem}.meta strong{color:#fff}.topnav{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.98);border-bottom:1px solid var(--line)}.nav-inner{display:flex;gap:7px 20px;flex-wrap:wrap;padding-top:14px;padding-bottom:14px}.topnav a{font-size:.78rem;font-weight:700;text-decoration:none;white-space:nowrap;line-height:1.6}.topnav a:hover{text-decoration:underline}
+main{padding-top:32px;padding-bottom:52px}.summary-card{background:#fff;padding:28px 32px;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:6px}.summary-card h2{font-size:1.3rem;margin:0 0 8px}.summary-card p{margin:0}.score-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:24px 0 12px}.score-card{background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:22px;text-decoration:none;display:flex;flex-direction:column;color:var(--ink)}.score-card:hover{border-color:var(--teal);text-decoration:none}.card-label{font-size:.85rem;font-weight:750;min-height:1.5em}.card-value{font-size:2.9rem;line-height:1.2;font-weight:750;letter-spacing:-.06em;margin:9px 0 13px;color:var(--teal)}.card-value small{font-size:1rem;color:var(--muted);font-weight:500;letter-spacing:0;margin-left:5px}.card-detail{font-size:.85rem;line-height:1.6;color:var(--muted)}.method-note{font-size:.87rem;color:var(--muted);margin:14px 0 35px}.reading-links{display:flex;flex-wrap:wrap;gap:10px 24px;padding:15px 0 25px;font-weight:700;font-size:.88rem}.document{padding:12px 0 28px}.document>h2{font-size:1.75rem;margin-top:50px;border-top:1px solid var(--line);padding-top:30px;letter-spacing:-.025em}.document>h3{font-size:1.14rem;margin-top:30px}.document p,.expert-body p{margin:12px 0 18px}h2,h3,h4,h5{line-height:1.3}strong{font-weight:720}ul,ol{padding-left:24px}li{margin:8px 0}blockquote{margin:22px 0;padding:12px 22px;background:var(--pale);border-left:4px solid var(--teal)}
+.table-scroll{max-width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:5px;background:#fff;margin:22px 0}table{border-collapse:collapse;min-width:580px;width:100%;font-size:.84rem;line-height:1.55}th{background:#e9f0f2;color:#213d4b;font-weight:750;text-align:left}th,td{padding:13px 15px;vertical-align:top;border-bottom:1px solid #dbe4e7}tr:last-child td{border-bottom:0}td:first-child{font-weight:600}thead{display:table-header-group}.ref{white-space:nowrap;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.92em}code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.85em;background:#eaf0f2;border-radius:3px;padding:2px 4px;overflow-wrap:anywhere}pre{padding:18px;background:#eaf0f2;overflow-x:auto;border-radius:5px;line-height:1.55}pre code{padding:0;background:none;overflow-wrap:normal}a{overflow-wrap:anywhere}
+.expert{background:var(--paper);border:1px solid var(--line);border-radius:8px;margin:40px 0;overflow:hidden;scroll-margin-top:7rem}.expert-header{display:flex;justify-content:space-between;gap:30px;padding:32px;background:#eaf3f2;border-bottom:1px solid #c9ded9}.expert-header .eyebrow{color:#35645d}.expert-header h2{font-size:1.8rem;letter-spacing:-.03em;margin:0 0 12px}.expert-header p:last-child{margin:0;max-width:760px;color:#35534f;font-size:.95rem}.expert-score{flex:none;font-size:3.1rem;font-weight:750;line-height:1.15;color:var(--teal);letter-spacing:-.06em}.expert-score span{display:block;font-size:.95rem;font-weight:550;letter-spacing:0;text-align:right;color:#35534f}.expert-body{padding:20px 32px}.expert-body>h3{font-size:1.32rem;margin-top:36px;padding-top:22px;border-top:1px solid var(--line)}.expert-body>h4{font-size:1.05rem;margin-top:28px}.expert-body h4.proposal-heading{border-left:4px solid var(--teal);padding:9px 0 9px 14px;background:linear-gradient(90deg,#eff7f4,#fff);margin-top:30px}.expert-body .table-scroll{margin-left:0;margin-right:0}.back{border-top:1px solid var(--line);padding:15px 32px;margin:0;font-size:.83rem;font-weight:700}.endnote{font-size:.88rem;color:var(--muted);border-top:1px solid var(--line);padding:25px 0}.endnote strong{color:var(--ink)}
+@media(max-width:760px){.shell{padding-left:20px;padding-right:20px}.hero{padding:35px 0}.deck{font-size:1rem}.score-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.score-card{padding:17px}.card-detail{font-size:.81rem}.nav-inner{gap:8px 15px}.summary-card{padding:22px}.expert-header{padding:24px 20px;gap:18px}.expert-header h2{font-size:1.45rem}.expert-score{font-size:2.4rem}.expert-body{padding:12px 20px}.expert-body>h3{font-size:1.2rem}.back{padding:15px 20px}body{font-size:15px}.table-scroll{margin:18px 0}}
+@media(max-width:420px){.score-grid{grid-template-columns:1fr}.score-card{display:grid;grid-template-columns:1fr auto;column-gap:15px}.card-value{grid-column:2;grid-row:1/3;margin:0;font-size:2.3rem}.card-detail{grid-column:1;margin-top:6px}.expert-score{font-size:2rem}.topnav a{font-size:.73rem}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{@page{size:A4;margin:15mm}html{scroll-padding-top:0}body{background:#fff;font-size:10pt;color:#152c3a}.shell{max-width:none;padding:0}.hero{background:#fff;color:#142f3e;border-top:4px solid #006b64;padding:18px 0}.hero .eyebrow,.hero h1 span,.deck,.meta,.meta strong{color:#244652}h1{font-size:30pt}.topnav,.skip,.reading-links,.back{display:none}.summary-card{padding:15px}.score-grid{gap:8px}.score-card{padding:12px;break-inside:avoid}.card-value{font-size:25pt}.card-detail{font-size:8pt}.expert{break-before:page;border:0;border-radius:0;margin-top:0;overflow:visible}.expert-header{padding:18px 0;background:#fff}.expert-body{padding:0}.table-scroll{overflow:visible;border:0}table{min-width:0;font-size:8pt}td,th{padding:7px 8px}tr{break-inside:avoid}h2,h3,h4{break-after:avoid}.proposal-heading{break-after:avoid}.expert-body>h3{font-size:15pt}.expert-body>h4{font-size:12pt}a{color:#145a54}pre{white-space:pre-wrap;overflow:visible}main{padding-top:15px}}
+</style>
+</head>
+<body>
+<a class="skip" href="#contenido">Saltar al contenido</a>
+<header class="hero" id="inicio"><div class="shell"><p class="eyebrow">ECG Lab · Revisión de calidad y fidelidad</p><h1>Auditoría<br><span>multidisciplinaria.</span></h1><p class="deck">Seis perspectivas especializadas para fortalecer el simulador actual: mecanismos electrofisiológicos, representación coronaria, ingeniería, metrología y experiencia visual.</p><div class="meta"><span><strong>Versión</strong> 1.2 · d8bb0a2</span><span><strong>Fecha</strong> 24 septiembre 2026</span><span><strong>Alcance</strong> 48 criterios · 72 propuestas · 20 temas</span></div></div></header>
+<nav class="topnav" aria-label="Índice del informe"><div class="shell nav-inner"><a href="#contenido">Síntesis</a><a href="#sintesis-veinte-temas-para-agrupar-las-72-propuestas">20 temas</a><a href="#software">Software</a><a href="#electrofisiologia">Electrofisiología</a><a href="#urgencias">Urgencias / SCA</a><a href="#hemodinamia">Hemodinamia</a><a href="#visual">Diseño visual</a><a href="#imagenes">Análisis / imágenes</a></div></nav>
+<main class="shell" id="contenido">
+<section class="summary-card" aria-labelledby="main-verdict"><h2 id="main-verdict">La próxima mejora debe aumentar coherencia y evidencia.</h2><p>La estructura técnica y visual permite evolucionar de forma gradual. Las brechas principales están en la causalidad de la conducción, la regionalidad de ST–T–QRS y la validación externa de los fenotipos. Antes de ampliar el modelo, conviene cerrar las incoherencias reproducidas en controles, importación y estados.</p></section>
+<div class="score-grid" aria-label="Notas por perspectiva"><a class="score-card" href="#software"><span class="card-label">Software</span><span class="card-value">5,1<small>/7</small></span><span class="card-detail">Conservar la arquitectura y convertir contratos y verificaciones en garantías de cada entrega.</span></a><a class="score-card" href="#electrofisiologia"><span class="card-label">Electrofisiología</span><span class="card-value">3,7<small>/7</small></span><span class="card-detail">Dar causalidad a conducción, refractariedad, activación y recuperación.</span></a><a class="score-card" href="#urgencias"><span class="card-label">Urgencias / SCA</span><span class="card-value">4,2<small>/7</small></span><span class="card-detail">Hacer coherentes territorio, ST, T, controles y lectura clínica urgente.</span></a><a class="score-card" href="#hemodinamia"><span class="card-label">Hemodinamia</span><span class="card-value">3,4<small>/7</small></span><span class="card-detail">Mejorar regionalidad, evolución y proporcionalidad sin adjudicar una anatomía única.</span></a><a class="score-card" href="#visual"><span class="card-label">Diseño visual</span><span class="card-value">5,1<small>/7</small></span><span class="card-detail">Asegurar que escala, estados, accesibilidad y legibilidad sostengan la interpretación.</span></a><a class="score-card" href="#imagenes"><span class="card-label">Análisis / imágenes</span><span class="card-value">5,2<small>/7</small></span><span class="card-detail">Validar señal, imagen y análisis de forma independiente, con procedencia y controles nuevos.</span></a></div>
+<p class="method-note"><strong>Cómo leer estas notas:</strong> media simple de ocho criterios por perspectiva, en escala de 1 a 7. Son juicios de auditoría realizados por IA desde las seis áreas solicitadas; no son porcentajes de precisión, una validación clínica ni la participación de seis especialistas humanos. No se promedian entre áreas.</p>
+<div class="reading-links"><a href="#sintesis-hallazgos-transversales-con-mayor-impacto">Hallazgos de mayor impacto ↓</a><a href="#sintesis-hoja-de-ruta-recomendada">Orden de implementación ↓</a><a href="#software">Dictámenes completos ↓</a></div>
+<article class="document" aria-label="Síntesis integrada"><h2 id="sintesis-dictamen-integrado">Dictamen integrado</h2>
+<p><strong>ECG Lab tiene una base de software y presentación sólida, pero todavía no alcanza alta fidelidad electrofisiológica y coronaria de forma general.</strong> El mayor valor de la próxima etapa está en hacer coherentes los mecanismos, las ondas, los controles y la evidencia que respalda cada caso.</p>
+<p>La arquitectura actual merece conservarse: eventos, señal, medición independiente, auditoría, worker y render ya tienen responsabilidades reconocibles. La oportunidad no exige cambiar de framework ni incorporar una simulación celular tridimensional en tiempo real. Primero conviene corregir los contratos y errores observados; después, evolucionar el generador hacia estados temporales y fuentes regionales compactas, con aceptación externa definida antes de ajustar.</p>
+<p>Estas seis revisiones fueron realizadas de forma independiente por agentes de IA desde las perspectivas solicitadas. No representan la participación de seis especialistas humanos. Cada una leyó código real y expone su evidencia y límites. La nota es un juicio de auditoría frente a la meta de máxima fidelidad, no un porcentaje de precisión ni una certificación clínica.</p>
+<h3 id="sintesis-escala-y-metodo">Escala y método</h3>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Tabla desplazable"><table>
+<thead>
+<tr>
+<th>Nota</th>
+<th>Interpretación</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>Ausencia o error grave en el parámetro evaluado</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Representación muy limitada</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Implementación parcial, con brechas importantes</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Funcional, con limitaciones relevantes</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Sólido, con brechas identificadas</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Nivel muy alto, respaldado por validación amplia</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Excelencia demostrada en el alcance declarado</td>
+</tr>
+</tbody></table></div>
+<p>Cada perspectiva utiliza ocho parámetros y una media simple redondeada a un decimal. No se calcula una media clínica global: una buena interfaz no compensa una fisiología incorrecta. Los decimales ordenan prioridades; no constituyen mediciones objetivas de calidad.</p>
+<p><strong>Versión evaluada:</strong> v1.2, commit <code>d8bb0a27710de2537737f2c1b03b14ad15b62598</code>, 24 de septiembre de 2026. Se confirmó repositorio limpio, 150/150 pruebas y TypeScript correcto. Se revisaron informes de 313 escenarios sintéticos y ocho registros LUDB; esa evidencia pertenece a objetivos distintos y no se suma como si fueran pacientes independientes. La revisión en navegador se concentró en escritorio, estados del monitor y calibres. No hubo pruebas móviles reales, perfilado físico ni nuevas anotaciones clínicas humanas. Esta entrega es una auditoría: no modifica ni despliega el simulador.</p>
+<h2 id="sintesis-hallazgos-transversales-con-mayor-impacto">Hallazgos transversales con mayor impacto</h2>
+<h3 id="sintesis-1-el-programa-puede-ser-consistente-numericamente-y-estar-limitado-fisiologicamente">1. El programa puede ser consistente numéricamente y estar limitado fisiológicamente</h3>
+<p>Las pruebas de señal, la auditoría contra eventos conocidos y los hashes de regresión son útiles. No responden por sí solos si un QRS, una T hiperaguda o una secuencia de conducción se parecen a un ECG humano. La aceptación del generador debe estudiar fenotipos; la del analizador, detección y límites; la del render, conservación de muestras y escala. Mezclar estas tres preguntas produce una confianza exagerada.</p>
+<h3 id="sintesis-2-existen-incoherencias-concretas-que-deben-resolverse-antes-de-ampliar-el-modelo">2. Existen incoherencias concretas que deben resolverse antes de ampliar el modelo</h3>
+<ul>
+<li><strong>Importación:</strong> un caso con <code>rhythm=&#39;vf&#39;</code> puede mantener <code>presetId=&#39;sinus&#39;</code> y sus textos. La normalización/síntesis se reprodujo; la consecuencia en la explicación se deriva del código de presentación.</li>
+<li><strong>Selector de lesión:</strong> seleccionar «BRI con lesión concordante» desde sinusal puede conservar conducción normal y QRS de 90 ms, sin aviso. El preset completo sí configura BRI.</li>
+<li><strong>Controles activos sin contrato uniforme:</strong> ST 0→8 no modifica V2 en Wellens A/de Winter; amplitud T no actúa como un escalado global consistente en BRD/sobrecargas.</li>
+<li><strong>Prematuridad:</strong> una dupla a 250 lpm y acoplamiento 0,30, aceptada por la normalización, programa RR de 72 ms y seis solapamientos QRS en diez segundos. Falta un mecanismo o una restricción que dé significado a esa combinación; no se propone imponer un RR mínimo universal.</li>
+<li><strong>Estados visuales:</strong> se reprodujeron Congelar/CONGELADO discordantes tras cambiar de caso, y Calibres marcado aunque el canvas ya no esté en modo de medición.</li>
+</ul>
+<p>Estos hallazgos están acompañados de reproducción o lectura precisa del camino afectado. No deben confundirse con funciones ausentes que ya se declaran pendientes.</p>
+<h3 id="sintesis-3-la-region-isquemica-modifica-st-mejor-que-t-y-qrs">3. La región isquémica modifica ST mejor que T y QRS</h3>
+<p>La reciprocidad del ST inferior es una fortaleza numérica real. En cambio, hiperaguda multiplica la T basal global por 2,15 y evolutiva invierte su vector: el componente T puede ser idéntico entre territorios. El generador basal <code>qrsKernels</code> no depende de lesión/fase; el posterior añade una corrección fija de R de 0,75 mV en V1–V3. Son prioridades concretas para mejorar el trazado existente.</p>
+<p>El estado interno <code>chronic</code> aparece correctamente como «ST resuelto», con aviso de que no genera Q de necrosis. La ausencia de secuela es una limitación declarada frente a la meta futura; no se presenta como una promesa incumplida de simular infarto crónico.</p>
+<h3 id="sintesis-4-la-validacion-externa-actual-es-valiosa-pero-pequena-y-especifica">4. La validación externa actual es valiosa, pero pequeña y específica</h3>
+<p>En los cuatro controles LUDB se conservaron 43/43 QRS detectados dentro de la ventana evaluada. La duración QRS pasó de MAE 19,9 a 21,6 ms; sobre los mismos 29 latidos, de 19,9 a 21,5 ms. No demuestra mejora universal de delineación, y tampoco valida ST/T, morfología coronaria ni imágenes. Los controles ya están expuestos; otra iteración necesita una reserva nueva fijada antes del ajuste.</p>
+<p>La demostración de alta fidelidad deberá incluir datos autorizados, separación por paciente y origen, criterios definidos previamente y revisión humana ciega. Propuestas de datos como STAFF III ayudan a estudiar cambios intraindividuales, pero su isquemia inducida y configuración de electrodos no equivalen a toda la urgencia coronaria.</p>
+<h2 id="sintesis-veinte-temas-para-agrupar-las-72-propuestas">Veinte temas para agrupar las 72 propuestas</h2>
+<p>Las referencias conservan la identidad de cada propuesta original. Las tareas relacionadas pueden compartir implementación, pero deben conservar los criterios de aceptación de las perspectivas implicadas.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Tabla desplazable"><table>
+<thead>
+<tr>
+<th>Tema</th>
+<th>Resultado buscado</th>
+<th>Propuestas relacionadas</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>01. Contratos y combinaciones permitidas</td>
+<td>Mismo significado entre control, caso, señal y explicación; ninguna combinación sin interpretación silenciosa</td>
+<td><a class="ref" href="#SW-01">SW-01</a>, <a class="ref" href="#SW-03">SW-03</a>, <a class="ref" href="#EP-01">EP-01</a>, <a class="ref" href="#ACS-04">ACS-04</a>, <a class="ref" href="#ACS-05">ACS-05</a>, <a class="ref" href="#HEM-11">HEM-11</a></td>
+</tr>
+<tr>
+<td>02. Regresión que protege la entrega</td>
+<td>Detectar errores de ambos signos, cambios precordiales y fallos de recorridos existentes</td>
+<td><a class="ref" href="#SW-02">SW-02</a>, <a class="ref" href="#SW-07">SW-07</a>, <a class="ref" href="#V12">V12</a></td>
+</tr>
+<tr>
+<td>03. Unidades e independencia de resultados</td>
+<td>Separar muestras, unidades, análisis autónomo y auditoría con información del generador</td>
+<td><a class="ref" href="#SW-04">SW-04</a>, <a class="ref" href="#A04">A04</a></td>
+</tr>
+<tr>
+<td>04. Estados, recuperación y reloj</td>
+<td>Botones, trazado, audio y recuperación reflejan la misma configuración vigente</td>
+<td><a class="ref" href="#SW-05">SW-05</a>, <a class="ref" href="#SW-12">SW-12</a>, <a class="ref" href="#V01">V01</a></td>
+</tr>
+<tr>
+<td>05. Mantenibilidad de la presentación</td>
+<td>Reducir concentración de responsabilidades y duplicación de estilos</td>
+<td><a class="ref" href="#SW-06">SW-06</a>, <a class="ref" href="#V11">V11</a></td>
+</tr>
+<tr>
+<td>06. Rendimiento medido</td>
+<td>Mejorar el camino costoso sin perder muestras ni extremos</td>
+<td><a class="ref" href="#SW-08">SW-08</a>, <a class="ref" href="#V10">V10</a></td>
+</tr>
+<tr>
+<td>07. Metrología visual y temporal</td>
+<td>Pantalla, PNG, calibre, J/ST y columnas conservan escalas y tiempos</td>
+<td><a class="ref" href="#SW-09">SW-09</a>, <a class="ref" href="#ACS-02">ACS-02</a>, <a class="ref" href="#V07">V07</a>, <a class="ref" href="#V08">V08</a>, <a class="ref" href="#V09">V09</a>, <a class="ref" href="#A01">A01</a>, <a class="ref" href="#A02">A02</a></td>
+</tr>
+<tr>
+<td>08. Incertidumbre útil</td>
+<td>Distinguir consistencia, exactitud, abstención y motivos de rechazo</td>
+<td><a class="ref" href="#SW-10">SW-10</a>, <a class="ref" href="#V06">V06</a>, <a class="ref" href="#A08">A08</a></td>
+</tr>
+<tr>
+<td>09. Reproducción entre versiones</td>
+<td>Vincular informes, código, datos, muestras e imágenes</td>
+<td><a class="ref" href="#SW-11">SW-11</a>, <a class="ref" href="#A03">A03</a></td>
+</tr>
+<tr>
+<td>10. Conducción y estimulación causal</td>
+<td>Compartir recuperación, llegada de impulsos y temporización</td>
+<td><a class="ref" href="#EP-02">EP-02</a>, <a class="ref" href="#EP-03">EP-03</a>, <a class="ref" href="#EP-10">EP-10</a></td>
+</tr>
+<tr>
+<td>11. Activación y proyección regional</td>
+<td>Dar morfología distinta a regiones, vías y orígenes sin un motor pesado en cada frame</td>
+<td><a class="ref" href="#EP-04">EP-04</a>, <a class="ref" href="#EP-05">EP-05</a>, <a class="ref" href="#EP-09">EP-09</a>, <a class="ref" href="#HEM-03">HEM-03</a>, <a class="ref" href="#HEM-04">HEM-04</a></td>
+</tr>
+<tr>
+<td>12. Secuencia auricular</td>
+<td>P y Ta dependientes de activación AD/AI</td>
+<td><a class="ref" href="#EP-06">EP-06</a></td>
+</tr>
+<tr>
+<td>13. Recuperación y evolución</td>
+<td>QT, fases, secuela y dinámica ventricular con estados definidos</td>
+<td><a class="ref" href="#EP-07">EP-07</a>, <a class="ref" href="#EP-11">EP-11</a>, <a class="ref" href="#HEM-02">HEM-02</a>, <a class="ref" href="#HEM-07">HEM-07</a></td>
+</tr>
+<tr>
+<td>14. ST–T primario y secundario</td>
+<td>Repolarización territorial y proporcional a la activación</td>
+<td><a class="ref" href="#EP-08">EP-08</a>, <a class="ref" href="#ACS-03">ACS-03</a>, <a class="ref" href="#ACS-09">ACS-09</a>, <a class="ref" href="#HEM-01">HEM-01</a>, <a class="ref" href="#HEM-08">HEM-08</a></td>
+</tr>
+<tr>
+<td>15. Validación específica de generador y analizador</td>
+<td>Evaluar por separado los fenotipos del generador y los límites del analizador mediante nuevas referencias externas</td>
+<td><a class="ref" href="#EP-12">EP-12</a>, <a class="ref" href="#ACS-12">ACS-12</a>, <a class="ref" href="#HEM-12">HEM-12</a>, <a class="ref" href="#A06">A06</a>, <a class="ref" href="#A12">A12</a></td>
+</tr>
+<tr>
+<td>16. Lenguaje clínico</td>
+<td>Observar patrón, interpretar mecanismo y reconocer límites sin adjudicar certeza falsa</td>
+<td><a class="ref" href="#ACS-01">ACS-01</a>, <a class="ref" href="#ACS-11">ACS-11</a></td>
+</tr>
+<tr>
+<td>17. Verificación desde imágenes</td>
+<td>Recuperar el ECG visible y estudiar errores de captura de forma independiente</td>
+<td><a class="ref" href="#A09">A09</a>, <a class="ref" href="#A10">A10</a>, <a class="ref" href="#A11">A11</a></td>
+</tr>
+<tr>
+<td>18. Patrones existentes difíciles</td>
+<td>Afinar posterior, VD, Wellens, de Winter, pericarditis y ST difuso</td>
+<td><a class="ref" href="#ACS-06">ACS-06</a>, <a class="ref" href="#ACS-07">ACS-07</a>, <a class="ref" href="#ACS-08">ACS-08</a>, <a class="ref" href="#ACS-10">ACS-10</a>, <a class="ref" href="#HEM-05">HEM-05</a>, <a class="ref" href="#HEM-06">HEM-06</a>, <a class="ref" href="#HEM-09">HEM-09</a>, <a class="ref" href="#HEM-10">HEM-10</a></td>
+</tr>
+<tr>
+<td>19. Accesibilidad y lectura móvil</td>
+<td>Poder operar y leer las mismas herramientas con teclado, tacto y ayudas técnicas</td>
+<td><a class="ref" href="#V02">V02</a>, <a class="ref" href="#V03">V03</a>, <a class="ref" href="#V04">V04</a>, <a class="ref" href="#V05">V05</a></td>
+</tr>
+<tr>
+<td>20. Evaluación sin filtración de respuestas</td>
+<td>Separar paciente/origen y retirar pistas diagnósticas del material de prueba</td>
+<td><a class="ref" href="#A05">A05</a>, <a class="ref" href="#A07">A07</a></td>
+</tr>
+</tbody></table></div>
+<h2 id="sintesis-hoja-de-ruta-recomendada">Hoja de ruta recomendada</h2>
+<h3 id="sintesis-entrega-1-corregir-incoherencias-observadas">Entrega 1 · Corregir incoherencias observadas</h3>
+<p>Cerrar importación/preset, equivalencia del selector Sgarbossa, controles ST/T sin efecto, estados de pausa/calibres y aserción eléctrica unilateral. Definir la conducta de las combinaciones de prematuridad que el motor aún no representa. Las pruebas deben reproducir los fallos antes de corregirlos y verificar los caminos normales junto a ellos. Son cambios localizados y de alto valor docente.</p>
+<p><strong>Salida verificable:</strong> ninguna de las reproducciones de esta auditoría pasa silenciosamente; un cambio de control vigente tiene un efecto definido o se indica que no aplica. Las pruebas de las ocho derivaciones independientes detectan una alteración precordial aislada.</p>
+<h3 id="sintesis-entrega-2-establecer-como-se-medira-la-fidelidad">Entrega 2 · Establecer cómo se medirá la fidelidad</h3>
+<p>Crear aceptación por fenotipo para los patrones actuales; separar error del generador, del analizador y del render. Seleccionar datos nuevos y reservar controles por paciente/origen antes de ajustar. Automatizar identidad de versión, datos, informes y pruebas de entrega. Esta preparación puede realizarse en paralelo a las correcciones de la entrega 1.</p>
+<p><strong>Salida verificable:</strong> cada familia tiene criterios, denominadores, casos frontera y límites conocidos; se identifica qué evidencia es sintética y cuál proviene de registros humanos. Las métricas incluyen errores extremos y abstención, no solo medias.</p>
+<h3 id="sintesis-entrega-3-mejorar-primero-st-t-y-los-patrones-coronarios-actuales">Entrega 3 · Mejorar primero ST–T y los patrones coronarios actuales</h3>
+<p>Regionalizar T hiperaguda/evolutiva; calibrar repolarización secundaria en BRI/estimulación; corregir R fija posterior y los parches de Wellens/de Winter. Mantener las identidades eléctricas y el nombre prudente de los patrones. Cada familia debe poder compararse antes/después con la aceptación definida en la entrega 2.</p>
+<p><strong>Salida verificable:</strong> ST, T, QRS y texto describen el mismo caso; los cambios regionales no invierten toda la T por una lesión localizada; no se fuerza una anatomía coronaria única a partir del ECG.</p>
+<h3 id="sintesis-entrega-4-dar-causalidad-a-conduccion-y-origen-ventricular">Entrega 4 · Dar causalidad a conducción y origen ventricular</h3>
+<p>Introducir un planificador pequeño con recuperación y demoras. En paralelo, prototipar activación regional para normales, ramas, ectopia y estimulación. Conservar <code>Signal</code>, el worker y la presentación. Mostrar beneficio cuantitativo en una familia antes de migrar todas.</p>
+<p><strong>Salida verificable:</strong> cada evento tiene una causa y una respuesta al estado previo; las vías/orígenes producen morfologías justificadas. FA/flutter y los modos de estimulación se integran después sobre esa base, siguiendo las dependencias de <a class="ref" href="#EP-02">EP-02</a>/04.</p>
+<h3 id="sintesis-entrega-5-afinar-recuperacion-muestreo-y-delineacion">Entrega 5 · Afinar recuperación, muestreo y delineación</h3>
+<p>Separar respuesta rápida/lenta de repolarización y revisar el tratamiento de impulsos a distintas frecuencias. Mejorar inicio QRS, P/T y abstención con un protocolo externo nuevo. No utilizar los cuatro controles expuestos para calibrar una nueva regla y después volver a presentarlos como independientes.</p>
+<p><strong>Salida verificable:</strong> mejora de error y cobertura predefinidos en controles nuevos; ningún descenso aparente del error se obtiene únicamente retirando los casos difíciles. Las advertencias identifican mejor las situaciones donde queda error residual.</p>
+<h3 id="sintesis-entrega-6-consolidar-metrologia-y-experiencia-visual">Entrega 6 · Consolidar metrología y experiencia visual</h3>
+<p>Corregir accesibilidad y contraste; preservar escala vertical al comparar latidos; hacer más visible el tiempo de cada columna; comprobar pantalla, impresión y PNG. Medir rendimiento en equipos de referencia antes de introducir cachés o capas nuevas. Puede avanzar en paralelo a la fisiología.</p>
+<p><strong>Salida verificable:</strong> calibración desde el archivo terminado; recorridos de teclado y tacto completos; coherencia de estados; presupuestos de rendimiento documentados y dispositivos realmente probados.</p>
+<h3 id="sintesis-entrega-7-usar-imagenes-como-comprobacion-externa-del-producto">Entrega 7 · Usar imágenes como comprobación externa del producto</h3>
+<p>Una vez estabilizada la geometría, ejecutar fuera del navegador una verificación señal → PNG → señal con un digitalizador independiente. Separar sus errores de los errores del render, conservar solo tramos visibles y eliminar pistas diagnósticas en el conjunto de evaluación.</p>
+<p><strong>Salida verificable:</strong> error temporal y en mV por derivación/región, conservación de ST y amplitudes, y degradaciones ópticas documentadas. No es necesario integrar IA de imágenes como función del simulador para obtener este beneficio.</p>
+<h2 id="sintesis-decisiones-de-arquitectura">Decisiones de arquitectura</h2>
+<ul>
+<li><strong>Conservar:</strong> TypeScript, Canvas, worker, separación de análisis y auditoría, casos reproducibles, identidades de extremidades y transparencia de límites.</li>
+<li><strong>Evolucionar gradualmente:</strong> calendario de eventos hacia estados causales; kernels globales hacia unas pocas fuentes regionales; pruebas puntuales hacia contratos de fenotipo y evaluación reservada.</li>
+<li><strong>Exigir evidencia antes de aumentar complejidad:</strong> rendimiento medido antes de optimizar; prototipo regional comparado antes de migrar; nuevo conjunto de control antes de ajustar.</li>
+<li><strong>Postergar:</strong> ampliación del catálogo, nuevas pantallas terapéuticas, reconstrucción anatómica completa y entrenamiento de un gran clasificador. No son el paso que más mejora la fiabilidad de los casos actuales.</li>
+</ul>
+<p>Las propuestas con revisión de especialistas y datos clínicos requieren esa colaboración externa: una IA puede preparar el protocolo y automatizar mediciones, pero no sustituye la adjudicación humana independiente. Los tamaños S/M/L del informe expresan complejidad relativa; cualquier estimación temporal de los dictámenes es orientativa y depende de acceso a datos, dispositivos y revisores.</p>
+</article>
+<section class="expert" id="software" aria-labelledby="software-title">
+  <header class="expert-header"><div><p class="eyebrow">Perspectiva 01 · 8 criterios · 12 propuestas</p><h2 id="software-title">Ingeniería de software</h2><p>Conservar la arquitectura y convertir contratos y verificaciones en garantías de cada entrega.</p></div><div class="expert-score" aria-label="Nota 5,1 de siete">5,1<span>/ 7</span></div></header>
+  <div class="expert-body"><p>Proyecto: ECG Lab v1.2. Commit revisado: <code>d8bb0a27710de2537737f2c1b03b14ad15b62598</code>.</p>
+<h3 id="software-dictamen">Dictamen</h3>
+<p>La estructura permite seguir mejorando el simulador sin reescribirlo. El motor, el medidor, la auditoría del modelo, el renderizado y la cola de trabajo tienen responsabilidades reconocibles. Destacan la independencia del medidor respecto del generador, las transiciones puras de controles, los datos de referencia trazables y la publicación explícita de resultados desfavorables. La brecha principal ya no es la ausencia de arquitectura: es convertir las verificaciones y los contratos que existen en garantías sistemáticas que acompañen cada cambio.</p>
+<p><strong>Nota global: 5,1/7</strong>, media simple de ocho parámetros, sin ponderación por número de pruebas: <code>(5,5 + 5 + 5,5 + 5 + 4 + 5 + 4,5 + 6) / 8 = 5,0625</code>.</p>
+<p>Escala: 1 ausente o incorrecto grave; 2 muy limitado; 3 parcial; 4 funcional con límites relevantes; 5 sólido con brechas identificadas; 6 nivel muy alto con validación amplia; 7 referencia excepcional demostrada. Las notas son juicio técnico de esta revisión, no certificación.</p>
+<h3 id="software-parametros-evaluados">Parámetros evaluados</h3>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Tabla desplazable"><table>
+<thead>
+<tr>
+<th>Parámetro</th>
+<th align="right">Nota</th>
+<th>Evidencia y fortalezas</th>
+<th>Brecha que limita la nota</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Separación de responsabilidades y mantenibilidad</td>
+<td align="right">5,5</td>
+<td><code>engine/signal.ts</code>, <code>measure.ts</code>, <code>analysis/model-audit.ts</code>, <code>render/ecg.ts</code>, <code>ui/signal-controller.ts</code> separan síntesis, medición, auditoría, dibujo y ejecución. <code>ui/case-state.ts/changeCase</code> es una transición pura.</td>
+<td><code>main.ts</code> concentra 956 líneas, variables globales, composición de pantallas, práctica, exportación, audio y eventos. Es una concentración de cambios, aunque no justifica introducir un framework.</td>
+</tr>
+<tr>
+<td>Contratos, tipos y consistencia del estado</td>
+<td align="right">5,0</td>
+<td>TypeScript estricto; <code>SignalRequest/SignalResponse</code>; <code>normalizeCase</code> valida versión, enum, números finitos y límites; la importación limita tamaño.</td>
+<td>Las unidades ms/s se distinguen por convención y hay conversiones mediante cast. Más importante: una importación puede conservar un <code>presetId</code> incompatible con su fisiología y presentar hallazgos de otro caso.</td>
+</tr>
+<tr>
+<td>Corrección e independencia numérica</td>
+<td align="right">5,5</td>
+<td><code>measure</code> solo acepta muestras y frecuencia; la auditoría conserva candidatos y rechaza sin sustituirlos por la verdad del generador. Hay pruebas independientes para límites, impulsos, T bifásica, offset DC y dependencia entre medidas.</td>
+<td>Muchos contratos numéricos se basan todavía en ejemplos puntuales. Una aserción de Einthoven es unilateral y los snapshots del catálogo calculan el hash exclusivamente de II. No equivalen a validación de todas las derivaciones.</td>
+</tr>
+<tr>
+<td>Calidad y alcance de las pruebas</td>
+<td align="right">5,0</td>
+<td>Pruebas de propiedades eléctricas, reloj, filtros, fixtures analíticos, asociación de latidos, cola y registros externos. Los tests de delineación exigen cobertura mínima y evitan aprobar por devolver todo nulo.</td>
+<td><code>tests/browser-smoke.mjs</code> es opcional y no forma parte de <code>npm test</code>. La cola se prueba con un Worker simulado, sin fallos ni transferencia real. El corpus externo automatizado usa cuatro registros de desarrollo.</td>
+</tr>
+<tr>
+<td>Resiliencia y recuperación</td>
+<td align="right">4,0</td>
+<td><code>invalidateSignal</code> retira la señal y medidas antiguas mientras se recalcula; el controlador omite respuestas obsoletas y conserva solo la última petición pendiente. Guardado/importación ofrecen manejo de errores.</td>
+<td>No existe protocolo explícito de recreación del Worker, vencimiento de peticiones ni prueba de recuperación tras un error. El código de error sugiere recargar mientras el callback de interfaz sugiere Restablecer; falta demostrar que ese reintento recupera el motor.</td>
+</tr>
+<tr>
+<td>Rendimiento y uso de recursos</td>
+<td align="right">5,0</td>
+<td>Worker separado, transferencia de buffers, coalescencia, debounce y trazado min/max por píxel. Monitor conserva una imagen de fondo y dibuja porciones de la señal.</td>
+<td>No se han observado mediciones de latencia, memoria o rendimiento en hardware real. Se sintetizan 65 s por petición y durante el arrastre del calibre se vuelve a ejecutar el dibujo completo. Son oportunidades que deben medirse antes de optimizar.</td>
+</tr>
+<tr>
+<td>Entrega repetible y mantenimiento de verificaciones</td>
+<td align="right">4,5</td>
+<td><code>package-lock.json</code>, comandos de comprobación, scripts de comparación y congelación con hashes; baseline compilado y licencia externa conservados.</td>
+<td>No se observó un gate de CI versionado. El smoke depende de una instalación opcional; Node no se fija en <code>package.json</code>; varios scripts importan <code>esbuild</code> como dependencia transitiva y repiten la versión manualmente.</td>
+</tr>
+<tr>
+<td>Documentación y trazabilidad de límites</td>
+<td align="right">6,0</td>
+<td><code>docs/modelo.md</code>, <code>verificacion.md</code>, corpus LUDB y reportes detallan protocolo, cobertura, denominadores, fallos, control expuesto y corrección posterior a la congelación.</td>
+<td>Falta una matriz breve que vincule cada garantía con su prueba y la evidencia de entrega; los informes manuales pueden quedar desactualizados respecto del código. No se descuenta por admitir límites: admitirlos aumenta la confianza de la documentación.</td>
+</tr>
+</tbody></table></div>
+<h3 id="software-hallazgo-reproducido-de-mayor-prioridad">Hallazgo reproducido de mayor prioridad</h3>
+<p>Se ejecutó un bundle en memoria, sin modificar el repositorio, con <code>normalizeCase({...DEFAULT_CASE, rhythm: &#39;vf&#39;})</code> seguido de <code>synthesize(c, 10)</code> y <code>presetById(c.presetId)</code>.</p>
+<p>Resultado: el caso normalizado conserva <code>rhythm=&#39;vf&#39;</code>, <code>presetId=&#39;sinus&#39;</code> y <code>name=&#39;Ritmo sinusal&#39;</code>. La señal generada tiene muestras no nulas, sin eventos auriculares ni ventriculares organizados, como corresponde al camino de FV. El preset consultado conserva el mecanismo «Activación auricular sinusal seguida de conducción AV 1:1» y hallazgos como «PR constante; QRS estrecho». <code>main.ts/renderInfo</code> utiliza esos datos por ID sin contrastar la configuración.</p>
+<p>El resultado de normalización y síntesis fue observado directamente; la salida visual exacta se infiere de <code>renderInfo</code>, no se verificó en navegador por este revisor. No afecta al cambio habitual por controles, que sí asigna <code>presetId=&#39;custom&#39;</code>. Afecta al camino existente de importación JSON o enlace de caso con parámetros discordantes.</p>
+<h3 id="software-doce-propuestas-factibles">Doce propuestas factibles</h3>
+<p>Esfuerzo orientativo: S = 1–2 jornadas; M = 3–5 jornadas; L = 1–2 semanas, para un desarrollador familiarizado con el código, incluyendo las pruebas específicas. Prioridades: P0 corregir primero; P1 siguiente iteración; P2 posterior a medición o a las correcciones anteriores.</p>
+<h4 id="SW-01" class="proposal-heading">SW-01. Evitar etiquetas clínicas incoherentes al importar — P0 · S</h4>
+<p><strong>Problema:</strong> el <code>presetId</code> puede describir un caso distinto de la señal. <strong>Implementación:</strong> comparar los parámetros fisiológicos normalizados con la definición del preset, excluyendo vista y nombre libre; si discrepan, utilizar el contexto personalizado y conservar la procedencia solo como metadato interno si se necesita. Centralizar esta decisión para importación, enlaces y casos guardados. <strong>Aceptación:</strong> importar sinusal modificado a FV, BAV o isquemia nunca muestra los hallazgos del preset original; importar un preset intacto conserva su contexto; cambiar solo ganancia no lo convierte en personalizado.</p>
+<h4 id="SW-02" class="proposal-heading">SW-02. Corregir la prueba eléctrica y proteger las derivaciones independientes — P1 · S</h4>
+<p><strong>Problema:</strong> <code>III - (II - I) &lt; 1e-9</code> permite discrepancias negativas arbitrarias; los 61 snapshots solo protegen II. <strong>Implementación:</strong> comprobar error absoluto y agregar invariantes/snapshots para I, II y V1–V6, de los que se derivan las otras cuatro derivaciones. Conservar pruebas morfológicas semánticas, que explican qué significa un cambio. <strong>Aceptación:</strong> introducir deliberadamente discrepancias de ambos signos hace fallar la prueba; alterar solo una precordial también se detecta. No reemplazar los valores esperados para acomodar una regresión.</p>
+<h4 id="SW-03" class="proposal-heading">SW-03. Probar sistemáticamente el espacio de parámetros permitido — P1 · M</h4>
+<p><strong>Problema:</strong> las combinaciones pueden fallar aunque cada preset por defecto pase. <strong>Implementación:</strong> matriz reproducible de valores frontera y semillas para FC, PR, QRS, QTc, acoplamiento, ruido y filtros; comprobar orden temporal, muestras finitas, invariancia de vista, independencia del prefijo y coherencia de medidas aceptadas. Separar expresamente el dominio normalizado del estrés fuera de contrato: el barrido actual incluye <code>coupling=0.2</code>, mientras la interfaz admite mínimo 0.3. <strong>Aceptación:</strong> cada fallo informa semilla y configuración mínima reproducible; ambas categorías se reportan por separado y ninguna regresión conocida desaparece por pérdida de cobertura.</p>
+<h4 id="SW-04" class="proposal-heading">SW-04. Consolidar contratos de señal y unidades — P1 · M</h4>
+<p><strong>Problema:</strong> eventos en segundos, controles/intervalos en milisegundos y muestras de distintos tipos comparten tipos <code>number</code> o contratos implícitos. <strong>Implementación:</strong> un contrato pequeño <code>SampleSignal</code> independiente del generador, soporte explícito de los arrays utilizados y funciones tipadas de conversión ms/s/índices. Validar dimensiones y <code>fs</code> en los puntos de entrada ya existentes, no dentro de cada bucle de muestras. <strong>Aceptación:</strong> fixtures equivalentes conservan resultados; una duración negativa, <code>fs</code> no finita o longitud de canal incompatible produce un error explicativo; un error intencional de unidades en los límites es detectable por tipos o prueba de contrato.</p>
+<h4 id="SW-05" class="proposal-heading">SW-05. Recuperar el motor tras errores sin conservar estados engañosos — P1 · M</h4>
+<p><strong>Problema:</strong> hay manejo de error, pero no recuperación demostrada. <strong>Implementación:</strong> recrear el Worker tras fallo, reintentar como máximo una vez la última configuración válida y mantener identificadores de generación. Añadir un vencimiento basado en un presupuesto medido y un estado terminal claro; unificar el texto de reintento. <strong>Aceptación:</strong> error de inicialización, error durante el cálculo y respuesta tardía no publican una señal obsoleta; Restablecer recupera una señal nueva o ofrece un error estable; no se generan bucles de reintentos.</p>
+<h4 id="SW-06" class="proposal-heading">SW-06. Reducir las responsabilidades de <code>main.ts</code> — P1 · M</h4>
+<p><strong>Problema:</strong> una modificación de exportación, práctica o reproducción comparte archivo y estado con la coordinación del análisis. <strong>Implementación:</strong> extraer controladores pequeños para diálogos/exportación, reproducción/audio y práctica, manteniendo <code>main.ts</code> como composición de los módulos existentes. Hacer explícitas las entradas y callbacks; no incorporar un framework ni un contenedor de dependencias. <strong>Aceptación:</strong> el cambio conserva los mismos casos, URLs, exportaciones e interacciones; la lógica de cada flujo puede probarse sin inicializar el resto de la aplicación y el smoke sigue pasando.</p>
+<h4 id="SW-07" class="proposal-heading">SW-07. Establecer un gate de entrega reproducible — P1 · M</h4>
+<p><strong>Problema:</strong> una colección buena de verificaciones no protege una entrega si varias quedan opcionales. <strong>Implementación:</strong> un comando versionado que ejecute tipos, unidades, smoke y regresión de desarrollo; fijar versión de Node y declarar las herramientas usadas directamente. Configurar ese mismo comando en el runner disponible, sin añadir infraestructura ajena al repositorio. <strong>Aceptación:</strong> un checkout limpio ejecuta el flujo documentado; un test fallido bloquea la entrega; el reporte identifica commit, runtime, versión y conjunto ejecutado. El control reservado solo se evalúa según su protocolo.</p>
+<h4 id="SW-08" class="proposal-heading">SW-08. Medir rendimiento y optimizar el camino que resulte costoso — P2 · M</h4>
+<p><strong>Problema:</strong> existen buenas decisiones de rendimiento, pero no datos para saber dónde está el límite. <strong>Implementación:</strong> medir p50/p95 de generación, actualización de interfaz, arrastre y exportación en una máquina de referencia y un móvil. Si se confirma el coste de redibujar el ECG con cada movimiento, reutilizar la capa estática del trazado y pintar los calibres aparte. <strong>Aceptación:</strong> presupuesto establecido antes de optimizar, ausencia de regresión mayor del 20% en el equipo de referencia y misma geometría/señal renderizada. No declarar 60 fps sin medirlos.</p>
+<h4 id="SW-09" class="proposal-heading">SW-09. Verificar exportación y calibres como una sola geometría — P1 · M</h4>
+<p><strong>Problema:</strong> la exactitud visual depende de que pantalla, calibre y PNG compartan conversiones; existen pruebas de layout, pero no una verificación completa del archivo exportado. <strong>Implementación:</strong> fixtures de amplitud y tiempo conocidos en todos los formatos, velocidades, ganancias y polaridad Cabrera; inspeccionar dimensiones, pulso de calibración y chunk <code>pHYs</code> del PNG. <strong>Aceptación:</strong> 1 mV y 200 ms mantienen su medida en pantalla, calibre y archivo; el PNG contiene densidad válida de 300 dpi; no hay recortes en los casos de amplitud límite.</p>
+<h4 id="SW-10" class="proposal-heading">SW-10. Separar códigos de calidad de sus textos de presentación — P1 · M</h4>
+<p><strong>Problema:</strong> la evidencia y el rechazo se expresan fundamentalmente en cadenas de texto; causas sucesivas pueden sobrescribirse y algunas pruebas dependen de una frase. <strong>Implementación:</strong> códigos tipados y una lista corta de causas con origen analizador/auditoría; traducirlos a los textos actuales en la interfaz. Mantener los candidatos crudos y las dependencias de rechazo. <strong>Aceptación:</strong> cambiar una frase no rompe la prueba lógica; un QRS retirado conserva la causa primaria y la propagación a PR/QT/eje; las cifras y estados visibles no cambian sin una decisión explícita.</p>
+<h4 id="SW-11" class="proposal-heading">SW-11. Hacer verificable la correspondencia entre código, informes y dataset — P1 · M</h4>
+<p><strong>Problema:</strong> hay buena trazabilidad, pero varios campos de versión y reportes se actualizan manualmente. <strong>Implementación:</strong> manifiesto de ejecución con hash del detector, lector, fixtures, configuración y baseline; extraer versión desde <code>package.json</code>; comprobar que un informe publicado corresponde al código evaluado. Registrar casos conocidos como regresiones identificables. <strong>Aceptación:</strong> un informe obsoleto se detecta automáticamente; el mismo código y datos reproducen los recuentos y errores; un cambio posterior a congelación queda declarado. Para ajustar el detector en otra iteración se define una nueva reserva no observada.</p>
+<h4 id="SW-12" class="proposal-heading">SW-12. Unificar el reloj de reproducción y sincronización con audio — P1 · M</h4>
+<p><strong>Problema:</strong> <code>main.ts/animate</code> y <code>render/ecg.ts/Monitor.frame</code> duplican la traducción entre tiempo de reproducción y posición dentro del buffer; el audio busca eventos en una ventana muy breve por frame. <strong>Implementación:</strong> una función pura compartida para tiempo fuente, vuelta y posición, y detección de eventos atravesados entre dos instantes consecutivos. Conservar la reproducción finita existente. <strong>Aceptación:</strong> pausar, reanudar, cambiar velocidad, perder frames o cruzar el retorno del buffer no duplica ni omite pitidos por el mecanismo de muestreo de frames; cursor, señal y audio usan el mismo instante fuente. Verificar también el límite de reproducción, sin afirmar señal infinita.</p>
+<h3 id="software-tres-riesgos-prioritarios">Tres riesgos prioritarios</h3>
+<ol>
+<li><strong>Coherencia semántica del caso importado:</strong> puede enseñar hallazgos de un preset distinto de la señal. Reproducido en normalización/síntesis y sustentado por el renderizador de información.</li>
+<li><strong>Confianza excesiva en una suite incompleta:</strong> el fallo unilateral de la identidad eléctrica, snapshots exclusivos de II y smoke opcional dejan huecos concretos. Tener 150 pruebas no prueba que todo el simulador esté protegido.</li>
+<li><strong>Estados de ejecución no cubiertos:</strong> recuperación del Worker, transferencia real de buffers y sincronización bajo pérdida de frames carecen de evidencia automatizada suficiente; pueden romper continuidad aunque el motor matemático pase las pruebas.</li>
+</ol>
+<h3 id="software-alcance-y-limites-de-esta-revision">Alcance y límites de esta revisión</h3>
+<p>Se leyó código real de motor, medidor, auditoría, normalización, estado, Worker, renderizado, exportación y pruebas, junto con protocolos e informes. Se reprodujo el caso de importación en un bundle en memoria. No se modificó el checkout; <code>git status --short</code> permaneció limpio. El coordinador confirmó sobre el mismo commit <strong>150/150 pruebas aprobadas y TypeScript correcto</strong>; esta evaluación no las cuenta como una segunda ejecución independiente propia.</p>
+<p>No se efectuaron por este revisor pruebas en navegador, perfilado en hardware real, auditoría de seguridad de dependencias, validación clínica ni inspección del servicio de hosting. La ausencia de un workflow de CI en los archivos revisados no demuestra ausencia de automatización externa. Las notas de rendimiento y resiliencia valoran la implementación observada, con estos límites explícitos.</p>
+</div>
+  <p class="back"><a href="#inicio">Volver al índice ↑</a></p>
+</section>
+<section class="expert" id="electrofisiologia" aria-labelledby="electrofisiologia-title">
+  <header class="expert-header"><div><p class="eyebrow">Perspectiva 02 · 8 criterios · 12 propuestas</p><h2 id="electrofisiologia-title">Electrofisiología clínica</h2><p>Dar causalidad a conducción, refractariedad, activación y recuperación.</p></div><div class="expert-score" aria-label="Nota 3,7 de siete">3,7<span>/ 7</span></div></header>
+  <div class="expert-body"><p><strong>Perspectiva:</strong> electrofisiólogo clínico, simulada por IA. No constituye una revisión humana especializada ni una validación clínica. <strong>Fecha:</strong> 24 de septiembre de 2026. <strong>Código revisado:</strong> <code>/workspace/sites/ecg-lab</code>, commit <code>d8bb0a27710de2537737f2c1b03b14ad15b62598</code>.</p>
+<h3 id="electrofisiologia-dictamen">Dictamen</h3>
+<p><strong>Nota global de fidelidad electrofisiológica: 3,7/7</strong>, media simple de ocho parámetros: 29,5/8 = 3,6875. Es una base docente funcional, con buena separación entre eventos, muestras y mediciones, pero todavía representa gran parte de la fisiología mediante plantillas y calendarios. El salto de calidad más importante consiste en que conducción, refractariedad, activación y recuperación compartan un estado fisiológico coherente.</p>
+<p>La nota evalúa la aspiración de alta fidelidad electrofisiológica, no la calidad general del software ni su utilidad inicial para enseñar patrones. Un motor determinista puede repetir con precisión una señal poco fisiológica. Que el analizador mida correctamente los tiempos que produjo ese motor tampoco demuestra que la señal reproduzca un ECG humano.</p>
+<p>Escala aplicada: 1 = ausente o gravemente incorrecto; 2 = representación muy limitada; 3 = parcial y con brechas importantes; 4 = funcional con brechas; 5 = sólido; 6 = alto nivel con validación amplia; 7 = excelencia demostrada. Las medias y decimales son juicios técnicos, no medidas objetivas de rendimiento clínico.</p>
+<h3 id="electrofisiologia-ocho-parametros-y-calificaciones">Ocho parámetros y calificaciones</h3>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Tabla desplazable"><table>
+<thead>
+<tr>
+<th>Parámetro</th>
+<th align="right">Nota</th>
+<th>Evidencia favorable</th>
+<th>Brecha que limita la nota</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Calendario de ritmos y relaciones temporales visibles</td>
+<td align="right"><strong>5,0</strong></td>
+<td><code>generateEvents</code> separa actividad auricular y ventricular. Wenckebach produce PR 160/240/280 ms, RR 880/840 ms y pausa 1480 ms; el BAV completo mantiene independencia de relojes. Las pruebas verifican estas relaciones.</td>
+<td>Los patrones proceden de secuencias prefijadas, no de la interacción de tejidos con diferentes propiedades. La FA usa RR aleatorios acotados; flutter impone la razón de conducción; TV y escape no compiten con focos conducidos.</td>
+</tr>
+<tr>
+<td>Conducción AV, refractariedad y respuesta a prematuridad</td>
+<td align="right"><strong>3,0</strong></td>
+<td>Hay P bloqueadas, pausas compensadoras y protección frente a eventos fuera de orden después de duplas.</td>
+<td>No existen periodos refractarios ni memoria de conducción en nodo AV/His-Purkinje/miocardio. La ESV siempre fuerza una P intermedia no conducida; la ESA siempre usa <code>0.9 × PR</code>. Un caso permitido genera RR ventriculares de 72 ms con soportes QRS solapados.</td>
+</tr>
+<tr>
+<td>Activación ventricular: QRS, ramas, fascículos y preexcitación</td>
+<td align="right"><strong>3,5</strong></td>
+<td>BRD y BRI tienen kernels diferentes y pruebas sobre muestras: rSR′ y S terminal lateral en BRD; predominio negativo V1 y positivo lateral en BRI.</td>
+<td>ESV, escape ventricular y estimulación comparten exactamente los mismos kernels tipo BRI y eje −65°. Los hemibloqueos son sobre todo rotaciones del patrón normal. WPW añade una senoide de 45 ms sobre el QRS, sin fusión dependiente de dos vías.</td>
+</tr>
+<tr>
+<td>Activación auricular, P y repolarización auricular</td>
+<td align="right"><strong>3,5</strong></td>
+<td>P sinusal combina dos componentes solapados y produce una V1 pequeña y bifásica, comprobada en pruebas. Ectopia y activación retrógrada tienen formas diferentes.</td>
+<td>P sinusal tiene soporte fijo de 95 ms; los dos componentes comparten eje frontal. P retrógrada aparece siempre 75 ms después del comienzo QRS en ritmo de unión. No hay repolarización auricular general; el PR de pericarditis se añade como corrección específica.</td>
+</tr>
+<tr>
+<td>Repolarización, memoria de QT y relación con frecuencia</td>
+<td align="right"><strong>4,0</strong></td>
+<td><code>assignRepolarization</code> incorpora memoria de RR y evita colapsar QT tras un único RR corto. La onda T es continua y asimétrica; existen T/U separables en fixtures. La elección de adaptación al 95% en 120 s tiene antecedente experimental en sujetos sanos.</td>
+<td>Se utiliza una sola constante temporal y una transformación de Fridericia para todos los latidos. Faltan restitución rápida, dependencia del intervalo diastólico y separación explícita de activación/repolarización. El límite <code>QT ≥ QRS + 120 ms</code> es un resguardo geométrico.</td>
+</tr>
+<tr>
+<td>Coherencia espacial y diversidad en 12 derivaciones</td>
+<td align="right"><strong>4,0</strong></td>
+<td>Einthoven y Goldberger se conservan exactamente después de filtros y ruido. El eje clínico se calcula desde I/II, sin confundirlo con X/Y. La reciprocidad inferior emerge de la proyección.</td>
+<td>Sin las correcciones locales y artefactos, ocho señales independientes proceden de tres componentes XYZ mediante una matriz fija: el espacio de morfologías es muy restringido. No hay variación anatómica/torácica ni fuente regional suficiente para todas las alteraciones locales.</td>
+</tr>
+<tr>
+<td>Estimulación y fenómenos ventriculares complejos</td>
+<td align="right"><strong>3,0</strong></td>
+<td>Espigas AAI/VVI/DDD preceden a la captura; la morfología ventricular ancha y la repolarización secundaria están representadas. El catálogo reconoce sus limitaciones.</td>
+<td>Son secuencias a frecuencia fija: faltan sensado, inhibición y temporizadores del modo. Las espigas tienen una única forma de 4 ms. La TV polimórfica es una rotación periódica; FV es suma de oscilaciones y ruido, sin vinculación a propagación/refractariedad.</td>
+</tr>
+<tr>
+<td>Verificación específicamente fisiológica y clínica</td>
+<td align="right"><strong>3,5</strong></td>
+<td>Suite de 150 pruebas, barrido de 313 escenarios, fixtures independientes y ocho registros LUDB con procedencia. Se publica el control externo desfavorable en duración QRS y la separación entre análisis y auditoría del modelo.</td>
+<td>Los 61 hashes garantizan regresión, no fidelidad. El banco externo estudia el analizador QRS, no valida la morfología del generador. No hay revisión clínica ciega del catálogo, cohortes amplias ni validación externa de QT, P, estimulación o mecanismos.</td>
+</tr>
+</tbody></table></div>
+<p><strong>Fuentes de código:</strong> <code>src/engine/rhythm.ts</code>, <code>morphology.ts</code>, <code>repolarization.ts</code>, <code>leads.ts</code>, <code>signal.ts</code>, <code>types.ts</code>, <code>src/presets/catalog.ts</code>, <code>tests/engine.test.ts</code>, <code>tests/fidelity.test.ts</code>, <code>docs/modelo.md</code> y <code>docs/verificacion.md</code>. El coordinador de la revisión confirmó hoy 150/150 pruebas y TypeScript correctos; este análisis no volvió a ejecutar la suite completa.</p>
+<p>La memoria lenta de QT tiene respaldo en estudios humanos, pero no debe confundirse con una simulación de restitución celular o con un ajuste individual. La evidencia distingue la magnitud de la adaptación de su velocidad y muestra diferencias entre personas. <a href="https://pubmed.ncbi.nlm.nih.gov/26968541/">Malik et al., 2016</a>, <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8859307/">Andršová et al., 2022</a>.</p>
+<h3 id="electrofisiologia-hallazgos-reproducidos-durante-esta-revision">Hallazgos reproducidos durante esta revisión</h3>
+<p>Se compiló el motor en memoria mediante el <code>esbuild</code> ya instalado y se ejecutaron funciones puras sobre casos derivados de <code>DEFAULT_CASE</code>, pasados por <code>normalizeCase</code>. No se modificó el repositorio.</p>
+<h4 id="electrofisiologia-activaciones-muy-prematuras-sin-refractariedad">Activaciones muy prematuras sin refractariedad</h4>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Tabla desplazable"><table>
+<thead>
+<tr>
+<th>Caso modificado</th>
+<th align="right">RR ventricular mínimo</th>
+<th align="right">Soportes QRS solapados en 10 s</th>
+<th>Advertencias</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>hr=150</code>, <code>ectopy=pvc</code>, <code>coupling=0.3</code>, <code>variability=0</code></td>
+<td align="right"><strong>120 ms</strong></td>
+<td align="right">0</td>
+<td>Ninguna</td>
+</tr>
+<tr>
+<td><code>hr=150</code>, <code>ectopy=pac</code>, <code>coupling=0.3</code>, <code>variability=0</code></td>
+<td align="right"><strong>104 ms</strong></td>
+<td align="right">0</td>
+<td>Ninguna</td>
+</tr>
+<tr>
+<td><code>hr=250</code>, <code>ectopy=couplet</code>, <code>coupling=0.3</code>, <code>variability=0</code></td>
+<td align="right"><strong>72 ms</strong></td>
+<td align="right"><strong>6</strong></td>
+<td>Ninguna</td>
+</tr>
+</tbody></table></div>
+<p>El control de acoplamiento permite 0,30 y la frecuencia admite 250 lpm. El defecto concreto es que se superponen activaciones QRS independientes sin un mecanismo de recuperación, bloqueo o fusión que permita interpretar esa combinación. No se propone resolverlo imponiendo un único RR mínimo universal: el dominio permitido debe depender del estado y de los fenómenos realmente modelados.</p>
+<h4 id="electrofisiologia-tres-origenes-ventriculares-con-identica-activacion">Tres orígenes ventriculares con idéntica activación</h4>
+<p>Con igual <code>ECGCase</code>, <code>qrsKernels(case, {kind:&#39;pvc&#39;})</code>, <code>qrsKernels(case, {kind:&#39;ventricular&#39;})</code> y <code>qrsKernels(case, {kind:&#39;paced&#39;})</code> devolvieron matrices exactamente iguales. <code>qrsDuration</code> impone en todos ellos al menos 150 ms y <code>qrsKernels</code> fuerza eje −65°. Esto funciona como un ejemplo de origen ventricular, pero no como representación general de esos tres mecanismos.</p>
+<h4 id="electrofisiologia-controles-que-no-describen-completamente-su-efecto">Controles que no describen completamente su efecto</h4>
+<p>En BRD, <code>tVector</code> devuelve <code>[0.18, 0.12, 0.27]</code> incluso con <code>tAmp=0</code>, y mantiene ese vector al variar la amplitud. En sinusal, <code>tAmp=0</code> anula la proyección frontal solicitada pero deja Z=−0,07, por lo que puede persistir T precordial. La interfaz denomina el control «Amplitud de T», con unidad «mV ref.»: conviene precisar o cumplir su contrato para todas las derivaciones. Las sobrecargas también sustituyen T por vectores fijos.</p>
+<h4 id="electrofisiologia-evidencia-externa-actual-que-no-demuestra-mejora-universal">Evidencia externa actual que no demuestra mejora universal</h4>
+<p>En los cuatro LUDB reservados, el error absoluto medio de duración QRS pasa de 19,9 a 21,6 ms; en los mismos 29 latidos comparables, de 19,9 a 21,5 ms. La detección conserva 43/43 complejos sin falsos positivos dentro de la ventana evaluada. Son resultados del analizador, no una validación de que los ECG sintéticos se parezcan a pacientes. El conjunto LUDB original contiene 200 registros y esta selección solo ocho. <a href="https://physionet.org/content/ludb/1.0.1/">Descripción primaria de LUDB</a>. Resultados del proyecto: <code>docs/analysis-validation-all.json</code>, <code>docs/analysis-paired-comparison.json</code> y <code>docs/verificacion.md</code>.</p>
+<h3 id="electrofisiologia-doce-propuestas-factibles">Doce propuestas factibles</h3>
+<p>Prioridades: <strong>P0</strong>, cerrar errores o establecer la base de aceptación antes de ampliar el modelo; <strong>P1</strong>, siguiente salto de fidelidad; <strong>P2</strong>, consolidación posterior. Esfuerzo relativo: <strong>S</strong>, localizado; <strong>M</strong>, varios componentes con nuevas pruebas; <strong>L</strong>, cambio de modelo con calibración y validación. Ninguna propuesta requiere añadir módulos, pantallas o presets; las doce fortalecen comportamientos ya presentes.</p>
+<h4 id="EP-01" class="proposal-heading">EP-01. Definir y hacer cumplir el dominio fisiológico de los controles</h4>
+<p><strong>Problema:</strong> los rangos se validan por separado, permitiendo combinaciones sin interpretación en el modelo actual; algunos parámetros de amplitud o eje se ignoran o cambian de significado según el patrón.</p>
+<p><strong>Implementación:</strong> ampliar <code>constraints</code> y las transiciones puras con relaciones entre RR, acoplamiento, QRS, PR y mecanismo activo. Cada parámetro debe tener un contrato explícito: qué modifica, cuándo queda subordinado al patrón y qué estados quedan fuera de alcance. Mientras no exista fusión/refractariedad, una combinación incompatible debe quedar identificada antes de presentarse como un ECG docente interpretable; no cambiar valores silenciosamente.</p>
+<p><strong>Aceptación:</strong> los tres casos de prematuridad anteriores tienen un resultado definido y documentado; ningún QRS se superpone inadvertidamente; barrido de límites y pruebas que comprueben el efecto o la indisponibilidad declarada de cada control.</p>
+<p><strong>Esfuerzo M · Prioridad P0.</strong></p>
+<h4 id="EP-02" class="proposal-heading">EP-02. Sustituir la conducción AV por un motor pequeño de estados</h4>
+<p><strong>Problema:</strong> Mobitz I/II, 2:1 y alto grado son reglas de módulo del contador; el bloqueo de una P no cambia el estado siguiente.</p>
+<p><strong>Implementación:</strong> conservar <code>EventSeries</code>, pero generarlo con nodos de estado para aurícula, nodo AV, His-Purkinje y escape. Cada nodo mantiene última activación, recuperación y demora. Un enlace AV decremental responde al intervalo precedente; los impulsos bloqueados pueden modificar su recuperación. Los presets actuales pasan a configurar parámetros internos del mecanismo. No es necesario simular cada cardiomiocito.</p>
+<p><strong>Aceptación:</strong> reproducir primero el Wenckebach actual; verificar conducción estable, bloqueo por prematuridad y recuperación después de pausa; mantener independencia auriculoventricular en BAV completo. Cada QRS conserva trazabilidad de su causa.</p>
+<p><strong>Esfuerzo L · Prioridad P1.</strong> Los modelos publicados de conducción AV con penetración oculta y redes de autómatas demuestran la viabilidad del enfoque reducido, aunque sus resultados no validan automáticamente una implementación nueva. <a href="https://link.springer.com/article/10.1006/bulm.2002.0313">Jørgensen et al., 2002</a>, <a href="https://faculty.sist.shanghaitech.edu.cn/faculty/jiangzhh/publication/embc10/">Jiang et al., modelo virtual del corazón</a>.</p>
+<h4 id="EP-03" class="proposal-heading">EP-03. Compartir un mismo origen entre actividad auricular y respuesta ventricular en FA/flutter</h4>
+<p><strong>Problema:</strong> en FA la actividad ondulante y los RR se generan por procesos separados; en flutter se impone directamente el RR ventricular.</p>
+<p><strong>Implementación:</strong> usar una secuencia auricular con tiempos/fase coherentes que alimente tanto la morfología auricular de <code>signal.ts</code> como la conducción de EP-02. Mantener los presets de flutter 2:1/3:1/4:1, calibrando sus estados para esa respuesta. En FA, ajustar la distribución de impulsos auriculares y la recuperación nodal para la frecuencia objetivo, con semilla reproducible.</p>
+<p><strong>Aceptación:</strong> cambios en la entrada auricular producen respuestas ventriculares explicables; histogramas RR, autocorrelación y pausas se comparan con registros reales separados por desarrollo y control. La fase auricular no se reinicia cuando aparece un QRS.</p>
+<p><strong>Esfuerzo M después de EP-02 · Prioridad P1.</strong></p>
+<h4 id="EP-04" class="proposal-heading">EP-04. Representar la activación ventricular por regiones con demoras propias</h4>
+<p><strong>Problema:</strong> todos los latidos ventriculares usan el mismo BRI; hemibloqueos y cambios de eje no modifican suficientemente la secuencia de activación.</p>
+<p><strong>Implementación:</strong> sustituir progresivamente los cuatro kernels globales por una pequeña base regional —septo, pared libre derecha, regiones anterior/posterior/lateral izquierdas— con contribución y demora. Los patrones actuales modifican rutas de llegada y peso relativo. ESV, escape y estimulación quedan asociados a una activación concreta documentada; la composición permite fusión solo cuando el planificador la determina.</p>
+<p><strong>Aceptación:</strong> matrices de criterios sobre muestras para BRD, BRI y fascículos: polaridad, secuencia de deflexiones, duración, fuerzas terminales y tiempo al pico R. Variar eje no debe borrar el componente terminal de BRD ni crear discontinuidades. Validar contra ejemplos humanos retenidos.</p>
+<p><strong>Esfuerzo L · Prioridad P1.</strong> Los criterios de rama requieren morfología además de duración/eje. <a href="https://pubmed.ncbi.nlm.nih.gov/19281930/">AHA/ACCF/HRS, conducción intraventricular</a>.</p>
+<h4 id="EP-05" class="proposal-heading">EP-05. Hacer que la delta de WPW resulte de dos frentes de activación</h4>
+<p><strong>Problema:</strong> la delta actual es una senoide fija sumada a los primeros 45 ms de un QRS normal ensanchado; puede variar sin relación causal con el resto del complejo.</p>
+<p><strong>Implementación:</strong> dentro de la base regional de EP-04, combinar llegada por conducción AV normal y llegada temprana por una vía accesoria representativa. La diferencia de tiempos determina cuánto ventrículo se activa precozmente y cuándo colisionan los frentes. El preset conserva sus controles actuales y declara la localización representada.</p>
+<p><strong>Aceptación:</strong> reducir gradualmente la ventaja temporal de la vía disminuye de forma continua la delta y la preexcitación; prolongarla cambia coherentemente inicio, duración y fuerzas iniciales. No aparece una P fusionada artificialmente con QRS ni una discontinuidad por cambio de plantilla.</p>
+<p><strong>Esfuerzo M después de EP-04 · Prioridad P1.</strong></p>
+<h4 id="EP-06" class="proposal-heading">EP-06. Mejorar la secuencia biatrial y la repolarización auricular</h4>
+<p><strong>Problema:</strong> una P de 95 ms con dos componentes de eje frontal común restringe demasiado la variación sinusal, ectópica y retrógrada; el segmento PR carece de una contribución auricular general.</p>
+<p><strong>Implementación:</strong> ampliar <code>atrialVector</code> con demoras y orientaciones separadas AD/AI, duración dependiente del perfil y una contribución Ta pequeña y coherente con la activación. Mantener los tres orígenes auriculares ya existentes y la independencia temporal en BAV completo; no añadir diagnósticos auriculares al catálogo.</p>
+<p><strong>Aceptación:</strong> conservar el ejemplo normal bifásico pequeño de V1, reproducir cambios coherentes con activación ectópica/retrógrada y contrastar duración, área y polaridad por derivación con ejemplos anotados. Ta debe poder superponerse al QRS sin alterar ficticiamente el evento ventricular.</p>
+<p><strong>Esfuerzo M · Prioridad P2.</strong> El vínculo entre secuencia interauricular y morfología P cuenta con validación mediante mapas electroanatómicos humanos. <a href="https://pubmed.ncbi.nlm.nih.gov/18313600/">Holmqvist et al., 2008</a>.</p>
+<h4 id="EP-07" class="proposal-heading">EP-07. Separar restitución rápida, adaptación lenta y duración de activación</h4>
+<p><strong>Problema:</strong> QT usa solo RR suavizado y una fórmula universal; un mismo QTc puede acortar artificialmente el componente posterior al QRS al ensanchar la activación.</p>
+<p><strong>Implementación:</strong> conservar <code>assignRepolarization</code> como etapa, añadiendo un estado reducido con intervalo diastólico, recuperación rápida y memoria lenta. Calcular tiempos de recuperación regional respecto de su activación; permitir un perfil reproducible por caso, sin controles celulares en la interfaz. El QT global resulta del último final de recuperación observable, con límites explícitos del modelo.</p>
+<p><strong>Aceptación:</strong> protocolos de un extrasístole, escalón de frecuencia y pausa muestran respuesta inicial y adaptación lenta diferenciadas; una modificación aislada de conducción no reduce JT por una resta implícita del mismo QT. Comparar cambios relativos con datos experimentales reservados.</p>
+<p><strong>Esfuerzo M · Prioridad P1.</strong> La coexistencia de respuesta rápida y adaptación de varios minutos se ha medido en potenciales de acción humanos. <a href="https://www.jci.org/articles/view/113706">Franz et al., 1988</a>. Esos datos orientan el modelo; APD local y QT superficial no son equivalentes.</p>
+<h4 id="EP-08" class="proposal-heading">EP-08. Vincular ST–T secundario a la activación efectiva</h4>
+<p><strong>Problema:</strong> T de BRD, sobrecarga VD y VI utiliza vectores fijos; la discordancia ventricular se aproxima con una oposición angular y puede ignorar el control de amplitud.</p>
+<p><strong>Implementación:</strong> derivar las contribuciones secundarias de ST–T de las regiones activadas y de su recuperación, conservando por separado lesión primaria. Definir un escalado global consistente para <code>tAmp</code>, y calibrar las formas ya existentes de T picuda, T aplanada y U. Los cambios de potasio seguirán siendo patrones morfológicos: no inferir una concentración plasmática de una forma ECG.</p>
+<p><strong>Aceptación:</strong> <code>tAmp=0</code> cumple el contrato definido en todas las derivaciones y patrones; cambiar eje/ancho/origen ventricular altera ST–T coherentemente. Sobre lesión primaria en BRI no debe aplicarse una inversión global accidental ni perderse la regionalidad.</p>
+<p><strong>Esfuerzo M · Prioridad P1.</strong></p>
+<h4 id="EP-09" class="proposal-heading">EP-09. Ampliar la proyección espacial mediante una base regional precalculada</h4>
+<p><strong>Problema:</strong> una matriz fija aplicada a tres señales obliga a muchas morfologías a compartir relaciones espaciales demasiado rígidas; las correcciones locales resuelven ejemplos aislados.</p>
+<p><strong>Implementación:</strong> mantener las ocho señales independientes y derivar algebraicamente las cuatro restantes, pero calcular las ocho desde unas pocas fuentes regionales o componentes residuales calibrados. Los campos de derivación y las familias de formas se calculan fuera del navegador; el worker solo combina tablas y eventos. El motor actual puede permanecer como referencia de regresión durante la transición.</p>
+<p><strong>Aceptación:</strong> comparar distribuciones de amplitud, área, polaridad, transición R/S y correlaciones entre derivaciones con ECG reales. Preservar identidades eléctricas a precisión numérica y establecer un presupuesto de generación medido en el equipo de referencia. Evitar aceptar únicamente una correlación global alta que oculte errores regionales.</p>
+<p><strong>Esfuerzo L · Prioridad P1.</strong> Los modelos de campos precalculados y MedalCare-XL ofrecen precedentes y material de calibración. MedalCare-XL es sintético y tampoco sustituye un control humano externo; su cohorte ventricular anatómica completa no está disponible de forma irrestricta. <a href="https://www.nature.com/articles/s41597-023-02416-4">Gillette et al., 2023</a>.</p>
+<h4 id="EP-10" class="proposal-heading">EP-10. Dar significado funcional a AAI, VVI y DDD</h4>
+<p><strong>Problema:</strong> actualmente las tres etiquetas describen secuencias fijas de espigas/captura, aunque las letras implican sensado y respuesta al sensado.</p>
+<p><strong>Implementación:</strong> añadir al mismo planificador auricular/ventricular temporizadores de escape, intervalo AV y periodos de cegamiento/refractarios indispensables. Un evento intrínseco inhibe o desencadena la salida según el modo. La captura depende del estado del tejido; la forma de la espiga y su muestreo permanecen separados de la activación. Puede hacerse sin ampliar la interfaz: primero mejorar las condiciones subyacentes de los tres presets.</p>
+<p><strong>Aceptación:</strong> un evento sensado oportuno inhibe la espiga correspondiente; DDD respeta el intervalo AV y el límite de seguimiento configurado internamente; AAI no obliga a conducir a un nodo AV bloqueado. Pruebas independientes de sensado, captura y artefacto, incluida la limitación conocida a 250 Hz.</p>
+<p><strong>Esfuerzo L · Prioridad P1.</strong> Las redes de eventos temporizados ya se han usado para estudiar interacción corazón–marcapasos. <a href="https://faculty.sist.shanghaitech.edu.cn/faculty/jiangzhh/publication/embc10/">Modelo virtual de Jiang et al.</a>.</p>
+<h4 id="EP-11" class="proposal-heading">EP-11. Mejorar la dinámica de TV polimórfica y FV sin adjudicar un mecanismo no modelado</h4>
+<p><strong>Problema:</strong> la TV polimórfica rota periódicamente el mismo vector y la FV suma frecuencias prefijadas; la apariencia puede ser reconocible, pero su estructura temporal es demasiado simple.</p>
+<p><strong>Implementación:</strong> en estos dos patrones existentes, introducir variación temporal correlacionada de frecuencia, orientación y amplitud, calibrada con registros reales; mantener coherencia entre derivaciones. Vincular la modulación ventricular a EP-07 cuando haya recuperación modelada. Conservar la etiqueta genérica de TV polimórfica mientras no se represente el QT precedente y un mecanismo de inicio compatible con torsades.</p>
+<p><strong>Aceptación:</strong> comparación independiente de frecuencia dominante, ancho espectral, evolución de amplitud y coherencia espacial, más revisión clínica ciega de fragmentos. La variación debe conservar una estructura por semilla y evitar ruido blanco añadido como sustituto de complejidad.</p>
+<p><strong>Esfuerzo M · Prioridad P2.</strong></p>
+<h4 id="EP-12" class="proposal-heading">EP-12. Crear aceptación fisiológica por fenotipo, separada de la precisión del analizador</h4>
+<p><strong>Problema:</strong> hay buena regresión de código y un pequeño banco del detector, pero falta medir si la señal generada reproduce los atributos clínicos que promete cada preset.</p>
+<p><strong>Implementación:</strong> añadir una especificación de aceptación por familia actual: relaciones PP/PR/RR; deflexiones y fuerzas terminales; transición precordial; ST relativo a base; T/U; espigas/captura. Usar señales humanas autorizadas para calibración y un conjunto nuevo reservado. Comparar rasgos sobre muestras y organizar revisión ciega de ECG reales/sintéticos con valoración de errores, no solo clasificación «real o simulado».</p>
+<p><strong>Aceptación:</strong> cada preset activo tiene criterios comprobables y fallos conocidos; reportar por familia sesgo, dispersión, extremos, cobertura e incertidumbre. Congelar parámetros antes de cada control; no ajustar con los cuatro LUDB ya expuestos. Ningún hash de snapshot ni coincidencia con <code>truth</code> se presenta como certificación clínica.</p>
+<p><strong>Esfuerzo M para la infraestructura; la revisión clínica requiere colaboración externa · Prioridad P0.</strong> El estudio MedalCare-XL combinó comparación de rasgos y revisión clínica ciega, un precedente útil para diseñar este protocolo. <a href="https://www.nature.com/articles/s41597-023-02416-4">Gillette et al., 2023</a>.</p>
+<h3 id="electrofisiologia-arquitectura-viable-para-este-proyecto">Arquitectura viable para este proyecto</h3>
+<p>Una primera versión plausible puede mantener íntegros <code>Signal</code>, las 12 derivaciones, el worker, los renderizadores, las mediciones y el estado de casos. El cambio se concentra en el productor de <code>EventSeries</code> y en la base temporal/espacial de las ondas. Unos pocos nodos con estado y fuentes regionales constituyen una aproximación razonable a investigar. La síntesis ocurre por buffer; no hace falta resolver propagación tridimensional en cada frame.</p>
+<p>La complejidad debe justificarse mediante una mejora medible en EP-12. Un modelo de reacción–eikonal o de volumen conductor puede servir para generar referencias y bases fuera de línea; no debe convertirse de entrada en una dependencia pesada del navegador. Tampoco basta con reemplazar todos los ECG por plantillas clínicas: se perdería la respuesta coherente a los controles. El objetivo es una base compacta, calibrada y causalmente consistente.</p>
+<h3 id="electrofisiologia-dependencias-y-orden-de-integracion">Dependencias y orden de integración</h3>
+<p>La aceptación de EP-12 se inicia antes de cambiar la síntesis y se amplía con cada entrega. Las dependencias siguientes son de implementación, no nuevos módulos visibles para el usuario.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Tabla desplazable"><table>
+<thead>
+<tr>
+<th>Propuesta</th>
+<th>Requisito previo</th>
+<th>Puede avanzar en paralelo</th>
+<th>Resultado que habilita el siguiente paso</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>EP-01</td>
+<td>Ninguno</td>
+<td>EP-12</td>
+<td>Dominio soportado y contrato verificable de parámetros.</td>
+</tr>
+<tr>
+<td>EP-12</td>
+<td>Ninguno</td>
+<td>EP-01</td>
+<td>Referencias, criterios y una reserva externa nueva.</td>
+</tr>
+<tr>
+<td>EP-02</td>
+<td>EP-01; primeros criterios de EP-12</td>
+<td>EP-04, EP-06</td>
+<td>Eventos con causa, estado de recuperación y demoras.</td>
+</tr>
+<tr>
+<td>EP-03</td>
+<td>EP-02</td>
+<td>EP-05, EP-10</td>
+<td>Fuente auricular común a ondas y respuesta ventricular.</td>
+</tr>
+<tr>
+<td>EP-04</td>
+<td>Criterios morfológicos de EP-12</td>
+<td>EP-02, EP-06</td>
+<td>Base regional de activación que aún puede usar la proyección actual.</td>
+</tr>
+<tr>
+<td>EP-05</td>
+<td>EP-02 y EP-04</td>
+<td>EP-03, EP-07</td>
+<td>Preexcitación por llegada de dos vías y fusión definida.</td>
+</tr>
+<tr>
+<td>EP-06</td>
+<td>Criterios auriculares de EP-12</td>
+<td>EP-02, EP-04</td>
+<td>Activación biatrial calibrada; EP-09 podrá mejorar después su proyección.</td>
+</tr>
+<tr>
+<td>EP-07</td>
+<td>EP-01 y EP-04 para recuperación regional completa</td>
+<td>EP-05, EP-09</td>
+<td>Estado rápido/lento y tiempos regionales de recuperación.</td>
+</tr>
+<tr>
+<td>EP-08</td>
+<td>EP-04 y EP-07</td>
+<td>EP-10</td>
+<td>ST–T secundario coherente con la activación. El contrato básico de amplitud se corrige antes, en EP-01.</td>
+</tr>
+<tr>
+<td>EP-09</td>
+<td>Contrato de fuentes regionales de EP-04</td>
+<td>EP-07, EP-10</td>
+<td>Proyección espacial más rica con campos/tablas precalculados.</td>
+</tr>
+<tr>
+<td>EP-10</td>
+<td>EP-02; EP-04 para la morfología estimulada</td>
+<td>EP-07, EP-09</td>
+<td>Modos existentes con sensado, temporización y captura coherentes.</td>
+</tr>
+<tr>
+<td>EP-11</td>
+<td>Criterios de EP-12; EP-07 si se vincula a recuperación</td>
+<td>Consolidación de EP-06/09</td>
+<td>Dinámica de los dos patrones complejos ya presentes, con límites explícitos.</td>
+</tr>
+</tbody></table></div>
+<p><strong>Primera entrega concreta:</strong> EP-01 y el núcleo de EP-12; cerrar los casos RR 72/104/120 ms y definir/probar el contrato de T. <strong>Segunda entrega:</strong> EP-02 y EP-04, con revisiones intermedias separadas. El resto se integra por las dependencias anteriores; no es necesario implementar las doce propuestas a la vez ni reconstruir toda la aplicación.</p>
+<h3 id="electrofisiologia-limites-de-esta-revision">Límites de esta revisión</h3>
+<p>La revisión se basa en lectura del código, pruebas y reportes existentes, más los experimentos puros descritos. No se inspeccionó cada uno de los 61 presets en el navegador ni se adquirieron nuevas anotaciones humanas. Los resultados externos se tomaron de los archivos reproducibles del proyecto. No se revisó por completo cada rango del producto cartesiano de parámetros. Las propuestas son hipótesis de ingeniería y fisiología que necesitan pruebas, no garantías de alcanzar indistinguibilidad respecto de pacientes.</p>
+<p>No se modificó código, no se ejecutó un despliegue y no se atribuye participación a especialistas humanos.</p>
+</div>
+  <p class="back"><a href="#inicio">Volver al índice ↑</a></p>
+</section>
+<section class="expert" id="urgencias" aria-labelledby="urgencias-title">
+  <header class="expert-header"><div><p class="eyebrow">Perspectiva 03 · 8 criterios · 12 propuestas</p><h2 id="urgencias-title">Medicina interna y urgencias · SCA</h2><p>Hacer coherentes territorio, ST, T, controles y lectura clínica urgente.</p></div><div class="expert-score" aria-label="Nota 4,2 de siete">4,2<span>/ 7</span></div></header>
+  <div class="expert-body"><h3 id="urgencias-alcance-y-dictamen">Alcance y dictamen</h3>
+<p>Revisión de solo lectura del commit <code>d8bb0a27710de2537737f2c1b03b14ad15b62598</code>, realizada el 24 de septiembre de 2026. Perspectiva de análisis: utilidad del simulador para aprender a interpretar el ECG ante sospecha de síndrome coronario agudo (SCA). No constituye una evaluación clínica humana ni validación diagnóstica del producto.</p>
+<p><strong>Nota global: 4,2/7</strong>; media simple exacta: <strong>4,1625/7</strong>. Es una base funcional y transparente para reconocer patrones y explorar la señal. Su mayor fortaleza coronaria es la coherencia del ST territorial y de algunos cambios recíprocos. Su principal brecha es la relación regional y temporal entre ST, T y QRS: parte de esa fisiología sigue representada por modificaciones geométricas independientes. La calidad de detección QRS y sus 150 pruebas técnicas no demuestran fidelidad de isquemia ni capacidad para enseñar decisiones de reperfusión.</p>
+<p>Se leyeron directamente <code>src/presets/catalog.ts</code>, <code>src/engine/morphology.ts</code>, <code>signal.ts</code>, <code>types.ts</code>, <code>leads.ts</code>, <code>src/ui/controls.ts</code>, <code>case-state.ts</code>, <code>beat-detail.ts</code>, <code>src/main.ts</code>, las pruebas de ST en <code>tests/engine.test.ts</code> y <code>tests/fidelity.test.ts</code>, y los documentos de modelo/verificación. Se inspeccionó el trazado exportado <code>docs/trazados/inferior.png</code>. Se ejecutaron pruebas exploratorias en memoria sobre el motor actual; no se modificó código, pruebas, configuración ni despliegue.</p>
+<p>Escala aplicada: 4 = funcional con brechas relevantes; 5 = sólido; 6 = nivel alto respaldado por validación amplia; 7 = excelencia demostrada. Las notas son juicios técnicos razonados, no resultados de una escala psicométrica validada. No se penaliza como error una función que el producto identifica correctamente como pendiente; sí se evalúa la distancia restante hacia máxima fidelidad.</p>
+<h3 id="urgencias-parametros-y-notas">Parámetros y notas</h3>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Tabla desplazable"><table>
+<thead>
+<tr>
+<th>Parámetro</th>
+<th align="right">Nota / 7</th>
+<th>Evidencia y efecto práctico</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Coherencia territorial del ST y reciprocidad</td>
+<td align="right"><strong>4,8</strong></td>
+<td><code>lesionVector()</code> y Dower producen cambios de signo relacionados entre derivaciones. El inferior predomina realmente en III y presenta descenso en I/aVL. Sin embargo, cada territorio usa un vector fijo y algunos patrones requieren correcciones locales: no equivale a una representación anatómica individual.</td>
+</tr>
+<tr>
+<td>Morfología isquémica integrada ST–T–QRS</td>
+<td align="right"><strong>3,7</strong></td>
+<td>La envolvente de ST alcanza su nivel en J, con pruebas específicas. Pero la T hiperaguda se multiplica globalmente por 2,15; la T evolutiva cambia globalmente de signo. El territorio no participa en <code>tVector()</code> salvo la condición genérica de que exista isquemia. No se generan Q patológicas.</td>
+</tr>
+<tr>
+<td>Coherencia temporal y contexto clínico</td>
+<td align="right"><strong>2,5</strong></td>
+<td>Hay cuatro fases seleccionables, pero cada cambio regenera el registro; no existe evolución continua. «ST resuelto» es una etiqueta prudente, aunque no representa cicatriz, reperfusión ni trayectoria individual. No hay relación formal con dolor, tiempo de síntomas o ECG previo.</td>
+</tr>
+<tr>
+<td>Representación de patrones de alto riesgo y sus imitadores actuales</td>
+<td align="right"><strong>4,2</strong></td>
+<td>Incluye inferior/anterior/lateral/posterior/VD, ST difuso, Wellens, de Winter, pericarditis, BRI con lesión, HVI e hiperpotasemia. El catálogo reconoce aproximaciones. Persiste asimetría T en de Winter y simplificación regional abrupta de Wellens; la interpretación posterior/VD no se completa con derivaciones adicionales, expresamente pendientes.</td>
+</tr>
+<tr>
+<td>Metrología útil para ST y fidelidad del papel</td>
+<td align="right"><strong>5,0</strong></td>
+<td>Calibración, velocidad, ganancia, formatos de 12 derivaciones, filtro diagnóstico y calibres permiten lectura clínica estructurada. El detalle identifica J como estimado. Las pruebas de ST verifican principalmente inferior y de Winter; no hay aceptación cuantitativa completa de J/ST para cada patrón y fase.</td>
+</tr>
+<tr>
+<td>Experiencia de lectura urgente y consistencia de controles</td>
+<td align="right"><strong>4,5</strong></td>
+<td>Papel y ampliación son legibles y ayudan a comparar medidas. Hay una incoherencia reproducida: elegir «BRI con lesión concordante» desde Sinusal mediante el selector conserva QRS estrecho/conducción normal sin aviso. «Intensidad de lesión» queda activa aunque no cambia el trazado de Wellens/de Winter.</td>
+</tr>
+<tr>
+<td>Lenguaje clínico, incertidumbre y límites de inferencia</td>
+<td align="right"><strong>5,6</strong></td>
+<td>Se evita diagnosticar NSTEMI por descenso ST, se explicita que aVR no determina arteria y se separan medidas de referencias sintéticas. Las limitaciones son visibles. Quedan abreviaturas «Inferior (CD)»/«Inferior (Cx)» que vuelven a sugerir una equivalencia anatómica más fuerte que las propias notas.</td>
+</tr>
+<tr>
+<td>Validación clínica específica de isquemia</td>
+<td align="right"><strong>3,0</strong></td>
+<td>Los 150 tests y la congelación del detector son fortalezas de ingeniería. El control externo LUDB evalúa QRS y no valida morfología ST/T isquémica, umbrales, imitadores, interpretación urgente ni aprendizaje. Falta un banco independiente de isquemia y una evaluación posterior por lectores.</td>
+</tr>
+</tbody></table></div>
+<p>Media: <code>(4,8 + 3,7 + 2,5 + 4,2 + 5,0 + 4,5 + 5,6 + 3,0) / 8 = 4,1625</code>.</p>
+<h3 id="urgencias-hallazgos-reproducidos-que-cambian-la-prioridad">Hallazgos reproducidos que cambian la prioridad</h3>
+<h4 id="urgencias-1-el-st-inferior-funciona-mejor-que-la-t-territorial">1. El ST inferior funciona mejor que la T territorial</h4>
+<p>En el preset inferior, con variabilidad anulada y filtro diagnóstico, se examinó un latido interior. Referencia local: media de los 40–20 ms anteriores al inicio QRS; J: media entre −2 y +4 ms respecto al final QRS del generador. Resultados aproximados: <strong>II +144 µV; III +239 µV; aVL −167 µV; I −95 µV</strong>. Es una comprobación del motor, no una medición clínica independiente. Confirma la dirección y reciprocidad esperadas del caso.</p>
+<p>Al seleccionar fase hiperaguda, el componente T calculado por <code>tVector()</code> es <strong>exactamente igual</strong> en los presets inferior, anterior, lateral y posterior: vector XYZ <code>[0,8633538764; 0,3217080645; −0,1505]</code>. Su proyección de pico es aproximadamente <strong>1,179 mV en V4 y 0,105 mV en III</strong> en todos esos territorios. La suma final de ST sí difiere; el hallazgo afecta específicamente al componente T. No basta con cambiar su amplitud global para producir una respuesta regional convincente.</p>
+<h4 id="urgencias-2-un-selector-puede-producir-una-denominacion-incoherente">2. Un selector puede producir una denominación incoherente</h4>
+<p>La operación equivalente al control actual:</p>
+<pre><code class="language-ts">changeCase(fromPreset(presetById(&#39;sinus&#39;)), &#39;ischemia&#39;, &#39;sgarbossa&#39;)
+</code></pre>
+<p>produce <code>ischemia: &#39;sgarbossa&#39;</code>, <code>conduction: &#39;normal&#39;</code>, <code>qrs: 90</code> y <code>constraints(): []</code>. El preset completo Sgarbossa sí inicializa BRI correctamente. El problema está en la equivalencia entre el selector y el preset.</p>
+<h4 id="urgencias-3-hay-un-control-que-no-actua-sobre-ciertos-patrones">3. Hay un control que no actúa sobre ciertos patrones</h4>
+<p>Al variar <code>st</code> de 0 a 8, la diferencia máxima entre todas las muestras V2 fue <strong>0 mV tanto en Wellens A como en de Winter</strong>. El control se muestra activo. La causa es visible: esos casos no tienen vector en <code>lesionVector()</code> y sus correcciones locales usan amplitudes constantes. Esto puede inducir a interpretar un control sin efecto como una propiedad fisiológica.</p>
+<h4 id="urgencias-4-las-etiquetas-actuales-contienen-una-buena-base-de-prudencia">4. Las etiquetas actuales contienen una buena base de prudencia</h4>
+<p>«La arteria no se determina solo por ECG», «patrón inespecífico de arteria y de infarto», «el diagnóstico de IAM requiere contexto y troponina», «ST resuelto no genera ondas Q» y las limitaciones explícitas de V7–V9/V3R–V4R son decisiones acertadas. Deben conservarse al mejorar la forma de onda.</p>
+<h3 id="urgencias-doce-propuestas-factibles-sobre-el-alcance-actual">Doce propuestas factibles sobre el alcance actual</h3>
+<p><strong>Prioridad P0:</strong> resolver antes de ampliar el catálogo. <strong>P1:</strong> siguiente ciclo de fidelidad. <strong>P2:</strong> consolidación posterior. <strong>Esfuerzo S:</strong> cambio acotado; <strong>M:</strong> varias piezas existentes y pruebas; <strong>L:</strong> investigación, ajuste y validación más extensa. Son tamaños relativos, no promesas de plazo. Todas las propuestas siguientes fortalecen funciones o patrones existentes; ninguna exige añadir un módulo terapéutico o un clasificador de infarto.</p>
+<h4 id="ACS-01" class="proposal-heading">ACS-01. Unificar la denominación del patrón observado</h4>
+<p><strong>Implementación:</strong> reemplazar las etiquetas cortas «Inferior (CD)» y «Inferior (Cx)» por «Inferior · III &gt; II» e «Inferior · II ≥ III», como ya hace el selector; mantener referencias anatómicas como posibilidades en la explicación. Normalizar en el catálogo la distinción entre patrón, mecanismo propuesto y diagnóstico clínico. Se conserva el contenido actual sin agregar controles.</p>
+<p><strong>Aceptación:</strong> títulos, botones, exportaciones y notas del mismo caso usan nomenclatura compatible; ningún texto convierte aVR o un cociente III/II en identificación definitiva de arteria. Comprobar ejemplos de las dos variantes inferiores y ST difuso. <strong>Esfuerzo S · P0.</strong> La prudencia sobre aVR está respaldada por la investigación original de <a href="https://pubmed.ncbi.nlm.nih.gov/23312698/">Knotts et al.</a>.</p>
+<h4 id="ACS-02" class="proposal-heading">ACS-02. Convertir J/ST en un contrato de aceptación del motor</h4>
+<p><strong>Implementación:</strong> ampliar las pruebas actuales de ST para todos los patrones activos de esa familia. Medir J, J+60 ms, pendiente ST y base local, con referencias TP/PR diferenciadas cuando corresponda. Contrastar el J estimado mostrado en la ampliación con el final conocido sintético y evaluar derivaciones que hoy pueden quedar fuera de las cuatro usadas por el medidor. Incluir filtros, ganancias y velocidades existentes.</p>
+<p><strong>Aceptación:</strong> el informe indica amplitud, signo, referencia de base y error por derivación; no basta una prueba de que «sube» o «baja». Fijar previamente tolerancias de ingeniería en µV/ms y mantener casos frontera a ambos lados de los valores docentes elegidos. Ningún cambio de ganancia altera mV ni un filtro se presenta como inocuo. <strong>Esfuerzo M · P0.</strong> Los criterios ECG se definen en J, con umbrales dependientes de derivación, edad y sexo, y excepciones por conducción/HVI. <a href="https://academic.oup.com/eurheartj/advance-article/doi/10.1093/eurheartj/ehag101/8766309">Definición Universal 2026, sección 13</a>.</p>
+<h4 id="ACS-03" class="proposal-heading">ACS-03. Acoplar la onda T al territorio existente</h4>
+<p><strong>Implementación:</strong> sustituir el multiplicador global por un componente regional de repolarización, conservando el dipolo basal y las identidades de derivaciones. El territorio existente determina dirección, anchura, simetría y magnitud relativa de la alteración T. Separar «T alta» de «T hiperaguda»: la forma y relación con QRS deben cambiar de forma coherente, sin forzar que toda T alta sea isquémica.</p>
+<p><strong>Aceptación:</strong> los cuatro territorios explorados dejan de generar exactamente el mismo componente T; un banco de referencia define polaridad, área y anchura regionales; la hiperpotasemia existente mantiene un perfil distinguible por el conjunto de ondas, con superposición de rasgos reconocida. Pruebas de continuidad y de suma eléctrica, además de revisión de trazados. <strong>Esfuerzo L · P1.</strong></p>
+<h4 id="ACS-04" class="proposal-heading">ACS-04. Hacer compatibles selector, preset y fase</h4>
+<p><strong>Implementación:</strong> incorporar a la lógica ya existente de <code>changeCase()</code>/<code>constraints()</code> una matriz pequeña de combinaciones soportadas. «BRI con lesión concordante» debe requerir BRI o activar explícitamente su configuración compatible. Las fases genéricas no deben invertir toda la T de pericarditis o de una corrección local sin una política definida. Cuando un parámetro no aplica, usar la capacidad actual de desactivarlo y explicarlo.</p>
+<p><strong>Aceptación:</strong> seleccionar el mismo concepto desde catálogo o controles produce condiciones equivalentes; el ejemplo reproducido de Sgarbossa con QRS 90 ms deja de pasar silenciosamente. Cada patrón/fase tiene resultado definido o control desactivado. «ST resuelto» conserva su descripción de alcance limitado. <strong>Esfuerzo M · P0.</strong></p>
+<h4 id="ACS-05" class="proposal-heading">ACS-05. Dar significado consistente a la intensidad de lesión</h4>
+<p><strong>Implementación:</strong> definir en metadatos qué componentes controla <code>st</code> en cada patrón. En de Winter puede escalar el desplazamiento ST y su componente regional asociado; en Wellens puede desactivarse ese control ST si solo se pretende modificar la T mediante sus controles pertinentes. Evitar que «0» y «8» produzcan la misma salida sin explicación. No es necesario añadir un segundo deslizador.</p>
+<p><strong>Aceptación:</strong> la modificación de un control activo produce el cambio definido, monotónico dentro del rango útil, o se declara no aplicable; un test metamórfico detecta controles inertes. Con intensidad nula no desaparecen cambios secundarios de BRI que pertenecen a otro mecanismo. <strong>Esfuerzo M · P0.</strong></p>
+<h4 id="ACS-06" class="proposal-heading">ACS-06. Refinar Wellens A/B sin convertirlo en diagnóstico automático</h4>
+<p><strong>Implementación:</strong> usar una forma T regional explícita y suave en lugar de una cancelación y sustitución fija exclusivamente en V2/V3. Mantener la secuencia positiva–negativa del tipo A y la simetría del tipo B; graduar las transiciones entre derivaciones vecinas según una configuración de referencia. Completar la nota actual con su relación habitual con el intervalo sin dolor y la necesidad de contexto, sin añadir una historia clínica interactiva.</p>
+<p><strong>Aceptación:</strong> pruebas de orden/polaridad de lóbulos, simetría, ST cercano a base y continuidad espacial; cambiar amplitud basal T no destruye de modo imprevisible el patrón. La nota no infiere anatomía definitiva ni normalidad por desaparición de las alteraciones. <strong>Esfuerzo M · P1.</strong> La descripción clínica se contrasta con <a href="https://academic.oup.com/eurheartj/advance-article/doi/10.1093/eurheartj/ehag101/8766309">Definición Universal 2026, tabla 5 y sección 13</a>.</p>
+<h4 id="ACS-07" class="proposal-heading">ACS-07. Completar la forma de de Winter actual</h4>
+<p><strong>Implementación:</strong> sustituir la suma de T basal asimétrica y un bulto simétrico uniforme por una T regional objetivo; conservar la depresión en J y la pendiente ascendente ya probadas. Usar distribución de amplitudes y anchuras entre V1–V6, evitando aplicar −0,16 mV y +0,48 mV idénticos en todas. aVR debe modelarse si corresponde a la variante elegida, sin transformarlo en requisito universal.</p>
+<p><strong>Aceptación:</strong> un perfil cuantitativo comprueba depresión inicial, pendiente positiva, simetría de T y variación precordial; ausencia de discontinuidades en J/ST/T y respuesta de los controles. La ley de Einthoven permanece exacta. <strong>Esfuerzo M · P1.</strong> El patrón original se describe en <a href="https://doi.org/10.1056/NEJMc0804737">de Winter et al., NEJM 2008</a>; se verificó su referencia y su inclusión en la definición de 2026.</p>
+<h4 id="ACS-08" class="proposal-heading">ACS-08. Corregir la relación ST/PR/base en la pericarditis actual</h4>
+<p><strong>Implementación:</strong> revisar el patrón usando una referencia TP explícita en los análisis de aceptación. La depresión PR no debe inflar inadvertidamente la medición de elevación ST. Ajustar la extensión multiderivación mediante componentes regionales coherentes y conservar las excepciones esperadas, sin imponer positividad indiscriminada en las doce derivaciones. Definir qué efectos sobreviven a cada fase soportada.</p>
+<p><strong>Aceptación:</strong> pruebas separadas de desplazamiento PR y ST, ambas contra la base adecuada; revisar aVR y precordiales derechas; ninguna etiqueta diagnostica pericarditis solo por concavidad o PR descendido. La nota identifica que el patrón puede ser incompleto. <strong>Esfuerzo M · P1.</strong></p>
+<h4 id="ACS-09" class="proposal-heading">ACS-09. Fortalecer la lesión sobre BRI y estimulación ya existentes</h4>
+<p><strong>Implementación:</strong> calibrar primero la repolarización secundaria sin lesión contra magnitud y dirección del QRS; después añadir la lesión primaria. En el preset concordante actual, medir concordancia real y, como prueba interna, proporción de ST respecto a S cuando corresponde. No se necesita mostrar un score ni generar una recomendación terapéutica.</p>
+<p><strong>Aceptación:</strong> el caso basal y el caso con lesión permanecen distinguibles al cambiar la amplitud QRS; los cocientes son estables cuando se escala toda la señal; un caso con poco voltaje no se evalúa solo por un umbral absoluto. La prueba especifica signo y denominador del cociente. <strong>Esfuerzo M · P1.</strong> El uso proporcional se contrasta con la investigación original de <a href="https://pubmed.ncbi.nlm.nih.gov/22939607/">Smith et al., 2012</a>.</p>
+<h4 id="ACS-10" class="proposal-heading">ACS-10. Revisar la coherencia de los patrones posterior y VD dentro de 12 derivaciones</h4>
+<p><strong>Implementación:</strong> en posterior, sustituir el aumento R fijo y simultáneo de 0,75 mV en V1–V3 por una modificación regional vinculada a la variante morfológica representada. No convertir R alta en rasgo obligatorio de toda presentación aguda. En VD, revisar el balance de fuerzas anteriores/derechas e inferiores y sus variantes ya posibles con los controles. Mantener visibles las limitaciones de las doce derivaciones actuales.</p>
+<p><strong>Aceptación:</strong> cada trazado cumple su descripción concreta, conserva progresión QRS plausible y relaciones regionales ST/T; las notas distinguen sospecha posterior/VD de confirmación. No se inventan V7–V9/V3R–V4R a partir de filas sin validar. <strong>Esfuerzo M · P1.</strong> La necesidad de derivaciones complementarias se recoge en <a href="https://academic.oup.com/eurheartj/advance-article/doi/10.1093/eurheartj/ehag101/8766309">Definición Universal 2026, sección 13</a>.</p>
+<h4 id="ACS-11" class="proposal-heading">ACS-11. Mejorar las notas de lectura urgente de los casos actuales</h4>
+<p><strong>Implementación:</strong> usar los campos existentes <code>mechanism</code>, <code>findings</code> y <code>limitation</code> con una estructura breve: observación principal, hallazgo recíproco/ausente relevante, principal confusor y límite de inferencia. Incorporar dónde importa repetir ECG o contrastar síntomas y ECG previo. La explicación de pericarditis/HVI/hiperpotasemia debe permitir comparación con los patrones coronarios ya disponibles. Revisar el término «lesión» para diferenciar señal de injuria miocárdica bioquímica.</p>
+<p><strong>Aceptación:</strong> los trece presets activos de ST tienen notas coherentes, específicas y breves; no se concluye descarte de SCA con un ECG aislado, ni infarto confirmado a partir del dibujo. Dos revisores clínicos futuros pueden evaluar los textos con una rúbrica predefinida; no se da por realizada esa revisión. <strong>Esfuerzo S · P1.</strong> Para el contexto se usan las fuentes vigentes <a href="https://www.escardio.org/guidelines/clinical-practice-guidelines/all-esc-practice-guidelines/acute-coronary-syndromes/">ESC ACS 2023</a> y <a href="https://professional.heart.org/en/science-news/2025-guideline-for-the-management-of-patients-with-acute-coronary-syndromes">ACC/AHA ACS 2025</a>; la utilidad del análisis seriado cuenta con investigación original de <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7408822/">Lehmacher et al.</a>.</p>
+<h4 id="ACS-12" class="proposal-heading">ACS-12. Crear una validación externa específica de ST/T antes de prometer más realismo</h4>
+<p><strong>Implementación:</strong> ampliar el sistema de informes reproducibles con un subconjunto seleccionado y documentado de isquemia real, manteniendo separado el test de detector QRS. STAFF III aporta registros antes/durante/después de oclusión con balón, útiles para estudiar cambios intraindividuales. Crear particiones por paciente y reservar un control no expuesto; comparar distribuciones de J/ST, pendiente, T/QRS y polaridades, además de errores de límites. El banco pertenece al desarrollo; no requiere cargar pacientes en la interfaz.</p>
+<p><strong>Aceptación:</strong> procedencia/licencia, posición de electrodos y exclusiones explícitas; informe antes/después en pacientes reservados sin retocar criterios tras ver resultados; resultados desfavorables publicados. Evaluación de semejanza por lectores, posterior y separada, con orden ciego y ECG de referencia autorizados. <strong>Esfuerzo L · P1.</strong> <a href="https://physionet.org/content/staffiii/1.0.0/">STAFF III</a> incluye 104 pacientes, isquemia inducida en procedimientos electivos y electrodos de miembros en configuración Mason–Likar: no representa por sí sola toda la urgencia coronaria.</p>
+<h3 id="urgencias-orden-recomendado">Orden recomendado</h3>
+<p>Primero <strong>ACS-04, ACS-05, ACS-01 y ACS-02</strong>: corrigen comportamientos actuales potencialmente engañosos y establecen cómo se verificará la fidelidad. Después <strong>ACS-03</strong>, seguido de los ajustes específicos <strong>ACS-06 a ACS-10</strong>. Ejecutar <strong>ACS-11</strong> junto a cada patrón corregido y preparar <strong>ACS-12</strong> antes de ajustar reiteradamente las formas contra unos pocos ejemplos conocidos.</p>
+<p>La continuidad clínica, nuevas derivaciones, decisiones de reperfusión, tratamiento y casos interactivos serían ampliaciones futuras. No son requisitos para ejecutar las doce mejoras propuestas. La prioridad actual es que el mismo trazado, sus controles, sus medidas y su explicación sean consistentes entre sí y frente a referencias independientes.</p>
+<h3 id="urgencias-referencias-verificadas-y-alcance-de-consulta">Referencias verificadas y alcance de consulta</h3>
+<ul>
+<li><a href="https://academic.oup.com/eurheartj/advance-article/doi/10.1093/eurheartj/ehag101/8766309">Quinta Definición Universal de Infarto 2026, OUP</a>: texto consultado, en particular sección 13 y tabla 5. Ya estaba citada en el proyecto; no se sustituye por la cuarta definición como si fuera la vigente.</li>
+<li><a href="https://www.escardio.org/guidelines/clinical-practice-guidelines/all-esc-practice-guidelines/acute-coronary-syndromes/">ESC, guía de SCA 2023</a>: publicación/alcance vigentes verificados. El enlace editorial al texto completo tuvo restricción de acceso; no se atribuyen aquí detalles de recomendaciones o clases no comprobados en el texto accesible.</li>
+<li><a href="https://professional.heart.org/en/science-news/2025-guideline-for-the-management-of-patients-with-acute-coronary-syndromes">AHA, guía de SCA 2025</a>: publicación/alcance oficiales verificados. DOI editorial <code>10.1161/CIR.0000000000001309</code>; acceso al texto íntegro bloqueado en esta revisión.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/23312698/">Knotts et al., 2013</a>: estudio original sobre falta de especificidad anatómica del patrón ST difuso/aVR.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/22939607/">Smith et al., 2012</a>: trabajo original de proporcionalidad ST/S en BRI.</li>
+<li><a href="https://doi.org/10.1056/NEJMc0804737">de Winter et al., 2008</a>: referencia original verificada a través de la bibliografía y descripción de la definición 2026; no se afirma haber accedido al texto completo NEJM.</li>
+<li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7408822/">Lehmacher et al., 2020</a>: estudio original de ECG seriados en sospecha de IAM.</li>
+<li><a href="https://physionet.org/content/staffiii/1.0.0/">STAFF III, PhysioNet</a>: documentación original de adquisición, muestra, eventos y limitaciones consultada.</li>
+</ul>
+</div>
+  <p class="back"><a href="#inicio">Volver al índice ↑</a></p>
+</section>
+<section class="expert" id="hemodinamia" aria-labelledby="hemodinamia-title">
+  <header class="expert-header"><div><p class="eyebrow">Perspectiva 04 · 8 criterios · 12 propuestas</p><h2 id="hemodinamia-title">Cardiología intervencionista</h2><p>Mejorar regionalidad, evolución y proporcionalidad sin adjudicar una anatomía única.</p></div><div class="expert-score" aria-label="Nota 3,4 de siete">3,4<span>/ 7</span></div></header>
+  <div class="expert-body"><p><strong>Objeto:</strong> ECG Lab v1.2, commit <code>d8bb0a27710de2537737f2c1b03b14ad15b62598</code>. Revisión de solo lectura de <code>leads.ts</code>, <code>morphology.ts</code>, <code>signal.ts</code>, <code>types.ts</code>, <code>repolarization.ts</code>, catálogo, controles, pruebas y documentación. Inspección visual del trazado inferior y una ejecución aislada del motor, sin modificar el repositorio. La perspectiva es una revisión técnica asistida por IA; no acredita una evaluación de un panel real de cardiólogos.</p>
+<h3 id="hemodinamia-dictamen">Dictamen</h3>
+<p><strong>Nota de la dimensión hemodinámica/coronaria: 3,4/7 (media simple: 27,5/8 = 3,4375).</strong> Buena base para mostrar patrones territoriales reconocibles y enseñar reciprocidad. La fidelidad cae cuando se exige que anatomía, despolarización, repolarización y evolución correspondan a un mismo proceso coronario. La nota compara con la meta de alta fidelidad solicitada; no significa que los controles actuales estén averiados.</p>
+<p>La escala aplicada considera 4 como funcional con brechas relevantes, 5 como sólido en el alcance evaluado, 6 como alto y ampliamente validado, y 7 como excelencia demostrada. Las notas son juicio de auditoría, no medidas estadísticas.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Tabla desplazable"><table>
+<thead>
+<tr>
+<th>Parámetro</th>
+<th align="right">Nota</th>
+<th>Evidencia concreta e interpretación</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Coherencia eléctrica y reciprocidad multiderivación</td>
+<td align="right">5,5</td>
+<td><code>leads.ts</code> proyecta XYZ y deriva III/aVR/aVL/aVF algebraicamente. En el inferior, las elevaciones y descensos recíprocos emergen del mismo vector; no se dibuja cada derivación de manera independiente. La comprobación algebraica es sólida, pero no demuestra una representación anatómica individual.</td>
+</tr>
+<tr>
+<td>Patrones territoriales agudos de ST</td>
+<td align="right">5,0</td>
+<td>Catálogo anterior, lateral, inferior CD/Cx, posterior, VD y difuso. El trazado inferior visualizado es reconocible. Los vectores son calibraciones propias fijas, sin corpus clínico territorial que defina sus intervalos plausibles.</td>
+</tr>
+<tr>
+<td>Anatomía coronaria y variabilidad de territorios</td>
+<td align="right">3,0</td>
+<td><code>ischemia</code> identifica un patrón, pero no modela dominancia, ramas, extensión perfundida, nivel de oclusión o colaterales. CD/Cx son dos orientaciones fijas. Es correcto que el catálogo advierta que la arteria no se determina solo por ECG.</td>
+</tr>
+<tr>
+<td>Coherencia de los casos posterior y ventricular derecho</td>
+<td align="right">3,5</td>
+<td>Posterior combina vector posterior con un incremento local idéntico de R de 0,75 mV en V1–V3. VD usa un único vector inferior/anterior derecho. No se generan V7–V9 ni derivaciones derechas, y esa limitación está declarada. La R posterior no depende de fase ni de sustrato basal.</td>
+</tr>
+<tr>
+<td>Evolución y reperfusión</td>
+<td align="right">2,5</td>
+<td><code>phase</code> escala ST a 0,35/1/0,35/0 y multiplica globalmente T por 2,15 en hiperaguda o −1 en evolutiva. No hay secuencia temporal o reperfusión tisular; cambiar controles crea un registro nuevo, tal como reconoce README. La inversión de T afecta el vector global y no el territorio afectado.</td>
+</tr>
+<tr>
+<td>Despolarización isquémica y secuela</td>
+<td align="right">2,0</td>
+<td><code>qrsKernels()</code> ignora <code>ischemia</code> y <code>phase</code>; no aparecen pérdida regional de R, Q patológica o distorsión terminal por lesión. <strong>No es un incumplimiento de una promesa de infarto crónico:</strong> la UI etiqueta <code>chronic</code> como «ST resuelto» y avisa que no genera Q de necrosis. Es un límite importante frente a la meta de fidelidad.</td>
+</tr>
+<tr>
+<td>Isquemia superpuesta a BRI y estimulación</td>
+<td align="right">3,5</td>
+<td>La lesión se suma a repolarización secundaria y existe un ejemplo de concordancia lateral. El ST secundario depende de una amplitud derivada de I, con techo, no de un modelo regional de QRS/repolarización. El catálogo declara que el caso Sgarbossa es ilustrativo y no garantiza criterio proporcional.</td>
+</tr>
+<tr>
+<td>Validación coronaria independiente</td>
+<td align="right">2,5</td>
+<td>Hay pruebas de reciprocidad inferior, preservación de J/ST y estabilidad de señales. La validación externa LUDB evalúa delimitación QRS; no valida anatomía coronaria, ST, T ni cambios pre/post reperfusión. No encontré un conjunto independiente con ECG y adjudicación angiográfica que mida el realismo de estos patrones.</td>
+</tr>
+</tbody></table></div>
+<h3 id="hemodinamia-hallazgos-reproducidos-que-cambian-la-priorizacion">Hallazgos reproducidos que cambian la priorización</h3>
+<h4 id="hemodinamia-1-la-base-vectorial-merece-conservarse">1. La base vectorial merece conservarse</h4>
+<p>Con intensidad 2 y fase aguda, antes de filtros, el vector inferior CD produce I −0,10668 mV, II +0,17102 mV, III +0,27770 mV y aVL −0,19219 mV. Esto explica de forma consistente III &gt; II y la reciprocidad. El perfil inferior Cx produce I +0,03002 mV, II +0,23876 mV y III +0,20874 mV. Son ejemplos de orientaciones plausibles; <strong>dos vectores no representan toda la distribución anatómica de CD y Cx</strong>. Fuente local: <code>morphology.ts</code>, <code>leads.ts</code>, prueba aislada y <code>docs/modelo.md</code>.</p>
+<p>Una validación angiográfica independiente de 480 STEMI encontró rendimientos más modestos que los reportes originales de las reglas de localización; incluso diferentes patrones podían corresponder al árbol coronario derecho o izquierdo. Es una razón para mantener la incertidumbre en el simulador, no para intentar prometer localización exacta. <a href="https://pubmed.ncbi.nlm.nih.gov/28485279/">Eerdekens et al., EuroIntervention 2017</a>.</p>
+<h4 id="hemodinamia-2-st-resuelto-significa-exactamente-eso">2. «ST resuelto» significa exactamente eso</h4>
+<p>En la ejecución aislada mantuve todos los parámetros del caso base, eliminé variabilidad y usé filtro desactivado. Cambié solo <code>ischemia</code> y <code>phase=&#39;chronic&#39;</code>: inferior CD, inferior Cx, anterior, lateral y VD fueron <strong>idénticos muestra por muestra al caso normal</strong>, con diferencia máxima de 0 mV. El posterior conservó la corrección local de R. No es una prueba de que todo ECG clínico deba conservar cambios después de una isquemia, ni que el etiquetado actual sea falso: confirma que el motor no conserva una memoria de lesión o secuela. La advertencia de la UI es correcta.</p>
+<h4 id="hemodinamia-3-la-onda-t-todavia-carece-de-suficiente-localizacion">3. La onda T todavía carece de suficiente localización</h4>
+<p>Para una lesión inferior, aumentar toda la T basal 2,15 veces no asegura T hiperagudas inferiores con relaciones T/QRS coherentes. Invertir todo el vector en fase evolutiva tampoco representa selectivamente la repolarización del tejido afectado. Esta corrección ofrece mayor valor inmediato que añadir nuevos nombres de infarto. La definición universal vigente describe ondas hiperagudas anchas y desproporcionadas respecto del QRS, cambios dinámicos de T y dependencia del momento de presentación; una simple ganancia global es una representación incompleta. <a href="https://academic.oup.com/eurheartj/advance-article/doi/10.1093/eurheartj/ehag101/8766309">Quinta Definición Universal de IAM, 2026, sección 13</a>.</p>
+<h4 id="hemodinamia-4-no-confundir-fenotipo-electrico-con-anatomia-o-histologia">4. No confundir fenotipo eléctrico con anatomía o histología</h4>
+<p>La precaución del preset difuso/aVR es un punto a favor. El patrón no adjudica una oclusión del tronco. En el estudio de Knotts solo 57 de 133 pacientes fueron a angiografía; entre esos 57, el 23% tenía enfermedad de tronco o equivalente. El denominador y la selección importan: ese porcentaje no es una probabilidad universal para cada paciente con ese ECG. <a href="https://pubmed.ncbi.nlm.nih.gov/23312698/">Knotts et al., 2013</a>.</p>
+<p>Si se desarrolla secuela regional, tampoco conviene codificar «Q = infarto transmural». En un estudio con resonancia y ECG, la presencia de Q se relacionó más con el tamaño total del infarto que con su transmuralidad. <a href="https://pubmed.ncbi.nlm.nih.gov/15358019/">Moon et al., JACC 2004</a>.</p>
+<h3 id="hemodinamia-doce-propuestas-concretas">Doce propuestas concretas</h3>
+<p>Prioridad P0: siguiente fortalecimiento. P1: siguiente ciclo tras disponer de aceptación básica. P2: evolución del motor que puede posponerse. S/M/L indican esfuerzo pequeño/medio/grande, incluyendo verificación, sin prometer fechas. Los umbrales y tamaños de conjuntos que se sugieren son criterios de ingeniería a acordar, no estándares clínicos.</p>
+<h4 id="HEM-01" class="proposal-heading">HEM-01 · Regionalizar la T hiperaguda y evolutiva — P0 / M</h4>
+<p><strong>Problema:</strong> <code>tVector()</code> multiplica el vector basal de todo el corazón. <strong>Implementación:</strong> separar T basal y componente regional de repolarización vinculada al territorio y fase ya existentes; ajustar amplitud, anchura y simetría, preservando reciprocidad y continuidad. <strong>Aceptación:</strong> para cada preset isquémico actual, fijar antes de ajustar un conjunto de derivaciones afectadas y relaciones T/QRS esperadas, y verificar que no aparecen inversiones difusas por el mero cambio de una lesión localizada; revisión ciega de ejemplos extremos. Sin nuevos controles ni presets.</p>
+<h4 id="HEM-02" class="proposal-heading">HEM-02 · Calibrar las cuatro fases existentes como estados coherentes — P1 / M</h4>
+<p><strong>Problema:</strong> las fases son ganancias fijas, no estados integrados de un mismo evento. <strong>Implementación:</strong> definir un contrato de fase con morfología de J/ST/T, persistencia o recuperación de alteraciones y condiciones documentadas; usar registros reales emparejados como referencia cuando sea posible. Conservar el selector actual y evitar adjudicar minutos clínicos ficticios. <strong>Aceptación:</strong> cambios entre fases mantienen identidad de caso, región y calibración, no hacen saltos incoherentes de QRS, y el estado «ST resuelto» no se describe como prueba de reperfusión completa o ausencia de daño.</p>
+<h4 id="HEM-03" class="proposal-heading">HEM-03 · Perfiles anatómicos internos para CD y Cx — P1 / M</h4>
+<p><strong>Problema:</strong> las etiquetas CD/Cx se apoyan en una sola dirección para cada una. <strong>Implementación:</strong> sustituir las constantes únicas por un pequeño conjunto versionado de perfiles plausibles de orientación y extensión, dependientes de la semilla y validados como conjunto; conservar los presets y su advertencia de incertidumbre arterial. Puede representarse dominancia de forma interna sin añadir un mapa coronario o un panel. <strong>Aceptación:</strong> los ejemplos cubren solapamiento real entre CD y Cx, no fuerzan III &gt; II como identidad anatómica infalible, y la variación mantiene contigüidad y reciprocidad.</p>
+<h4 id="HEM-04" class="proposal-heading">HEM-04 · Sustituir correcciones locales aisladas por una base regional calibrada — P1 / L</h4>
+<p><strong>Problema:</strong> los parches de posterior, Wellens y de Winter están desacoplados del resto de la señal. <strong>Implementación:</strong> mantener un motor híbrido ligero con unas pocas fuentes regionales y campos de derivación distintos, calibrados en las ocho señales independientes; derivar las extremidades al final como ahora. Sumar más dipolos con la misma matriz Dower no resuelve por sí solo la limitación espacial. <strong>Aceptación:</strong> mejora en el conjunto externo fijado antes, conservación exacta de las identidades de extremidades, parámetros trazables y coste de síntesis compatible con el worker actual. Primero comparar una prueba de concepto con la arquitectura existente; no migrar por complejidad sola.</p>
+<h4 id="HEM-05" class="proposal-heading">HEM-05 · Corregir la R anterior fija del preset posterior — P0 / M</h4>
+<p><strong>Problema:</strong> se añade la misma R de 0,75 mV en V1, V2 y V3, cualquiera sea fase o señal basal. <strong>Implementación:</strong> reemplazar el incremento fijo por una modificación regional del QRS dependiente del sustrato y de la fase, con transición gradual entre derivaciones y magnitud relativa al QRS basal. <strong>Aceptación:</strong> no imponer R dominante a todo posterior temprano; comprobar anchura de R, R/S y ST/T de V1–V3 frente a un conjunto revisado. Mantener explícita la limitación de las 12 derivaciones; no inventar V7–V9.</p>
+<h4 id="HEM-06" class="proposal-heading">HEM-06 · Afinar el caso de lesión ventricular derecha y su interacción inferior — P1 / M</h4>
+<p><strong>Problema:</strong> un único vector no reproduce la diversidad de extensión inferior y anterior derecha ni la posible cancelación de fuerzas. <strong>Implementación:</strong> ajustar componentes inferior y VD dentro del preset existente y sus perfiles internos, sin fijar universalmente un criterio aislado V1/V2; contrastar con ECG con información clínica y angiográfica fiable. <strong>Aceptación:</strong> V1, precordiales e inferiores permanecen conjuntamente plausibles al cambiar intensidad y eje; no se afirma confirmar infarto VD sin derivaciones derechas. La definición universal vigente destaca la necesidad de esas derivaciones para esta localización. <a href="https://academic.oup.com/eurheartj/advance-article/doi/10.1093/eurheartj/ehag101/8766309">Definición Universal 2026</a>.</p>
+<h4 id="HEM-07" class="proposal-heading">HEM-07 · Acoplar lesión y despolarización cuando el estado lo justifique — P2 / L</h4>
+<p><strong>Problema:</strong> la isquemia no cambia <code>qrsKernels()</code>. <strong>Implementación:</strong> introducir en los mismos presets pérdida regional de fuerzas, alteración terminal o secuela mediante parámetros internos documentados; evitar que bajar ST obligue a crear una Q. Es ampliación del motor fisiológico, no un nuevo módulo de uso. <strong>Aceptación:</strong> conservar ejemplos de lesión sin Q y de infarto con Q según el sustrato, evitar equivalencias histológicas rígidas y validar duración/amplitud/progresión R con revisión externa. No reutilizar el interruptor «componente septal» como sustituto de necrosis. <a href="https://pubmed.ncbi.nlm.nih.gov/15358019/">Moon et al., 2004</a>.</p>
+<h4 id="HEM-08" class="proposal-heading">HEM-08 · Repolarización secundaria proporcional en BRI y estimulación — P0 / M</h4>
+<p><strong>Problema:</strong> el ST secundario usa una estimación derivada de I con techo, mientras el vector de lesión es fijo. <strong>Implementación:</strong> calibrar la repolarización secundaria contra la activación regional y amplitud del QRS, y revisar el preset Sgarbossa en el rango ya permitido de QRS/amplitud. El objetivo es mejorar la señal; no añadir un score automático. <strong>Aceptación:</strong> documentar qué ejemplos cumplen concordancia o discordancia excesiva, verificar ejemplos de control sin lesión y evitar que una amplitud QRS baja produzca un criterio espurio por el algoritmo generador. Para proporcionalidad, usar la convención de signos explícita del estudio original. <a href="https://pubmed.ncbi.nlm.nih.gov/22939607/">Smith et al., 2012</a>.</p>
+<h4 id="HEM-09" class="proposal-heading">HEM-09 · Recalibrar ST difuso/subendocárdico sin adjudicar arteria — P1 / M</h4>
+<p><strong>Problema:</strong> dos vectores fijos pueden convertir la isquemia difusa en un patrón demasiado repetitivo. <strong>Implementación:</strong> variar extensión y orientación dentro de rangos regionales revisados, mantener el nombre de patrón y separar en la documentación alteración eléctrica, lesión miocárdica y mecanismo coronario. <strong>Aceptación:</strong> descenso multiderivación y relación con aVR coherentes, variación clínicamente plausible y ninguna regla que traduzca automáticamente el patrón a tronco o infarto transmural/subendocárdico confirmado. <a href="https://pubmed.ncbi.nlm.nih.gov/23312698/">Knotts et al., 2013</a>.</p>
+<h4 id="HEM-10" class="proposal-heading">HEM-10 · Afinar Wellens y de Winter en las doce derivaciones — P1 / M</h4>
+<p><strong>Problema:</strong> Wellens reemplaza T de V2–V3 con amplitudes constantes; de Winter aplica depresiones y T prácticamente idénticas a V1–V6 y admite que falta aVR. <strong>Implementación:</strong> perfiles de transición regional, escalado relativo al QRS y compatibilidad con las fases actuales, con amplitudes por región correlacionadas en lugar de seis parches iguales. <strong>Aceptación:</strong> cada patrón tiene coherencia global y conserva diferencias plausibles V1–V6; el texto sigue distinguiendo patrón morfológico de diagnóstico dependiente del contexto. La relación original de de Winter con oclusión proximal de DA puede documentarse sin presentarla como exclusiva. <a href="https://doi.org/10.1056/NEJMc0804737">de Winter et al., NEJM 2008</a>.</p>
+<h4 id="HEM-11" class="proposal-heading">HEM-11 · Pruebas de compatibilidad entre controles actuales — P0 / S</h4>
+<p><strong>Problema:</strong> los controles permiten cruzar fase, conducción, lesión y amplitudes cuyo resultado puede dejar de corresponder al preset. <strong>Implementación:</strong> extender las restricciones y pruebas existentes con una matriz pequeña de combinaciones de mayor riesgo interpretativo; distinguir combinación no representada de combinación clínicamente imposible. <strong>Aceptación:</strong> los casos revisados conservan el rasgo que su etiqueta promete o informan claramente que ya no lo representan; no bloquear por comodidad combinaciones clínicamente posibles. Los resultados se documentan en el catálogo y se prueban sin añadir paneles.</p>
+<h4 id="HEM-12" class="proposal-heading">HEM-12 · Validación específica de morfología isquémica — P0 / L</h4>
+<p><strong>Problema:</strong> los resultados LUDB QRS y los snapshots no responden si un hemodinamista reconoce una lesión plausible. <strong>Implementación:</strong> conjunto versionado de ECG autorizados de los territorios actuales, incluyendo mimetizadores, fases y patrones con conducción alterada; cuando exista, conservar referencia angiográfica o imagen y momento respecto de reperfusión. Separar desarrollo y reserva por paciente y procedencia. Empezar con una colección pequeña y revisable, declarando los límites de representatividad. <strong>Aceptación:</strong> protocolo previo con medidas J/ST, áreas/polaridad de T, Q/R y evaluación ciega por médicos; informar acuerdo, errores por patrón y ejemplos fallidos. No convertir la concordancia con el generador en evidencia clínica. Requiere acceso lícito a datos y revisión humana; sin ellos solo es posible la validación de ingeniería.</p>
+<h3 id="hemodinamia-orden-recomendado">Orden recomendado</h3>
+<p>Aplicaría primero HEM-01, HEM-05, HEM-08 y HEM-11, acompañados de la primera etapa de HEM-12. Son mejoras directas del contenido que ya se enseña. HEM-04 y HEM-07 tienen mayor coste y solo deberían avanzar después de demostrar, en un prototipo, que resuelven errores que la calibración ligera no puede corregir.</p>
+<p>La mayor ganancia actual sería que cada trazado mostrase una lesión regional coherente en QRS, J, ST y T. Aumentar el número de etiquetas sin cerrar esa relación no elevaría la fidelidad coronaria.</p>
+</div>
+  <p class="back"><a href="#inicio">Volver al índice ↑</a></p>
+</section>
+<section class="expert" id="visual" aria-labelledby="visual-title">
+  <header class="expert-header"><div><p class="eyebrow">Perspectiva 05 · 8 criterios · 12 propuestas</p><h2 id="visual-title">Desarrollo web y diseño visual</h2><p>Asegurar que escala, estados, accesibilidad y legibilidad sostengan la interpretación.</p></div><div class="expert-score" aria-label="Nota 5,1 de siete">5,1<span>/ 7</span></div></header>
+  <div class="expert-body"><p>ECG Lab v1.2, commit <code>d8bb0a27710de2537737f2c1b03b14ad15b62598</code>. Evaluación de perspectiva especializada por IA; no representa una revisión de seis personas ni certificación clínica o de accesibilidad. Solo lectura del proyecto.</p>
+<h3 id="visual-alcance-y-evidencia">Alcance y evidencia</h3>
+<p>Se inspeccionaron <code>src/style.css</code>, <code>src/main.ts</code>, <code>src/render/ecg.ts</code>, los componentes de <code>src/ui/</code> y el smoke de navegador existente. Inspección visual real de <code>docs/browser-captures/v1.2-wpw.jpg</code>; <code>vista-general.jpg</code> se consultó como antecedente visual v1.1, no como captura actual. También se inspeccionó la captura actual <code>reviews/monitor-state-review.jpg</code>, producida por el agente coordinador en navegador autorizado al comprobar una transición de pausa y cambio de caso. No se verificó un viewport móvil actual: el entorno de navegador de esta revisión no expone un cambio de viewport. Las conclusiones móviles son inferencias del CSS/DOM y requieren confirmación práctica.</p>
+<p>La guía modern-web-guidance se leyó primero; su búsqueda offline no estuvo disponible (<code>ENOTCACHED</code>). Se usaron W3C y MDN como fuentes primarias alternativas. No se modificó código, no se ejecutó un navegador alternativo y no se publicó una versión.</p>
+<h3 id="visual-veredicto">Veredicto</h3>
+<p><strong>5,1/7, media simple de ocho parámetros (40,6/8 = 5,075).</strong> Interfaz sobria, coherente y útil para lectura clínica. La gráfica tiene mejores fundamentos que una maqueta visual: unidades, calibración, conservación de extremos, distinción entre medidas aceptadas y revisables. Las principales brechas hacia un producto de nivel alto son accesibilidad, coherencia de estados de controles, calibración perceptiva de la ampliación y evidencia de funcionamiento en dispositivos reales. Embellecer más el marco de la aplicación aportaría menos valor que resolver esas brechas.</p>
+<p>Escala: 4 = funcional con brechas; 5 = sólido; 6 = nivel alto con validación amplia; 7 = excelencia demostrada. Las notas son juicio de auditoría, no mediciones clínicas ni porcentajes de cumplimiento.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Tabla desplazable"><table>
+<thead>
+<tr>
+<th>Parámetro</th>
+<th align="right">Nota /7</th>
+<th>Evidencia y fundamento</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Jerarquía clínica y composición visual</td>
+<td align="right">5,9</td>
+<td>Papel central, navegación lateral, resumen de medidas y ampliación de latido forman una lectura coherente. La captura v1.2 de WPW muestra intervalos bien separados y límites unidos a la curva. No hay evidencia de pruebas de usabilidad clínica con observadores.</td>
+</tr>
+<tr>
+<td>Fidelidad de representación y escalas</td>
+<td align="right">5,8</td>
+<td><code>render/ecg.ts</code> calcula geometría en mm, usa pulso de 1 mV/200 ms y conserva extremos en la reducción por píxel. Exportación define 300/25,4 px/mm. La ampliación SVG autoescala su amplitud por latido; dificulta comparar visualmente voltajes entre latidos o derivaciones sin leer el eje.</td>
+</tr>
+<tr>
+<td>Tipografía, contraste y legibilidad</td>
+<td align="right">4,7</td>
+<td>Números monoespaciados/tabulares, buen contraste de curva y controles principales. Varias jerarquías pequeñas usan contraste insuficiente: grupos del catálogo 3,56:1 y pie 2,89:1. El texto secundario en fondo gris llega a 4,41:1; la captura muestra etiquetas y notas visualmente muy pequeñas.</td>
+</tr>
+<tr>
+<td>Comunicación de incertidumbre</td>
+<td align="right">5,6</td>
+<td>«Revisar»/«No estimable» aparecen en texto, las medidas pueden retirarse y el diálogo explica consistencia interna. «QRS reproducible» y «resolución 2 ms» junto al trazado todavía exigen abrir el diálogo para entender plenamente que ni reproducibilidad ni paso de muestreo equivalen a exactitud clínica.</td>
+</tr>
+<tr>
+<td>Accesibilidad y operación alternativa</td>
+<td align="right">3,8</td>
+<td>Controles nativos, etiquetas y foco visible son buenos cimientos. Calibres dependen del puntero; grupos <code>role=tab</code> no implementan navegación con flechas ni asociación <code>aria-controls</code>/<code>tabpanel</code>; el catálogo móvil se oculta mediante transform sin inert. <code>Casos</code> pierde su texto visible bajo 430 px y carece de <code>aria-label</code>.</td>
+</tr>
+<tr>
+<td>Responsive y precisión táctil</td>
+<td align="right">4,7</td>
+<td>Hay reflujo de métricas y columnas, catálogo móvil, scroll interno del papel y del detalle. Papel mínimo de 640 px y SVG de 600 px requieren desplazamiento horizontal intencional. Botones de 31–37 px y extremos pequeños del calibre no prueban una interacción cómoda en teléfono. Nota basada en código y antecedente, no validación móvil actual.</td>
+</tr>
+<tr>
+<td>Coherencia del estado de la interfaz</td>
+<td align="right">4,5</td>
+<td>Invalidar señal y medidas al cambiar parámetros evita mostrar una configuración con datos antiguos; cola del Worker descarta respuestas obsoletas. Sin embargo, estado de pausa, texto del monitor y clases/ARIA de calibres se actualizan en ramas diferentes, con un fallo confirmado: tras congelar y seleccionar Bradicardia, vuelve el botón Congelar pero permanece CONGELADO. El coordinador reprodujo la transición y se inspeccionó su captura actual. También confirmó que Calibres conserva aria-pressed=true al volver desde Monitor, aunque el canvas ya no está en modo measuring.</td>
+</tr>
+<tr>
+<td>Arquitectura de presentación, rendimiento y pruebas</td>
+<td align="right">5,6</td>
+<td>Separación motor/Worker/render/UI, render incremental del monitor y reducción con extremos son decisiones acertadas. <code>main.ts</code> aún combina orquestación y numerosas plantillas/eventos; CSS acumula reglas antiguas y overrides. Arrastrar calibres vuelve a renderizar todo el papel. El smoke opcional existe, pero no sustituye una suite de regresión visual/teclado reproducible ni presupuestos medidos de rendimiento.</td>
+</tr>
+</tbody></table></div>
+<h4 id="visual-fallo-de-estado-confirmado-en-navegador">Fallo de estado confirmado en navegador</h4>
+<p>Recorrido: <strong>Monitor → Congelar → seleccionar Bradicardia</strong>. Antes del cambio, el botón muestra Reanudar y el rótulo CONGELADO. Tras regenerar el caso, la FC pasa a 45 lpm y el botón vuelve a Congelar, pero el rótulo sigue CONGELADO. La contradicción está visible en <code>monitor-state-review.jpg</code>; el reinicio de <code>paused=false</code> está además confirmado en el callback de <code>SignalController</code>. La captura prueba el desacuerdo visual; el reinicio de la reproducción se infiere del código y del botón, sin una medición temporal independiente.</p>
+<p><strong>Segundo fallo, verificado por DOM en el navegador del coordinador:</strong> Papel → activar Calibres → Monitor → Papel conserva <code>aria-pressed=true</code> en el botón, pero <code>canvas.className</code> queda vacío: el calibre se ha desactivado (<code>caliperOn=false</code>) y el control sigue comunicando selección. Esta evidencia es de atributos/estado y lectura de código; no se inventa una segunda captura.</p>
+<h4 id="visual-contraste-calculo-verificable">Contraste: cálculo verificable</h4>
+<p>Se aplicó la fórmula de luminancia relativa sRGB a los colores declarados; no es una auditoría automática de toda la página. Grupos: <code>#7b8a94</code> sobre blanco = <strong>3,556:1</strong>, a 11 px. Pie: <code>#84939c</code> sobre <code>#f2f5f7</code> = <strong>2,891:1</strong>. Texto secundario: <code>#637481</code> sobre <code>#f2f5f7</code> = <strong>4,413:1</strong>, frente a <strong>4,832:1</strong> sobre blanco. W3C establece 4,5:1 para texto normal; para símbolos y estados visuales esenciales debe comprobarse también el criterio de contraste no textual. No corresponde exigir que toda la grilla decorativa alcance el mismo contraste que el texto o la curva. <a href="https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html">W3C: contraste de texto</a>, <a href="https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html">contraste no textual</a>.</p>
+<p>El bloque CSS móvil antiguo contiene letras de 7–9 px, pero reglas posteriores lo sobrescriben: no se atribuye ese tamaño final a las métricas actuales. Esto ilustra por qué conviene revisar la cascada efectiva antes de declarar un fallo visual.</p>
+<h3 id="visual-exactamente-12-propuestas-factibles">Exactamente 12 propuestas factibles</h3>
+<p>P0 = incoherencia que conviene corregir primero; P1 = prioridad alta; P2 = consolidación posterior. Esfuerzo orientativo de implementación: S = 1–2 jornadas; M = 3–5 jornadas; L = 1–2 semanas, incluyendo revisión y pruebas, sujeto a hardware/navegadores disponibles. Todas fortalecen vistas, controles o exportaciones ya existentes; no añaden módulos clínicos.</p>
+<h4 id="V01" class="proposal-heading">V01. Derivar los estados visuales desde un estado único de pantalla</h4>
+<p><strong>P0 · M.</strong> Unificar en una pequeña función <code>renderViewState</code> el texto REPRODUCCIÓN/CONGELADO, el nombre del botón, <code>aria-pressed</code>, clases activas, controles habilitados y tema; ejecutarla tras modo, caso, importación, generación y error. Hoy el callback del Worker restablece <code>paused=false</code>, mientras el texto de monitor solo cambia al pulsar pausa; al cambiar vista se limpia <code>caliperOn</code> y la comprobación actual confirma que queda <code>aria-pressed=true</code> en el botón. No hace falta introducir una biblioteca de estado.</p>
+<p><strong>Aceptación:</strong> secuencias Monitor → Congelar → otro caso; Calibres → Monitor → Papel; tema oscuro → guardar/importar muestran siempre el mismo estado en curva, texto, botón y atributos accesibles. Ninguna etiqueta CONGELADO acompaña un barrido activo.</p>
+<h4 id="V02" class="proposal-heading">V02. Hacer los calibres plenamente operables con teclado</h4>
+<p><strong>P1 · M.</strong> Añadir foco y movimiento de los dos extremos existentes mediante flechas, desplazamiento fino por muestra, paso amplio con modificador, Enter para confirmar y Escape para salir. El resultado numérico debe anunciarse de forma contenida, reutilizando el readout actual. Una medición definida por dos extremos admite equivalente de teclado. <a href="https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html">W3C: teclado</a>.</p>
+<p><strong>Aceptación:</strong> medir un intervalo y una amplitud, cambiar de derivación y limpiar la selección sin ratón; obtener el mismo Δt/ΔV que con puntero sobre coordenadas idénticas, a distintas velocidades/ganancias. No depender de instrucciones ocultas ni interceptar flechas de inputs nativos.</p>
+<h4 id="V03" class="proposal-heading">V03. Completar semántica y foco de pestañas, catálogo y diálogos</h4>
+<p><strong>P1 · M.</strong> Implementar índice de tabulación móvil en las pestañas, flechas y vínculos tab/panel; poner <code>inert</code> y ocultación accesible al catálogo cerrado; gestionar <code>aria-expanded</code>, nombre del botón Casos, entrada/restauración de foco y cierre. Etiquetar el diálogo con su título. Conservar los controles nativos y el <code>&lt;dialog&gt;</code> ya presentes. <a href="https://www.w3.org/WAI/ARIA/apg/patterns/tabs/">W3C: patrón de pestañas</a>.</p>
+<p><strong>Aceptación:</strong> recorrer cada vista con teclado y lector de pantalla; ninguna parada de foco fuera de la pantalla con catálogo cerrado; al cerrar se vuelve al disparador; las pestañas anuncian selección y panel correcto. Los atajos globales no activan acciones involuntarias cuando un botón o campo tiene foco.</p>
+<h4 id="V04" class="proposal-heading">V04. Ajustar contraste y escala tipográfica de la información clínica secundaria</h4>
+<p><strong>P1 · S.</strong> Definir tokens de texto secundario, texto tenue permitido solo para decoración y estados clínicos, comprobados en ambos temas. Aumentar notas/leyendas relevantes sin ampliar desproporcionadamente las cifras principales; usar una base de 12–13 px para información que el usuario debe leer, y rem para escalado. Priorizar unidades, estado de fiabilidad, derivación y tiempo.</p>
+<p><strong>Aceptación:</strong> texto normal ≥4,5:1 y estados gráficos esenciales ≥3:1, revisión al 200% y captura en teléfono; ninguna referencia de precisión o limitación requiere leer letra diminuta. Mantener la grilla discreta y la curva como primer plano. Estos umbrales son de accesibilidad, no requisitos de fidelidad electrofisiológica.</p>
+<h4 id="V05" class="proposal-heading">V05. Refinar la lectura móvil manteniendo la escala del ECG</h4>
+<p><strong>P1 · M.</strong> Compactar cabecera y barras en pantallas estrechas para que el trazado aparezca antes; conservar desplazamiento dentro del papel, sin comprimir hasta hacer ilegibles ondas o grilla. Mantener derivación, velocidad y ganancia visibles al desplazarse por el trazado; separar el scroll del SVG de las cabeceras/notas del detalle. Ampliar áreas de pulsación a un objetivo de 44 px cuando sea práctico: WCAG 2.2 AA exige 24 px con excepciones, por lo que 44 px aquí es un objetivo de ergonomía, no una descripción del mínimo normativo. <a href="https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html">W3C: tamaño de objetivo</a>.</p>
+<p><strong>Aceptación:</strong> 360/390/430 px, horizontal y vertical, zoom 200%; no hay scroll horizontal del documento, únicamente del trazado donde sea necesario; las escalas y el nombre del caso siguen siendo legibles; no se arrastra un calibre accidentalmente al intentar desplazar la página. <a href="https://www.w3.org/WAI/WCAG22/Understanding/reflow.html">W3C: reflujo</a>.</p>
+<h4 id="V06" class="proposal-heading">V06. Comunicar con precisión qué significan «reproducible» y «2 ms»</h4>
+<p><strong>P1 · S.</strong> Revisar los textos existentes: indicar «consistencia interna» junto al estado del QRS y «paso de muestreo: 2 ms» en lugar de una «resolución» susceptible de interpretarse como error de medida. Mostrar la razón breve del estado Revisar en el detalle, también accesible al tacto, manteniendo el diálogo como explicación extensa. El aspecto de confianza debe depender de evidencia disponible, no del color del caso seleccionado.</p>
+<p><strong>Aceptación:</strong> en un caso usable, revisable y no estimable, la lectura principal permite distinguir dato medido, consistencia y límite de evidencia sin abrir el diálogo; no aparece una probabilidad de acierto inventada ni se confunde muestreo con precisión. Capturas y textos quedan cubiertos por pruebas.</p>
+<h4 id="V07" class="proposal-heading">V07. Evitar comparaciones engañosas por el autoescalado de la ampliación</h4>
+<p><strong>P1 · M.</strong> Reutilizar un rango vertical estable durante la navegación entre latidos de un mismo registro, o declarar explícitamente el autoescalado al cambiarlo; conservar siempre ticks de mV y un cero inequívoco. Revisar alineación temporal/espacio de PR-QRS-QT para valores extremos y QRS grandes. La forma visual de un latido no debe parecer de mayor voltaje solo por cambiar el rango de la ventana.</p>
+<p><strong>Aceptación:</strong> señales de 0,2 y 1 mV no parecen iguales bajo la misma escala; avanzar/retroceder no provoca saltos injustificados de amplitud; no se ocultan límites ni se superponen rótulos en QRS ancho, QT largo, ondas de bajo voltaje y espigas. Los valores numéricos y las muestras permanecen idénticos.</p>
+<h4 id="V08" class="proposal-heading">V08. Hacer visible la relación temporal entre columnas del papel</h4>
+<p><strong>P1 · S.</strong> Añadir en las cabeceras actuales de columna el intervalo temporal del segmento y reforzar la indicación de simultáneo/secuencial en el propio papel y PNG. Hoy la modalidad está en un selector debajo de la señal y en textos pequeños; las líneas verticales separadoras no explican por sí solas si dos complejos ocurrieron al mismo tiempo.</p>
+<p><strong>Aceptación:</strong> en una secuencia irregular, el usuario puede identificar visualmente si I y V6 corresponden al mismo tiempo; 3×4, 6×2 y 12×1 mantienen tiempos coherentes con <code>segment.start</code>; la indicación permanece en una captura recortada o exportación. Esto reduce una ambigüedad relevante al comparar ST o ectopia entre derivaciones.</p>
+<h4 id="V09" class="proposal-heading">V09. Cerrar la cadena de calibración de pantalla a exportación</h4>
+<p><strong>P1 · M.</strong> Conservar el PNG de 300 dpi y su geometría; reforzar metadatos de escala y revisar estilos de impresión que actualmente usan <code>max-width:100%</code>, porque el navegador puede reducir el papel. Distinguir escala nominal de calibración física realizada. No asumir que un píxel CSS tiene tamaño físico conocido en todas las pantallas o que el programa de impresión respeta los DPI.</p>
+<p><strong>Aceptación:</strong> regresión de anchura/altura del pulso y grilla a 12,5/25/50 mm/s y 5/10/20 mm/mV; exportación mantiene metadatos y dimensiones; una impresión de prueba al 100% permite comprobar una regla de 50 mm. Cualquier reducción para ajustar página queda explícita y no se presenta como calibración física intacta.</p>
+<h4 id="V10" class="proposal-heading">V10. Separar papel estático y superposición interactiva para mantener fluidez</h4>
+<p><strong>P2 · M.</strong> Cachear la señal/grilla ya renderizada y dibujar calibres/anotaciones en una capa de superposición, invalidando solo con señal o escala nueva. Hoy cada <code>pointermove</code> llama <code>draw</code>, que recorre amplitudes y vuelve a dibujar el papel. El monitor ya tiene un fondo cacheado: extender ese principio sin introducir WebGL ni complejidad innecesaria. Usar un DPR efectivo coherente para dibujo y reducción de muestras. <a href="https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Optimizing_canvas">MDN: optimización de Canvas</a>.</p>
+<p><strong>Aceptación:</strong> medición registrada en hardware de referencia; objetivo inicial p95 de actualización de calibre &lt;16,7 ms y respuesta visible a controles &lt;100 ms, documentando el entorno. Una comparación de píxeles y extremos verifica que la mejora no elimina espigas ni redondea amplitudes. No se declara rendimiento demostrado antes de medirlo.</p>
+<h4 id="V11" class="proposal-heading">V11. Consolidar estilos y hacer reproducible la tipografía</h4>
+<p><strong>P2 · M.</strong> Eliminar duplicación entre estilos iniciales y overrides de la iteración v1.1, separar por componentes funcionales y mantener pocos tokens semánticos. Servir localmente las fuentes con su licencia o definir un fallback deliberado. Extraer de <code>main.ts</code> las plantillas de monitor/barras sin introducir un framework solo por esta refactorización.</p>
+<p><strong>Aceptación:</strong> capturas antes/después preservan geometría y trazado; con fuentes remotas bloqueadas no cambia el ancho de las cifras ni se corta una etiqueta; cada breakpoint tiene una regla efectiva identificable. El bundle y tiempo de inicio no empeoran. Cambios de un token de estado se reflejan por igual en tarjetas, detalle y diálogo.</p>
+<h4 id="V12" class="proposal-heading">V12. Convertir los recorridos clínicos actuales en una regresión visual y accesible</h4>
+<p><strong>P1 · M.</strong> Formalizar el smoke actual con escenarios deterministas: sinus, WPW, QRS ancho, marcapasos y caso con medidas retiradas; añadir las transiciones defectuosas, keyboard/focus y PNG. Usar unas pocas capturas con regiones significativas y aserciones DOM/geométricas; mantener pruebas de píxel separadas de la validación electrofisiológica. Registrar navegador, viewport, DPR, fuentes y semilla.</p>
+<p><strong>Aceptación:</strong> la comprobación detecta a propósito una etiqueta de pausa desincronizada, un foco fuera de pantalla, un recorte del QRS y un cambio de escala no declarado. Ejecutar al menos escritorio Chromium y una prueba real Safari/iOS antes de afirmar compatibilidad móvil de nivel alto. Las 150 pruebas existentes son una base útil; no se reinterpretan como 150 pruebas de interfaz.</p>
+<h3 id="visual-orden-recomendado">Orden recomendado</h3>
+<p>Primero V01 y los defectos accesibles de V02–V04. Después V06–V09, que afectan la interpretación del ECG y de sus medidas. V05 se cierra con dispositivo real; V10–V11 consolidan rendimiento y mantenibilidad. V12 acompaña cada cambio de riesgo concreto y se integra en la entrega, sin multiplicar capturas o tests que no detectarían un fallo relevante.</p>
+</div>
+  <p class="back"><a href="#inicio">Volver al índice ↑</a></p>
+</section>
+<section class="expert" id="imagenes" aria-labelledby="imagenes-title">
+  <header class="expert-header"><div><p class="eyebrow">Perspectiva 06 · 8 criterios · 12 propuestas</p><h2 id="imagenes-title">IA y análisis de ECG desde imágenes</h2><p>Validar señal, imagen y análisis de forma independiente, con procedencia y controles nuevos.</p></div><div class="expert-score" aria-label="Nota 5,2 de siete">5,2<span>/ 7</span></div></header>
+  <div class="expert-body"><h3 id="imagenes-alcance-y-conclusion">Alcance y conclusión</h3>
+<p>Revisión independiente, de solo lectura, de ECG Lab v1.2, commit <code>d8bb0a27710de2537737f2c1b03b14ad15b62598</code>. Perspectiva de ingeniería de análisis automatizado y digitalización de ECG. Es una evaluación técnica asistida por IA; no constituye revisión humana por un especialista ni validación clínica.</p>
+<p><strong>Nota global: 5,2/7</strong>, media simple de ocho parámetros: <strong>41,8 / 8 = 5,225</strong>. Escala: 4, funcional con brechas; 5, sólido; 6, alto nivel con validación amplia; 7, excelencia demostrada. Las notas son juicios técnicos explícitos, no estimaciones estadísticas de precisión.</p>
+<p><strong>La base es favorable para medir señales y conservar la geometría del papel. La precisión externa todavía es limitada y la imagen exportada no está verificada como instrumento de medición.</strong> El producto no tiene un módulo que interprete fotografías de ECG; esa ausencia no se penaliza, porque no era su alcance. La preparación para una futura aplicación de imágenes se describe por separado.</p>
+<p>La oportunidad más valiosa consiste en usar un digitalizador externo como instrumento de verificación del simulador: comprobar que un tercero puede recuperar correctamente la señal desde el PNG. Esto puede realizarse fuera del producto, sin añadir IA al navegador ni crear un flujo nuevo para el usuario.</p>
+<h3 id="imagenes-evaluacion-por-parametros">Evaluación por parámetros</h3>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Tabla desplazable"><table>
+<thead>
+<tr>
+<th>Parámetro actual</th>
+<th align="right">Nota</th>
+<th>Evidencia y limitación</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Independencia entre analizador y referencia del generador</td>
+<td align="right"><strong>6,2</strong></td>
+<td><code>measure</code> recibe exclusivamente <code>fs</code> y <code>leads</code>; el test que modifica <code>events</code> y <code>truth</code> comprueba que el resultado no cambia. La auditoría sintética ocurre después. Es una separación correcta y poco común en demostradores. Falta hacer explícita esa separación también en todos los artefactos de evaluación.</td>
+</tr>
+<tr>
+<td>Procedencia e integridad de las referencias</td>
+<td align="right"><strong>5,8</strong></td>
+<td>LUDB conserva archivos originales, hashes, calibración, anotaciones y licencia. El lector fue contrastado con WFDB; no inventa límites ausentes. La referencia global de cuatro derivaciones es una agregación del proyecto, correctamente declarada, no una adjudicación humana global.</td>
+</tr>
+<tr>
+<td>Calibración física de la exportación</td>
+<td align="right"><strong>5,8</strong></td>
+<td>El render usa mm, mm/s y mm/mV; el PNG añade <code>pHYs</code> real. Verifiqué el artefacto: <strong>3425 × 1819 píxeles, 11811 píxeles/m = 299,9994 dpi</strong>. Falta probar la recuperación de esa escala desde sus píxeles, además de verificar fórmulas.</td>
+</tr>
+<tr>
+<td>Correspondencia temporal entre señal y formatos</td>
+<td align="right"><strong>5,2</strong></td>
+<td>Cada segmento conserva derivación, inicio, duración, polaridad y línea basal. Se prueban formatos secuenciales/simultáneos y aVR invertida en Cabrera. Ese mapa no acompaña al PNG y no hay una prueba automática de reconstrucción de su contenido visible.</td>
+</tr>
+<tr>
+<td>Reproducción duradera de casos</td>
+<td align="right"><strong>5,3</strong></td>
+<td>Semilla, parámetros, JSON/URL y comprobaciones deterministas permiten repetir casos dentro de una versión. El JSON exportado guarda parámetros, no las muestras ni la versión exacta del motor; un cambio futuro de síntesis puede producir otro ECG con el mismo JSON.</td>
+</tr>
+<tr>
+<td>Incertidumbre y abstención</td>
+<td align="right"><strong>5,0</strong></td>
+<td>Hay estados <code>usable/review/unavailable</code>, recuento, denominador, dispersión y conservación de candidatos rechazados. Es mejor que mostrar toda cifra como cierta. Sin embargo, estabilidad entre latidos no asegura exactitud y la auditoría sintética dispone de información privilegiada que un analizador de ECG real no tendría.</td>
+</tr>
+<tr>
+<td>Precisión del análisis en datos externos</td>
+<td align="right"><strong>4,4</strong></td>
+<td>El control conserva 43/43 QRS detectados dentro de la ventana evaluada; la delineación de duración QRS presenta MAE <strong>21,6 ms</strong>, frente a 19,9 ms antes. En un registro hay un error por latido de <strong>108 ms</strong>. La detección de eventos funciona mejor que la delimitación fina.</td>
+</tr>
+<tr>
+<td>Alcance de la validación independiente</td>
+<td align="right"><strong>4,1</strong></td>
+<td>Ocho registros de conveniencia, cuatro de desarrollo y cuatro de control expuesto, son útiles para regresión. No cubren una población suficiente ni prueban P, T, QT, ST o imágenes. Las 150 pruebas automatizadas y 313 escenarios sintéticos aportan evidencia técnica distinta de la validez externa.</td>
+</tr>
+</tbody></table></div>
+<h4 id="imagenes-archivos-examinados">Archivos examinados</h4>
+<ul>
+<li><a href="sandbox:/workspace/sites/ecg-lab/src/engine/measure.ts">measure.ts</a>, <a href="sandbox:/workspace/sites/ecg-lab/src/engine/analysis/model-audit.ts">model-audit.ts</a>, <a href="sandbox:/workspace/sites/ecg-lab/src/engine/analysis/evidence.ts">evidence.ts</a>.</li>
+<li><a href="sandbox:/workspace/sites/ecg-lab/src/render/ecg.ts">ecg.ts</a>, <a href="sandbox:/workspace/sites/ecg-lab/src/ui/persistence.ts">persistence.ts</a>, <a href="sandbox:/workspace/sites/ecg-lab/src/main.ts">main.ts</a>.</li>
+<li><a href="sandbox:/workspace/sites/ecg-lab/tests/engine.test.ts">engine.test.ts</a>, <a href="sandbox:/workspace/sites/ecg-lab/tests/external.test.mjs">external.test.mjs</a>, <a href="sandbox:/workspace/sites/ecg-lab/tests/browser-smoke.mjs">browser-smoke.mjs</a>.</li>
+<li><a href="sandbox:/workspace/sites/ecg-lab/tests/reference/ludb/README.md">Protocolo LUDB</a>, <a href="sandbox:/workspace/sites/ecg-lab/docs/analysis-validation-all.json">comparación externa</a>, <a href="sandbox:/workspace/sites/ecg-lab/docs/analysis-paired-comparison.json">comparación de los mismos latidos</a>, <a href="sandbox:/workspace/sites/ecg-lab/docs/analysis-freeze.json">congelación</a> y <a href="sandbox:/workspace/sites/ecg-lab/docs/analysis-post-freeze-review.json">revisión posterior de auditoría</a>.</li>
+</ul>
+<h3 id="imagenes-hallazgos-que-cambian-la-interpretacion">Hallazgos que cambian la interpretación</h3>
+<h4 id="imagenes-senal-papel-y-diagnostico-son-tres-problemas-distintos">Señal, papel y diagnóstico son tres problemas distintos</h4>
+<p>La medición actual trabaja sobre muestras digitales. Que ese analizador identifique un QRS no demuestra que una imagen conserve sus detalles, que un digitalizador los recupere ni que un clasificador diagnostique correctamente. El Challenge PhysioNet 2024 separó digitalización y clasificación, y evaluó también fotografías y escaneos reales en conjuntos ocultos. Esa separación metodológica sirve como guía para el proyecto. <a href="https://moody-challenge.physionet.org/2024/">Protocolo oficial</a>.</p>
+<p>La construcción de imágenes sintéticas a partir de señales clínicas tampoco equivale a crear señales fisiológicas sintéticas. ECG-Image-Kit aborda principalmente el primer problema. Sus distorsiones de papel permiten estudiar impresión, pliegues, texto o captura sin alterar arbitrariamente el origen fisiológico de la señal. Puede usarse en un entorno de pruebas separado, con una versión fijada y su licencia comprobada. <a href="https://zenodo.org/records/12731152">Software y publicación de los autores</a>.</p>
+<h4 id="imagenes-usable-expresa-repetibilidad-no-exactitud-demostrada">«Usable» expresa repetibilidad, no exactitud demostrada</h4>
+<p>Una ejecución independiente de <code>measure</code> sobre los fixtures actuales mostró que el registro de control <strong>102</strong> obtiene QRS <code>usable</code>, con dispersión <strong>4,6 ms</strong>, aunque la duración tiene MAE <strong>20,25 ms</strong> frente a la agregación anotada. Esto no contradice el contrato documentado de <code>evidence</code>; demuestra por qué su significado debe conservarse al comunicar resultados. El registro 101 está marcado para revisión y alcanza el error de 108 ms por latido señalado arriba.</p>
+<p>La auditoría del simulador puede retirar medidas porque conoce sus eventos sintéticos. Ese filtro es una protección educativa válida, pero sus resultados no deben contabilizarse como precisión de un algoritmo autónomo. Se confirmó que la evaluación LUDB invoca <code>measure</code> directamente y no usa esa auditoría.</p>
+<h4 id="imagenes-un-png-nitido-todavia-puede-ocultar-errores-pequenos-y-clinicamente-relevantes">Un PNG nítido todavía puede ocultar errores pequeños y clínicamente relevantes</h4>
+<p>Los tests actuales verifican las fórmulas de calibración y que se descarga un PNG; no extraen la curva desde sus píxeles. Tampoco prueban sistemáticamente el resultado de redimensionar, imprimir o fotografiar. La literatura de ECG-Image-Database advierte que el SNR global puede no reflejar bien cambios pequeños del ST o de límites Q/T. Por eso propongo combinar error de amplitud y tiempo con conservación de esas regiones, además de SNR. <a href="https://arxiv.org/html/2409.16612v1">Artículo de los autores</a>.</p>
+<h3 id="imagenes-doce-propuestas-factibles">Doce propuestas factibles</h3>
+<p><strong>Prioridad:</strong> P0, fundamento para la siguiente iteración; P1, siguiente bloque de consolidación; P2, preparación posterior. <strong>Esfuerzo:</strong> S, pequeño; M, moderado; L, amplio. Son estimaciones relativas de implementación y verificación, no plazos contractuales. Todos los instrumentos de datos e imágenes siguientes pueden quedar en scripts y pruebas, sin agregar módulos al producto.</p>
+<h4 id="A01" class="proposal-heading">A01 · Verificar la calibración desde el PNG terminado</h4>
+<p><strong>Implementación:</strong> crear pruebas que abran el PNG y midan la separación real de la grilla, el pulso de 1 mV/200 ms y algunos puntos conocidos. Cubrir 25/50 mm/s, ganancias habituales y ganancia precordial diferente. Revisar los pulsos por bloque cuando conviven escalas distintas.</p>
+<p><strong>Aceptación:</strong> las dimensiones rasterizadas concuerdan con la transformación declarada dentro del redondeo de píxel especificado; <code>pHYs</code> es coherente; una regresión intencional de velocidad o ganancia hace fallar la prueba. No declarar tolerancias clínicas a partir de una tolerancia gráfica.</p>
+<p><strong>P0 · M.</strong> Fortalece una exportación ya existente.</p>
+<h4 id="A02" class="proposal-heading">A02 · Conservar el mapa de lo que realmente aparece en el papel</h4>
+<p><strong>Implementación:</strong> utilizar <code>Layout.segments</code> para registrar, en fixtures de pruebas, qué derivación, tramo temporal y polaridad corresponde a cada región de imagen. Adjuntar una máscara de muestras visibles; los segmentos no impresos se consideran ausentes.</p>
+<p><strong>Aceptación:</strong> la comparación desde imagen nunca evalúa ni reconstruye como observado un tramo que no se imprimió. Cubrir 3×4, 6×2, 12×1, tiras adicionales, secuencial/simultáneo y Cabrera.</p>
+<p><strong>P0 · S.</strong> Evita comparar columnas secuenciales como si fueran registros simultáneos y facilita comprobar el render actual.</p>
+<h4 id="A03" class="proposal-heading">A03 · Vincular cada caso reproducible con su versión de motor</h4>
+<p><strong>Implementación:</strong> ampliar el manifiesto técnico de los casos de prueba con versión de esquema, commit o identificador estable del motor, parámetros, semilla, <code>fs</code>, hash de muestras y hash de imagen. Para referencias que deban durar entre versiones, conservar también muestras explícitas en un formato definido.</p>
+<p><strong>Aceptación:</strong> regenerar un caso con el mismo motor produce muestras idénticas; otro motor se identifica explícitamente y no se presenta como la misma señal por conservar la semilla. Mantener compatibilidad con los JSON existentes.</p>
+<p><strong>P0 · M.</strong> Mejora trazabilidad sin exigir un nuevo botón de exportación.</p>
+<h4 id="A04" class="proposal-heading">A04 · Separar artefactos de análisis crudo y auditoría del simulador</h4>
+<p><strong>Implementación:</strong> reforzar los tipos o envoltorios de resultados para distinguir <code>SampleAnalysis</code> de <code>SimulatorAudit</code>, e incluir en los informes qué información consumió cada etapa. Conservar la prueba que altera <code>truth/events</code> y agregar un guardia de acceso en el entorno de evaluación.</p>
+<p><strong>Aceptación:</strong> un benchmark externo rechaza un resultado que haya utilizado eventos, etiquetas o parámetros del generador. Una alteración deliberada de esos campos no modifica el análisis crudo. Ninguna cifra auditada reemplaza silenciosamente una métrica independiente.</p>
+<p><strong>P0 · S.</strong> Endurece una separación que ya está bien encaminada.</p>
+<h4 id="A05" class="proposal-heading">A05 · Retirar pistas diagnósticas de las imágenes de evaluación</h4>
+<p><strong>Implementación:</strong> crear un perfil interno de render para evaluación que oculte nombre de caso, preset, solución y anotaciones derivadas de la respuesta, pero mantenga derivaciones, velocidad y ganancia. Usar identificadores opacos; inspeccionar también nombres de archivo y metadatos.</p>
+<p><strong>Aceptación:</strong> la información que recibe un digitalizador/clasificador no contiene el diagnóstico objetivo. El diseño educativo normal puede seguir mostrando el nombre del patrón; este saneamiento corresponde a los fixtures de evaluación.</p>
+<p><strong>P0 · S.</strong> Evita que una futura evaluación parezca excelente por leer «Infarto inferior» en el encabezado del PNG.</p>
+<h4 id="A06" class="proposal-heading">A06 · Ampliar la referencia externa con un protocolo nuevo y congelado</h4>
+<p><strong>Implementación:</strong> seleccionar antes del ajuste un conjunto mayor de LUDB y otra fuente compatible, con estratos explícitos de QRS estrecho/ancho, bajo voltaje, frecuencia, ruido y conducción. Mantener nuevos controles ajenos al desarrollo. Separar métricas de eventos, límites, cobertura y resultados por registro.</p>
+<p><strong>Aceptación:</strong> publicar selección, exclusiones, hash del detector y regla de evaluación antes de abrir el control. Los registros 101–104 quedan como regresión ya expuesta. La evaluación muestra también los errores extremos y el porcentaje de latidos sin medida, sin prometer una validación clínica por el tamaño elegido.</p>
+<p><strong>P0 · L.</strong> Es el paso que más aumenta la credibilidad de futuras mejoras de delineación.</p>
+<h4 id="A07" class="proposal-heading">A07 · Evitar fugas por paciente, señal origen, fuente y familia sintética</h4>
+<p><strong>Implementación:</strong> unificar en una misma partición todas las imágenes y aumentos de un ECG y todos los registros de un paciente. Conservar IDs de origen al combinar recursos derivados de PTB-XL. Separar además fuentes/dispositivos y familias de síntesis en pruebas de transferencia; cambiar solo la semilla no crea una población clínica independiente.</p>
+<p><strong>Aceptación:</strong> el validador detecta cualquier paciente o señal origen compartido entre entrenamiento/ajuste y prueba. Usar, cuando corresponda, las particiones por paciente recomendadas por PTB-XL y comprobar duplicados entre bases derivadas. <a href="https://physionet.org/content/ptb-xl/1.0.3/">PTB-XL 1.0.3: particiones y correcciones de duplicados</a>.</p>
+<p><strong>P0 · M.</strong> Protege tanto la comparación de morfologías como una futura investigación de IA.</p>
+<h4 id="A08" class="proposal-heading">A08 · Medir si las advertencias identifican los errores</h4>
+<p><strong>Implementación:</strong> comparar en datos externos el error y la cobertura de <code>usable</code>, <code>review</code> y <code>unavailable</code>; separar incertidumbre de detección, inicio, final y escala. Probar si la abstención realmente concentra los errores mayores. Conservar motivos concretos en vez de convertir la dispersión en un porcentaje de confianza no calibrado.</p>
+<p><strong>Aceptación:</strong> informe por estado y por registro, con error residual y fracción de medidas retenidas. Si <code>usable</code> no implica menor error en un conjunto independiente, revisar reglas o vocabulario, sin ajustarlas al control ya visto.</p>
+<p><strong>P1 · M.</strong> Fortalece los estados y avisos existentes.</p>
+<h4 id="A09" class="proposal-heading">A09 · Generar etiquetas geométricas desde el render, con procedencia explícita</h4>
+<p><strong>Implementación:</strong> permitir que el render de pruebas produzca capas separadas de curva, grilla, texto, calibración y áreas de recorte, además de coordenadas de cada muestra visible. Rotularlas como etiquetas geométricas del generador; distinguirlas de anotaciones clínicas humanas y de medidas calculadas.</p>
+<p><strong>Aceptación:</strong> las máscaras se alinean con el PNG final y respetan recortes, inversión de aVR y escalas. Ninguna etiqueta oculta se incorpora a la entrada del algoritmo evaluado. Esto permite evaluar segmentación sin inventar adjudicaciones médicas.</p>
+<p><strong>P1 · M.</strong> Convierte el render actual en una fuente verificable de fixtures.</p>
+<h4 id="A10" class="proposal-heading">A10 · Crear una batería de degradaciones de imagen fuera del producto</h4>
+<p><strong>Implementación:</strong> a partir de los PNG existentes, generar versiones con rotación, perspectiva, desenfoque, compresión, sombra, grilla tenue y superposición de texto no diagnóstico. Mantener la señal fuente intacta. Puede reutilizarse ECG-Image-Kit fijando su versión; complementar con unas pocas impresiones/escaneos/fotografías de señales conocidas para comprobar que las deformaciones sintéticas no sean el único desafío.</p>
+<p><strong>Aceptación:</strong> cada transformación registra parámetros y máscara de visibilidad; los resultados se desglosan por degradación. El deterioro óptico no se confunde con ruido muscular o deriva de la señal eléctrica.</p>
+<p><strong>P1 · M.</strong> Mejora la exigencia de las pruebas de imagen sin alterar la estética habitual del simulador.</p>
+<h4 id="A11" class="proposal-heading">A11 · Usar un digitalizador independiente para comprobar señal → PNG → señal</h4>
+<p><strong>Implementación:</strong> ejecutar fuera del navegador un método publicado o un extractor de referencia sobre imágenes exportadas, sin acceso a muestras ni respuestas. Comparar la señal recuperada con la fuente visible mediante error en mV, SNR, tiempos QRS y, con definiciones previas, conservación del ST y regiones de baja amplitud. Separar el error propio del extractor mediante imágenes de control.</p>
+<p><strong>Aceptación:</strong> un gráfico puede verse limpio y aun fallar una prueba de escala, polaridad o ST. Publicar métricas por derivación/región, además del SNR global; documentar alineación y evitar que una corrección temporal/amplitud libre esconda un error de exportación. La precisión de QRS/QT no se extrapola a diagnóstico de SCA.</p>
+<p><strong>P1 · L.</strong> Es la propuesta de mayor valor específico desde esta perspectiva: una verificación externa del producto actual, sin instalar IA en su funcionamiento.</p>
+<h4 id="A12" class="proposal-heading">A12 · Evaluar la diversidad fisiológica sin confundirla con diversidad gráfica</h4>
+<p><strong>Implementación:</strong> comparar descriptores de los patrones existentes —amplitud y pendiente QRS, relaciones R/S, área y asimetría T, evolución entre derivaciones y covariación de intervalos— con conjuntos clínicos estratificados. Variar parámetros dentro de restricciones fisiológicas, registrar las familias de morfología y mantener la relación entre etiqueta y soporte generado.</p>
+<p><strong>Aceptación:</strong> el informe distingue diversidad de semillas, de parámetros, de morfologías y de personas reales. Crear miles de imágenes con el mismo kernel no se presenta como miles de ejemplos clínicamente independientes. Usar datos sintéticos para desarrollo o aumento; reservar datos clínicos independientes para medir transferencia.</p>
+<p><strong>P1 · L.</strong> Ayuda a determinar qué patrones actuales necesitan reconstrucción, sin ampliar el catálogo.</p>
+<h3 id="imagenes-orden-recomendado">Orden recomendado</h3>
+<p>Primero A01–A05: hacen confiables y trazables los instrumentos que ya existen. En paralelo, A06–A07 fijan la siguiente evaluación independiente antes de tocar umbrales. Después A08 y A11 conectan errores reales con las advertencias y con lo que se ve en el papel. A09–A10 facilitan ese trabajo. A12 orienta la mejora de las morfologías existentes una vez que el sistema puede medir su progreso.</p>
+<p><strong>Preparación para una futura IA de imágenes:</strong> favorable en geometría, generación reproducible y control de etiquetas; todavía incompleta en diversidad clínica, captura óptica y validación externa. No se asigna una nota de rendimiento a una función inexistente. La evidencia actual tampoco permite afirmar equivalencia entre señales sintéticas y ECG clínicos reales.</p>
+<h3 id="imagenes-grado-de-certeza">Grado de certeza</h3>
+<ul>
+<li><strong>Alto:</strong> estructura de entradas de <code>measure</code>, separación de auditoría, comportamiento de exportación, dimensiones/densidad del PNG, contenido de pruebas y resultados de los fixtures inspeccionados.</li>
+<li><strong>Moderado:</strong> prioridades y esfuerzo; dependen de cuánto de la evaluación externa se automatice y de la disponibilidad de registros adecuados.</li>
+<li><strong>No establecido:</strong> desempeño en fotografías clínicas arbitrarias, exactitud diagnóstica de una IA, equivalencia clínica del simulador o validación humana de las propuestas. No se hizo ninguna de esas evaluaciones.</li>
+</ul>
+</div>
+  <p class="back"><a href="#inicio">Volver al índice ↑</a></p>
+</section>
+<footer class="endnote"><p><strong>Alcance de la entrega.</strong> Este documento contiene los seis dictámenes completos y su síntesis. Incluye problemas observados, propuestas de implementación, aceptación verificable, prioridades, esfuerzo relativo, referencias y límites de la evidencia. El simulador no se modificó ni se desplegó durante esta auditoría.</p><p>Los enlaces a fuentes primarias requieren conexión. Los nombres de archivos de código y datos identifican la evidencia en el repositorio evaluado. Las propuestas deben contrastarse con nuevas referencias y adjudicación humana independiente antes de atribuir una fidelidad clínica demostrada.</p></footer>
+</main>
+</body>
+</html>

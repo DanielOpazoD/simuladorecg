@@ -1,0 +1,184 @@
+{
+  "baselineCommit": "1317742fe340e9748575bc7cc2c5e22032580f44",
+  "version": "1.1.0",
+  "date": "2026-09-24",
+  "method": "Identical parameters, seed, 10s, variability0, diagnostic filter. Analytic fixtures independent of both generators.",
+  "qt": [
+    {
+      "hr": 40,
+      "qtc": 410,
+      "before": {
+        "reference": 469.33283944686605,
+        "measured": {
+          "hr": 40,
+          "pr": 156,
+          "qrs": 84,
+          "qt": 444,
+          "qtcF": 387.8697263429167
+        }
+      },
+      "after": {
+        "reference": 469.33283944686605,
+        "measured": {
+          "hr": 40,
+          "pr": 154,
+          "qrs": 94,
+          "qt": 471.99999999999955,
+          "qtcF": 412.32997935553266
+        }
+      }
+    },
+    {
+      "hr": 60,
+      "qtc": 410,
+      "before": {
+        "reference": 410,
+        "measured": {
+          "hr": 60,
+          "pr": 156,
+          "qrs": 84,
+          "qt": 386,
+          "qtcF": 386
+        }
+      },
+      "after": {
+        "reference": 410,
+        "measured": {
+          "hr": 60,
+          "pr": 154,
+          "qrs": 94,
+          "qt": 405.9999999999997,
+          "qtcF": 405.9999999999997
+        }
+      }
+    },
+    {
+      "hr": 72,
+      "qtc": 410,
+      "before": {
+        "reference": 385.82477184122166,
+        "measured": {
+          "hr": 72.0052367444905,
+          "pr": 154,
+          "qrs": 84,
+          "qt": 364,
+          "qtcF": 386.7046254358012
+        }
+      },
+      "after": {
+        "reference": 385.82477184122166,
+        "measured": {
+          "hr": 72.00523674449052,
+          "pr": 154,
+          "qrs": 94,
+          "qt": 378,
+          "qtcF": 401.5778802602551
+        }
+      }
+    },
+    {
+      "hr": 40,
+      "qtc": 650,
+      "before": {
+        "reference": 744.0642576596658,
+        "measured": {
+          "hr": 40,
+          "pr": 156,
+          "qrs": 84,
+          "qt": null,
+          "qtcF": null
+        }
+      },
+      "after": {
+        "reference": 744.0642576596658,
+        "measured": {
+          "hr": 40,
+          "pr": 154,
+          "qrs": 94,
+          "qt": 736,
+          "qtcF": 642.9552220459159
+        }
+      }
+    }
+  ],
+  "analytic": [
+    {
+      "name": "linear",
+      "before": {
+        "hr": 60,
+        "pr": 166,
+        "qrs": 72,
+        "qt": 388,
+        "qtcF": 388
+      },
+      "after": {
+        "hr": 60,
+        "pr": 158,
+        "qrs": 94,
+        "qt": 400,
+        "qtcF": 400
+      }
+    },
+    {
+      "name": "biphasicT",
+      "before": {
+        "hr": 60,
+        "pr": 166,
+        "qrs": 72,
+        "qt": 310,
+        "qtcF": 310
+      },
+      "after": {
+        "hr": 60,
+        "pr": 158,
+        "qrs": 94,
+        "qt": 480,
+        "qtcF": 480
+      }
+    },
+    {
+      "name": "separateU",
+      "before": {
+        "hr": 60,
+        "pr": 166,
+        "qrs": 72,
+        "qt": 388,
+        "qtcF": 388
+      },
+      "after": {
+        "hr": 60,
+        "pr": 158,
+        "qrs": 94,
+        "qt": 400,
+        "qtcF": 400
+      }
+    },
+    {
+      "name": "noiseOnly",
+      "before": {
+        "hr": 141.76417641764175,
+        "pr": null,
+        "qrs": null,
+        "qt": null,
+        "qtcF": null
+      },
+      "after": {
+        "hr": null,
+        "pr": null,
+        "qrs": null,
+        "qt": null,
+        "qtcF": null
+      }
+    }
+  ],
+  "inferiorII": {
+    "before": {
+      "J": -0.019457042366446547,
+      "J60": 0.16710813214052594
+    },
+    "after": {
+      "J": 0.16759787974496596,
+      "J60": 0.1665329679908002
+    }
+  }
+}

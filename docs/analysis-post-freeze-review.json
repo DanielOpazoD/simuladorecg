@@ -1,0 +1,14 @@
+{
+  "version": "1.2.0",
+  "reason": "Final code review found a synthetic audit bug: a P/PR candidate assigned to a ventricular ectopic with no AV association could escape rejection.",
+  "change": "Reject the global PR and P axis when any paired P/PR candidate has no AV association in its synthetic source; retain raw candidates. Added a regression test.",
+  "externalControlImpact": "None. LUDB evaluation calls measure directly and never invokes the synthetic model audit. No detection, delineation, parameter, corpus or benchmark changes after control exposure.",
+  "amendments": {
+    "src/engine/analysis/model-audit.ts": {
+      "frozenSha256": "4da994990a653b9c033ae8db1b17fb4b5371adefb8823af156579ff67b5d4136",
+      "publishedSha256": "d61bacca643912ed8672fd47bc7d93b1bdc96e9f5bf9b20257b08e4567836005"
+    }
+  },
+  "freeze": "docs/analysis-freeze.json",
+  "controlStatus": "Records 101\u2013104 exposed after first frozen evaluation; reserve new records for any future detector tuning."
+}

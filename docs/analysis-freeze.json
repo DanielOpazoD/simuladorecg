@@ -1,0 +1,31 @@
+{
+  "version": "1.2.0",
+  "frozenAtUTC": "2026-09-24T19:17:35.092887+00:00",
+  "baselineCommit": "ad5a53261a7ac170297b32e7709ec158c2ed45c4",
+  "development": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "reservedControl": [
+    101,
+    102,
+    103,
+    104
+  ],
+  "controlEvaluatedBeforeFreeze": false,
+  "policy": "No adjustment of detection or delineation parameters based on reserved control results. These records become exposed after this evaluation.",
+  "sha256": {
+    "src/engine/measure.ts": "42549edaa0502121aeca3e736ef6d18622c425b79b7e5a1ce31f9545c8e5a60e",
+    "src/engine/analysis/evidence.ts": "c6e05ae78b0c08718b3cbe848b47d7431d2ad3a3d41bf73f83608c11f3dfefa3",
+    "src/engine/analysis/impulses.ts": "362814239fb6dcae06025cb065c6f6dfef08bb5341cabaef01c58d8227222cb1",
+    "src/engine/analysis/model-audit.ts": "4da994990a653b9c033ae8db1b17fb4b5371adefb8823af156579ff67b5d4136",
+    "src/engine/analysis/statistics.ts": "c8c20531ca3eb5483529d426357360ac1381ac934a3c3ef3d5d3cd21023e5a4b",
+    "src/engine/analysis/ventricular-candidates.ts": "0c7d0abb1834fd9407ca9fdd85c735b7794bcaf933d911f13222039ab4c0bec4",
+    "src/engine/reference.ts": "07752cbc37016b7ea255501df50e253b96fa98454a1423597fddbf5844bc167a",
+    "tests/reference/ludb/load-ludb.mjs": "41658b1bce6d69f76870089252c3f1bc0019f908c9298b88dd1b28fb7c39b586",
+    "scripts/validate-analysis.mjs": "8d35261e4c0320a8f082c2824e1ed6a6ab345cfb48fef29ce1d19d23a05af5f5",
+    "tests/reference/ludb/fixtures/manifest.json": "e4e6d2e5d825433b2d65e77d7f751a1747c873a5d519c57874ccec03652c40b1"
+  }
+}
