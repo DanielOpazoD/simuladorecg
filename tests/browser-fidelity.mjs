@@ -125,6 +125,22 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  await page.screenshot({path:path.join(out,'session-recovered.png')});
  checks.push('P6: real worker domain error disables stale export; new case recovers');
 
+ // P8: exercise identity is hidden before answer; feedback follows live state.
+ await page.locator('[data-action="quiz"]').first().click();await ready();
+ assert.equal(await page.locator('#case-title').innerText(),'Interpreta este ECG');
+ assert.equal(await page.locator('.practice-feedback').count(),0);
+ assert.equal(await page.locator('#quiz-panel [data-answer]').count(),4);
+ await page.locator('#quiz-panel [data-answer]').first().click();
+ assert.match(await page.locator('.practice-feedback').innerText(),/Observaciones y estimaciones/);
+ assert.match(await page.locator('.practice-feedback').innerText(),/Referencia del ejercicio/);
+ assert.match(await page.locator('.practice-feedback').innerText(),/no diagnóstico automático/);
+ await page.locator('#quiz-panel').screenshot({path:path.join(out,'p8-feedback.png')});
+ await page.locator('[data-key="view.gain"]').selectOption('5');
+ assert.equal(await page.locator('#quiz-panel').isVisible(),true);
+ await page.locator('[data-panel="base"]').click();
+ await page.locator('[data-key="hr"]').evaluate(el=>{el.value=Number(el.value)===80?'90':'80';el.dispatchEvent(new Event('input',{bubbles:true}));});
+ assert.equal(await page.locator('#quiz-panel').isVisible(),false);await ready();
+ checks.push('P8: real question, separate reference/estimates, view retained and physiology exits practice');
  await select('inferior');await phase('hyperacute');
  await page.locator('[data-action="export"]').click();const download=page.waitForEvent('download');await page.locator('[data-action="png"]').click();
  const pngPath=path.join(out,'export-300dpi.png');await (await download).saveAs(pngPath);
