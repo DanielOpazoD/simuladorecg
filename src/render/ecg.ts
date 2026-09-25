@@ -229,6 +229,7 @@ export function renderPaper(
     measurement?: Measurement;
     selectedBeat?: number;
     hideName?: boolean;
+    displayName?: string;
   } = {},
 ): Layout {
   let amplitude = 0;
@@ -249,7 +250,7 @@ export function renderPaper(
   ctx.font = "600 3.2px ui-monospace, monospace";
   ctx.fillText(
     "ECG LAB  /  " +
-      (options.hideName ? "CASO DE PRÁCTICA" : c.name.toUpperCase()),
+      (options.hideName ? "CASO DE PRÁCTICA" : (options.displayName ?? c.name).toUpperCase()),
     5,
     6,
   );

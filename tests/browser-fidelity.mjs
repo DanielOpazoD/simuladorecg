@@ -39,6 +39,22 @@ try {
  assert.equal(await page.locator('[data-action="caliper"]').getAttribute('aria-pressed'),'true');
  await page.locator('[data-mode="monitor"]').click();await page.locator('[data-mode="paper"]').click();
  assert.equal(await page.locator('[data-action="caliper"]').getAttribute('aria-pressed'),'false');checks.push('pause and caliper regression');
+ // Use the real JSON import path, not DOM injection of a synthetic title.
+ await select('inferior');
+ await page.locator('[data-action="export"]').click();
+ const exported=page.waitForEvent('download');await page.locator('[data-action="json"]').click();
+ const jsonPath=path.join(out,'inferior-case.json');await (await exported).saveAs(jsonPath);
+ const reversed=JSON.parse(await readFile(jsonPath,'utf8'));reversed.artifacts.reversed=true;
+ await page.locator('#file-input').setInputFiles({name:'inverted.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(reversed))});
+ await page.waitForFunction(()=>document.querySelector('#case-title')?.textContent==='Registro con brazos invertidos');await ready();
+ await page.locator('#dialog').evaluate(d=>d.close());
+ assert.equal(await page.locator('#case-title').innerText(),'Registro con brazos invertidos');
+ assert.equal(await page.locator('#finding-title').innerText(),'Transformación de la adquisición');
+ assert.doesNotMatch(await page.locator('#findings').innerText(),/III\s*>\s*II|ST↓ recíproco en I/);
+ assert.match(await page.locator('#warnings').innerText(),/inversión de electrodos de brazos/i);
+ assert.match(await page.locator('#ecg').getAttribute('aria-label'),/Registro con brazos invertidos/);
+ await page.screenshot({path:path.join(out,'inverted-electrodes.png')});
+ checks.push('P1: actual JSON import preserves reversed acquisition and retires basal observations');
  await select('inferior');await phase('hyperacute');
  await page.locator('[data-action="export"]').click();const download=page.waitForEvent('download');await page.locator('[data-action="png"]').click();
  const pngPath=path.join(out,'export-300dpi.png');await (await download).saveAs(pngPath);

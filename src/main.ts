@@ -28,7 +28,7 @@ import {
 } from "./render/ecg";
 import { icon, btn, esc, select, options } from "./ui/helpers";
 import { controls, leadOptions, amplitudeControlState } from "./ui/controls";
-import { caseContext, normalizeImportedCase } from "./presets/case-context";
+import { caseContext, caseReading, normalizeImportedCase } from "./presets/case-context";
 import {
   decodeCase,
   encodeCase,
@@ -113,19 +113,19 @@ function renderCatalog() {
 }
 function renderInfo() {
   const context = caseContext(c),
+    reading = caseReading(c, context),
     p = context.preset,
     concealed = quiz && !quiz.answer;
-  $("#case-title").textContent = concealed ? "Interpreta este ECG" : context.displayName;
+  $("#case-title").textContent = concealed ? "Interpreta este ECG" : reading.title;
   $("#case-category").textContent = concealed
     ? "PRÁCTICA"
     : p?.group || "CASO PERSONALIZADO";
   $("#case-subtitle").textContent = concealed
     ? "Identifica el patrón. Puedes cambiar la vista y utilizar los calibres."
-    : p?.mechanism ||
-      "Caso ajustado manualmente. Comprueba los hallazgos sobre la señal.";
+    : reading.subtitle;
   $("#finding-title").textContent = concealed
     ? "Análisis sistemático"
-    : "Hallazgos esperados";
+    : reading.findingsTitle;
   $("#findings").innerHTML = (
     concealed
       ? [
@@ -133,10 +133,7 @@ function renderInfo() {
           "Actividad auricular y relación AV",
           "QRS, eje y repolarización",
         ]
-      : p?.findings || [
-          "Parámetros personalizados",
-          "Utiliza las medidas como estimaciones",
-        ]
+      : reading.findings
   )
     .map((f) => `<li>${esc(f)}</li>`)
     .join("");
@@ -415,7 +412,7 @@ function draw() {
     width = $("#canvas-wrap").clientWidth;
   canvas.setAttribute(
     "aria-label",
-    `ECG sintético, ${c.view.mode === "paper" ? "12 derivaciones" : c.view.lead}, ${quiz && !quiz.answer ? "caso de práctica" : c.name}`,
+    `ECG sintético, ${c.view.mode === "paper" ? "12 derivaciones" : c.view.lead}, ${quiz && !quiz.answer ? "caso de práctica" : caseReading(c).title}`,
   );
   if (c.view.mode === "paper") {
     monitor = null;
@@ -424,6 +421,7 @@ function draw() {
       measurement: measurement ?? undefined,
       selectedBeat,
       hideName: !!quiz && !quiz.answer,
+      displayName: caseReading(c).title,
     });
   } else if (c.view.mode === "rhythm") {
     monitor = null;
@@ -798,6 +796,7 @@ document.addEventListener("click", async (e) => {
       pxPerMm: 300 / 25.4,
       ratio: 1,
       hideName: !!quiz && !quiz.answer,
+      displayName: caseReading(c).title,
     });
     canvas.toBlob(async (blob) => {
       if (blob) {
