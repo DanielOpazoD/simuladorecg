@@ -11,6 +11,7 @@ import argparse
 import ast
 import csv
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import io
 import json
@@ -158,6 +159,7 @@ class Release:
         path = self.raw / name
         if path.is_file():
             return path.read_bytes()
+        print(json.dumps({'stage':'download','url':self.base+name}), flush=True)
         for attempt in range(3):
             try:
                 with urlopen(self.base+name, timeout=120) as response:
@@ -178,6 +180,7 @@ class Release:
         if digest(body) != self.sums[name]:
             raise ValueError(f'Source checksum mismatch: {name}')
         self.files[name] = {'url': self.base+name, 'sha256': digest(body), 'bytes': len(body)}
+        write(self.raw.parent.parent/'acquisition-progress.json', {'lastVerified':self.files[name], 'release':self.base, 'verifiedFilesInRelease':len(self.files)})
         return body
 
 
@@ -316,6 +319,14 @@ def acquire(output: Path):
             if ecg in index:
                 raise ValueError('Ambiguous median path')
             index[ecg] = name
+    # Bounded I/O concurrency only. Verification/decoding retain the fixed order.
+    paths = [name for ecg in selection['medianIds'] if ecg in index
+             for name in (index[ecg], index[ecg][:-4]+'.dat')]
+    if any(name not in plus.sums for name in paths):
+        raise ValueError('Incomplete median pair in release manifest')
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        for _ in pool.map(plus.download, paths):
+            pass
     medians, statuses = [], []
     for ecg in selection['medianIds']:
         if ecg not in index:

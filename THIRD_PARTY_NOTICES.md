@@ -22,3 +22,16 @@ La ausencia de licencia explícita no equivale a una licencia abierta:
 https://docs.github.com/es/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository .
 El valor `UNLICENSED` documenta el estado, no sustituye una decisión del titular:
 https://docs.npmjs.com/cli/v11/configuring-npm/package-json/ .
+
+## PTB-XL / PTB-XL+ (benchmark offline PR3)
+
+PTB-XL 1.0.3 aporta metadatos y categorías SCP; PTB-XL+ 1.0.1 aporta
+características automáticas de 12SL/Uni-G y latidos medianos 12SL. Strodthoff et al.,
+*PTB-XL+, a comprehensive electrocardiographic feature dataset*, Scientific Data
+10, 279 (2023); conjunto doi:10.13026/g6h6-7g88. Wagner et al., *PTB-XL, a large
+publicly available electrocardiography dataset*, Scientific Data 7, 154 (2020).
+
+Las fuentes, transformaciones y límites están en el [contrato](docs/ptbxl-morphology-reference.md).
+Se conservan los textos LICENSE.txt originales de ambas versiones en cada
+artefacto, con sus hashes. PTB-XL+ se publica bajo CC BY 4.0; no se aplica esa
+licencia al código ECG Lab ni se distribuyen tablas completas en el producto.

@@ -54,6 +54,9 @@ Si el productor incluyó prefijos de directorio en el encabezado, se retiran sol
 en una copia temporal para WFDB. Se guardan los hashes original/temporal y los
 nombres; no se corrigen ganancias mediante heurísticas ni se editan las fuentes.
 Un error de integridad o desacuerdo entre lectores impide completar el benchmark.
+La descarga de pares pequeños usa como máximo cuatro solicitudes concurrentes;
+la validación, selección y decodificación conservan su orden. Se registra el último
+archivo verificado para diagnosticar interrupciones sin publicar contenido bruto.
 La ausencia de un latido en el manifiesto queda registrada sin sustitución.
 
 Los límites externos son **automáticos de 12SL**, no anotaciones humanas.
@@ -64,7 +67,10 @@ el detector del simulador. T_On tiene ambigüedad reconocida en la propia fuente
 `tests/support/morphology-metrics.ts`, ya existente, mide ambas clases de señales:
 J/J+60, pico-pico QRS, pico/área/anchura/asimetría T y T/QRS. Las áreas de este
 extractor están en **mV·s**, a diferencia de las tablas mV·ms. Las claves conservan
-la unidad. Se añaden extremos e integral QRS y eje de área desde I/II.
+la unidad. T/QRS usa pico T dividido por amplitud pico a pico QRS, no T/R ni
+puntuación HATW. Se añaden extremos e integral QRS y eje de área desde I/II.
+Los proveedores pueden aplicar preprocesamientos diferentes; no se presupone
+equivalencia de adquisición con el generador sin filtro.
 
 El generador se ejecuta en 61 configuraciones existentes con adquisición limpia
 y sin filtro. Sus ventanas proceden de eventos sintéticos y del soporte nativo
