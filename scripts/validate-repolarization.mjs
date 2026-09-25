@@ -1,5 +1,7 @@
 /** v1.3 versus working tree, on matched synthetic samples. Not clinical validation. */
 import { build } from 'esbuild';
+import assert from 'node:assert/strict';
+import { compareSignalContract, assertPresetSet } from './lib/fidelity-contracts.mjs';
 import { execFileSync } from 'node:child_process';
 import { mkdtemp, mkdir, readFile, writeFile, rm, readdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
@@ -29,32 +31,38 @@ try {
  const outfile = path.join(temp,'metrics.mjs');
  await build({entryPoints:[path.join(root,'tests/support/morphology-metrics.ts')],bundle:true,platform:'node',format:'esm',outfile});
  const {morphologyMetrics} = await import(pathToFileURL(outfile).href);
- const detectorFiles = ['src/engine/measure.ts', ...(await readdir(path.join(root,'src/engine/analysis'))).filter(p=>p.endsWith('.ts')).sort().map(p=>'src/engine/analysis/'+p)];
+ const analysisFiles=async dir=>(await readdir(path.join(dir,'src/engine/analysis'))).filter(p=>p.endsWith('.ts')).sort();
+ const currentAnalysis=await analysisFiles(root),baselineAnalysis=await analysisFiles(baseDir);
+ assert.deepEqual(currentAnalysis,baselineAnalysis,'Detector file set changed');
+ const detectorFiles = ['src/engine/measure.ts', ...currentAnalysis.map(p=>'src/engine/analysis/'+p)];
  const detector = await Promise.all(detectorFiles.map(async p => {
    const a=await readFile(path.join(baseDir,p)),b=await readFile(path.join(root,p));
    return {path:p,unchanged:a.equals(b),sha256:createHash('sha256').update(b).digest('hex')};
  }));
  if (detector.some(f=>!f.unchanged)) throw new Error('Detector freeze violated');
+ assertPresetSet(before.PRESETS,after.PRESETS);
  const rows=[];
  for(const id of ['inferior','inferior_lcx','anterior','lateral'])
  for(const phase of ['acute','hyperacute','evolving','chronic'])
  for(const filter of ['off','diagnostic']) {
    const c=after.fromPreset(after.presetById(id)); Object.assign(c,{phase,filter,hr:72,variability:0});
    const a=before.synthesize(c,10),b=after.synthesize(c,10),beat=b.events.beats.find(x=>x.time>3);
+   const contract=compareSignalContract(a,b,{exact:phase==='acute'||phase==='chronic',label:`${id}/${phase}/${filter}`});
+   assert.ok(beat,'missing interior beat');
    const qrs=beat.qrs,qt=beat.qt,tStart=qt-Math.min(.22,(qt-qrs)*.68);
    const windows={baseline:[beat.time-.04,beat.time-.02],qrs:[beat.time,beat.time+qrs],t:[beat.time+tStart,beat.time+qt]};
    const leads={};
    for(const lead of Object.keys(b.leads)) leads[lead]={before:morphologyMetrics(a.leads[lead],a.fs,windows),after:morphologyMetrics(b.leads[lead],b.fs,windows)};
    // The product detector sees only samples; model windows are not passed to it.
    const am=after.measure(a),bm=after.measure(b);
-   rows.push({id,phase,filter,case:c,windows,eventsUnchanged:JSON.stringify(a.events)===JSON.stringify(b.events),leads,
+   rows.push({id,phase,filter,case:c,windows,...contract,leads,
     detector:{before:{hr:am.hr,qrs:am.qrs,qt:am.qt},after:{hr:bm.hr,qrs:bm.qrs,qt:bm.qt}}});
  }
  const defaults=[];
  for(const p of after.PRESETS.filter(p=>p.strategy!=='pending')) {
    const c=after.fromPreset(p),a=before.synthesize(c,10),b=after.synthesize(c,10);
-   let max=0; for(const l of Object.keys(b.leads)) for(let i=0;i<b.leads[l].length;i++) max=Math.max(max,Math.abs(a.leads[l][i]-b.leads[l][i]));
-   defaults.push({id:p.id,maxDifferenceMv:max});
+   const contract=compareSignalContract(a,b,{exact:true,label:`default/${p.id}`});
+   defaults.push({id:p.id,...contract});
  }
  const output=options['--output'] || path.join(root,'.sites-runtime','repolarization-comparison.json');
  await mkdir(path.dirname(output),{recursive:true});

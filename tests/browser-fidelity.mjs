@@ -1,4 +1,4 @@
-/** Real Chromium checks. Run against Vite: ECG_TEST_URL=http://127.0.0.1:5173.
+/** Real Chromium checks. Run against the built dist (vite preview): ECG_TEST_URL=http://127.0.0.1:5173.
  * Outputs outside source by default; no patient data, diagnostic labels or network AI.
  * npm install --no-save --package-lock=false playwright@1.63.0
  */
@@ -9,8 +9,14 @@ import path from 'node:path';
 const url=process.env.ECG_TEST_URL || 'http://127.0.0.1:5173/';
 const out=path.resolve(process.env.ECG_EVIDENCE_DIR || '.sites-runtime/browser');
 await mkdir(out,{recursive:true});
+const productionResponse=await fetch(new URL('build-info.json',url));
+assert.equal(productionResponse.status,200,'production manifest unavailable');
+const productionInfo=await productionResponse.json();
+assert.deepEqual(productionInfo,JSON.parse(await readFile('dist/build-info.json','utf8')));
+assert.equal(productionInfo.dirty,false,'do not QA a dirty build');
 const browser=await chromium.launch({headless:true}), errors=[], warnings=[], checks=[];
 const page=await browser.newPage({viewport:{width:1440,height:1000},deviceScaleFactor:1});
+const requested=[];page.on('request',r=>requested.push(r.url()));
 page.on('pageerror',e=>errors.push(e.message));
 page.on('console',m=>{if(m.type()==='error')errors.push(m.text());else if(m.type()==='warning')warnings.push(m.text());});
 const ready=()=>page.locator('#signal-loading').waitFor({state:'hidden'});
@@ -71,45 +77,55 @@ try {
  for(let off=8;off+12<=png.length;) {const len=png.readUInt32BE(off),type=png.toString('ascii',off+4,off+8);if(type==='pHYs')phys=[png.readUInt32BE(off+8),png.readUInt32BE(off+12),png[off+16]];off+=12+len;}
  assert.deepEqual(phys,[11811,11811,1]);checks.push('real UI PNG download + 300 dpi pHYs');
  await page.locator('#dialog').evaluate(d=>d.close());
- // Exercise the actual renderer and then decode its encoded PNG: independent pixel measurements.
- const pixels=await page.evaluate(async()=>{
-  const {renderPaper}=await import('/src/render/ecg.ts'),{DEFAULT_CASE,cloneCase,LEADS}=await import('/src/engine/types.ts');
-  const {synthesize}=await import('/src/engine/signal.ts');
-  const seed=cloneCase(DEFAULT_CASE),s=synthesize(seed,10);for(const l of LEADS)s.leads[l].fill(0);
-  const results=[],ppm=300/25.4;
-  for(const speed of [12.5,25,50])for(const gain of [2.5,5,10,20]){
-   const c=cloneCase(seed);Object.assign(c.view,{speed,gain,chestGain:gain,grid:true,fit:false,palette:'paper',format:'3x4'});
-   const canvas=document.createElement('canvas'),layout=renderPaper(canvas,s,c,1000,{pxPerMm:ppm,ratio:1});
-   const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png')),img=await createImageBitmap(blob);
-   const decoded=document.createElement('canvas');decoded.width=img.width;decoded.height=img.height;
-   const ctx=decoded.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0);const {data}=ctx.getImageData(0,0,img.width,img.height);
+ // Measure actual UI downloads. No source imports, zeroed signals, or layout truth.
+ await select('sinus');
+ await page.locator('[data-key="view.format"]').selectOption('3x4');
+ await page.locator('[data-key="view.grid"]').check();
+ const pixels=[];
+ for(const speed of [12.5,25,50])for(const gain of [2.5,5,10,20]){
+  await page.locator('[data-key="view.speed"]').selectOption(String(speed));
+  await page.locator('[data-key="view.gain"]').selectOption(String(gain));
+  await page.locator('[data-action="export"]').click();
+  const pending=page.waitForEvent('download');await page.locator('[data-action="png"]').click();
+  const file=path.join(out,`calibration-${speed}-${gain}.png`);await (await pending).saveAs(file);
+  await page.locator('#dialog').evaluate(d=>d.close());
+  const result=await page.evaluate(async ({base64,speed,gain})=>{
+   const bytes=Uint8Array.from(atob(base64),c=>c.charCodeAt(0));
+   const img=await createImageBitmap(new Blob([bytes],{type:'image/png'}));
+   const canvas=document.createElement('canvas');canvas.width=img.width;canvas.height=img.height;
+   const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0);
+   const {data}=ctx.getImageData(0,0,img.width,img.height),ppm=300/25.4;
    const dark=(x,y)=>{const i=4*(Math.round(y)*img.width+Math.round(x));return data[i]<120&&data[i+1]<120&&data[i+2]<120;};
-   const base=layout.segments[0].baseline;
-   // Pulse top at midpoint of its plateau; bottom at the leading baseline stub.
-   const ys=[];for(let y=Math.floor((base-gain-1)*ppm);y<=Math.ceil((base+1)*ppm);y++)if(dark((2+.1*speed)*ppm,y))ys.push(y);
-   const bs=[];for(let y=Math.floor((base-.5)*ppm);y<=Math.ceil((base+.5)*ppm);y++)if(dark(1.5*ppm,y))bs.push(y);
-   // Half-height intersects only the two vertical sides.
-   const xs=[];for(let x=Math.floor(ppm);x<=Math.ceil((3+.2*speed)*ppm);x++)if(dark(x,(base-gain*.5)*ppm))xs.push(x);
-   const groups=[];for(const x of xs){if(!groups.length||x>groups.at(-1).at(-1)+1)groups.push([]);groups.at(-1).push(x);}
+   const groups=values=>{const out=[];for(const v of values){if(!out.length||v>out.at(-1).at(-1)+1)out.push([]);out.at(-1).push(v);}return out;};
    const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
-   // Bold 5-mm grid measured from a clean scan line below the title, before traces.
-   const majors=[];const gy=Math.round(15.4*ppm);
+   // Read the first calibration baseline from its leading stub, not renderer coordinates.
+   const baselinePixels=[];
+   for(let y=Math.ceil(18*ppm);y<img.height-Math.ceil(8*ppm);y++)if(dark(1.5*ppm,y))baselinePixels.push(y);
+   const baselineGroups=groups(baselinePixels);
+   if(!baselineGroups.length)throw Error('Calibration baseline not found');
+   const baseline=mean(baselineGroups[0]),ys=[];
+   for(let y=Math.floor(baseline-(gain+1)*ppm);y<=Math.ceil(baseline+ppm);y++)if(dark((2+.1*speed)*ppm,y))ys.push(y);
+   const xs=[];for(let x=Math.floor(ppm);x<=Math.ceil((3+.2*speed)*ppm);x++)if(dark(x,baseline-gain*.5*ppm))xs.push(x);
+   const sides=groups(xs),tops=groups(ys),majors=[],gy=Math.round(15.4*ppm);
    for(let x=Math.round(20*ppm);x<Math.round(80*ppm);x++){const i=4*(gy*img.width+x);if(data[i]>190&&data[i]<240&&data[i+1]<210&&data[i+2]<218)majors.push(x);}
-   const gg=[];for(const x of majors){if(!gg.length||x>gg.at(-1).at(-1)+1)gg.push([]);gg.at(-1).push(x);}
-   const centers=gg.map(mean),steps=centers.slice(1).map((v,i)=>v-centers[i]);
-   results.push({speed,gain,widthPx:groups.length===2?mean(groups[1])-mean(groups[0]):null,heightPx:ys.length&&bs.length?mean(bs)-mean(ys):null,expectedWidthPx:.2*speed*ppm,expectedHeightPx:gain*ppm,grid5mmPx:steps.length?mean(steps):null,expectedGrid5mmPx:5*ppm});
-   img.close();canvas.width=decoded.width=0;
-  }
-  return results;
- });
+   const centers=groups(majors).map(mean),steps=centers.slice(1).map((v,i)=>v-centers[i]);
+   const result={speed,gain,widthPx:sides.length===2?mean(sides[1])-mean(sides[0]):null,heightPx:tops.length===1?baseline-mean(tops[0]):null,expectedWidthPx:.2*speed*ppm,expectedHeightPx:gain*ppm,grid5mmPx:steps.length?mean(steps):null,expectedGrid5mmPx:5*ppm};
+   img.close();canvas.width=0;return result;
+  },{base64:(await readFile(file)).toString('base64'),speed,gain});
+  pixels.push(result);
+ }
  for(const p of pixels){assert.ok(p.widthPx!==null&&Math.abs(p.widthPx-p.expectedWidthPx)<2,JSON.stringify(p));assert.ok(p.heightPx!==null&&Math.abs(p.heightPx-p.expectedHeightPx)<2,JSON.stringify(p));assert.ok(p.grid5mmPx!==null&&Math.abs(p.grid5mmPx-p.expectedGrid5mmPx)<1,JSON.stringify(p));}
- checks.push('12 PNG pixel-calibration combinations: pulse width/height + 5-mm grid');
+ checks.push('12 actual production PNG downloads: pulse width/height + 5-mm grid');
  await page.setViewportSize({width:390,height:844});await page.goto(url);await ready();
  assert.ok(await page.locator('#ecg').isVisible());assert.match(await page.locator('#case-title').innerText(),/sinusal/i);
  await page.locator('[data-action="catalog"]').click();await select('anterior');await phase('hyperacute');
  await page.locator('#beat-detail').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(out,'mobile.png')});checks.push('390x844 emulated viewport: catalog / phase / trace');
+ const localPaths=requested.filter(u=>new URL(u).origin===new URL(url).origin).map(u=>new URL(u).pathname);
+ assert.ok(localPaths.some(p=>/^\/assets\/.*\.js$/.test(p)),'compiled application not loaded');
+ assert.ok(!localPaths.some(p=>p.startsWith('/src/')||p.includes('@vite/client')),'development source loaded');
+ checks.push('production assets loaded without source-module imports');
  assert.deepEqual(errors,[]);
- await writeFile(path.join(out,'browser-results.json'),JSON.stringify({url,checks,pixels,errors,warnings,browser:await browser.version(),viewports:[[1440,1000],[390,844]],physicalDeviceTest:false},null,2));
+ await writeFile(path.join(out,'browser-results.json'),JSON.stringify({url,productionInfo,checks,pixels,errors,warnings,browser:await browser.version(),viewports:[[1440,1000],[390,844]],physicalDeviceTest:false},null,2));
  console.log(JSON.stringify({passed:checks.length,pixelCases:pixels.length,errors}));
 } catch(e){await page.screenshot({path:path.join(out,'failure.png'),fullPage:true}).catch(()=>{});await writeFile(path.join(out,'browser-failure.json'),JSON.stringify({checks,errors,warnings,error:String(e)},null,2));throw e;}
 finally{await browser.close();}
