@@ -1,272 +1,354 @@
-diff --git a/docs/estado-presets.json b/docs/estado-presets.json
-index 24a6ccd..4d7394f 100644
---- a/docs/estado-presets.json
-+++ b/docs/estado-presets.json
-@@ -255,3 +255,3 @@
-     "estrategia": "vectorial",
--    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
-+    "limitacion": "Repolarización secundaria aproximada: al variar el voltaje QRS, la relación ST/QRS no está calibrada. Este modelo no permite validar criterios proporcionales de Sgarbossa."
-   },
-@@ -295,3 +295,3 @@
-     "estrategia": "vectorial",
--    "limitacion": "Delta aproximada; sin vías accesorias anatómicas ni circuito AVRT."
-+    "limitacion": "Delta aproximada; sin vías accesorias anatómicas ni circuito AVRT. Preexcitación aproximada: la delta no modifica el ST-T secundario en este modelo. No uses esta T para aprender la repolarización típica de WPW."
-   },
-@@ -391,3 +391,3 @@
-     "estrategia": "vectorial",
--    "limitacion": "Caso ilustrativo; sin cálculo automático de score ni ajuste de criterio proporcional."
-+    "limitacion": "Caso ilustrativo; sin cálculo automático de score. Repolarización secundaria aproximada: al variar el voltaje QRS, la relación ST/QRS no está calibrada. Este modelo no permite validar criterios proporcionales de Sgarbossa."
-   },
-@@ -439,3 +439,3 @@
-     "estrategia": "vectorial",
--    "limitacion": "Estimulación capturada a frecuencia fija; sensado, demanda y fallos pendientes."
-+    "limitacion": "Estimulación capturada a frecuencia fija; sensado, demanda y fallos pendientes. Repolarización secundaria aproximada: al variar el voltaje QRS, la relación ST/QRS no está calibrada. Este modelo no permite validar criterios proporcionales de Sgarbossa."
-   },
-@@ -447,3 +447,3 @@
-     "estrategia": "vectorial",
--    "limitacion": "Secuencia fija; no simula demanda, PVARP, seguimiento ni límite superior."
-+    "limitacion": "Secuencia fija; no simula demanda, PVARP, seguimiento ni límite superior. Repolarización secundaria aproximada: al variar el voltaje QRS, la relación ST/QRS no está calibrada. Este modelo no permite validar criterios proporcionales de Sgarbossa."
-   },
-diff --git a/docs/estado-presets.md b/docs/estado-presets.md
-index 08b29fa..c6f74c0 100644
---- a/docs/estado-presets.md
-+++ b/docs/estado-presets.md
-@@ -37,3 +37,3 @@ Ningún patrón se presenta como validado clínicamente.
- | Bloqueo incompleto de rama derecha | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
--| Bloqueo completo de rama izquierda | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
-+| Bloqueo completo de rama izquierda | aproximado | vectorial | Repolarización secundaria aproximada: al variar el voltaje QRS, la relación ST/QRS no está calibrada. Este modelo no permite validar criterios proporcionales de Sgarbossa. |
- | Hemibloqueo anterior izquierdo | aproximado | vectorial | Reproduce eje; detalle qR/rS de todos los fascículos es aproximado. |
-@@ -42,3 +42,3 @@ Ningún patrón se presenta como validado clínicamente.
- | Bifascicular + BAV de primer grado | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
--| Preexcitación ventricular | aproximado | vectorial | Delta aproximada; sin vías accesorias anatómicas ni circuito AVRT. |
-+| Preexcitación ventricular | aproximado | vectorial | Delta aproximada; sin vías accesorias anatómicas ni circuito AVRT. Preexcitación aproximada: la delta no modifica el ST-T secundario en este modelo. No uses esta T para aprender la repolarización típica de WPW. |
- | Lesión inferior · predominio en III | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
-@@ -54,3 +54,3 @@ Ningún patrón se presenta como validado clínicamente.
- | Patrón de de Winter | aproximado | local | No garantiza ST↑ en aVR; patrón parcial señalado como aproximado. |
--| BRI con lesión concordante | aproximado | vectorial | Caso ilustrativo; sin cálculo automático de score ni ajuste de criterio proporcional. |
-+| BRI con lesión concordante | aproximado | vectorial | Caso ilustrativo; sin cálculo automático de score. Repolarización secundaria aproximada: al variar el voltaje QRS, la relación ST/QRS no está calibrada. Este modelo no permite validar criterios proporcionales de Sgarbossa. |
- | Patrón de pericarditis | aproximado | local | Dipolo único no garantiza elevación en todas las derivaciones; no diagnostica pericarditis. |
-@@ -60,4 +60,4 @@ Ningún patrón se presenta como validado clínicamente.
- | Estimulación auricular AAI | aproximado | vectorial | Estimulación capturada a frecuencia fija; sensado, demanda y fallos pendientes. |
--| Estimulación ventricular VVI | aproximado | vectorial | Estimulación capturada a frecuencia fija; sensado, demanda y fallos pendientes. |
--| Estimulación secuencial DDD | aproximado | vectorial | Secuencia fija; no simula demanda, PVARP, seguimiento ni límite superior. |
-+| Estimulación ventricular VVI | aproximado | vectorial | Estimulación capturada a frecuencia fija; sensado, demanda y fallos pendientes. Repolarización secundaria aproximada: al variar el voltaje QRS, la relación ST/QRS no está calibrada. Este modelo no permite validar criterios proporcionales de Sgarbossa. |
-+| Estimulación secuencial DDD | aproximado | vectorial | Secuencia fija; no simula demanda, PVARP, seguimiento ni límite superior. Repolarización secundaria aproximada: al variar el voltaje QRS, la relación ST/QRS no está calibrada. Este modelo no permite validar criterios proporcionales de Sgarbossa. |
- | Hiperpotasemia · T prominente | aproximado | vectorial | Sin relación concentración–ECG, ni evolución a onda sinusoidal. |
-diff --git a/docs/p2-secondary-repolarization-limits.md b/docs/p2-secondary-repolarization-limits.md
+diff --git a/.github/workflows/fidelity.yml b/.github/workflows/fidelity.yml
+index 7a0d2d3..7665d11 100644
+--- a/.github/workflows/fidelity.yml
++++ b/.github/workflows/fidelity.yml
+@@ -3,3 +3,3 @@ on:
+   push:
+-    branches: ['improvement/v1.4-*']
++    branches: ['main', 'improvement/v1.4-*']
+   pull_request:
+@@ -25,3 +25,2 @@ jobs:
+       - name: Types and production build
+-        if: always()
+         run: npm run build
+@@ -33,8 +32,9 @@ jobs:
+           npx playwright install --with-deps chromium
+-      - name: Real browser flows and PNG pixel metrology
++      - name: Production identity, browser flows and PNG pixel metrology
+         env:
+           ECG_TEST_URL: http://127.0.0.1:5173/
++          ECG_EXPECT_COMMIT: ${{ github.sha }}
+           ECG_EVIDENCE_DIR: ${{ runner.temp }}/ecg-evidence/browser
+         run: |
+-          npm run dev -- --host 127.0.0.1 --port 5173 > "$RUNNER_TEMP/vite.log" 2>&1 &
++          npx vite preview --host 127.0.0.1 --port 5173 --strictPort > "$RUNNER_TEMP/vite.log" 2>&1 &
+           PID=$!
+@@ -42,2 +42,4 @@ jobs:
+           for n in {1..40}; do curl --silent --fail "$ECG_TEST_URL" > /dev/null && break; sleep 1; done
++          curl --silent --fail "$ECG_TEST_URL/build-info.json" > /dev/null
++          node scripts/verify-production.mjs
+           node tests/browser-fidelity.mjs
+diff --git a/docs/p3-ci-contract.md b/docs/p3-ci-contract.md
 new file mode 100644
-index 0000000..e71fe7c
+index 0000000..71764fa
 --- /dev/null
-+++ b/docs/p2-secondary-repolarization-limits.md
-@@ -0,0 +1,31 @@
-+# P2 · Límites visibles de repolarización secundaria
++++ b/docs/p3-ci-contract.md
+@@ -0,0 +1,60 @@
++# P3 · CI del código integrado y del artefacto servido
 +
-+## Contrato docente
++## Contrato ejecutable
 +
-+WPW añade delta pero no modifica la T secundaria. BRI, VVI y DDD incluyen
-+repolarización secundaria aproximada, pero el control de voltaje QRS no mantiene
-+una proporcionalidad ST/QRS calibrada. No sirven para validar reglas proporcionales
-+de Sgarbossa. Esto limita al simulador, no la interpretación clínica de pacientes.
++`ECG fidelity` se ejecuta en cada pull request, push a `main`, ramas históricas
++`improvement/v1.4-*` y ejecución manual. El job `verify` instala desde lockfile,
++ejecuta tests, TypeScript/build, contratos de comparación y Chromium contra
++`vite preview` (dist). No se prueba el servidor de desarrollo como sustituto.
 +
-+Los avisos se obtienen de los parámetros actuales (incluidos casos personalizados),
-+se muestran en el panel habitual y se conservan en la ficha de estado del preset.
-+AAI sin BRI no recibe el aviso de estimulación ventricular. FV y asistolia no
-+reciben avisos sobre una T organizada. El quiz oculta pistas antes de responder.
-+No se añade una T invertida arbitraria ni se ajustan vectores, eventos o filtros.
++`verify-production.mjs` exige commit esperado, árbol de producto limpio, versión
++coincidente y SHA-256 de entradas. Descarga cada archivo de dist desde el servidor
++y compara sus bytes con el build local, incluido el worker. El navegador verifica
++que usa assets compilados y no importa `/src/` ni `@vite/client`.
++Esto prueba el artefacto servido en CI, no el despliegue de la URL privada.
 +
-+## Evidencia y tolerancias
++## Invariantes que ahora hacen fallar CI
 +
-+`tests/teaching-limits.test.ts` compara importación/contexto y doce derivaciones
-+con igualdad exacta. Reproduce delta visible con T terminal idéntica al control
-+sin preexcitación, manteniendo iguales PR/QRS/semilla (ventana QRS+210 ms hasta QT).
-+El barrido de voltaje 0,1 → 1 en BRI/VVI/DDD mide S en V2 y ST40, sin convertir
-+ese valor en ST en J ni diagnosticar positividad de Sgarbossa. La escala de S se
-+comprueba con tolerancia decimal 1e−6; el residuo no proporcional >0,1 mV es un
-+margen del fixture conocido, no un límite clínico. Estas pruebas describen un
-+límite actual; cuando se corrija el modelo deberán reemplazarse, no perpetuarlo.
++`validate-repolarization.mjs` usa los mismos validadores de
++`tests/fidelity-gates.test.mjs`. Siete mutaciones negativas cubren cambio de voltaje,
++error algebraico negativo, NaN, canal ausente/corto, tiempo de activación y QT.
++La prueba falla ante cambio de catálogo activo, calendario o archivo del analizador.
++Los 61 defaults y las fases aguda/resuelta de la matriz regional conservan sus
++muestras exactamente (0 mV). Hiperaguda/evolutiva admiten cambios regionales, pero
++no canales inválidos, muestras no finitas ni cambios de eventos. Einthoven/Goldberger:
++error absoluto <1e−9 mV, tolerancia algebraica, no precisión clínica.
 +
-+El contrato original de WPW exige cambios secundarios (guía original, §3.4 A).
-+El enfoque clínico del repositorio distingue una configuración docente de una
-+adjudicación diagnóstica (`enfoque-clinico.md`, «BRI o marcapasos»). Esta entrega
-+reduce la discrepancia de enseñanza mediante advertencias explícitas; no afirma
-+haber implementado aún esa fisiología ni realizado validación humana independiente.
-diff --git a/src/presets/case-context.ts b/src/presets/case-context.ts
-index c32b0c0..ddd834a 100644
---- a/src/presets/case-context.ts
-+++ b/src/presets/case-context.ts
-@@ -1,2 +1,3 @@
- import { normalizeCase, type ECGCase } from "../engine/types";
-+import { repolarizationLimitations } from "./teaching-limits";
- import { fromPreset, presetById, type Preset } from "./catalog";
-@@ -62,2 +63,3 @@ export function caseContext(input: ECGCase): CaseContext {
-     );
-+  warnings.push(...repolarizationLimitations(c));
-   return {
-diff --git a/src/presets/catalog.ts b/src/presets/catalog.ts
-index f82274a..301ffc5 100644
---- a/src/presets/catalog.ts
-+++ b/src/presets/catalog.ts
-@@ -1 +1,2 @@
-+import { WPW_REPOLARIZATION_LIMIT, SECONDARY_ST_RATIO_LIMIT } from "./teaching-limits";
- import { DEFAULT_CASE, cloneCase, type ECGCase } from "../engine/types";
-@@ -389,2 +390,4 @@ export const PRESETS: Preset[] = [
-     ],
-+    "vectorial",
-+    SECONDARY_ST_RATIO_LIMIT,
-   ),
-@@ -443,3 +446,3 @@ export const PRESETS: Preset[] = [
-     "vectorial",
--    "Delta aproximada; sin vías accesorias anatómicas ni circuito AVRT.",
-+    "Delta aproximada; sin vías accesorias anatómicas ni circuito AVRT. " + WPW_REPOLARIZATION_LIMIT,
-   ),
-@@ -586,3 +589,3 @@ export const PRESETS: Preset[] = [
-     "vectorial",
--    "Caso ilustrativo; sin cálculo automático de score ni ajuste de criterio proporcional.",
-+    "Caso ilustrativo; sin cálculo automático de score. " + SECONDARY_ST_RATIO_LIMIT,
-   ),
-@@ -659,3 +662,3 @@ export const PRESETS: Preset[] = [
-     "vectorial",
--    "Estimulación capturada a frecuencia fija; sensado, demanda y fallos pendientes.",
-+    "Estimulación capturada a frecuencia fija; sensado, demanda y fallos pendientes. " + SECONDARY_ST_RATIO_LIMIT,
-   ),
-@@ -670,3 +673,3 @@ export const PRESETS: Preset[] = [
-     "vectorial",
--    "Secuencia fija; no simula demanda, PVARP, seguimiento ni límite superior.",
-+    "Secuencia fija; no simula demanda, PVARP, seguimiento ni límite superior. " + SECONDARY_ST_RATIO_LIMIT,
-   ),
-diff --git a/src/presets/teaching-limits.ts b/src/presets/teaching-limits.ts
++El PNG se obtiene por la exportación real de la UI en doce combinaciones de
++velocidad/ganancia. Se leen pulso y grilla desde esos archivos con señal sinusal,
++sin inyectar ceros ni importar el renderizador fuente. Tolerancias: <2 píxeles en
++altura/anchura del pulso y <1 píxel en paso de grilla 5 mm, por rasterización y
++antialias a 300 dpi. No constituyen validación de impresión física o digitalización
++completa de las ondas. Continúa el control de metadatos pHYs del PNG descargado.
++
++## Protección de main: ajuste administrativo separado
++
++El workflow no activa por sí mismo la protección de rama. Debe configurarse en
++GitHub para `main`: pull requests obligatorios, check `verify` de ECG fidelity
++obligatorio y actualizado con la base, sin force-push ni eliminación. Mantener
++la revisión humana según la organización del proyecto, sin atribuirla a estos tests.
++
++En esta ejecución el conector disponible permite PR/merge y lectura de protección,
++pero no escritura administrativa de branch protection/rulesets. Por tanto, el
++repositorio NO se declara protegido por incorporar este archivo. La activación
++administrativa queda pendiente hasta confirmarla mediante la API de GitHub.
++
++## Reproducción
++
++```bash
++npm ci
++npm run check
++node scripts/validate-repolarization.mjs
++npx vite preview --host 127.0.0.1 --port 5173 --strictPort
++# En otra terminal, con el mismo commit limpio y Playwright instalado:
++node scripts/verify-production.mjs
++node tests/browser-fidelity.mjs
++```
++
++Archivos JSON/capturas de ejecución se guardan fuera del código en los artefactos
++identificados por SHA. Las pruebas sintéticas no sustituyen revisión humana ni
++validación externa; los límites fisiológicos de P2 permanecen sin cambios.
+diff --git a/scripts/lib/fidelity-contracts.mjs b/scripts/lib/fidelity-contracts.mjs
 new file mode 100644
-index 0000000..25cdaab
+index 0000000..84dd76d
 --- /dev/null
-+++ b/src/presets/teaching-limits.ts
-@@ -0,0 +1,16 @@
-+import type { ECGCase } from "../engine/types";
++++ b/scripts/lib/fidelity-contracts.mjs
+@@ -0,0 +1,38 @@
++import assert from 'node:assert/strict';
 +
-+/** Limits of this implementation, not diagnostic rules or physiological laws. */
-+export const WPW_REPOLARIZATION_LIMIT =
-+  "Preexcitación aproximada: la delta no modifica el ST-T secundario en este modelo. No uses esta T para aprender la repolarización típica de WPW.";
-+export const SECONDARY_ST_RATIO_LIMIT =
-+  "Repolarización secundaria aproximada: al variar el voltaje QRS, la relación ST/QRS no está calibrada. Este modelo no permite validar criterios proporcionales de Sgarbossa.";
-+
-+export function repolarizationLimitations(c: ECGCase): string[] {
-+  if (c.rhythm === "vf" || c.rhythm === "asystole") return [];
-+  const limits: string[] = [];
-+  if (c.conduction === "wpw") limits.push(WPW_REPOLARIZATION_LIMIT);
-+  if (c.conduction === "lbbb" || (c.rhythm === "paced" && c.pacing !== "AAI"))
-+    limits.push(SECONDARY_ST_RATIO_LIMIT);
-+  return limits;
++// Independent regression contract. Numerical tolerance is NOT clinical accuracy.
++export const LEADS = ['I','II','III','aVR','aVL','aVF','V1','V2','V3','V4','V5','V6'];
++export const ELECTRICAL_TOLERANCE_MV = 1e-9;
++export function assertSignal(signal, label = 'signal') {
++  assert.ok(Number.isFinite(signal.fs) && signal.fs > 0, `${label}: sample rate`);
++  assert.ok(Number.isFinite(signal.duration) && signal.duration > 0, `${label}: duration`);
++  assert.deepEqual(Object.keys(signal.leads).sort(), [...LEADS].sort(), `${label}: lead set`);
++  const length = Math.floor(signal.fs * signal.duration);
++  for (const lead of LEADS) {
++    const values = signal.leads[lead];
++    assert.equal(values.length, length, `${label}/${lead}: sample count`);
++    for (let i=0;i<length;i++) assert.ok(Number.isFinite(values[i]), `${label}/${lead}/${i}: nonfinite sample`);
++  }
++  for(let i=0;i<length;i++) {
++    const l=signal.leads, a=l.I[i], b=l.II[i];
++    const expected={III:b-a,aVR:-(a+b)/2,aVL:a-b/2,aVF:b-a/2};
++    for(const [lead,value] of Object.entries(expected))
++      assert.ok(Math.abs(l[lead][i]-value)<ELECTRICAL_TOLERANCE_MV, `${label}/${lead}/${i}: electrical identity`);
++  }
 +}
++export function compareSignalContract(before, after, {exact = false, label = 'comparison'} = {}) {
++  assertSignal(before, `${label}/before`); assertSignal(after, `${label}/after`);
++  assert.equal(after.fs, before.fs, `${label}: sample rate changed`);
++  assert.equal(after.duration, before.duration, `${label}: duration changed`);
++  assert.deepEqual(after.events, before.events, `${label}: activation/QRS/QT calendar changed`);
++  let maxDifferenceMv=0;
++  for(const lead of LEADS) for(let i=0;i<after.leads[lead].length;i++)
++    maxDifferenceMv=Math.max(maxDifferenceMv,Math.abs(after.leads[lead][i]-before.leads[lead][i]));
++  if(exact) assert.equal(maxDifferenceMv,0,`${label}: protected samples changed`);
++  return {maxDifferenceMv, eventsUnchanged:true};
++}
++export function assertPresetSet(before, after) {
++  const ids=presets=>presets.filter(p=>p.strategy!=='pending').map(p=>p.id).sort();
++  assert.ok(ids(before).length>0,'empty reference catalog');
++  assert.deepEqual(ids(after),ids(before),'active preset set changed: revise the explicit scope before acceptance');
++}
+diff --git a/scripts/validate-repolarization.mjs b/scripts/validate-repolarization.mjs
+index 91194bc..e99adc4 100644
+--- a/scripts/validate-repolarization.mjs
++++ b/scripts/validate-repolarization.mjs
+@@ -2,2 +2,4 @@
+ import { build } from 'esbuild';
++import assert from 'node:assert/strict';
++import { compareSignalContract, assertPresetSet } from './lib/fidelity-contracts.mjs';
+ import { execFileSync } from 'node:child_process';
+@@ -31,3 +33,6 @@ try {
+  const {morphologyMetrics} = await import(pathToFileURL(outfile).href);
+- const detectorFiles = ['src/engine/measure.ts', ...(await readdir(path.join(root,'src/engine/analysis'))).filter(p=>p.endsWith('.ts')).sort().map(p=>'src/engine/analysis/'+p)];
++ const analysisFiles=async dir=>(await readdir(path.join(dir,'src/engine/analysis'))).filter(p=>p.endsWith('.ts')).sort();
++ const currentAnalysis=await analysisFiles(root),baselineAnalysis=await analysisFiles(baseDir);
++ assert.deepEqual(currentAnalysis,baselineAnalysis,'Detector file set changed');
++ const detectorFiles = ['src/engine/measure.ts', ...currentAnalysis.map(p=>'src/engine/analysis/'+p)];
+  const detector = await Promise.all(detectorFiles.map(async p => {
+@@ -37,2 +42,3 @@ try {
+  if (detector.some(f=>!f.unchanged)) throw new Error('Detector freeze violated');
++ assertPresetSet(before.PRESETS,after.PRESETS);
+  const rows=[];
+@@ -43,2 +49,4 @@ try {
+    const a=before.synthesize(c,10),b=after.synthesize(c,10),beat=b.events.beats.find(x=>x.time>3);
++   const contract=compareSignalContract(a,b,{exact:phase==='acute'||phase==='chronic',label:`${id}/${phase}/${filter}`});
++   assert.ok(beat,'missing interior beat');
+    const qrs=beat.qrs,qt=beat.qt,tStart=qt-Math.min(.22,(qt-qrs)*.68);
+@@ -49,3 +57,3 @@ try {
+    const am=after.measure(a),bm=after.measure(b);
+-   rows.push({id,phase,filter,case:c,windows,eventsUnchanged:JSON.stringify(a.events)===JSON.stringify(b.events),leads,
++   rows.push({id,phase,filter,case:c,windows,...contract,leads,
+     detector:{before:{hr:am.hr,qrs:am.qrs,qt:am.qt},after:{hr:bm.hr,qrs:bm.qrs,qt:bm.qt}}});
+@@ -55,4 +63,4 @@ try {
+    const c=after.fromPreset(p),a=before.synthesize(c,10),b=after.synthesize(c,10);
+-   let max=0; for(const l of Object.keys(b.leads)) for(let i=0;i<b.leads[l].length;i++) max=Math.max(max,Math.abs(a.leads[l][i]-b.leads[l][i]));
+-   defaults.push({id:p.id,maxDifferenceMv:max});
++   const contract=compareSignalContract(a,b,{exact:true,label:`default/${p.id}`});
++   defaults.push({id:p.id,...contract});
+  }
+diff --git a/scripts/verify-production.mjs b/scripts/verify-production.mjs
+new file mode 100644
+index 0000000..add773b
+--- /dev/null
++++ b/scripts/verify-production.mjs
+@@ -0,0 +1,35 @@
++/** Verify the served build, not a development server or an assertion in README. */
++import assert from 'node:assert/strict';
++import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
++import { createHash } from 'node:crypto';
++import { execFileSync } from 'node:child_process';
++import path from 'node:path';
++const base=process.env.ECG_TEST_URL || 'http://127.0.0.1:5173/';
++const expected=process.env.ECG_EXPECT_COMMIT || execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
++const sha=buffer=>createHash('sha256').update(buffer).digest('hex');
++const files=async dir=>{const all=[];for(const entry of await readdir(dir,{withFileTypes:true})) {
++ const name=path.join(dir,entry.name);if(entry.isDirectory())all.push(...await files(name));else all.push(name);
++}return all;};
++const info=JSON.parse(await readFile('dist/build-info.json','utf8'));
++assert.match(expected,/^[a-f0-9]{40}$/);assert.equal(info.commit,expected,'built commit differs from tested commit');
++assert.equal(info.dirty,false,'production build has uncommitted product changes');
++assert.equal(info.clinicalValidation,false);
++assert.equal(info.packageVersion,JSON.parse(await readFile('package.json','utf8')).version);
++const inputs=[...await files('src'),...await files('public'),'index.html','package.json','package-lock.json','vite.config.ts'].sort();
++const hash=createHash('sha256');for(const file of inputs)hash.update(file+'\0').update(await readFile(file)).update('\0');
++assert.equal(info.sourceSha256,hash.digest('hex'),'source fingerprint differs');
++const checked=[];
++for(const file of await files('dist')){
++ const route=path.relative('dist',file).split(path.sep).join('/');
++ const response=await fetch(new URL(route==='index.html'?'':route,base),{signal:AbortSignal.timeout(15000)});
++ assert.equal(response.status,200,route);
++ const actual=Buffer.from(await response.arrayBuffer()),disk=await readFile(file);
++ assert.equal(sha(actual),sha(disk),`served bytes differ: ${route}`);
++ checked.push({path:route,sha256:sha(disk),bytes:disk.length});
++}
++const html=await readFile('dist/index.html','utf8');
++assert.doesNotMatch(html,/\/src\/|@vite\/client/,'development entry in production');
++assert.match(html,/\/assets\/[^"']+\.js/);
++const dir=path.resolve(process.env.ECG_EVIDENCE_DIR || '.sites-runtime/browser');await mkdir(dir,{recursive:true});
++await writeFile(path.join(dir,'production-identity.json'),JSON.stringify({expectedCommit:expected,buildInfo:info,files:checked,url:base},null,2));
++console.log(JSON.stringify({productionVerified:true,commit:expected,files:checked.length}));
 diff --git a/tests/browser-fidelity.mjs b/tests/browser-fidelity.mjs
-index bba077e..dab7c17 100644
+index dab7c17..273ba64 100644
 --- a/tests/browser-fidelity.mjs
 +++ b/tests/browser-fidelity.mjs
-@@ -57,2 +57,11 @@ try {
-  checks.push('P1: actual JSON import preserves reversed acquisition and retires basal observations');
-+ for(const id of ['wpw','lbbb','vvi','ddd']) {
-+  await select(id);
-+  const message=await page.locator('#warnings').innerText();
-+  assert.match(message,id==='wpw'?/delta no modifica el ST-T secundario/:/relación ST\/QRS no está calibrada/);
-+  assert.match(await page.locator('#limitation').innerText(),id==='wpw'?/delta no modifica/:/no está calibrada/);
+@@ -1,2 +1,2 @@
+-/** Real Chromium checks. Run against Vite: ECG_TEST_URL=http://127.0.0.1:5173.
++/** Real Chromium checks. Run against the built dist (vite preview): ECG_TEST_URL=http://127.0.0.1:5173.
+  * Outputs outside source by default; no patient data, diagnostic labels or network AI.
+@@ -11,4 +11,10 @@ const out=path.resolve(process.env.ECG_EVIDENCE_DIR || '.sites-runtime/browser');
+ await mkdir(out,{recursive:true});
++const productionResponse=await fetch(new URL('build-info.json',url));
++assert.equal(productionResponse.status,200,'production manifest unavailable');
++const productionInfo=await productionResponse.json();
++assert.deepEqual(productionInfo,JSON.parse(await readFile('dist/build-info.json','utf8')));
++assert.equal(productionInfo.dirty,false,'do not QA a dirty build');
+ const browser=await chromium.launch({headless:true}), errors=[], warnings=[], checks=[];
+ const page=await browser.newPage({viewport:{width:1440,height:1000},deviceScaleFactor:1});
++const requested=[];page.on('request',r=>requested.push(r.url()));
+ page.on('pageerror',e=>errors.push(e.message));
+@@ -73,35 +79,41 @@ try {
+  await page.locator('#dialog').evaluate(d=>d.close());
+- // Exercise the actual renderer and then decode its encoded PNG: independent pixel measurements.
+- const pixels=await page.evaluate(async()=>{
+-  const {renderPaper}=await import('/src/render/ecg.ts'),{DEFAULT_CASE,cloneCase,LEADS}=await import('/src/engine/types.ts');
+-  const {synthesize}=await import('/src/engine/signal.ts');
+-  const seed=cloneCase(DEFAULT_CASE),s=synthesize(seed,10);for(const l of LEADS)s.leads[l].fill(0);
+-  const results=[],ppm=300/25.4;
+-  for(const speed of [12.5,25,50])for(const gain of [2.5,5,10,20]){
+-   const c=cloneCase(seed);Object.assign(c.view,{speed,gain,chestGain:gain,grid:true,fit:false,palette:'paper',format:'3x4'});
+-   const canvas=document.createElement('canvas'),layout=renderPaper(canvas,s,c,1000,{pxPerMm:ppm,ratio:1});
+-   const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png')),img=await createImageBitmap(blob);
+-   const decoded=document.createElement('canvas');decoded.width=img.width;decoded.height=img.height;
+-   const ctx=decoded.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0);const {data}=ctx.getImageData(0,0,img.width,img.height);
++ // Measure actual UI downloads. No source imports, zeroed signals, or layout truth.
++ await select('sinus');
++ await page.locator('[data-key="view.format"]').selectOption('3x4');
++ await page.locator('[data-key="view.grid"]').check();
++ const pixels=[];
++ for(const speed of [12.5,25,50])for(const gain of [2.5,5,10,20]){
++  await page.locator('[data-key="view.speed"]').selectOption(String(speed));
++  await page.locator('[data-key="view.gain"]').selectOption(String(gain));
++  await page.locator('[data-action="export"]').click();
++  const pending=page.waitForEvent('download');await page.locator('[data-action="png"]').click();
++  const file=path.join(out,`calibration-${speed}-${gain}.png`);await (await pending).saveAs(file);
++  await page.locator('#dialog').evaluate(d=>d.close());
++  const result=await page.evaluate(async ({base64,speed,gain})=>{
++   const bytes=Uint8Array.from(atob(base64),c=>c.charCodeAt(0));
++   const img=await createImageBitmap(new Blob([bytes],{type:'image/png'}));
++   const canvas=document.createElement('canvas');canvas.width=img.width;canvas.height=img.height;
++   const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0);
++   const {data}=ctx.getImageData(0,0,img.width,img.height),ppm=300/25.4;
+    const dark=(x,y)=>{const i=4*(Math.round(y)*img.width+Math.round(x));return data[i]<120&&data[i+1]<120&&data[i+2]<120;};
+-   const base=layout.segments[0].baseline;
+-   // Pulse top at midpoint of its plateau; bottom at the leading baseline stub.
+-   const ys=[];for(let y=Math.floor((base-gain-1)*ppm);y<=Math.ceil((base+1)*ppm);y++)if(dark((2+.1*speed)*ppm,y))ys.push(y);
+-   const bs=[];for(let y=Math.floor((base-.5)*ppm);y<=Math.ceil((base+.5)*ppm);y++)if(dark(1.5*ppm,y))bs.push(y);
+-   // Half-height intersects only the two vertical sides.
+-   const xs=[];for(let x=Math.floor(ppm);x<=Math.ceil((3+.2*speed)*ppm);x++)if(dark(x,(base-gain*.5)*ppm))xs.push(x);
+-   const groups=[];for(const x of xs){if(!groups.length||x>groups.at(-1).at(-1)+1)groups.push([]);groups.at(-1).push(x);}
++   const groups=values=>{const out=[];for(const v of values){if(!out.length||v>out.at(-1).at(-1)+1)out.push([]);out.at(-1).push(v);}return out;};
+    const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+-   // Bold 5-mm grid measured from a clean scan line below the title, before traces.
+-   const majors=[];const gy=Math.round(15.4*ppm);
++   // Read the first calibration baseline from its leading stub, not renderer coordinates.
++   const baselinePixels=[];
++   for(let y=Math.ceil(18*ppm);y<img.height-Math.ceil(8*ppm);y++)if(dark(1.5*ppm,y))baselinePixels.push(y);
++   const baselineGroups=groups(baselinePixels);
++   if(!baselineGroups.length)throw Error('Calibration baseline not found');
++   const baseline=mean(baselineGroups[0]),ys=[];
++   for(let y=Math.floor(baseline-(gain+1)*ppm);y<=Math.ceil(baseline+ppm);y++)if(dark((2+.1*speed)*ppm,y))ys.push(y);
++   const xs=[];for(let x=Math.floor(ppm);x<=Math.ceil((3+.2*speed)*ppm);x++)if(dark(x,baseline-gain*.5*ppm))xs.push(x);
++   const sides=groups(xs),tops=groups(ys),majors=[],gy=Math.round(15.4*ppm);
+    for(let x=Math.round(20*ppm);x<Math.round(80*ppm);x++){const i=4*(gy*img.width+x);if(data[i]>190&&data[i]<240&&data[i+1]<210&&data[i+2]<218)majors.push(x);}
+-   const gg=[];for(const x of majors){if(!gg.length||x>gg.at(-1).at(-1)+1)gg.push([]);gg.at(-1).push(x);}
+-   const centers=gg.map(mean),steps=centers.slice(1).map((v,i)=>v-centers[i]);
+-   results.push({speed,gain,widthPx:groups.length===2?mean(groups[1])-mean(groups[0]):null,heightPx:ys.length&&bs.length?mean(bs)-mean(ys):null,expectedWidthPx:.2*speed*ppm,expectedHeightPx:gain*ppm,grid5mmPx:steps.length?mean(steps):null,expectedGrid5mmPx:5*ppm});
+-   img.close();canvas.width=decoded.width=0;
+-  }
+-  return results;
+- });
++   const centers=groups(majors).map(mean),steps=centers.slice(1).map((v,i)=>v-centers[i]);
++   const result={speed,gain,widthPx:sides.length===2?mean(sides[1])-mean(sides[0]):null,heightPx:tops.length===1?baseline-mean(tops[0]):null,expectedWidthPx:.2*speed*ppm,expectedHeightPx:gain*ppm,grid5mmPx:steps.length?mean(steps):null,expectedGrid5mmPx:5*ppm};
++   img.close();canvas.width=0;return result;
++  },{base64:(await readFile(file)).toString('base64'),speed,gain});
++  pixels.push(result);
 + }
-+ await page.screenshot({path:path.join(out,'secondary-repolarization-limit.png')});
-+ await select('aai');assert.doesNotMatch(await page.locator('#warnings').innerText(),/ST\/QRS no está calibrada/);
-+ checks.push('P2: WPW / LBBB / VVI / DDD warnings visible; AAI alone excluded');
-  await select('inferior');await phase('hyperacute');
-diff --git a/tests/case-contract.test.ts b/tests/case-contract.test.ts
-index a7b923f..24aa6b3 100644
---- a/tests/case-contract.test.ts
-+++ b/tests/case-contract.test.ts
-@@ -1 +1,2 @@
-+import { repolarizationLimitations, SECONDARY_ST_RATIO_LIMIT } from "../src/presets/teaching-limits";
- import { describe, expect, it, vi } from "vitest";
-@@ -20,3 +21,3 @@ describe("Declared preset versus imported physiology", () => {
-       expect(context.preset?.id, preset.id).toBe(preset.id);
--      expect(context.warnings, preset.id).toEqual([]);
-+      expect(context.warnings, preset.id).toEqual(repolarizationLimitations(fromPreset(preset)));
-     }
-@@ -146,3 +147,3 @@ describe("Concordant injury example requires the existing LBBB substrate", () =>
-     expect(previous).toEqual(original);
--    expect(caseContext(c).warnings).toEqual([]);
-+    expect(caseContext(c).warnings).toEqual([SECONDARY_ST_RATIO_LIMIT]);
-   });
-@@ -171,3 +172,5 @@ describe("Concordant injury example requires the existing LBBB substrate", () =>
-     c.qrs = 100;
--    expect(caseContext(c).warnings).toHaveLength(1);
-+    expect(caseContext(c).warnings).toHaveLength(2);
-+    expect(caseContext(c).warnings[0]).toMatch(/requiere conducción BRI/);
-+    expect(caseContext(c).warnings[1]).toBe(SECONDARY_ST_RATIO_LIMIT);
-   });
-diff --git a/tests/teaching-limits.test.ts b/tests/teaching-limits.test.ts
+  for(const p of pixels){assert.ok(p.widthPx!==null&&Math.abs(p.widthPx-p.expectedWidthPx)<2,JSON.stringify(p));assert.ok(p.heightPx!==null&&Math.abs(p.heightPx-p.expectedHeightPx)<2,JSON.stringify(p));assert.ok(p.grid5mmPx!==null&&Math.abs(p.grid5mmPx-p.expectedGrid5mmPx)<1,JSON.stringify(p));}
+- checks.push('12 PNG pixel-calibration combinations: pulse width/height + 5-mm grid');
++ checks.push('12 actual production PNG downloads: pulse width/height + 5-mm grid');
+  await page.setViewportSize({width:390,height:844});await page.goto(url);await ready();
+@@ -110,4 +122,8 @@ try {
+  await page.locator('#beat-detail').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(out,'mobile.png')});checks.push('390x844 emulated viewport: catalog / phase / trace');
++ const localPaths=requested.filter(u=>new URL(u).origin===new URL(url).origin).map(u=>new URL(u).pathname);
++ assert.ok(localPaths.some(p=>/^\/assets\/.*\.js$/.test(p)),'compiled application not loaded');
++ assert.ok(!localPaths.some(p=>p.startsWith('/src/')||p.includes('@vite/client')),'development source loaded');
++ checks.push('production assets loaded without source-module imports');
+  assert.deepEqual(errors,[]);
+- await writeFile(path.join(out,'browser-results.json'),JSON.stringify({url,checks,pixels,errors,warnings,browser:await browser.version(),viewports:[[1440,1000],[390,844]],physicalDeviceTest:false},null,2));
++ await writeFile(path.join(out,'browser-results.json'),JSON.stringify({url,productionInfo,checks,pixels,errors,warnings,browser:await browser.version(),viewports:[[1440,1000],[390,844]],physicalDeviceTest:false},null,2));
+  console.log(JSON.stringify({passed:checks.length,pixelCases:pixels.length,errors}));
+diff --git a/tests/fidelity-gates.test.mjs b/tests/fidelity-gates.test.mjs
 new file mode 100644
-index 0000000..45e9694
+index 0000000..1a54678
 --- /dev/null
-+++ b/tests/teaching-limits.test.ts
-@@ -0,0 +1,68 @@
-+import { describe, expect, it } from "vitest";
-+import { readFileSync } from "node:fs";
-+import { LEADS, type Signal } from "../src/engine/types";
-+import { synthesize } from "../src/engine/signal";
-+import { fromPreset, presetById, PRESETS } from "../src/presets/catalog";
-+import { caseContext, caseReading, normalizeImportedCase } from "../src/presets/case-context";
-+import { repolarizationLimitations, WPW_REPOLARIZATION_LIMIT, SECONDARY_ST_RATIO_LIMIT } from "../src/presets/teaching-limits";
-+const load = (id: string) => fromPreset(presetById(id)!);
++++ b/tests/fidelity-gates.test.mjs
+@@ -0,0 +1,29 @@
++import { describe, expect, it } from 'vitest';
++import { synthesize } from '../src/engine/signal';
++import { fromPreset, presetById } from '../src/presets/catalog';
++import { compareSignalContract, assertPresetSet } from '../scripts/lib/fidelity-contracts.mjs';
 +
-+describe("Specific teaching limits, not repaired physiology", () => {
-+  it.each(["wpw", "lbbb", "sgarbossa", "vvi", "ddd"])("%s retains every sample and exposes its specific limit", (id) => {
-+    const c=load(id), original=structuredClone(c), before=synthesize(c,10);
-+    const restored=normalizeImportedCase(c), context=caseContext(restored);
-+    const warning=id==='wpw'?WPW_REPOLARIZATION_LIMIT:SECONDARY_ST_RATIO_LIMIT;
-+    expect(context.warnings).toContain(warning);
-+    expect(context.preset?.limitation).toContain(warning);
-+    expect(caseReading(c).title).toBe(c.name);
-+    const after=synthesize(restored,10);
-+    for(const lead of LEADS) expect(after.leads[lead],lead).toEqual(before.leads[lead]);
-+    expect(c).toEqual(original);expect(restored).toEqual(original);
-+  });
-+  it.each(["sinus", "rbbb", "aai"])("%s does not receive an unrelated limit",id=>{
-+    expect(repolarizationLimitations(load(id))).toEqual([]);
-+  });
-+  it("retains the warning after manual settings and supports combined acquisition",()=>{
-+    const c=load('lbbb');c.presetId='custom';c.name='Ejercicio';c.qrsAmp=.1;c.artifacts.reversed=true;
-+    expect(caseContext(c).warnings).toContain(SECONDARY_ST_RATIO_LIMIT);
-+    expect(caseReading(c).title).toBe('Registro con brazos invertidos');
-+    const aai=load('aai');aai.conduction='lbbb';
-+    expect(repolarizationLimitations(aai)).toEqual([SECONDARY_ST_RATIO_LIMIT]);
-+  });
-+  it("documents the existing absence of WPW secondary T rather than synthesizing a substitute",()=>{
-+    const c=load('wpw');c.filter='off';c.variability=0;
-+    const preexcited=synthesize(c,10), control=synthesize({...c,conduction:'normal'},10);
-+    const b=preexcited.events.beats.find(b=>b.time>3)!;
-+    let qrsChange=0, tChange=0;
-+    for(const lead of LEADS){
-+      for(let i=Math.ceil(b.time*preexcited.fs);i<Math.floor((b.time+b.qrs!)*preexcited.fs);i++)
-+        qrsChange=Math.max(qrsChange,Math.abs(preexcited.leads[lead][i]-control.leads[lead][i]));
-+      for(let i=Math.ceil((b.time+.210)*preexcited.fs);i<Math.floor((b.time+b.qt!)*preexcited.fs);i++)
-+        tChange=Math.max(tChange,Math.abs(preexcited.leads[lead][i]-control.leads[lead][i]));
-+    }
-+    expect(qrsChange).toBeGreaterThan(.02);expect(tChange).toBe(0);
-+    expect(caseContext(c).warnings).toContain(WPW_REPOLARIZATION_LIMIT);
-+  });
-+  it.each(['lbbb','vvi','ddd'])("%s exposes the non-proportional voltage response without calling it a diagnostic ratio",id=>{
-+    const c=load(id);c.filter='off';c.variability=0;c.qrsAmp=.1;
-+    const low=synthesize(c,10);c.qrsAmp=1;const high=synthesize(c,10);
-+    const read=(s:Signal)=>{
-+      const b=s.events.beats.find(b=>b.time>3)!;
-+      const q=s.leads.V2.slice(Math.ceil((b.time+.01)*s.fs),Math.floor((b.time+b.qrs!-.02)*s.fs));
-+      return {s:Math.abs(Math.min(...q)),st40:s.leads.V2[Math.round((b.time+b.qrs!+.040)*s.fs)]};
-+    };
-+    const a=read(low),b=read(high);
-+    expect(b.s/a.s).toBeCloseTo(10,6);
-+    expect(Math.abs(b.st40-10*a.st40)).toBeGreaterThan(.1);
-+    expect(caseContext(c).warnings).toContain(SECONDARY_ST_RATIO_LIMIT);
-+    // ST40 != J; this test cannot classify Sgarbossa or define normal physiology.
-+  });
-+  it("keeps the visible preset limits and the versioned state documents synchronized",()=>{
-+    const json=JSON.parse(readFileSync('docs/estado-presets.json','utf8'));
-+    const md=readFileSync('docs/estado-presets.md','utf8');
-+    for(const p of PRESETS){
-+      expect(json.find((r:{id:string})=>r.id===p.id).limitacion).toBe(p.limitation);
-+      expect(md).toContain(p.limitation);
-+    }
-+  });
++const original=synthesize(fromPreset(presetById('sinus')),10);
++describe('CI gate rejects corrupt signals, not just reports their differences',()=>{
++ it('accepts the unchanged signal',()=>expect(compareSignalContract(original,structuredClone(original),{exact:true}).maxDifferenceMv).toBe(0));
++ it.each([
++  ['precordial amplitude',s=>s.leads.V2[10]+=.001,/protected samples changed/],
++  ['negative algebraic error',s=>s.leads.III[10]-=.001,/electrical identity/],
++  ['NaN',s=>s.leads.V3[10]=NaN,/nonfinite/],
++  ['channel length',s=>s.leads.V6=s.leads.V6.slice(1),/sample count/],
++  ['absent channel',s=>delete s.leads.V5,/lead set/],
++  ['activation time',s=>s.events.beats[0].time+=.002,/calendar changed/],
++  ['QT reference',s=>s.events.beats[0].qt+=.002,/calendar changed/],
++ ])('rejects deliberate mutation: %s',(_name,mutate,error)=>{
++   const corrupted=structuredClone(original);mutate(corrupted);
++   expect(()=>compareSignalContract(original,corrupted,{exact:true})).toThrow(error);
++ });
++ it('allows an intended regional sample difference only when the explicit exact contract is off',()=>{
++  const changed=structuredClone(original);changed.leads.V2[10]+=.001;
++  expect(compareSignalContract(original,changed,{exact:false}).maxDifferenceMv).toBeGreaterThan(0);
++ });
++ it('refuses to silently lose a preset from the comparison',()=>{
++  expect(()=>assertPresetSet([{id:'a',strategy:'vectorial'}],[])).toThrow(/preset set changed/);
++ });
++ it('rejects an empty reference set',()=>expect(()=>assertPresetSet([],[])).toThrow(/empty reference/));
 +});
