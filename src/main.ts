@@ -77,10 +77,17 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  <footer class="workspace-footer"><span>Motor paramétrico vectorial · Dower + identidades de Einthoven/Goldberger</span><span>Uso educativo. Sin validación clínica.</span></footer></main></div>
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
 
+let toastTimer = 0;
+function clearToast() {
+  window.clearTimeout(toastTimer);
+  $("#toast").classList.remove("visible");
+  $("#toast").textContent = "";
+}
 function toast(message: string) {
+  clearToast();
   $("#toast").textContent = message;
   $("#toast").classList.add("visible");
-  window.setTimeout(() => $("#toast").classList.remove("visible"), 3500);
+  toastTimer = window.setTimeout(clearToast, 3500);
 }
 function currentPreset() {
   return caseContext(c).preset;
@@ -390,6 +397,7 @@ function showUnavailableSignal(message: string, unavailable = false) {
   syncTraceTools();
 }
 function invalidateSignal() {
+  clearToast();
   session.invalidate();
   showUnavailableSignal("Calculando señal…");
 }
