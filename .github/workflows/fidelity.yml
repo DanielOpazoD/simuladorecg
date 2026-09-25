@@ -1,7 +1,7 @@
 name: ECG fidelity
 on:
   push:
-    branches: ['improvement/v1.4-*']
+    branches: ['main', 'improvement/v1.4-*']
   pull_request:
   workflow_dispatch:
 permissions:
@@ -23,7 +23,6 @@ jobs:
       - name: Unit and signal contracts
         run: npm test -- --reporter=default --reporter=json --outputFile=${{ runner.temp }}/unit-results.json
       - name: Types and production build
-        if: always()
         run: npm run build
       - name: Matched repolarization comparison and detector freeze
         run: node scripts/validate-repolarization.mjs --output "${{ runner.temp }}/repolarization-comparison.json"
@@ -31,15 +30,18 @@ jobs:
         run: |
           npm install --no-save --package-lock=false playwright@1.63.0
           npx playwright install --with-deps chromium
-      - name: Real browser flows and PNG pixel metrology
+      - name: Production identity, browser flows and PNG pixel metrology
         env:
           ECG_TEST_URL: http://127.0.0.1:5173/
+          ECG_EXPECT_COMMIT: ${{ github.sha }}
           ECG_EVIDENCE_DIR: ${{ runner.temp }}/ecg-evidence/browser
         run: |
-          npm run dev -- --host 127.0.0.1 --port 5173 > "$RUNNER_TEMP/vite.log" 2>&1 &
+          npx vite preview --host 127.0.0.1 --port 5173 --strictPort > "$RUNNER_TEMP/vite.log" 2>&1 &
           PID=$!
           trap 'kill $PID 2>/dev/null || true' EXIT
           for n in {1..40}; do curl --silent --fail "$ECG_TEST_URL" > /dev/null && break; sleep 1; done
+          curl --silent --fail "$ECG_TEST_URL/build-info.json" > /dev/null
+          node scripts/verify-production.mjs
           node tests/browser-fidelity.mjs
       - name: Archive exact reviewed source and reports
         if: always()
