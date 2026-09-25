@@ -1,0 +1,42 @@
+name: External reference evaluation
+on:
+  pull_request:
+    paths: ['scripts/*ludb-expansion*', 'scripts/lib/external-qrs-evaluation.mjs', 'tests/reference/ludb-expansion/**', 'tests/external-cohort.test.mjs', 'tests/reference/ludb/prepare_ludb.py', 'tests/test_ludb_annotations.py', '.github/workflows/external-reference.yml']
+  push:
+    branches: ['main']
+    paths: ['scripts/*ludb-expansion*', 'scripts/lib/external-qrs-evaluation.mjs', 'tests/reference/ludb-expansion/**', 'tests/external-cohort.test.mjs', 'tests/reference/ludb/prepare_ludb.py', 'tests/test_ludb_annotations.py', '.github/workflows/external-reference.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ludb:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22.16.0', cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: npm ci
+      - run: python -m pip install wfdb==4.3.1
+      - name: Annotation reader contracts
+        run: python -m unittest discover -s tests -p test_ludb_annotations.py -v
+      - name: Fetch prespecified cohort and verify against WFDB
+        run: python scripts/prepare-ludb-expansion.py --output "$RUNNER_TEMP/ludb-expansion" --crosscheck
+      - name: Evaluate frozen sample-only analyzer, without tuning
+        run: node scripts/validate-ludb-expansion.mjs --fixtures "$RUNNER_TEMP/ludb-expansion/fixtures" --output "$RUNNER_TEMP/ludb-expansion/report.json"
+      - name: Archive protocol and evaluated sources (no raw headers)
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/ludb-expansion"
+          git archive HEAD | gzip > "$RUNNER_TEMP/ludb-expansion/source.tar.gz"
+          git rev-parse HEAD > "$RUNNER_TEMP/ludb-expansion/commit.txt"
+          rm -rf "$RUNNER_TEMP/ludb-expansion/raw"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ludb-expansion-${{ github.sha }}
+          path: ${{ runner.temp }}/ludb-expansion/
+          retention-days: 30
