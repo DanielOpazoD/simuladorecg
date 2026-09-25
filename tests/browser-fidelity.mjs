@@ -72,6 +72,41 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  await page.screenshot({path:path.join(out,'secondary-repolarization-limit.png')});
  await select('aai');assert.doesNotMatch(await page.locator('#warnings').innerText(),/ST\/QRS no está calibrada/);
  checks.push('P2: WPW / LBBB / VVI / DDD warnings visible; AAI alone excluded');
+ // P6: invalidate synchronously during a real slider input; no stale export window.
+ await select('sinus');await page.locator('[data-mode="monitor"]').click();
+ await page.locator('[data-action="pause"]').click();
+ await page.locator('[data-panel="base"]').click();
+ const retired=await page.locator('[data-key="hr"]').evaluate(el=>{
+  el.value='90';el.dispatchEvent(new Event('input',{bubbles:true}));
+  document.querySelector('[data-action="export"]').click();
+  const state={loading:!document.querySelector('#signal-loading').hidden,
+   metrics:document.querySelectorAll('#metrics .metric').length,
+   pauseDisabled:document.querySelector('[data-action="pause"]').disabled,
+   pngDisabled:document.querySelector('[data-action="png"]').disabled};
+  document.querySelector('#dialog').close();return state;
+ });
+ assert.deepEqual(retired,{loading:true,metrics:0,pauseDisabled:true,pngDisabled:true});
+ await ready();assert.equal(await page.locator('#monitor-state').innerText(),'REPRODUCCIÓN');
+ checks.push('P6: slider invalidates paused samples, measurements and PNG synchronously');
+ await page.locator('[data-mode="paper"]').click();
+ const unsupported={...reversed,presetId:'custom',name:'Prueba de dominio',rhythm:'sinus',
+  ischemia:'none',conduction:'normal',ectopy:'couplet',hr:250,coupling:.3,qrs:90,
+  artifacts:{...reversed.artifacts,reversed:false}};
+ await page.locator('#file-input').setInputFiles({name:'unsupported.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(unsupported))});
+ await page.locator('#signal-loading.signal-unavailable').waitFor({state:'visible'});
+ assert.match(await page.locator('#signal-loading').innerText(),/Fuera del alcance del modelo/);
+ assert.equal(await page.locator('#metrics .metric').count(),0);
+ await page.locator('[data-action="export"]').click();
+ assert.equal(await page.locator('[data-action="png"]').isDisabled(),true);
+ await page.locator('#dialog').evaluate(d=>d.close());
+ await page.screenshot({path:path.join(out,'session-error.png')});
+ await select('sinus');assert.ok(await page.locator('#metrics .metric').count()>0);
+ await page.locator('[data-action="export"]').click();
+ assert.equal(await page.locator('[data-action="png"]').isDisabled(),false);
+ await page.locator('#dialog').evaluate(d=>d.close());
+ await page.screenshot({path:path.join(out,'session-recovered.png')});
+ checks.push('P6: real worker domain error disables stale export; new case recovers');
+
  await select('inferior');await phase('hyperacute');
  await page.locator('[data-action="export"]').click();const download=page.waitForEvent('download');await page.locator('[data-action="png"]').click();
  const pngPath=path.join(out,'export-300dpi.png');await (await download).saveAs(pngPath);

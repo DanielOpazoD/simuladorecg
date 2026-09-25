@@ -18,7 +18,7 @@ npm run check
 npm run dev
 ```
 
-`check` ejecuta pruebas, TypeScript y compilación; no incluye navegador. Abrir mediante HTTP, no como archivo local. Los cambios de P4 actualizan metadatos y documentación, no el motor ni el analizador.
+`check` ejecuta pruebas, TypeScript y compilación; no incluye navegador. Abrir mediante HTTP, no como archivo local. P4 actualiza metadatos y documentación; P6 extrae el estado de sesión del trazado. Ninguno modifica el motor ni el analizador.
 
 ```bash
 # Comparación de señal con la referencia v1.3, sin modificarla:
@@ -60,7 +60,7 @@ Los [avisos de adquisición P1](docs/p1-acquisition-contract.md) distinguen la i
 - [Modelo y decisiones](docs/modelo.md), [enfoque clínico](docs/enfoque-clinico.md) y [contratos por fenotipo](docs/aceptacion-fenotipos.md).
 - [Modelo regional](docs/regional-repolarization-v1.4.md), [protocolo](docs/repolarization-protocol-v1.4.md) y [metrología](docs/metrologia-v1.4.md).
 - [Verificación histórica v1.4](docs/verificacion-v1.4.md), [STAFF III](docs/staff-exploration-v1.4.md) y [LUDB: procedencia/licencia](tests/reference/ludb/README.md).
-- [Contrato de versión y trazabilidad P4](docs/p4-version-provenance.md).
+- [Contrato de versión y trazabilidad P4](docs/p4-version-provenance.md) y [sesión del trazado P6](docs/p6-trace-session.md).
 
 La [revisión clínica aportada](docs/referencias/Revision_ECG_SCA_Simulador.md) se conserva íntegra: no se convierte toda su bibliografía ni sus cifras en reglas del producto. Las afirmaciones adoptadas y excluidas están distinguidas en el enfoque clínico. Las pruebas sintéticas no sustituyen revisión humana ni validación externa.
 
