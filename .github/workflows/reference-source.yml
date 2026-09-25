@@ -2,27 +2,29 @@ name: Reference source acquisition
 on:
   push:
     branches: ['improvement/v1.4-reference']
-    paths: ['.github/workflows/reference-source.yml']
+    paths: ['.github/workflows/reference-source.yml', 'scripts/collect-staff.py']
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  public-metadata:
+  public-development-excerpts:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 12
     steps:
-      - name: Download public versioned source metadata
-        shell: bash
-        run: |
-          mkdir -p "$RUNNER_TEMP/staff"
-          cd "$RUNNER_TEMP/staff"
-          for file in STAFF-III-Database-Annotations.xlsx RECORDS SHA256SUMS.txt; do
-            curl --fail --location --retry 2 --max-time 60 "https://physionet.org/files/staffiii/1.0.0/$file" -o "$file"
-          done
-          sha256sum STAFF-III-Database-Annotations.xlsx RECORDS > acquired-sha256.txt
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install wfdb==4.3.0
+      - name: Acquire preselected public signals with provenance
+        env:
+          REFERENCE_OUTPUT: ${{ runner.temp }}/staff
+        run: python scripts/collect-staff.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: staff-source-metadata
+          name: staff-development-excerpts
           path: ${{ runner.temp }}/staff/
           retention-days: 14
