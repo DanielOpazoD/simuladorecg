@@ -1,3 +1,4 @@
+import { caliperMeasurement } from "./caliper-geometry";
 import { orderedLeads, displayPolarity, leadGain } from "../engine/lead-registry";
 import {
   LEADS,
@@ -454,13 +455,7 @@ export function drawCaliper(
   ctx.lineTo(Math.max(cal.x1, cal.x2), cal.y2);
   ctx.stroke();
   ctx.setLineDash([]);
-  return {
-    ms: (Math.abs(cal.x2 - cal.x1) / c.view.speed) * 1000,
-    mm: Math.abs(cal.y2 - cal.y1),
-    mv:
-      Math.abs(cal.y2 - cal.y1) /
-      (leadGain(seg.lead, c.view)),
-  };
+  return caliperMeasurement(cal, l, c.view);
 }
 export const filterLabel = (c: ECGCase) =>
   ({
