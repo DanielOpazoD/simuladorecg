@@ -7,6 +7,9 @@ import {
 } from "./engine/types";
 import { SignalController } from "./ui/signal-controller";
 import { TraceSession } from "./ui/trace-session";
+import { CaliperEditor } from "./ui/caliper-editor";
+import { initialCaliper, placeCaliper, moveCaliper } from "./render/caliper-geometry";
+import { practiceQuestion, practiceFeedback, type PracticeId } from "./ui/practice-feedback";
 import { changeCase, isCaseControlKey, controlValue } from "./ui/case-state";
 import { beatDetail, representativeBeat, nearestBeat } from "./ui/beat-detail";
 import { measurementDialog } from "./ui/measurement-dialog";
@@ -69,14 +72,15 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  <main class="workspace"><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-subtitle">Activación auricular sinusal seguida de conducción AV 1:1.</p></div><div class="case-state"><span class="status-label">Prototipo educativo</span>${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
  <section id="metrics" class="metrics" aria-label="Medidas del ECG"><div class="loading-metrics">Generando señal…</div></section>
  <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><div class="trace-tools">${btn("caliper", "Calibres", "ruler")}${btn("annotations", "Ondas", "eye")}${btn("focus", "Ampliar", "search")}${btn("pause", "Congelar", "pause")}</div></div>
- <div id="quiz-panel" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small>lpm</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
- <div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div>
- <div id="measurement-readout" class="caliper-readout" hidden></div><div class="scale-toolbar" id="scale-toolbar"></div><div class="trace-caption"><span id="trace-caption">10 s · Columnas secuenciales</span><span id="signal-state">Señal sintética · 500 muestras/s</span></div></section>
+ <div id="quiz-panel" hidden></div><details class="keyboard-help"><summary>Teclado y calibres</summary><p id="trace-keyboard-help">Con foco en el trazado: M/P/R cambia vista, V/G cambia escala, C activa calibres y espacio congela el monitor. Calibres: flechas mueven el extremo seleccionado una muestra horizontal o 0,01 mV vertical; Mayús mueve diez pasos. También puedes usar los campos de tiempo y amplitud. Tab sale del trazado.</p></details><div id="caliper-editor" class="caliper-editor" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small>lpm</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
+ <div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div>
+ <div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><div class="scale-toolbar" id="scale-toolbar"></div><div class="trace-caption"><span id="trace-caption">10 s · Columnas secuenciales</span><span id="signal-state">Señal sintética · 500 muestras/s</span></div></section>
  <section id="beat-detail" class="beat-detail" aria-label="Ampliación del latido"><div class="detail-empty">Preparando análisis…</div></section>
  <section class="lower-grid"><div id="inspector" class="inspector"></div><aside class="interpretation"><div class="section-label">LECTURA DEL CASO</div><h2 id="finding-title">Hallazgos esperados</h2><ul id="findings"></ul><div id="limitation" class="model-note"></div><div id="warnings"></div><button class="text-button" data-action="measurements">Ver medidas y valores del modelo ${icon("chevron")}</button><button class="text-button" data-action="about">Estado y referencias ${icon("chevron")}</button></aside></section>
  <footer class="workspace-footer"><span>Motor paramétrico vectorial · Dower + identidades de Einthoven/Goldberger</span><span>Uso educativo. Sin validación clínica.</span></footer></main></div>
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
 
+const caliperEditor = new CaliperEditor($("#caliper-editor"), $<HTMLCanvasElement>("#ecg"), next => { caliper = next; draw(); });
 let toastTimer = 0;
 function clearToast() {
   window.clearTimeout(toastTimer);
@@ -337,7 +341,8 @@ function syncTraceTools() {
   $("#ecg").classList.toggle("measuring", measuring);
   caliperButton.title = monitorMode
     ? "Calibres disponibles en papel y tira de ritmo"
-    : "Arrastra sobre una derivación para medir";
+    : "Calibres por arrastre, teclado o campos numéricos";
+  caliperEditor.update({active:measuring, layout, caliper, view:c.view, fs:session.signal?.fs ?? 500});
 }
 const controller = new SignalController(
   (next, measured, requestId) => {
@@ -349,6 +354,7 @@ const controller = new SignalController(
     $("#signal-loading").hidden = true;
     $("#signal-state").textContent = "500 muestras/s · análisis independiente";
     renderMetrics();
+    renderQuiz();
     renderInfo();
     renderScales();
     draw();
@@ -399,6 +405,7 @@ function showUnavailableSignal(message: string, unavailable = false) {
 function invalidateSignal() {
   clearToast();
   session.invalidate();
+  renderQuiz();
   showUnavailableSignal("Calculando señal…");
 }
 function generate() {
@@ -444,17 +451,8 @@ function draw() {
       : c.view.mode === "rhythm"
         ? `${c.view.duration} s · Tiras sucesivas de 10 s`
         : "Barrido continuo · reproducción de señal sintética";
-  if (caliper && layout) {
-    const m = drawCaliper(canvas, layout, caliper, c);
-    $("#measurement-readout").hidden = false;
-    $("#measurement-readout").innerHTML =
-      `<strong>Δt ${m.ms.toFixed(0)} ms</strong><span>ΔV ${m.mv.toFixed(2)} mV · ${m.mm.toFixed(1)} mm</span><span>60.000 / Δt = ${m.ms > 0 ? (60000 / m.ms).toFixed(0) : "—"} lpm</span><button data-action="clear-caliper">Limpiar</button>`;
-  } else {
-    $("#measurement-readout").hidden = !session.caliperOn;
-    $("#measurement-readout").textContent = session.caliperOn
-      ? "Arrastra dentro de una derivación para medir tiempo y amplitud."
-      : "";
-  }
+  if (caliper && layout && session.caliperOn) drawCaliper(canvas, layout, caliper, c);
+  caliperEditor.update({active:session.caliperOn, layout, caliper, view:c.view, fs:session.signal.fs});
 }
 function animate(t: number) {
   if (c.view.mode === "monitor" && monitor && !session.paused) {
@@ -505,10 +503,12 @@ function selectPreset(id: string) {
 }
 function setValue(key: string, value: unknown) {
   if (!isCaseControlKey(key)) return;
+  if (quiz && !key.startsWith("view.")) { quiz = null; renderQuiz(); renderInfo(); }
+  if (key.startsWith("view.")) caliper = null;
   c = changeCase(c, key, value);
   if (session.measurement && (key === "view.timing" || key === "view.format"))
     session.selectBeat(representativeBeat(session.measurement, visibleSegmentEnd()));
-  if (!key.startsWith("view.")) renderCatalog();
+  if (!key.startsWith("view.")) { renderCatalog(); renderInfo(); }
 }
 function visibleSegmentEnd(): number {
   if (c.view.mode !== "paper" || c.view.timing !== "simultaneous")
@@ -624,41 +624,15 @@ function renderQuiz() {
   const panel = $("#quiz-panel");
   panel.hidden = !quiz;
   if (!quiz) return;
-  panel.innerHTML = `<div class="quiz-top"><strong>${quiz.answer ? (quiz.answer === quiz.preset.id ? "Respuesta correcta" : "Revisa el patrón") : "¿Cuál es el diagnóstico más probable?"}</strong><button data-action="end-quiz">Salir de práctica</button></div><div class="quiz-choices">${quiz.choices.map((p) => `<button data-answer="${p.id}" ${quiz!.answer ? "disabled" : ""} class="${quiz!.answer && p.id === quiz!.preset.id ? "correct" : quiz!.answer === p.id ? "incorrect" : ""}">${p.name}</button>`).join("")}</div>${quiz.answer ? `<p><strong>${quiz.preset.name}.</strong> ${quiz.preset.findings.join(" · ")}.</p>${btn("quiz", "Siguiente caso", "chevron", "primary")}` : ""}`;
+  const q = quiz, feedback = q.answer ? practiceFeedback(q.preset.id as PracticeId, c, session.signal, session.measurement) : null;
+  panel.innerHTML = `<div class="quiz-top"><strong>${q.answer ? (q.answer === q.preset.id ? "Coincide con el caso configurado" : "Compara los rasgos del ejercicio") : "¿Qué patrón representa este ejercicio?"}</strong><button data-action="end-quiz">Salir de práctica</button></div><div class="quiz-choices">${q.choices.map((p) => `<button data-answer="${p.id}" ${q.answer || !session.canExport ? "disabled" : ""} class="${q.answer && p.id === q.preset.id ? "correct" : q.answer === p.id ? "incorrect" : ""}">${esc(p.name)}</button>`).join("")}</div>${feedback ? `<div class="practice-feedback" role="status"><section><h3>Observaciones y estimaciones</h3><ul>${feedback.observations.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></section><section><h3>Referencia del ejercicio</h3><p><strong>${esc(q.preset.name)}</strong> · Etiqueta configurada, no diagnóstico automático.</p><p>${q.answer !== q.preset.id ? `Elegiste ${esc(presetById(q.answer!)?.name || "otra alternativa")}. ` : ""}Revisa ${esc(feedback.leads)}. ${esc(feedback.cue)}</p></section></div><div class="practice-limits">${feedback.limitations.map(x=>`<p>${esc(x)}</p>`).join("")}<p>Modelo aproximado. La puntuación compara tu opción con el ejercicio, no mide precisión clínica.</p></div>${btn("quiz", "Siguiente caso", "chevron", "primary")}` : `<p>Responde después de observar el ECG. Las referencias se muestran al contestar.</p>`}`;
 }
 function startQuiz() {
-  const ids = [
-    "sinus",
-    "af",
-    "flutter",
-    "wenckebach",
-    "complete",
-    "rbbb",
-    "lbbb",
-    "inferior",
-    "vt",
-    "bigeminy",
-    "av1",
-    "anterior",
-    "vvi",
-    "wellens_b",
-  ];
-  const rng = new Uint32Array(5);
+  const rng = new Uint32Array(2);
   crypto.getRandomValues(rng);
-  const pool = ids.map((id) => presetById(id)!);
-  const chosen = pool[rng[0] % pool.length];
-  const distractors = pool
-    .filter((p) => p.id !== chosen.id)
-    .sort(
-      (a, b) =>
-        ((rng[1] + a.id.length * 1337) % 991) -
-        ((rng[1] + b.id.length * 1337) % 991),
-    )
-    .slice(0, 3);
-  const choices = [...distractors];
-  choices.splice(rng[2] % 4, 0, chosen);
-  quiz = { preset: chosen, choices, answer: null };
-  selectPreset(chosen.id);
+  const question = practiceQuestion(Array.from(rng));
+  quiz = { preset: presetById(question.id)!, choices: question.choices.map(id=>presetById(id)!), answer: null };
+  selectPreset(question.id);
   renderQuiz();
   renderInfo();
   $("#quiz-panel").scrollIntoView({ block: "nearest", behavior: "smooth" });
@@ -688,7 +662,7 @@ document.addEventListener("click", async (e) => {
     draw();
     return;
   }
-  if (answer && quiz && !quiz.answer) {
+  if (answer && quiz && !quiz.answer && session.canExport && quiz.choices.some(p=>p.id===answer.dataset.answer)) {
     quiz.answer = answer.dataset.answer!;
     renderQuiz();
     renderInfo();
@@ -735,7 +709,9 @@ document.addEventListener("click", async (e) => {
     if (!session.signal || c.view.mode === "monitor") return;
     session.toggleCaliper(c.view.mode);
     if (!session.caliperOn) caliper = null;
+    else if (layout) caliper = initialCaliper(layout, c.view, session.signal.fs);
     draw();
+    if (session.caliperOn) $<HTMLCanvasElement>("#ecg").focus();
   }
   if (action === "clear-caliper") {
     caliper = null;
@@ -902,7 +878,10 @@ canvas.addEventListener("pointerdown", (e) => {
       pos.y <= s.y + s.height,
   );
   if (i < 0) return;
-  caliper = { x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y, segment: i };
+  if (!session.signal) return;
+  caliper = placeCaliper(initialCaliper(layout,c.view,session.signal.fs,i),1,pos,layout,c.view,session.signal.fs);
+  caliper = placeCaliper(caliper,2,pos,layout,c.view,session.signal.fs);
+  canvas.focus({preventScroll:true});
   dragging = true;
   canvas.setPointerCapture(e.pointerId);
   draw();
@@ -911,39 +890,36 @@ canvas.addEventListener("pointermove", (e) => {
   if (!dragging || !caliper || !layout) return;
   const pos = pointer(e);
   if (!pos) return;
-  const seg = layout.segments[caliper.segment];
-  caliper.x2 = Math.max(seg.x, Math.min(seg.x + seg.width, pos.x));
-  caliper.y2 = Math.max(seg.y, Math.min(seg.y + seg.height, pos.y));
+  if (!session.signal) return;
+  caliper = placeCaliper(caliper,2,pos,layout,c.view,session.signal.fs);
   draw();
 });
 canvas.addEventListener("pointerup", () => (dragging = false));
 canvas.addEventListener("pointercancel", () => (dragging = false));
 document.addEventListener("keydown", (e) => {
-  if (
-    (e.target as HTMLElement).matches("input,select,textarea") ||
-    $<HTMLDialogElement>("#dialog").open
-  )
-    return;
-  if (e.code === "Space" && c.view.mode === "monitor") {
+  // Character shortcuts belong to the focused trace only. Native fields/buttons
+  // keep their keyboard behavior; do not intercept screen-reader modifiers.
+  if (e.target !== canvas || e.ctrlKey || e.altKey || e.metaKey || e.isComposing || $<HTMLDialogElement>("#dialog").open) return;
+  const key=e.key.toLowerCase();
+  if (session.caliperOn && session.signal && layout && e.key.startsWith("Arrow")) {
     e.preventDefault();
-    $<HTMLButtonElement>('[data-action="pause"]').click();
-  }
-  if (e.key === "m") $<HTMLButtonElement>('[data-mode="monitor"]').click();
-  if (e.key === "p") $<HTMLButtonElement>('[data-mode="paper"]').click();
-  if (e.key === "r") $<HTMLButtonElement>('[data-mode="rhythm"]').click();
-  if (e.key === "v") {
-    const a = [12.5, 25, 50];
-    c.view.speed = a[(a.indexOf(c.view.speed) + 1) % 3];
-    renderScales();
+    caliper=moveCaliper(caliper??initialCaliper(layout,c.view,session.signal.fs),caliperEditor.endpoint,e.key,layout,c.view,session.signal.fs,e.shiftKey);
     draw();
+    const wrap=$("#canvas-wrap"),r=canvas.getBoundingClientRect(),w=wrap.getBoundingClientRect();
+    const x=r.left+(caliperEditor.endpoint===1?caliper.x1:caliper.x2)/layout.widthMm*r.width;
+    const y=r.top+(caliperEditor.endpoint===1?caliper.y1:caliper.y2)/layout.heightMm*r.height;
+    if(x<w.left+20)wrap.scrollLeft+=x-w.left-20;else if(x>w.right-20)wrap.scrollLeft+=x-w.right+20;
+    if(y<w.top+20)wrap.scrollTop+=y-w.top-20;else if(y>w.bottom-20)wrap.scrollTop+=y-w.bottom+20;
+    return;
   }
-  if (e.key === "g") {
-    const a = [2.5, 5, 10, 20];
-    c.view.gain = a[(a.indexOf(c.view.gain) + 1) % 4];
-    c.view.chestGain = c.view.gain;
-    renderScales();
-    draw();
-  }
+  if (!['m','p','r','v','g','c',' '].includes(key)) return;
+  e.preventDefault();
+  if (key===' ' && c.view.mode==='monitor') $<HTMLButtonElement>('[data-action="pause"]').click();
+  if (key==='c') $<HTMLButtonElement>('[data-action="caliper"]').click();
+  const mode=({m:'monitor',p:'paper',r:'rhythm'} as Record<string,string>)[key];
+  if(mode)$<HTMLButtonElement>(`[data-mode="${mode}"]`).click();
+  if(key==='v') {const a=[12.5,25,50];c.view.speed=a[(a.indexOf(c.view.speed)+1)%3];caliper=null;renderScales();draw();}
+  if(key==='g') {const a=[2.5,5,10,20];c.view.gain=a[(a.indexOf(c.view.gain)+1)%4];c.view.chestGain=c.view.gain;caliper=null;renderScales();draw();}
 });
 new ResizeObserver(() => {
   window.clearTimeout(resizeTimer);
@@ -955,6 +931,8 @@ window.addEventListener("hashchange", () => {
     const next = decodeCase(location.hash);
     if (next) {
       c = next;
+      quiz = null;
+      renderQuiz();
       renderCatalog();
       renderControls();
       renderInfo();
