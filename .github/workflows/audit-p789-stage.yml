@@ -1,0 +1,42 @@
+name: Stage reviewed P7-P9 objects
+on:
+  push:
+    branches: ['audit/p789-stage']
+permissions:
+  contents: write
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Publish reviewed tree objects only
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          cp audit-apply.py "$RUNNER_TEMP/apply.py"
+          cp audit-plan.json "$RUNNER_TEMP/plan.json"
+          python - <<'PY'
+          import base64,json,os,pathlib,subprocess
+          def run(*a,**kw):return subprocess.check_output(a,**kw).decode().strip()
+          plan=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'plan.json').read_text())
+          subprocess.run(['git','checkout','--detach',plan['base']],check=True)
+          subprocess.run(['python',os.environ['RUNNER_TEMP']+'/apply.py'],check=True)
+          subprocess.run(['git','add','src','tests','docs'],check=True)
+          tree=run('git','write-tree');assert tree==plan['tree'],(tree,plan['tree'])
+          def api(endpoint,data):return json.loads(subprocess.check_output(['gh','api','--method','POST','repos/'+os.environ['GH_REPO']+'/git/'+endpoint,'--input','-'],input=json.dumps(data).encode()))
+          entries=[]
+          for line in run('git','diff','--cached','--name-status').splitlines():
+              status,name=line.split('\t');assert status in ('A','M','D')
+              assert name.startswith(('src/','tests/','docs/'))
+              if status=='D':entries.append({'path':name,'mode':'100644','type':'blob','sha':None});continue
+              blob=api('blobs',{'content':base64.b64encode(pathlib.Path(name).read_bytes()).decode(),'encoding':'base64'})
+              entries.append({'path':name,'mode':run('git','ls-files','--stage','--',name).split()[0],'type':'blob','sha':blob['sha']})
+          result=api('trees',{'base_tree':run('git','rev-parse',plan['base']+'^{tree}'),'tree':entries})
+          assert result['sha']==tree
+          print(json.dumps({'verifiedTree':tree,'base':plan['base'],'files':len(entries)}))
+          PY
