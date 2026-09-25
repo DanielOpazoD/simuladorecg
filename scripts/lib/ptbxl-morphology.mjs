@@ -45,3 +45,9 @@ export function linearSummary(values) {
   const quantile=p=> {const pos=(a.length-1)*p,lo=Math.floor(pos);return a.length?a[lo]+(a[Math.min(lo+1,a.length-1)]-a[lo])*(pos-lo):null;};
   return {total:values.length,n:a.length,missing:values.length-a.length,p05:quantile(.05),median:quantile(.5),p95:quantile(.95)};
 }
+
+/** Statistics is a shared arithmetic utility, not the sample analyzer. */
+export function assertSampleOnlyImports(inputs) {
+  for(const p of inputs) if(p.endsWith('/measure.ts') || (p.includes('/analysis/') && !p.endsWith('/analysis/statistics.ts')))
+    throw new Error(`Benchmark must not import the analyzer or model audit: ${p}`);
+}

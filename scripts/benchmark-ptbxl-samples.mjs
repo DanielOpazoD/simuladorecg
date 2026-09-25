@@ -7,23 +7,26 @@ import { pathToFileURL } from 'node:url';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import assert from 'node:assert/strict';
-import { MORPHOLOGY_LEADS, vendorWindows, sampledMorphology, linearSummary } from './lib/ptbxl-morphology.mjs';
+import { createHash } from 'node:crypto';
+import { MORPHOLOGY_LEADS, vendorWindows, sampledMorphology, linearSummary, assertSampleOnlyImports } from './lib/ptbxl-morphology.mjs';
 const root=process.cwd(),output=process.argv[2];
 if(!output)throw new Error('Usage: node scripts/benchmark-ptbxl-samples.mjs OUTPUT_DIRECTORY');
 const temp=await mkdtemp(path.join(tmpdir(),'ptbxl-morphology-'));
 const write=(name,data)=>writeFile(path.join(output,name),JSON.stringify(data,null,2)+'\n');
 try {
   const bundled=path.join(temp,'metrics.mjs');
-  const result=await build({stdin:{contents:`export {synthesize} from './src/engine/signal'; export {PRESETS,fromPreset} from './src/presets/catalog'; export {morphologyMetrics,sampleAt} from './tests/support/morphology-metrics';`,resolveDir:root},bundle:true,platform:'node',format:'esm',outfile:bundled,metafile:true});
-  assert.ok(!Object.keys(result.metafile.inputs).some(p=>p.includes('measure.ts')||p.includes('/analysis/')),'Benchmark imports analyzer');
-  const {synthesize,PRESETS,fromPreset,morphologyMetrics,sampleAt}=await import(pathToFileURL(bundled).href);
+  const result=await build({stdin:{contents:`export {synthesize} from './src/engine/signal'; export {PRESETS,fromPreset} from './src/presets/catalog'; export {morphologyMetrics,sampleAt} from './tests/support/morphology-metrics'; export {tWaveSupport} from './src/engine/constraints';`,resolveDir:root},bundle:true,platform:'node',format:'esm',outfile:bundled,metafile:true});
+  assertSampleOnlyImports(Object.keys(result.metafile.inputs));
+  const {synthesize,PRESETS,fromPreset,morphologyMetrics,sampleAt,tWaveSupport}=await import(pathToFileURL(bundled).href);
   const source=JSON.parse(await readFile(path.join(output,'median-beats.json'),'utf8'));
+  assert.ok(source.records.length>0,'No median beat decoded: incomplete benchmark');
   const records=source.records.map(r=>{
     try {const windows=vendorWindows(r.fiducialsMs);
       return {ecg_id:r.ecg_id,groups:r.groups,windows,windowSource:r.windowSource,
         ...sampledMorphology(r,windows,morphologyMetrics,sampleAt)};
     }catch(e){return {ecg_id:r.ecg_id,groups:r.groups,unavailable:String(e.message)};}
   });
+  assert.ok(records.some(r=>r.leads?.II),'No usable external median windows: incomplete benchmark');
   const fields=['jMv','j60Mv','qrsPeakToPeakMv','qrsPositivePeakMv','qrsNegativePeakMagnitudeMv','tPeakMv','tSignedAreaMvS','tFwhmMs','tSymmetry','tToQrs'];
   const groups=['ALL','NORM','MI','STTC','CD','HYP'];
   const distributions=Object.fromEntries(groups.map(group=> {
@@ -41,13 +44,14 @@ try {
     if(!b||!(b.qt>0)) {generated.push({preset:preset.id,unavailable:'No complete ventricular cycle'});continue;}
     const on=b.time,off=on+b.qrs,tOff=on+b.qt;
     // Native parametric T support, not independently delineated. May include residual ST.
-    const tOn=tOff-Math.min(.22,(b.qt-b.qrs)*.68);
+    const tOn=on+tWaveSupport(c,b.qrs,b.qt).start;
     const windows={baseline:[on-.035,on-.020],qrs:[on,off],t:[tOn,tOff]};
     generated.push({preset:preset.id,filter:'off',windowSource:'Synthetic event timings, not independent delineation; T window follows the declared synthesis support',
       windows,...sampledMorphology(signal,windows,morphologyMetrics,sampleAt)});
   }
   await write('generator-morphology.json',{records:generated,analyzerUsed:false,
     comparability:'Same sample metrics, different window definitions. One exemplar per preset, not population distributions or paired clinical error. No calibration/tuning.'});
-  await write('sample-extractor-provenance.json',{inputs:Object.keys(result.metafile.inputs),analyzerUsed:false});
+  const inputs=Object.fromEntries(await Promise.all(Object.keys(result.metafile.inputs).filter(p=>p!=='<stdin>').map(async p=>[p,createHash('sha256').update(await readFile(path.resolve(root,p))).digest('hex')])));
+  await write('sample-extractor-provenance.json',{inputs,analyzerUsed:false,sharedStatistics:'Pure arithmetic utility used by generator; no detection/delineation/audit'});
   console.log(JSON.stringify({externalDecoded:records.length,externalWindowUnavailable:records.filter(r=>r.unavailable).length,generated:generated.length,analyzerUsed:false}));
 } finally {await rm(temp,{recursive:true,force:true});}

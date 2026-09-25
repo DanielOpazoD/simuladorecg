@@ -1,11 +1,15 @@
 import {describe,it,expect} from 'vitest';
 import {morphologyMetrics,sampleAt} from './support/morphology-metrics';
-import {vendorWindows,sampledMorphology,linearSummary,MORPHOLOGY_LEADS} from '../scripts/lib/ptbxl-morphology.mjs';
+import {vendorWindows,sampledMorphology,linearSummary,assertSampleOnlyImports,MORPHOLOGY_LEADS} from '../scripts/lib/ptbxl-morphology.mjs';
 function signal(){const leads=Object.fromEntries(MORPHOLOGY_LEADS.map(l=>[l,new Float64Array(600)]));
  for(const a of Object.values(leads)){for(let i=100;i<=140;i++)a[i]=i<=120?(i-100)/20:(140-i)/20;for(let i=180;i<=260;i++)a[i]=.4*(1-Math.abs(i-220)/40);}
  return {fs:500,leads};}
 const f={QRS_On_Global:200,QRS_Off_Global:280,T_On_Global:360,T_Off_Global:520};
 describe('PTB-XL+ descriptive windows and sample metrics',()=>{
+ it('rejects analyzer imports but allows shared arithmetic',()=>{
+  expect(()=>assertSampleOnlyImports(['src/engine/analysis/statistics.ts'])).not.toThrow();
+  for(const file of ['src/engine/measure.ts','src/engine/analysis/model-audit.ts','src/engine/analysis/ventricular-candidates.ts']) expect(()=>assertSampleOnlyImports([file])).toThrow();
+ });
  it('uses ms once, not doubled vendor indices',()=>expect(vendorWindows(f).qrs).toEqual([.2,.28]));
  it('never infers absent T onset',()=>expect(()=>vendorWindows({...f,T_On_Global:null})).toThrow());
  it('rejects unordered windows',()=>expect(()=>vendorWindows({...f,T_On_Global:240})).toThrow());
