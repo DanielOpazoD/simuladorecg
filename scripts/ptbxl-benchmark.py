@@ -203,20 +203,39 @@ class Release:
 
 
 def decode_median(header: bytes, raw: bytes):
-    """Strict interleaved WFDB16 decoder. No heuristic gain normalization."""
-    lines = [l.strip() for l in header.decode().splitlines() if l.strip() and not l.startswith('#')]
+    """Decode explicit, uniform interleaved WFDB 16 or 32 (little-endian).
+
+    Format is read from every channel header, never inferred from file size.
+    WFDB checksum remains modulo 2**16 for both formats. The minimum signed
+    digital value is the missing-sample sentinel of the declared format.
+    No amplitude normalization, type truncation or source header modification.
+    """
+    lines = [l.strip() for l in header.decode().splitlines() if l.strip() and not l.lstrip().startswith('#')]
+    if not lines or len(lines[0].split()) < 4:
+        raise ValueError('Missing median record header')
     first = lines[0].split()
     count, fs, n = int(first[1]), float(first[2]), int(first[3])
-    if count != 12 or fs != 500 or n < 1 or len(lines) != 13 or len(raw) != n*count*2:
+    if count != 12 or fs != 500 or n < 1 or len(lines) != 13:
         raise ValueError('Unexpected median dimensions')
     h = [l.split() for l in lines[1:]]
+    if any(len(row) != 9 for row in h):
+        raise ValueError('Incomplete or unsupported median channel header')
+    formats = {row[1] for row in h}
+    if len(formats) != 1 or not formats.issubset({'16', '32'}):
+        raise ValueError('Only uniform interleaved WFDB16/WFDB32 supported')
+    fmt = h[0][1]
+    width, code, missing = {'16': (2, 'h', -(2**15)), '32': (4, 'i', -(2**31))}[fmt]
+    if len(raw) != n*count*width:
+        raise ValueError(f'Median byte count differs from WFDB{fmt} header: '
+                         f'expected {n*count*width}, received {len(raw)}')
+    filenames = {row[0] for row in h}
+    if len(filenames) != 1:
+        raise ValueError('Only same-file interleaved medians supported')
     filename = PurePosixPath(h[0][0]).name
-    values = struct.unpack('<'+'h'*(count*n), raw)
+    values = struct.unpack('<'+code*(count*n), raw)
     signals, factors, gains = {}, [], []
     labels = {l.lower(): l for l in LEADS}
     for channel, row in enumerate(h):
-        if row[1] != '16' or PurePosixPath(row[0]).name != filename:
-            raise ValueError('Only same-file interleaved WFDB16 supported')
         m = re.fullmatch(r'([+\-\d.eE]+)(?:\(([+\-\d]+)\))?/(\S+)',row[2])
         if not m:
             raise ValueError('Explicit gain and unit required')
@@ -228,8 +247,8 @@ def decode_median(header: bytes, raw: bytes):
         x = values[channel::count]
         if x[0] != int(row[5]) or (sum(x)&65535) != (int(row[6])&65535):
             raise ValueError('WFDB checksum/initial value mismatch')
-        signals[label] = [None if v == -32768 else (v-baseline)/gain*factor for v in x]
-        factors.append(factor); gains.append({'lead':label, 'gain':gain, 'baseline':baseline, 'unit':unit})
+        signals[label] = [None if v == missing else (v-baseline)/gain*factor for v in x]
+        factors.append(factor); gains.append({'lead':label, 'gain':gain, 'baseline':baseline, 'unit':unit, 'format':fmt, 'missingDigitalValue':missing})
     if set(signals) != set(LEADS):
         raise ValueError('Missing median lead')
     # WFDB Python rejects producer directory prefixes. Alter names only in a temp copy.
@@ -257,6 +276,7 @@ def crosscheck(header: bytes, raw: bytes):
             if not np.array_equal(ours, other.p_signal[:,i]*factors[i], equal_nan=True):
                 raise ValueError('Independent WFDB calibration disagreement')
     return sample, {'reader':f'wfdb {wfdb.__version__}', 'physicalSamples':len(other.p_signal)*12,
+                    'sourceFormat':sample['calibration'][0]['format'],
                     'originalHeaderSha256':digest(header), 'temporaryHeaderSha256':digest(sanitized),
                     'originalRecordToken':original_name, 'normalizedRecordToken':stem,
                     'change':'Directory prefixes in record/data filenames only; comments omitted', 'maxDifferenceMv':0}

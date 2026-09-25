@@ -149,4 +149,74 @@ class TransportTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d, patch.object(m,'urlopen',return_value=self.response(b'wrong')):
             with self.assertRaises(ValueError):self.release(d).get('x')
 
+
+class WFDB32Tests(unittest.TestCase):
+    """Analytic integer fixtures independent of the decoder under test."""
+    def fixture(self, values=None, gain='1000000(-1900000000)/mV'):
+        values = values if values is not None else [-1900000000, -1899000000, -1900500000]
+        checksum = sum(values) % 65536
+        header = 'producer/m 12 500 '+str(len(values))+'\n'
+        header += '\n'.join(f'producer/m.dat 32 {gain} 32 0 {values[0]} {checksum} 0 {lead}' for lead in m.LEADS)+'\n'
+        raw = struct.pack('<'+'i'*(len(values)*12), *[x for x in values for _ in range(12)])
+        return header.encode(), raw
+
+    def test_32bit_nonzero_large_baseline_and_negative_samples(self):
+        h, raw = self.fixture()
+        sample, normalized, *_ = m.decode_median(h, raw)
+        self.assertEqual(sample['leads']['II'], [0, 1, -.5])
+        self.assertEqual(sample['calibration'][0]['format'], '32')
+        self.assertIn(b'.dat 32 1000000(-1900000000)/mV', normalized)
+
+    def test_minimum_int32_is_missing_but_int16_minimum_is_valid(self):
+        h, raw = self.fixture([0, -32768, -(2**31)], '1000(0)/mV')
+        sample, *_ = m.decode_median(h, raw)
+        self.assertEqual(sample['leads']['I'][:2], [0, -32.768])
+        self.assertIsNone(sample['leads']['I'][2])
+
+    def test_checksum_wraps_at_16bits_even_for_32bit_samples(self):
+        h, raw = self.fixture([2**31-1, 2**31-2, 2**31-3], '1000(2147483644)/mV')
+        sample, *_ = m.decode_median(h, raw)
+        self.assertEqual(sample['leads']['V6'], [.003, .002, .001])
+
+    def test_signed_and_unsigned_checksums_are_equivalent(self):
+        h, raw = self.fixture(); rows=h.decode().splitlines()
+        for i in range(1, len(rows)):
+            fields=rows[i].split(); v=int(fields[6]);fields[6]=str(v-65536 if v>=32768 else v);rows[i]=' '.join(fields)
+        self.assertEqual(m.decode_median(h,raw)[0],m.decode_median(('\n'.join(rows)+'\n').encode(),raw)[0])
+
+    def test_corrupt_32bit_checksum_is_rejected(self):
+        h, raw = self.fixture()
+        corrupted = bytearray(raw);corrupted[12*4] ^= 1
+        with self.assertRaisesRegex(ValueError, 'checksum'): m.decode_median(h, bytes(corrupted))
+
+    def test_truncated_and_extra_bytes_are_rejected(self):
+        h, raw = self.fixture()
+        for wrong in (raw[:-4],raw+b'\0\0\0\0'):
+            with self.assertRaisesRegex(ValueError, 'byte count'):m.decode_median(h,wrong)
+
+    def test_no_format_inference_from_file_size(self):
+        h, raw = self.fixture();h=h.replace(b'.dat 32 ',b'.dat 16 ')
+        with self.assertRaisesRegex(ValueError, 'byte count'):m.decode_median(h,raw)
+
+    def test_mixed_and_packed_formats_are_rejected(self):
+        h, raw = self.fixture()
+        for wrong in (h.replace(b'.dat 32 ',b'.dat 16 ',1),h.replace(b'.dat 32 ',b'.dat 24 ')):
+            with self.assertRaisesRegex(ValueError, 'uniform'):m.decode_median(wrong,raw)
+
+    def test_same_basename_in_different_directories_is_not_same_file(self):
+        h, raw = self.fixture();h=h.replace(b'producer/m.dat',b'other/m.dat',1)
+        with self.assertRaisesRegex(ValueError, 'same-file'):m.decode_median(h,raw)
+
+    def test_empty_or_incomplete_header_is_rejected(self):
+        for h in (b'',b'm 12\n',b'm 12 500 3\n'):
+            with self.assertRaises(ValueError):m.decode_median(h,b'')
+
+    def test_prefixed_comment_ignored_not_misread_as_signal(self):
+        h, raw = self.fixture()
+        self.assertEqual(m.decode_median(h+b'   # no clinical content\n',raw)[0],m.decode_median(h,raw)[0])
+
+    def test_scientific_gain_and_explicit_microvolt_units(self):
+        h,raw=self.fixture([100,1100,-400], '1e0(100)/uV')
+        self.assertEqual(m.decode_median(h,raw)[0]['leads']['I'],[0,1,-.5])
+
 if __name__=='__main__':unittest.main()

@@ -48,10 +48,12 @@ imprevistas detienen el proceso. No se exige una precisión clínica para CI ver
 Se cotejan los bytes con el SHA256SUMS de la versión. Se usa el espejo S3 público
 documentado por PhysioNet, con respaldo HTTPS. La URL efectiva y cualquier
 descompresión HTTP gzip se registran; el hash siempre corresponde al archivo
-original descomprimido, nunca a una señal recalibrada. El lector admite WFDB16,
+original descomprimido, nunca a una señal recalibrada. El lector admite WFDB16 y WFDB32,
 12 canales y 500 Hz, con ganancia, línea basal, unidades, valor inicial y checksum
 explícitos. La conversión se contrasta muestra a muestra con **WFDB Python 4.3.1**.
-El valor digital reservado −32768 permanece ausente, no voltaje extremo.
+El valor digital mínimo del formato (−32768 en 16 bits; −2147483648 en 32 bits)
+permanece ausente, no voltaje extremo. El checksum WFDB se calcula módulo 65536
+en ambos formatos; no se truncan las muestras de 32 bits.
 
 Si el productor incluyó prefijos de directorio en el encabezado, se retiran solo
 en una copia temporal para WFDB. Se guardan los hashes original/temporal y los
@@ -114,3 +116,22 @@ la evidencia histórica de LUDB/STAFF; un fallo deja `failure.json` y CI rojo.
 Las anotaciones de algoritmo no son verdad humana infalible. No se atribuye
 anatomía coronaria, mecanismo celular ni equivalencia a SCA agudo a las clases.
 La licencia de las referencias no concede una licencia nueva al código ECG Lab.
+
+## Corrección del fallo de formato de PR #18
+
+La ejecución 36189110969 falló antes de medir: los latidos medianos originales
+son WFDB32 (12 canales × 600 muestras × 4 bytes = 28.800 bytes en los ejemplos),
+no WFDB16. No era un fallo de descarga ni un ECG inválido. El decodificador ahora
+lee el formato explícito de TODOS los canales y admite 16/32 bits con signo y
+little-endian. Se conservan ganancias, basales, señales y checksums originales.
+Formatos mixtos, truncamientos y discrepancias de lectores siguen fallando.
+
+La cohorte, la semilla, la lista seleccionada y las métricas no cambian. El
+protocolo original se conserva como documento preespecificado (su texto WFDB16
+refleja la suposición previa); esta enmienda corrige únicamente el decodificador
+y registra el formato real en la procedencia. Doce regresiones analíticas nuevas
+cubren 32 bits, basales grandes, sentinelas, endianness y corrupción. El cotejo
+muestra a muestra con WFDB Python sigue siendo obligatorio antes de aceptar los
+64 latidos reales. No se atribuye validación clínica a un lector correcto.
+
+Formato oficial: https://physionet.org/physiotools/wag/signal-5.htm .
