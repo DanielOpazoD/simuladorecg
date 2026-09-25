@@ -83,3 +83,11 @@ La licencia de reutilización del código está **pendiente de elección del tit
 referencias mantienen sus licencias propias: [inventario](THIRD_PARTY_NOTICES.md).
 La [guía de contribución](CONTRIBUTING.md) describe contratos, pruebas, referencias
 y el flujo de PR. Ver [alcance de P5](docs/p5-licensing-contribution.md).
+
+## Referencia morfológica externa (auditoría profunda PR3)
+
+[Benchmark PTB-XL+](docs/ptbxl-morphology-reference.md): protocolo por paciente,
+características 12SL/Uni-G separadas y latidos medianos cotejados con WFDB.
+Solo evaluación offline; no modifica el generador ni el analizador y no acredita
+validación clínica. Los resultados y la fuente ejecutada quedan en el artefacto
+del workflow `PTB-XL+ morphology reference`.

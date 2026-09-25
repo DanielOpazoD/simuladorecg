@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "name": "ECG Lab deep audit PR3: PTB-XL+ morphology reference",
+  "cohortRole": "Development reference, not a clinical holdout or diagnostic test",
+  "ptbxlVersion": "1.0.3",
+  "plusVersion": "1.0.1",
+  "seed": "ecg-lab-ptbxl-plus-pr3-2026-09-25-v1",
+  "patientCount": 512,
+  "medianCount": 64,
+  "selection": "Exclude any patient with an ECG in fold 9 or 10. Retain the smallest ECG ID per remaining patient. Rank patients by SHA256(seed:patient_id), take the first 512; take the first 64 for 12SL median beats. Never replace missing or difficult cases.",
+  "groups": [
+    "ALL",
+    "NORM",
+    "MI",
+    "STTC",
+    "CD",
+    "HYP"
+  ],
+  "groupPolicy": "Diagnostic superclass membership from SCP metadata with positive likelihood; groups overlap, are not angiographic adjudication, and are not used for selection.",
+  "providers": [
+    "12sl",
+    "unig"
+  ],
+  "featurePolicy": "Use already harmonized columns in mV, ms, bpm or degrees; never reapply vendor conversion factors. Preserve signed S and T. Report missingness per feature and per group; do not impute.",
+  "globalFeatures": {
+    "PR_Int_Global": "ms",
+    "QRS_Dur_Global": "ms",
+    "QT_Int_Global": "ms",
+    "P_Dur_Global": "ms",
+    "HR_Ventr_Global": "bpm",
+    "T_AxisFront_Global": "degrees"
+  },
+  "providerAxes": {
+    "12sl": "R_AxisFrontal_Global",
+    "unig": "QRS_AxisFront_Global"
+  },
+  "leadFeatures": {
+    "R_Amp_X": "mV",
+    "S_Amp_X": "mV",
+    "T_Amp_X": "mV",
+    "ST_Amp_X": "mV",
+    "QRS_AmpPP_X": "mV",
+    "T_Area_X": "mV*ms",
+    "T_DurFull_X": "ms"
+  },
+  "medianProvider": "12sl",
+  "medianFiducials": [
+    "QRS_On_Global",
+    "QRS_Off_Global",
+    "T_On_Global",
+    "T_Off_Global"
+  ],
+  "medianPolicy": "Read original WFDB16 bytes and explicit gain/baseline/unit. Cross-check with WFDB Python 4.3.1; only remove directory prefixes from header record/data names in a temporary copy, recording before/after hashes. No inferred gain or silent rescaling. Preserve absent or invalid windows with reasons.",
+  "windowPolicy": "QRS/T windows are automatic 12SL fiducials in ms; baseline QRS onset-35 to -20 ms. A shared sample-metric extractor processes medians and generated signals but their window provenance differs. Results are descriptive, never paired clinical errors.",
+  "summaryPolicy": "Linear quantiles type 7, sample SD, explicit denominators; axes use circular mean/resultant length, not linear means. R progression uses signed R,S only when all V1-V6 are available with R>=0 and S<=0; a zero/zero lead is undefined. No statistical quality threshold or generator tuning.",
+  "sourceBaseCommit": "d4e4c7d742a2067ddc4bb26f869a1d865ee56b99",
+  "productFingerprintSha256": "635e582385c4d730dc6a52e4462ce829aa6b15bfb5235ec59fca05064108fd8f"
+}
