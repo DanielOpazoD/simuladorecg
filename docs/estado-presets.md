@@ -1,6 +1,6 @@
 # Estado de los patrones
 
-Ningún patrón se presenta como validado clínicamente.
+Ningún patrón se presenta como validado clínicamente. La columna «Estrategia» describe la base del preset; las correcciones regionales por fase y su dominio reducido están en la [matriz vigente](alcance-actual.md).
 
 | Patrón | Estado | Estrategia | Límite |
 |---|---|---|---|

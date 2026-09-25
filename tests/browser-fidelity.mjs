@@ -24,7 +24,9 @@ async function select(id){await page.locator(`[data-preset="${id}"]`).click();aw
 async function phase(value){await page.locator('[data-panel="st"]').click();await page.locator('[data-key="phase"]').selectOption(value);await ready();}
 const scale=()=>page.locator('.beat-plot').evaluate(e=>[e.dataset.scaleMin,e.dataset.scaleMax]);
 try {
- await page.goto(url);await ready();assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,new URL(url).origin);
+ await page.goto(url);await ready();
+ assert.equal(await page.locator('[data-product-version]').getAttribute('data-product-version'),productionInfo.packageVersion,'visible version differs from build');
+assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,new URL(url).origin);
  assert.match(await page.locator('#case-title').innerText(),/sinusal/i);
  assert.equal(await page.locator('vite-error-overlay').count(),0);
  assert.ok(await page.locator('#ecg').evaluate(c=>c.width>0&&c.height>0));checks.push('page identity / nonblank / no overlay');

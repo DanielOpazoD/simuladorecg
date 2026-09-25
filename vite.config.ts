@@ -13,7 +13,7 @@ function identity() {
  const hash=createHash('sha256');for(const file of files)hash.update(file+'\0').update(readFileSync(file)).update('\0');
  let commit='unknown',dirty=true;
  try{commit=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();dirty=!!execFileSync('git',['status','--porcelain','--',...files],{encoding:'utf8'}).trim();}catch{/* archive builds have no Git metadata */}
- return {commit,dirty,sourceSha256:hash.digest('hex'),packageVersion:JSON.parse(readFileSync('package.json','utf8')).version,revision:'v1.4-review',clinicalValidation:false};
+ return {commit,dirty,sourceSha256:hash.digest('hex'),packageVersion:JSON.parse(readFileSync('package.json','utf8')).version,revision:'v'+JSON.parse(readFileSync('package.json','utf8')).version,clinicalValidation:false};
 }
 export default defineConfig({
  server:{host:'0.0.0.0',allowedHosts:['terminal.local']},

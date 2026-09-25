@@ -15,6 +15,7 @@ assert.match(expected,/^[a-f0-9]{40}$/);assert.equal(info.commit,expected,'built
 assert.equal(info.dirty,false,'production build has uncommitted product changes');
 assert.equal(info.clinicalValidation,false);
 assert.equal(info.packageVersion,JSON.parse(await readFile('package.json','utf8')).version);
+assert.equal(info.revision,`v${info.packageVersion}`,'revision differs from package');
 const inputs=[...await files('src'),...await files('public'),'index.html','package.json','package-lock.json','vite.config.ts'].sort();
 const hash=createHash('sha256');for(const file of inputs)hash.update(file+'\0').update(await readFile(file)).update('\0');
 assert.equal(info.sourceSha256,hash.digest('hex'),'source fingerprint differs');
