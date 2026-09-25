@@ -1,7 +1,7 @@
 import type { Beat, ECGCase } from './types';
 
 export const T_REFERENCE_AMPLITUDE = 0.28;
-type SourceLead = 'I' | 'II' | 'V1' | 'V2' | 'V3' | 'V4' | 'V5' | 'V6';
+import type { IndependentLead as SourceLead } from "./lead-registry";
 type Territory = 'inferior_rca' | 'inferior_lcx' | 'anterior' | 'lateral';
 /** Reduced lead-space profiles, not anatomical forward fields or fitted patient data.
  * Only I/II are specified for limbs; III/aV* are derived AFTER all processing.

@@ -1,3 +1,4 @@
+import { PRECORDIAL_LEADS } from "./lead-registry";
 import {
   LEADS,
   constraints,
@@ -178,7 +179,7 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
         }
       }
     if (lesionScale > 0 && c.ischemia === "de_winter")
-      for (const l of ["V1", "V2", "V3", "V4", "V5", "V6"] as Lead[]) {
+      for (const l of PRECORDIAL_LEADS) {
         local(
           l,
           b.time + dur - 0.012,
