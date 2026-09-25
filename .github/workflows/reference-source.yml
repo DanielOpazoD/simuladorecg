@@ -1,0 +1,28 @@
+name: Reference source acquisition
+on:
+  push:
+    branches: ['improvement/v1.4-reference']
+    paths: ['.github/workflows/reference-source.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-metadata:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Download public versioned source metadata
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/staff"
+          cd "$RUNNER_TEMP/staff"
+          for file in STAFF-III-Database-Annotations.xlsx RECORDS SHA256SUMS.txt; do
+            curl --fail --location --retry 2 --max-time 60 "https://physionet.org/files/staffiii/1.0.0/$file" -o "$file"
+          done
+          sha256sum STAFF-III-Database-Annotations.xlsx RECORDS > acquired-sha256.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: staff-source-metadata
+          path: ${{ runner.temp }}/staff/
+          retention-days: 14
