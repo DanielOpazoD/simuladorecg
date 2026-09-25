@@ -1,3 +1,4 @@
+import { orderedLeads, displayPolarity, leadGain } from "../engine/lead-registry";
 import {
   LEADS,
   type ECGCase,
@@ -77,10 +78,7 @@ export function paperLayout(
     (c.view.fit
       ? Math.min(c.view.pxPerMm, Math.max(640, availableWidth) / widthMm)
       : c.view.pxPerMm);
-  const limb = c.view.cabrera
-    ? ["aVL", "I", "aVR", "II", "aVF", "III"]
-    : ["I", "II", "III", "aVR", "aVL", "aVF"];
-  const leads = [...limb, "V1", "V2", "V3", "V4", "V5", "V6"] as Lead[];
+  const leads = orderedLeads(c.view.cabrera);
   const segments: Segment[] = [];
   for (let col = 0; col < cols; col++)
     for (let row = 0; row < rows; row++) {
@@ -96,7 +94,7 @@ export function paperLayout(
         start: c.view.timing === "simultaneous" ? 0 : col * segDuration,
         duration: segDuration,
         lead,
-        polarity: c.view.cabrera && lead === "aVR" ? -1 : 1,
+        polarity: displayPolarity(lead, c.view.cabrera),
       });
     }
   for (let row = 0; row < extra; row++) {
@@ -162,7 +160,7 @@ function trace(
   range?: [number, number],
 ) {
   const a = s.leads[seg.lead],
-    gain = seg.lead.startsWith("V") ? c.view.chestGain : c.view.gain,
+    gain = leadGain(seg.lead, c.view),
     scale = c.view.speed;
   const from = range?.[0] ?? seg.start,
     to = range?.[1] ?? seg.start + seg.duration,
@@ -234,7 +232,7 @@ export function renderPaper(
 ): Layout {
   let amplitude = 0;
   for (const lead of LEADS) {
-    const gain = lead.startsWith("V") ? c.view.chestGain : c.view.gain;
+    const gain = leadGain(lead, c.view);
     for (let i = 0; i < Math.min(s.fs * 10, s.leads[lead].length); i++)
       amplitude = Math.max(amplitude, Math.abs(s.leads[lead][i]) * gain);
   }
@@ -291,7 +289,7 @@ export function renderPaper(
         2,
         seg.baseline,
         c.view.speed,
-        seg.lead.startsWith("V") ? c.view.chestGain : c.view.gain,
+        leadGain(seg.lead, c.view),
       );
       doneRows.add(seg.y);
     }
@@ -377,7 +375,7 @@ export function renderRhythm(
   availableWidth: number,
   offset = 0,
 ): Layout {
-  const gain = c.view.lead.startsWith("V") ? c.view.chestGain : c.view.gain;
+  const gain = leadGain(c.view.lead, c.view);
   let amp = 0;
   for (
     let i = 0;
@@ -461,7 +459,7 @@ export function drawCaliper(
     mm: Math.abs(cal.y2 - cal.y1),
     mv:
       Math.abs(cal.y2 - cal.y1) /
-      (seg.lead.startsWith("V") ? c.view.chestGain : c.view.gain),
+      (leadGain(seg.lead, c.view)),
   };
 }
 export const filterLabel = (c: ECGCase) =>
@@ -513,7 +511,7 @@ export class Monitor {
     this.ctx.fillText(c.view.lead, 4, 7);
     this.ctx.font = "2.7px ui-monospace,monospace";
     this.ctx.fillText(
-      `${c.view.speed} mm/s · ${c.view.lead.startsWith("V") ? c.view.chestGain : c.view.gain} mm/mV · ${filterLabel(c)}`,
+      `${c.view.speed} mm/s · ${leadGain(c.view.lead, c.view)} mm/mV · ${filterLabel(c)}`,
       4,
       79,
     );

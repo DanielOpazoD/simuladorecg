@@ -31,6 +31,23 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  assert.equal(await page.locator('vite-error-overlay').count(),0);
  assert.ok(await page.locator('#ecg').evaluate(c=>c.width>0&&c.height>0));checks.push('page identity / nonblank / no overlay');
  await page.screenshot({path:path.join(out,'desktop.png')});
+ // P7 uses real controls on the compiled product; sample invariance is tested in Node.
+ for (const format of ['3x4','3x4+1','3x4+3','6x2','12x1']) {
+  await page.locator('[data-key="view.format"]').selectOption(format);
+  assert.ok(await page.locator('#ecg').evaluate(c=>c.width>0&&c.height>0));
+ }
+ await page.locator('[data-key="view.format"]').selectOption('3x4+1');
+ await page.locator('[data-panel="signal"]').click();
+ await page.locator('[data-key="view.cabrera"]').check();
+ await page.screenshot({path:path.join(out,'p7-cabrera.png')});
+ await page.locator('[data-key="view.cabrera"]').uncheck();
+ await page.locator('[data-mode="monitor"]').click();
+ for (const lead of ['II','V1','aVR']) {
+  await page.locator('[data-key="view.lead"]').selectOption(lead);
+  assert.match(await page.locator('#ecg').getAttribute('aria-label'),new RegExp(lead));
+ }
+ await page.locator('[data-mode="paper"]').click();
+ checks.push('P7: five paper formats, Cabrera and physical monitor lead selection');
  for(const id of ['inferior','anterior','lateral']) {
   await select(id);await phase('hyperacute');
   const fixed=await scale();assert.ok(fixed.every(Boolean));

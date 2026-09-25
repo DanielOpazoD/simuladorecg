@@ -1,26 +1,10 @@
-import { LEADS, type Lead } from "./types";
+import { LEADS, LEAD_REGISTRY, INDEPENDENT, type Lead, type IndependentLead } from "./lead-registry";
+export { INDEPENDENT } from "./lead-registry";
 export type Vec = [number, number, number];
-/** Forward Dower: Frank X left, Y inferior, Z posterior. See docs/model.md. */
-export const DOWER: Record<string, Vec> = {
-  I: [0.632, -0.235, 0.059],
-  II: [0.235, 1.066, -0.132],
-  V1: [-0.515, 0.157, -0.917],
-  V2: [0.044, 0.164, -1.387],
-  V3: [0.882, 0.098, -1.277],
-  V4: [1.213, 0.127, -0.601],
-  V5: [1.125, 0.127, -0.086],
-  V6: [0.831, 0.076, 0.23],
-};
-export const INDEPENDENT = [
-  "I",
-  "II",
-  "V1",
-  "V2",
-  "V3",
-  "V4",
-  "V5",
-  "V6",
-] as const;
+/** Forward Dower projection from the physical-channel registry. */
+export const DOWER = Object.fromEntries(INDEPENDENT.map(lead =>
+  [lead, [...LEAD_REGISTRY[lead].projection]],
+)) as Record<IndependentLead, Vec>;
 export function dot(a: Vec, b: Vec) {
   return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
