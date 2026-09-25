@@ -67,3 +67,11 @@ La [revisión clínica aportada](docs/referencias/Revision_ECG_SCA_Simulador.md)
 ## Histórico
 
 [README de v1.3](docs/README-v1.3.md), [verificación v1.3](docs/verificacion.md), [v1.2](docs/verificacion-v1.2.md) y [v1.1](docs/verificacion-v1.1.md) son registros históricos, no nuevas ejecuciones. Sus cifras no describen automáticamente el HEAD actual. La navegación vigente comienza en este README y la matriz de alcance. No se distribuye el ZIP antiguo de código en `public/`.
+
+## Derechos y contribuciones
+
+La licencia de reutilización del código está **pendiente de elección del titular**;
+[LICENSE](LICENSE) documenta el estado y no concede una licencia abierta. Las
+referencias mantienen sus licencias propias: [inventario](THIRD_PARTY_NOTICES.md).
+La [guía de contribución](CONTRIBUTING.md) describe contratos, pruebas, referencias
+y el flujo de PR. Ver [alcance de P5](docs/p5-licensing-contribution.md).

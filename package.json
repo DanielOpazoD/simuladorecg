@@ -15,5 +15,6 @@
     "typescript": "^5.7.3",
     "vitest": "^3.0.5",
     "@types/node": "^22.13.1"
-  }
+  },
+  "license": "UNLICENSED"
 }
