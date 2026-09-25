@@ -14,7 +14,8 @@ El PR no ajusta detector, tolerancias ni perfiles para mejorar el resultado.
 
 ## Referencia, denominadores y límites
 
-Se reutiliza sin cambios el lector de LUDB 1.0.1 y su agregación I/II/V1/V5.
+Se reutiliza la calibración del lector LUDB 1.0.1 y sin cambios la agregación I/II/V1/V5.
+La corrección del lector tras el fallo inicial se documenta abajo.
 No equivale a una anotación global original: II ancla identidades, los extremos
 son min/max entre cuatro derivaciones con cobertura completa. Los grupos no
 emparejables y los límites ausentes se contabilizan; no se imputan.
@@ -52,3 +53,19 @@ Licencia de datos: Open Data Commons Attribution 1.0, conservada en el artefacto
 No cambia LICENSE del código. No valida P/PR/T/QT, ST, población clínica, ni el
 realismo del generador. Nuevas mejoras del detector requieren otro protocolo;
 no cambiar estos hashes para aparentar que el analizador permaneció congelado.
+
+## Corrección de adquisición antes de evaluar (PR #17)
+
+La primera ejecución 36178101569 se detuvo en un marcador de límite sin pico
+asignable, antes de ejecutar el detector. La cohorte de 40 IDs y los hashes del
+analizador no se cambian. El lector conserva ahora esos paréntesis como eventos
+no asignados en cada registro/derivación y en `annotation-integrity.json`.
+No inventa ondas ni asocia límites no adyacentes. Picos sin onset/offset siguen
+con null. Se cuentan estos eventos aparte: no equivalen a QRS de referencia
+elegibles. Se mantienen todos los registros y la lista completa de eventos se
+coteja con `wfdb.rdann`. El comportamiento estricto histórico sigue por defecto.
+
+Las pruebas del parser usan bytes construidos independientemente, cubren marcas
+huérfanas, límites ausentes, SKIP y truncamiento. Esta enmienda de preparación no
+es un ajuste del detector tras observar precisión; tampoco corrige manualmente
+las anotaciones humanas. Los resultados publican los límites de la referencia.

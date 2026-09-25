@@ -1,10 +1,10 @@
 name: External reference evaluation
 on:
   pull_request:
-    paths: ['scripts/*ludb-expansion*', 'scripts/lib/external-qrs-evaluation.mjs', 'tests/reference/ludb-expansion/**', 'tests/external-cohort.test.mjs', '.github/workflows/external-reference.yml']
+    paths: ['scripts/*ludb-expansion*', 'scripts/lib/external-qrs-evaluation.mjs', 'tests/reference/ludb-expansion/**', 'tests/external-cohort.test.mjs', 'tests/reference/ludb/prepare_ludb.py', 'tests/test_ludb_annotations.py', '.github/workflows/external-reference.yml']
   push:
     branches: ['main']
-    paths: ['scripts/*ludb-expansion*', 'scripts/lib/external-qrs-evaluation.mjs', 'tests/reference/ludb-expansion/**', 'tests/external-cohort.test.mjs', '.github/workflows/external-reference.yml']
+    paths: ['scripts/*ludb-expansion*', 'scripts/lib/external-qrs-evaluation.mjs', 'tests/reference/ludb-expansion/**', 'tests/external-cohort.test.mjs', 'tests/reference/ludb/prepare_ludb.py', 'tests/test_ludb_annotations.py', '.github/workflows/external-reference.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -21,6 +21,8 @@ jobs:
         with: {python-version: '3.11'}
       - run: npm ci
       - run: python -m pip install wfdb==4.3.1
+      - name: Annotation reader contracts
+        run: python -m unittest discover -s tests -p test_ludb_annotations.py -v
       - name: Fetch prespecified cohort and verify against WFDB
         run: python scripts/prepare-ludb-expansion.py --output "$RUNNER_TEMP/ludb-expansion" --crosscheck
       - name: Evaluate frozen sample-only analyzer, without tuning

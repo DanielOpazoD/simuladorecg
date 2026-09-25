@@ -37,7 +37,7 @@ def prepare(output: Path, crosscheck: bool = False):
                 time.sleep(2 ** attempt)
     module.fetch = retry
     module.SPLITS = {'expansion': p['records']}
-    module.prepare(output)
+    module.prepare(output, preserve_unassigned=True)
     manifest_path = output / 'fixtures/manifest.json'
     manifest = json.loads(manifest_path.read_text())
     manifest['selection'] = p['selectionRule']
@@ -45,6 +45,17 @@ def prepare(output: Path, crosscheck: bool = False):
     manifest['protocolSha256'] = hashlib.sha256(protocol_bytes).hexdigest()
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n')
     (output / 'protocol.json').write_bytes(protocol_bytes)
+    anomalies = []
+    for record in p["records"]:
+        meta = json.loads((output / f"fixtures/expansion/{record}.json").read_text())
+        for lead, events in meta["unassignedBoundaryEvents"].items():
+            if events:
+                anomalies.append({"record": record, "lead": lead, "events": events})
+    (output / "annotation-integrity.json").write_text(json.dumps({
+        "unassignedBoundaries": anomalies,
+        "totalUnassignedEvents": sum(len(a["events"]) for a in anomalies),
+        "policy": "Preserved; no peak or nonadjacent fiducial inferred. No record removed."
+    }, indent=2) + "\n")
     if crosscheck:
         import numpy as np
         import wfdb

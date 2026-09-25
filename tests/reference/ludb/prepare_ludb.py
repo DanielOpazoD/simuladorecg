@@ -39,16 +39,20 @@ def fetch(path: str, raw: Path) -> bytes:
     return body
 
 
-def annotations(data: bytes) -> dict:
+def annotations(data: bytes, *, preserve_unassigned: bool = False) -> dict:
     """Decode MIT WFDB annotation words with optional waveform boundaries.
 
     References: https://physionet.org/physiotools/wag/annot-5.htm and
     https://physionet.org/physiotools/wpg/wpg_36.htm .
-    Fail closed on unknown waveform codes or ambiguous/unassigned boundaries.
+    Fail closed on unknown codes. Default: fail on unassigned boundaries.
+    Expansion mode preserves unassigned brackets as explicit audit events; it
+    never invents a peak or attaches a nonadjacent boundary to a waveform.
     Some source wave peaks have no onset/offset; retain these as null, not inferred.
     """
     sample, pos, events = 0, 0, []
     while pos < len(data):
+        if pos + 2 > len(data):
+            raise ValueError("Truncated WFDB annotation word")
         word = int.from_bytes(data[pos:pos + 2], "little")
         pos += 2
         if word == 0:
@@ -65,6 +69,8 @@ def annotations(data: bytes) -> dict:
             sample += interval
             pos += 4
         elif code == 63:
+            if pos + delta + delta % 2 > len(data):
+                raise ValueError("Truncated WFDB auxiliary data")
             pos += delta + delta % 2
         elif code in (60, 61, 62):
             # Numeric/subtype/channel attributes do not change sample time.
@@ -89,12 +95,16 @@ def annotations(data: bytes) -> dict:
         if (onset is not None and onset > peak["sample"]) or (offset is not None and offset < peak["sample"]):
             raise ValueError("Unordered LUDB waveform boundaries")
         waves.append({"wave": {"p": "P", "N": "QRS", "t": "T"}[peak["symbol"]], "onset": onset, "peak": peak["sample"], "offset": offset})
-    if len(used) != len(events):
+    unassigned = [{"eventIndex": i, **event} for i, event in enumerate(events) if i not in used]
+    if unassigned and not preserve_unassigned:
         raise ValueError("Ambiguous/unassigned LUDB boundary; preserve and inspect source")
-    return {"waves": waves, "events": events}
+    result = {"waves": waves, "events": events}
+    if preserve_unassigned:
+        result["unassignedBoundaries"] = unassigned
+    return result
 
 
-def prepare(root: Path) -> None:
+def prepare(root: Path, *, preserve_unassigned: bool = False) -> None:
     raw, out = root / "raw", root / "fixtures"
     raw.mkdir(parents=True, exist_ok=True)
     out.mkdir(parents=True, exist_ok=True)
@@ -137,7 +147,7 @@ def prepare(root: Path) -> None:
             if (rec, channels, frequency, count) != (str(record), 12, 500, 5000):
                 raise ValueError(f"Unexpected LUDB dimensions in record {record}")
             samples = struct.unpack("<" + "h" * (channels * count), bodies[prefix + ".dat"])
-            calibration, wave_annotations, raw_events = [], {}, {}
+            calibration, wave_annotations, raw_events, unassigned = [], {}, {}, {}
             for channel, line in enumerate(lines[1:13]):
                 parts = line.split()
                 if parts[0] != f"{record}.dat" or parts[1] != "16":
@@ -154,9 +164,11 @@ def prepare(root: Path) -> None:
                 if checksum != int(parts[6]) or values[0] != int(parts[5]):
                     raise ValueError(f"WFDB signal checksum/initial value differs: {record}/{lead}")
                 calibration.append({"lead": LABEL[lead], "adcGain": gain, "baseline": baseline, "unit": "mV"})
-                annotation = annotations(bodies[prefix + "." + lead])
+                annotation = annotations(bodies[prefix + "." + lead], preserve_unassigned=preserve_unassigned)
                 wave_annotations[LABEL[lead]] = annotation["waves"]
                 raw_events[LABEL[lead]] = annotation["events"]
+                if preserve_unassigned:
+                    unassigned[LABEL[lead]] = annotation["unassignedBoundaries"]
             meta = {
                 "record": str(record), "split": split, "fs": frequency, "samples": count,
                 "channels": calibration, "signalFile": f"{record}.dat", "signalFormat": "WFDB 16: interleaved signed int16 little-endian",
@@ -167,6 +179,9 @@ def prepare(root: Path) -> None:
                 "annotationUnits": "integer sample indices at 500 Hz",
                 "sourceFiles": [{"path": f"{record}.{ext}", "url": BASE + prefix + "." + ext, "sha256": sha(bodies[prefix + "." + ext])} for ext in ["hea", "dat", *LEADS]],
             }
+            if preserve_unassigned:
+                meta["unassignedBoundaryEvents"] = unassigned
+                meta["unassignedBoundaryPolicy"] = "Retained verbatim with indices; no missing wave/peak inferred. Not used as reference fiducials."
             target = out / split
             target.mkdir(parents=True, exist_ok=True)
             (target / f"{record}.dat").write_bytes(bodies[prefix + ".dat"])
