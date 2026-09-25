@@ -1,11 +1,11 @@
 import { synthesize } from "./signal";
-import { measure } from "./measure";
+import { analyzeSamples } from "./sample-analysis";
 import type { SignalRequest, SignalResponse } from "./protocol";
 self.onmessage = (event: MessageEvent<SignalRequest>) => {
   const { id, ecg, duration } = event.data;
   try {
     const signal = synthesize(ecg, duration),
-      measurement = measure(signal);
+      measurement = analyzeSamples({ fs: signal.fs, leads: signal.leads });
     const response: SignalResponse = { id, signal, measurement };
     self.postMessage(response, {
       transfer: Object.values(signal.leads).map((lead) => lead.buffer),

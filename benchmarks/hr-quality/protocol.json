@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "baselineCommit": "784173f94bc103686efb321fc13f1b8f40913f76",
+  "source": "NSTDB 1.0.0",
+  "developmentStartsSeconds": [60, 180, 300],
+  "replicationStartsSeconds": [90, 210, 330],
+  "replicationPolicy": "Fixed before running these segments. Same three noise recordings, not independent patients or clinical validation. Do not tune the gate after viewing replication results.",
+  "developmentPolicy": "The PR19 windows and clean presets were inspected during development. Report performance as known-set regression, not holdout validation.",
+  "heartRateErrorReviewBpm": 5,
+  "qualityPolicy": {"candidateFraction": 0.6, "matchSeconds": 0.04, "backgroundRatio": 0.1, "unmatchedFraction": 0.075, "minimumUnmatched": 2},
+  "acceptance": "All numerical outputs, candidate peaks and boundaries identical before/after. HR evidence may only move usable to review; no numerical correction, suppression or promotion. Describe coverage and residual usable errors, including warnings on accurate rates.",
+  "limitations": "Same detector at two thresholds: sensitivity test, NOT independent detector agreement or a calibrated probability. Periodic artifacts can pass both branches. Low-amplitude real complexes can cause review. RR variability is never a quality feature. review retains the raw rate, and a separate model audit may subsequently remove it."
+}
