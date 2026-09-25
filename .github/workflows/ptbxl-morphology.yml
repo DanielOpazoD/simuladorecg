@@ -1,0 +1,46 @@
+name: PTB-XL+ morphology reference
+on:
+  pull_request:
+    paths: ['benchmarks/ptbxl-plus/**', 'scripts/*ptbxl*', 'scripts/lib/ptbxl-morphology.mjs', 'tests/*ptbxl*', '.github/workflows/ptbxl-morphology.yml']
+  push:
+    branches: ['main']
+    paths: ['benchmarks/ptbxl-plus/**', 'scripts/*ptbxl*', 'scripts/lib/ptbxl-morphology.mjs', 'tests/*ptbxl*', '.github/workflows/ptbxl-morphology.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22.16.0', cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: npm ci
+      - run: python -m pip install wfdb==4.3.1
+      - name: Independent selection, statistics and waveform contracts
+        run: |
+          python -m unittest discover -s tests -p test_ptbxl_reference.py -v
+          npx vitest run tests/ptbxl-morphology.test.mjs
+      - name: Select patients before feature acquisition and verify sources
+        run: python scripts/ptbxl-benchmark.py --output "$RUNNER_TEMP/ptbxl-reference"
+      - name: Describe median beats and unchanged generated samples separately
+        run: node scripts/benchmark-ptbxl-samples.mjs "$RUNNER_TEMP/ptbxl-reference"
+      - name: Archive reproducible reference, not demographics or full source tables
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/ptbxl-reference"
+          git archive HEAD | gzip > "$RUNNER_TEMP/ptbxl-reference/source.tar.gz"
+          git rev-parse HEAD > "$RUNNER_TEMP/ptbxl-reference/commit.txt"
+          python -m pip freeze > "$RUNNER_TEMP/ptbxl-reference/python-packages.txt"
+          node -p 'JSON.stringify(process.versions,null,2)' > "$RUNNER_TEMP/ptbxl-reference/node-runtime.json"
+          rm -rf "$RUNNER_TEMP/ptbxl-reference/raw"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ptbxl-reference-${{ github.sha }}
+          path: ${{ runner.temp }}/ptbxl-reference/
+          retention-days: 30
