@@ -1,5 +1,6 @@
 /** Offline regression comparison. Clinical records are never passed to model audit. */
 import { build } from "esbuild";
+import { reportIdentity } from "./lib/report-identity.mjs";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
@@ -12,6 +13,10 @@ import {
 } from "../tests/reference/ludb/load-ludb.mjs";
 
 const root = process.cwd();
+const provenance = reportIdentity(root);
+const outputIndex = process.argv.indexOf("--output");
+if (outputIndex >= 0 && (!process.argv[outputIndex + 1] || process.argv[outputIndex + 1].startsWith("--")))
+  throw new Error("--output requires a path");
 const split =
   process.argv.find((x) => x.startsWith("--split="))?.slice(8) ?? "development";
 if (!["development", "control", "all"].includes(split))
@@ -188,7 +193,9 @@ for (const name of ["development", "control"]) {
   }
 }
 const result = {
-  version: "1.2.0",
+  version: provenance.packageVersion,
+  provenance,
+  baselineVersion: "1.1.0",
   baselineCommit: "ad5a53261a7ac170297b32e7709ec158c2ed45c4",
   baselineBundleSha256: createHash("sha256")
     .update(
@@ -202,10 +209,11 @@ const result = {
   external,
   synthetic,
 };
-await writeFile(
-  path.join(root, "docs", `analysis-validation-${split}.json`),
-  JSON.stringify(result, null, 2),
-);
+const output = outputIndex >= 0
+  ? path.resolve(process.argv[outputIndex + 1])
+  : path.join(root, ".sites-runtime", `analysis-validation-${split}.json`);
+await mkdir(path.dirname(output), { recursive: true });
+await writeFile(output, JSON.stringify(result, null, 2));
 console.log(
   JSON.stringify(
     {
