@@ -13,6 +13,7 @@ import csv
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
+import gzip
 import io
 import json
 import math
@@ -25,7 +26,7 @@ import subprocess
 import tempfile
 import time
 from urllib.error import HTTPError, URLError
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
 PROTOCOL = ROOT / 'benchmarks/ptbxl-plus/protocol.json'
@@ -141,6 +142,8 @@ def validate_schema(header: list, description: dict, p: dict, provider: str):
 class Release:
     def __init__(self, name: str, version: str, raw: Path):
         self.base = f'https://physionet.org/files/{name}/{version}/'
+        self.mirror = f'https://physionet-open.s3.amazonaws.com/{name}/{version}/'
+        self.transports = {}
         self.raw = raw / name
         self.files = {}
         manifest = self.download('SHA256SUMS.txt')
@@ -158,20 +161,35 @@ class Release:
             raise ValueError('Unsafe relative source path')
         path = self.raw / name
         if path.is_file():
+            self.transports.setdefault(name, {'transportUrl':'local-cache'})
             return path.read_bytes()
-        print(json.dumps({'stage':'download','url':self.base+name}), flush=True)
-        for attempt in range(3):
-            try:
-                with urlopen(self.base+name, timeout=120) as response:
-                    body = response.read()
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_bytes(body)
-                return body
-            except (URLError, TimeoutError):
-                if attempt == 2:
-                    raise
-                time.sleep(2**attempt)
-        raise RuntimeError('Unreachable download state')
+        last_error = None
+        # PhysioNet documents its public S3 mirror. Bytes still require the
+        # release checksum; transport choice never changes the selected cohort.
+        for base in (self.mirror, self.base):
+            url = base + name
+            print(json.dumps({'stage':'download','url':url}), flush=True)
+            for attempt in range(3):
+                try:
+                    request = Request(url, headers={'Accept-Encoding':'gzip', 'User-Agent':'ECG-Lab-reference/1.0'})
+                    with urlopen(request, timeout=120) as response:
+                        wire = response.read()
+                        encoding = response.headers.get('Content-Encoding','identity').lower()
+                    if encoding not in ('identity', '', 'gzip'):
+                        raise ValueError('Unsupported HTTP content encoding')
+                    body = gzip.decompress(wire) if encoding == 'gzip' else wire
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_bytes(body)
+                    self.transports[name] = {'transportUrl':url, 'httpContentEncoding':encoding,
+                                             'wireBytes':len(wire), 'decodedBytes':len(body)}
+                    return body
+                except (URLError, TimeoutError) as error:
+                    last_error = error
+                    if isinstance(error, HTTPError) and error.code in (403,404):
+                        break
+                    if attempt < 2:
+                        time.sleep(2**attempt)
+        raise RuntimeError(f'Both documented transports failed: {name}: {last_error}')
 
     def get(self, name: str) -> bytes:
         if name not in self.sums:
@@ -179,7 +197,7 @@ class Release:
         body = self.download(name)
         if digest(body) != self.sums[name]:
             raise ValueError(f'Source checksum mismatch: {name}')
-        self.files[name] = {'url': self.base+name, 'sha256': digest(body), 'bytes': len(body)}
+        self.files[name] = {'url': self.base+name, 'sha256': digest(body), 'bytes': len(body), **self.transports[name]}
         write(self.raw.parent.parent/'acquisition-progress.json', {'lastVerified':self.files[name], 'release':self.base, 'verifiedFilesInRelease':len(self.files)})
         return body
 
@@ -343,7 +361,7 @@ def acquire(output: Path):
     write(output/'provenance.json',{'commit':commit,'productFingerprintSha256':product_fingerprint(),
           'protocolSha256':digest(pbytes),'python':platform.python_version(),
           'benchmarkFiles':{str(f.relative_to(ROOT)):digest(f.read_bytes()) for f in scripts if f.is_file()},
-          'sources':{label:{'base':r.base,'manifestSha256':r.manifest_hash,'verifiedFiles':r.files}
+          'sources':{label:{'base':r.base,'manifestSha256':r.manifest_hash,'manifestTransport':r.transports.get('SHA256SUMS.txt'),'verifiedFiles':r.files}
                      for label,r in [('PTB-XL',parent),('PTB-XL+',plus)]},
           'clinicalValidation':False,'generatorTuned':False,'analyzerEvaluated':False})
     print(json.dumps({'patients':len(wanted),'mediansRequested':p['medianCount'],'mediansDecoded':len(medians),

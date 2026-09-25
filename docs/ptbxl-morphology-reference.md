@@ -45,7 +45,10 @@ imprevistas detienen el proceso. No se exige una precisión clínica para CI ver
 
 ## Latidos medianos y medición sobre muestras
 
-Se cotejan los bytes con el SHA256SUMS de la versión. El lector admite WFDB16,
+Se cotejan los bytes con el SHA256SUMS de la versión. Se usa el espejo S3 público
+documentado por PhysioNet, con respaldo HTTPS. La URL efectiva y cualquier
+descompresión HTTP gzip se registran; el hash siempre corresponde al archivo
+original descomprimido, nunca a una señal recalibrada. El lector admite WFDB16,
 12 canales y 500 Hz, con ganancia, línea basal, unidades, valor inicial y checksum
 explícitos. La conversión se contrasta muestra a muestra con **WFDB Python 4.3.1**.
 El valor digital reservado −32768 permanece ausente, no voltaje extremo.

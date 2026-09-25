@@ -1,5 +1,9 @@
 import importlib.util
 import json
+import gzip
+import io
+import tempfile
+from unittest.mock import patch
 import math
 from pathlib import Path
 import struct
@@ -118,5 +122,31 @@ class MedianTests(unittest.TestCase):
 
     def test_product_freeze(self):
         p=json.loads(m.PROTOCOL.read_text());self.assertEqual(m.product_fingerprint(),p['productFingerprintSha256'])
+
+class TransportTests(unittest.TestCase):
+    def release(self, folder):
+        r=m.Release.__new__(m.Release)
+        r.raw=Path(folder)/'raw'/'release';r.base='https://canonical/';r.mirror='https://mirror/'
+        r.transports={};r.files={};r.sums={'x':m.digest(b'abc')}
+        return r
+
+    def response(self, body, encoding='identity'):
+        result=io.BytesIO(body);result.headers={'Content-Encoding':encoding};return result
+
+    def test_gzip_is_decoded_before_integrity_check(self):
+        with tempfile.TemporaryDirectory() as d, patch.object(m,'urlopen',return_value=self.response(gzip.compress(b'abc'),'gzip')) as call:
+            r=self.release(d);self.assertEqual(r.get('x'),b'abc')
+            self.assertEqual(call.call_args.args[0].full_url,'https://mirror/x')
+            self.assertEqual(r.files['x']['httpContentEncoding'],'gzip')
+
+    def test_missing_mirror_falls_back_without_changing_content(self):
+        failure=m.HTTPError('https://mirror/x',404,'missing',{},None)
+        with tempfile.TemporaryDirectory() as d, patch.object(m,'urlopen',side_effect=[failure,self.response(b'abc')]):
+            r=self.release(d);self.assertEqual(r.get('x'),b'abc')
+            self.assertEqual(r.files['x']['transportUrl'],'https://canonical/x')
+
+    def test_mirror_does_not_bypass_release_checksum(self):
+        with tempfile.TemporaryDirectory() as d, patch.object(m,'urlopen',return_value=self.response(b'wrong')):
+            with self.assertRaises(ValueError):self.release(d).get('x')
 
 if __name__=='__main__':unittest.main()
