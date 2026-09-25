@@ -45,3 +45,13 @@ fuera de foco, contraste calculado de elementos y una medición manual por punte
 No hay prueba con teléfono físico, lector de pantalla humano o impresora. El
 DOM/roles comprobado en Chromium no sustituye esa evaluación. Las pruebas de
 representación no validan generador ni analizador; ambos quedan sin cambios.
+
+Primera ejecución Chromium: el nuevo recorrido se detuvo porque el selector de
+«Ajustar al ancho» coincidía con dos controles existentes. El test selecciona
+ahora explícitamente el del inspector. No se modifican las expectativas de
+precisión ni se interpreta ese error del test como un fallo del producto.
+
+La revisión de la captura detectó también contraste 4,28:1 en el texto Δt/ΔV
+(acento sobre fondo suave). Se cambia solo ese texto al token de tinta y se añade
+su contraste a la prueba de estilos computados en ambos temas; la curva y los
+marcadores no cambian de color.

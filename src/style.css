@@ -593,12 +593,12 @@ canvas.measuring {
   padding: 12px 20px;
   background: var(--soft);
   font-size: 13px;
-  color: var(--accent);
+  color: var(--ink);
   flex-wrap: wrap;
 }
 .caliper-readout button {
   background: transparent;
-  color: var(--accent);
+  color: var(--ink);
   text-decoration: underline;
   margin-left: auto;
   font-size: 12px;

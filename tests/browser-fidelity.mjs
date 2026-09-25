@@ -172,7 +172,7 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  // Direct pointer path at known physical geometry; source modules are never imported.
  await page.locator('[data-key="view.format"]').selectOption('3x4');
  await page.locator('[data-panel="signal"]').click();
- await page.locator('[data-key="view.fit"]').uncheck();
+ await page.locator('#inspector [data-key="view.fit"]').uncheck();
  await page.locator('[data-key="view.pxPerMm"]').evaluate(el=>{el.value='10';el.dispatchEvent(new Event('input',{bubbles:true}));});
  await page.locator('[data-key="view.speed"]').selectOption('50');
  await page.locator('[data-key="view.gain"]').selectOption('20');
@@ -199,7 +199,7 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  await page.mouse.move(points.a.x,points.a.y);await page.mouse.down();await page.mouse.move(points.b.x,points.b.y,{steps:4});await page.mouse.up();
  const pointerManual=await manual();assert.ok(Math.abs(pointerManual.ms-referenceManual.ms)<=2.00001,JSON.stringify(pointerManual));assert.ok(Math.abs(pointerManual.mv-referenceManual.mv)<=.010001,JSON.stringify(pointerManual));
  accessibility.push({keyboardNative:native,pointerReference:referenceManual,pointer: pointerManual});
- await page.locator('[data-key="view.fit"]').check();
+ await page.locator('#inspector [data-key="view.fit"]').check();
  await page.locator('[data-key="view.pxPerMm"]').evaluate(el=>{el.value=String(96/25.4);el.dispatchEvent(new Event('input',{bubbles:true}));});
  await page.locator('[data-key="view.speed"]').selectOption('25');await page.locator('[data-key="view.gain"]').selectOption('10');
  await caliperButton.click();
@@ -207,7 +207,7 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
    if(theme==='dark')await page.locator('[data-action="theme"]').click();
    const ratios=await page.evaluate(()=>{
      const lum=rgb=>{const a=rgb.match(/[\d.]+/g).slice(0,3).map(Number).map(n=>n/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return a[0]*.2126+a[1]*.7152+a[2]*.0722;};
-     return ['.workspace-footer','.trace-caption','.keyboard-help'].map(selector=>{const el=document.querySelector(selector);let p=el,bg;while(p){bg=getComputedStyle(p).backgroundColor;if(bg!=='rgba(0, 0, 0, 0)'&&bg!=='transparent')break;p=p.parentElement;}const fg=getComputedStyle(el).color,a=lum(fg),b=lum(bg);return {selector,fg,bg,ratio:(Math.max(a,b)+.05)/(Math.min(a,b)+.05)};});
+     return ['.workspace-footer','.trace-caption','.keyboard-help','.caliper-readout'].map(selector=>{const el=document.querySelector(selector);let p=el,bg;while(p){bg=getComputedStyle(p).backgroundColor;if(bg!=='rgba(0, 0, 0, 0)'&&bg!=='transparent')break;p=p.parentElement;}const fg=getComputedStyle(el).color,a=lum(fg),b=lum(bg);return {selector,fg,bg,ratio:(Math.max(a,b)+.05)/(Math.min(a,b)+.05)};});
    });
    for(const r of ratios)assert.ok(r.ratio>=4.5,JSON.stringify(r));accessibility.push({theme,ratios});
  }

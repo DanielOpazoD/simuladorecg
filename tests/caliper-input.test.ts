@@ -51,5 +51,7 @@ describe("P9 muted text palette contracts",()=>{
     for(const surface of ['background','soft'])expect(contrast(token('muted'),token(surface))).toBeGreaterThanOrEqual(4.5);
     expect(css).toContain('color: var(--ink);\n  background: var(--background);');
     expect(css).toContain('#ecg:focus-visible');
+    expect(css.match(/\.caliper-readout \{([^}]+)\}/)![1]).toContain('color: var(--ink)');
+    expect(contrast(token('ink'),token('soft'))).toBeGreaterThanOrEqual(4.5);
   });
 });
