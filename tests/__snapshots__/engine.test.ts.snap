@@ -44,7 +44,7 @@ exports[`Determinismo y catálogo > flutter3 produce muestras finitas, QRS orden
 
 exports[`Determinismo y catálogo > highav produce muestras finitas, QRS ordenados y señal determinista 1`] = `"ebf4880f3c5277d6353110c175c125d925b76b9bf31c96df0fceb4a8dd5c7d1a"`;
 
-exports[`Determinismo y catálogo > hyperk produce muestras finitas, QRS ordenados y señal determinista 1`] = `"6981ccd64fe5c6a3baacdfa54945d9642b7c301f84dd22d937f77c3da1bfe64c"`;
+exports[`Determinismo y catálogo > hyperk produce muestras finitas, QRS ordenados y señal determinista 1`] = `"efb48fe66c3bc4d4f92e561264b211cb66799a248396d880423919b2d811c1a1"`;
 
 exports[`Determinismo y catálogo > hypok produce muestras finitas, QRS ordenados y señal determinista 1`] = `"f3cc53539ae918858f4a351736b3d4c4661456d8bfa1031c72f5fbbeb1cde93a"`;
 

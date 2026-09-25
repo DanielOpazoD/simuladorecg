@@ -1,0 +1,31 @@
+name: Reference source acquisition
+on:
+  push:
+    branches: ['improvement/v1.4-reference']
+    paths: ['.github/workflows/reference-source.yml', 'scripts/collect-staff.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-development-excerpts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install compatible acquisition environment
+        run: pip install wfdb==4.3.0 pandas==2.2.3 numpy==2.2.6 scipy==1.15.3
+      - name: Acquire preselected public signals with provenance
+        env:
+          REFERENCE_OUTPUT: ${{ runner.temp }}/staff
+        run: python scripts/collect-staff.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: staff-development-excerpts
+          path: ${{ runner.temp }}/staff/
+          retention-days: 14

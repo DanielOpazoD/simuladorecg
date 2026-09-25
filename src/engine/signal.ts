@@ -31,6 +31,7 @@ import { assignRepolarization } from "./repolarization";
 import { assertRepresentableEvents, tWaveSupport } from "./constraints";
 import { median } from "./analysis/statistics";
 import { atrialVector, tWave } from "./morphology";
+import { regionalTerritory, regionalTCorrection } from "./regional-repolarization";
 const FS = 1000,
   OUT = 500,
   WARM = 4,
@@ -146,6 +147,11 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
     add(tStart, tLen, (u) =>
       scale(tv, tWave(u, c.electrolyte === "hyperkalemia")),
     );
+    if (regionalTerritory(c, b) && (c.phase === "hyperacute" || c.phase === "evolving") && c.st > 0 && c.tAmp > 0) {
+      const basal = project(tv);
+      for (const lead of INDEPENDENT)
+        local(lead, tStart, tLen, 1, (u) => regionalTCorrection(c, b, lead, u, basal[lead], tWave(u)));
+    }
     if (c.electrolyte === "hypokalemia")
       add(b.time + qt + 0.035, 0.16, (u) =>
         scale(frontal(40, 0.17, -0.06), bump(u)),

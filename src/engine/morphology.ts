@@ -2,7 +2,8 @@ import type { ECGCase, Beat } from "./types";
 import { frontal, project, axisFromLeads, type Vec } from "./leads";
 export type Kernel = { mu: number; sigma: number; v: Vec };
 /** Reference amplitude for the existing T templates, in mV. */
-export const T_REFERENCE_AMPLITUDE = 0.28;
+import { regionalTerritory, T_REFERENCE_AMPLITUDE } from "./regional-repolarization";
+export { T_REFERENCE_AMPLITUDE } from "./regional-repolarization";
 const normal: Kernel[] = [
   { mu: 0.12, sigma: 0.052, v: [-0.12, -0.04, -0.11] },
   { mu: 0.28, sigma: 0.07, v: [-0.035, 0.02, -0.065] },
@@ -140,9 +141,9 @@ export function tVector(c: ECGCase, b: Beat): Vec {
     phaseBlend = Math.min(1, Math.max(0, c.st / 2));
   let v = frontal(c.tAxis, T_REFERENCE_AMPLITUDE, -0.07),
     amp = 1;
-  if (c.phase === "hyperacute" && c.ischemia !== "none")
+  if (!regionalTerritory(c, b) && c.phase === "hyperacute" && c.ischemia !== "none")
     amp = 1 + 1.15 * phaseBlend;
-  if (c.phase === "evolving" && c.ischemia !== "none") amp = 1 - 2 * phaseBlend;
+  if (!regionalTerritory(c, b) && c.phase === "evolving" && c.ischemia !== "none") amp = 1 - 2 * phaseBlend;
   const ventricular = b.kind !== "normal";
   if (c.conduction === "lbbb" || ventricular)
     v = frontal(
