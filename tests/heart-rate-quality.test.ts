@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { loadLudb } from './reference/ludb/load-ludb.mjs';
 import { analyzeSamples, heartRateDetectionQuality, HR_QUALITY_POLICY } from '../src/engine/sample-analysis';
 import { measure } from '../src/engine/measure';
 import { synthesize } from '../src/engine/signal';
@@ -30,11 +28,6 @@ function artificialSample(fs = 500): Pick<Signal, 'fs' | 'leads'> {
 }
 
 describe('Sample-only HR detection sensitivity, no numerical correction', () => {
-  it.each([1,2,3,4,101,102,103,104])('preserves numerical analysis of known LUDB %s',id=>{
-    const root=fileURLToPath(new URL('./reference/ludb/fixtures',import.meta.url));
-    const {signal}=loadLudb(root,id<100?'development':'control',id);
-    expect(withoutHRReason(analyzeSamples(signal))).toEqual(withoutHRReason(measure(signal)));
-  });
   it.each(PRESETS.filter(p=>p.strategy!=='pending').map(p=>p.id))('preserves every numerical result in %s', id=>{
     const signal=synthesize(fromPreset(presetById(id)!),10);
     const clean=structuredClone(signal.leads), before=measure(signal), after=analyzeSamples(signal);

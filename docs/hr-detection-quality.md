@@ -47,7 +47,8 @@ No distingue ruido de arritmia ni identifica con certeza sobredetección.
 `heart-rate-quality.test.ts`: pulsos triangulares analíticos con dos amplitudes
 y fondo sinusoidal; invariancia numérica de los 61 presets; FA/ectopia/bloqueos
 limpios; input Proxy que falla ante referencias no autorizadas; DC, 250/500 Hz,
-asistolia, ocho registros LUDB ya conocidos y enrutamiento del worker. La prueba de 250 Hz no valida espigas a esa
+asistolia y enrutamiento del worker. `hr-quality-external.test.mjs` comprueba
+los ocho registros LUDB ya conocidos. La prueba de 250 Hz no valida espigas a esa
 frecuencia ni resuelve el fallo histórico correspondiente.
 El recorrido Chromium importa un caso de EV con ruido muscular nativo, comprueba
 la FC conservada con «Revisar» y motivo en el diálogo, y retorna a EV limpia.
