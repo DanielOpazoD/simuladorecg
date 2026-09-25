@@ -25,15 +25,17 @@ jobs:
       - name: Types and production build
         if: always()
         run: npm run build
-      - name: Archive exact reviewed source and test runtime
+      - name: Matched repolarization comparison and detector freeze
+        run: node scripts/validate-repolarization.mjs --output "${{ runner.temp }}/repolarization-comparison.json"
+      - name: Archive exact reviewed source
         if: always()
         run: |
           mkdir -p "$RUNNER_TEMP/ecg-evidence"
           git archive HEAD | gzip > "$RUNNER_TEMP/ecg-evidence/source.tar.gz"
-          tar -czf "$RUNNER_TEMP/ecg-evidence/test-runtime.tar.gz" node_modules
           git rev-parse HEAD > "$RUNNER_TEMP/ecg-evidence/source-commit.txt"
           node -p 'JSON.stringify(process.versions,null,2)' > "$RUNNER_TEMP/ecg-evidence/runtime.json"
-          test ! -f "$RUNNER_TEMP/unit-results.json" || cp "$RUNNER_TEMP/unit-results.json" "$RUNNER_TEMP/ecg-evidence/"
+          cp "$RUNNER_TEMP"/*results.json "$RUNNER_TEMP/ecg-evidence/" 2>/dev/null || true
+          cp "$RUNNER_TEMP/repolarization-comparison.json" "$RUNNER_TEMP/ecg-evidence/" 2>/dev/null || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
