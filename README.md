@@ -91,3 +91,11 @@ características 12SL/Uni-G separadas y latidos medianos cotejados con WFDB.
 Solo evaluación offline; no modifica el generador ni el analizador y no acredita
 validación clínica. Los resultados y la fuente ejecutada quedan en el artefacto
 del workflow `PTB-XL+ morphology reference`.
+
+## Ruido, filtros y medidas conservadas
+
+[Contrato de estrés con ruido calibrado](docs/noise-stress.md): evaluación offline
+con ventanas NSTDB fijas, preservación ST/T/QRS y abstención del analizador sin
+acceso a la referencia sintética. No modifica el producto ni afirma precisión
+clínica. Distingue el ensayo a 500 Hz de la cadena nativa a 1000 Hz; conserva
+resultados desfavorables y errores etiquetados como utilizables.
