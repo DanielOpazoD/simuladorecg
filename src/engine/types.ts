@@ -1,3 +1,4 @@
+import { VENTRICULAR_SOURCE_IDS, type VentricularSourceId } from "./ventricular-source";
 import { LEADS, type Lead } from "./lead-registry";
 export { LEADS, type Lead } from "./lead-registry";
 export type Rhythm =
@@ -50,6 +51,8 @@ export interface ECGCase {
   name: string;
   seed: number;
   rhythm: Rhythm;
+  /** Optional in schema v1. Auto selects an illustrative source, not an origin diagnosis. */
+  ventricularSource?: "auto" | VentricularSourceId;
   av: AV;
   conduction: Conduction;
   ischemia: Ischemia;
@@ -199,6 +202,7 @@ export const DEFAULT_CASE: ECGCase = {
   name: "Ritmo sinusal",
   seed: 2026,
   rhythm: "sinus",
+  ventricularSource: "auto",
   av: "normal",
   conduction: "normal",
   ischemia: "none",
@@ -270,6 +274,7 @@ export function normalizeCase(input: unknown): ECGCase {
       "asystole",
       "paced",
     ],
+    ventricularSource: ["auto", ...VENTRICULAR_SOURCE_IDS],
     av: [
       "normal",
       "first",
@@ -442,5 +447,10 @@ export function constraints(c: ECGCase): string[] {
     out.push(
       "La lesión se suma a los cambios secundarios de conducción; requiere interpretación contextual.",
     );
+  if (["idioventricular", "vt", "torsades"].includes(c.rhythm) ||
+      (c.rhythm === "paced" && c.pacing !== "AAI") ||
+      (c.rhythm === "sinus" && ((c.av === "complete" && c.escape === "ventricular") ||
+        ["pvc", "bigeminy", "trigeminy", "couplet"].includes(c.ectopy))))
+    out.push("Fuente ventricular ilustrativa: el ritmo no determina un origen único. La repolarización secundaria sigue siendo aproximada y no está calibrada para criterios proporcionales.");
   return out;
 }

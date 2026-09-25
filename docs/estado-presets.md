@@ -1,5 +1,7 @@
 # Estado de los patrones
 
+> v1.5: ocho ejemplos ventriculares usan fuentes diferenciadas; véase el [contrato actual](ventricular-source-v1.5.md). No implica validación clínica ni cambios en los ritmos disponibles.
+
 Ningún patrón se presenta como validado clínicamente. La columna «Estrategia» describe la base del preset; las correcciones regionales por fase y su dominio reducido están en la [matriz vigente](alcance-actual.md).
 
 | Patrón | Estado | Estrategia | Límite |

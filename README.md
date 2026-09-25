@@ -1,4 +1,4 @@
-# ECG Lab — v1.4.0
+# ECG Lab — v1.5.0
 
 Simulador educativo de ECG de 12 derivaciones. Vite + TypeScript + Canvas, sin backend ni IA diagnóstica. La señal mostrada es sintética; los registros de referencia se usan únicamente fuera del producto. Ningún preset está validado clínicamente.
 
@@ -7,6 +7,14 @@ Simulador educativo de ECG de 12 derivaciones. Vite + TypeScript + Canvas, sin b
 La repolarización regional y metrología de los PR [#1](https://github.com/DanielOpazoD/simuladorecg/pull/1), [#2](https://github.com/DanielOpazoD/simuladorecg/pull/2) y [#3](https://github.com/DanielOpazoD/simuladorecg/pull/3) están integradas desde `d55cc648cfbaf74754dfce5df647152f274f8f70`. P1–P3 de la auditoría posterior ([#5](https://github.com/DanielOpazoD/simuladorecg/pull/5), [#6](https://github.com/DanielOpazoD/simuladorecg/pull/6), [#7](https://github.com/DanielOpazoD/simuladorecg/pull/7)) están integrados desde `279ef40cfe8d98026d35542039d9709f9e021b73`.
 
 La versión del producto procede de `package.json`; la UI y `dist/build-info.json` la utilizan sin una etiqueta manual separada. La versión del esquema JSON del caso sigue siendo 1: no es la versión del producto. Un merge o un build **no acredita el despliegue** de la URL privada. Para identificar un servidor concreto, comparar su `build-info.json` y sus bytes con el artefacto de CI correspondiente. No se afirma aquí que ese despliegue se haya realizado.
+
+## Activación ventricular v1.5
+
+El [contrato de fuentes ventriculares](docs/ventricular-source-v1.5.md) separa la
+fuente del ritmo: cuatro perfiles ilustrativos reutilizables, sin nuevo selector.
+Ocho presets cambian su QRS y la orientación secundaria; 53 conservan exactamente
+sus muestras. La fuente histórica `rv_apical_pacing` permite reproducir todos los
+presets v1.4. No hay calibración anatómica o clínica de esos perfiles.
 
 ## Ejecutar y verificar
 

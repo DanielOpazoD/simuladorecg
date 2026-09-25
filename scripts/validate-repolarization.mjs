@@ -58,11 +58,18 @@ try {
    rows.push({id,phase,filter,case:c,windows,...contract,leads,
     detector:{before:{hr:am.hr,qrs:am.qrs,qt:am.qt},after:{hr:bm.hr,qrs:bm.qrs,qt:bm.qt}}});
  }
+ // Explicitly reviewed v1.5 source changes. Never relax conservation for the other defaults.
+ const changedSources = new Set(['pvc','bigeminy','trigeminy','couplet','idioventricular','aivr','vt','complete_v']);
  const defaults=[];
  for(const p of after.PRESETS.filter(p=>p.strategy!=='pending')) {
    const c=after.fromPreset(p),a=before.synthesize(c,10),b=after.synthesize(c,10);
-   const contract=compareSignalContract(a,b,{exact:true,label:`default/${p.id}`});
-   defaults.push({id:p.id,...contract});
+   const intendedSourceChange=changedSources.has(p.id);
+   const contract=compareSignalContract(a,b,{exact:!intendedSourceChange,label:`default/${p.id}`});
+   // All 61 historical signals remain reconstructible with the explicit historical source.
+   const legacy=after.synthesize({...c,ventricularSource:'rv_apical_pacing'},10);
+   compareSignalContract(a,legacy,{exact:true,label:`legacy-source/${p.id}`});
+   if(intendedSourceChange) assert.ok(contract.maxDifferenceMv>.03,`missing source change ${p.id}`);
+   defaults.push({id:p.id,intendedSourceChange,legacySourceExact:true,...contract});
  }
  const output=options['--output'] || path.join(root,'.sites-runtime','repolarization-comparison.json');
  await mkdir(path.dirname(output),{recursive:true});

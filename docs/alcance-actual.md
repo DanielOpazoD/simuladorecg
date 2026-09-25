@@ -1,5 +1,7 @@
 # Matriz vigente de alcance por fase
 
+> v1.5: ocho ejemplos ventriculares usan fuentes diferenciadas; véase el [contrato actual](ventricular-source-v1.5.md). No implica validación clínica ni cambios en los ritmos disponibles.
+
 Producto 1.4.0; la fecha o etiqueta de versión no acredita validación clínica. Esta matriz complementa `estado-presets.md` sin cambiar los parámetros ni la estrategia base del catálogo. Los coeficientes regionales y sus límites están en `src/engine/regional-repolarization.ts:6–38`.
 
 | Familia | Aguda | Hiperaguda | Evolutiva | ST resuelto (`chronic`) |

@@ -1,4 +1,5 @@
 import type { ECGCase, Beat } from "./types";
+import { ventricularSource } from "./ventricular-source";
 import { frontal, project, axisFromLeads, type Vec } from "./leads";
 export type Kernel = { mu: number; sigma: number; v: Vec };
 /** Reference amplitude for the existing T templates, in mV. */
@@ -38,11 +39,10 @@ export function bump(u: number) {
   );
 }
 export function qrsKernels(c: ECGCase, beat: Beat): Kernel[] {
-  const ventricular =
-    beat.kind === "pvc" || beat.kind === "ventricular" || beat.kind === "paced";
-  const block = ventricular ? "lbbb" : c.conduction;
+  const source = ventricularSource(c, beat);
+  const block = source ? "source" : c.conduction;
   let ks = (
-    block === "lbbb"
+    source ? source.kernels : block === "lbbb"
       ? lbbb
       : block.includes("rbbb") || block === "irbbb"
         ? rbbb
@@ -54,7 +54,7 @@ export function qrsKernels(c: ECGCase, beat: Beat): Kernel[] {
   const p = project(sum),
     baseAxis = axisFromLeads(p.I, p.II);
   let target = c.axis;
-  if (ventricular) target = -65;
+  if (source) target = source.axis;
   const rotation = ((target - baseAxis) * Math.PI) / 180;
   if (block.includes("rbbb") || block === "irbbb") {
     const net = project(sum),
@@ -86,8 +86,8 @@ export function qrsKernels(c: ECGCase, beat: Beat): Kernel[] {
   return ks;
 }
 export function qrsDuration(c: ECGCase, b: Beat) {
-  if (b.kind === "pvc" || b.kind === "ventricular" || b.kind === "paced")
-    return Math.max(150, c.qrs) / 1000;
+  const source = ventricularSource(c, b);
+  if (source) return Math.max(source.minimumQrsMs, c.qrs) / 1000;
   return c.qrs / 1000;
 }
 
@@ -144,12 +144,13 @@ export function tVector(c: ECGCase, b: Beat): Vec {
   if (!regionalTerritory(c, b) && c.phase === "hyperacute" && c.ischemia !== "none")
     amp = 1 + 1.15 * phaseBlend;
   if (!regionalTerritory(c, b) && c.phase === "evolving" && c.ischemia !== "none") amp = 1 - 2 * phaseBlend;
-  const ventricular = b.kind !== "normal";
+  const source = ventricularSource(c, b);
+  const ventricular = source !== null;
   if (c.conduction === "lbbb" || ventricular)
     v = frontal(
-      (ventricular ? -65 : c.axis) + 180,
+      (source ? source.axis : c.axis) + 180,
       T_REFERENCE_AMPLITUDE * 0.9,
-      -0.15,
+      source ? source.secondaryTZ : -0.15,
     );
   if (
     !ventricular &&

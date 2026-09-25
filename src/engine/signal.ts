@@ -1,3 +1,4 @@
+import { ventricularSource } from "./ventricular-source";
 import { PRECORDIAL_LEADS } from "./lead-registry";
 import {
   LEADS,
@@ -90,6 +91,7 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
   for (const b of events.beats) {
     const dur = qrsDuration(c, b),
       ks = qrsKernels(c, b),
+      source = ventricularSource(c, b),
       qt = b.qt!,
       tors = c.rhythm === "torsades";
     add(b.time, dur, (u, t) => {
@@ -128,9 +130,9 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
         ] as Vec),
       );
       const s = frontal(
-        (b.kind !== "normal" ? -65 : c.axis) + 180,
+        (source ? source.axis : c.axis) + 180,
         Math.min(0.1, Math.abs(q.I) * 0.3),
-        -0.035,
+        source ? source.secondarySTZ : -0.035,
       );
       for (let j = 0; j < 3; j++) lv[j] += s[j];
     }
@@ -341,7 +343,7 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
       pr: hasPR && c.av !== "mobitz1" ? c.pr : null,
       qrs: bs.length ? widths[Math.floor(widths.length / 2)] : null,
       qt: bs.length ? median(bs.map((b) => b.qt! * 1000)) : null,
-      axis: bs.length ? (allV ? -65 : c.axis) : null,
+      axis: bs.length ? (allV ? ventricularSource(c, bs[0])!.axis : c.axis) : null,
     },
     warnings: constraints(c),
   };

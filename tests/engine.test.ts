@@ -121,7 +121,7 @@ describe("Reloj y conducción", () => {
   it("T secundaria ventricular se opone al eje ventricular efectivo", () => {
     const c = testCase();
     const t = project(tVector(c, { time: 0, kind: "pvc", rr: 1 }));
-    expect(axisFromLeads(t.I, t.II)).toBeCloseTo(115, 1);
+    expect(axisFromLeads(t.I, t.II)).toBeCloseTo(-105, 1);
   });
 });
 describe("Determinismo y catálogo", () => {

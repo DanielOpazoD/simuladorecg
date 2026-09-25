@@ -8,7 +8,7 @@ exports[`Determinismo y catálogo > af_fast produce muestras finitas, QRS ordena
 
 exports[`Determinismo y catálogo > af_slow produce muestras finitas, QRS ordenados y señal determinista 1`] = `"fafd7505572eba7d6c662a6329b8ddc2949a0f22cf623a753bbabca3df1f8760"`;
 
-exports[`Determinismo y catálogo > aivr produce muestras finitas, QRS ordenados y señal determinista 1`] = `"7dea1a9ad8aab70196449a12a4fc8a89248a354fdd6927f005eae56d6b4d551a"`;
+exports[`Determinismo y catálogo > aivr produce muestras finitas, QRS ordenados y señal determinista 1`] = `"2f0165996b12e306d07e8f9ac3276f02a1fd6ca9aeb0a343470298acb90e2640"`;
 
 exports[`Determinismo y catálogo > anterior produce muestras finitas, QRS ordenados y señal determinista 1`] = `"2e9d015fc5a14ee4382c8e4a9e54e67e1898ac84886ba60c92c1f2fe1e196c9c"`;
 
@@ -22,15 +22,15 @@ exports[`Determinismo y catálogo > bifascicular produce muestras finitas, QRS o
 
 exports[`Determinismo y catálogo > bifascicular_pr produce muestras finitas, QRS ordenados y señal determinista 1`] = `"462279d336f3ca8a99a1554a79c9c16bc45cdfba6ab5b8773b8b8ab03ff63e23"`;
 
-exports[`Determinismo y catálogo > bigeminy produce muestras finitas, QRS ordenados y señal determinista 1`] = `"b28d59320f397200abf432d92cb6f836f33e4f264c4b26610967715298c30a4c"`;
+exports[`Determinismo y catálogo > bigeminy produce muestras finitas, QRS ordenados y señal determinista 1`] = `"ec74c604bf66911611de7e1dce7de415eb7b0f91e80dc095b0688683b6697431"`;
 
 exports[`Determinismo y catálogo > brady produce muestras finitas, QRS ordenados y señal determinista 1`] = `"7268f195d43abb562625b3352c5b500bdf9aca3c49c0aea95ed1441bcfb6e396"`;
 
 exports[`Determinismo y catálogo > complete produce muestras finitas, QRS ordenados y señal determinista 1`] = `"dbfec292fa6ba845722644cce67aa79706c76bbc019f8394b73a5985d554ae80"`;
 
-exports[`Determinismo y catálogo > complete_v produce muestras finitas, QRS ordenados y señal determinista 1`] = `"d8973158d9d10bf46b7fbe4c032bed8b8f4a2642414165d1d250838798235a30"`;
+exports[`Determinismo y catálogo > complete_v produce muestras finitas, QRS ordenados y señal determinista 1`] = `"b097e71de951f65a5b768ea6f5fbd61be5e654b1d8590f14b8f43d7aae094367"`;
 
-exports[`Determinismo y catálogo > couplet produce muestras finitas, QRS ordenados y señal determinista 1`] = `"2d4a00da3e7eecc7504047699dbdc3583e65e2fcdaa6c2d85e0b383e6cb5af21"`;
+exports[`Determinismo y catálogo > couplet produce muestras finitas, QRS ordenados y señal determinista 1`] = `"b443e6cbbbc13bdc87b18ebba57ed74e07d1d662400ee2115349c6a48614d5b4"`;
 
 exports[`Determinismo y catálogo > ddd produce muestras finitas, QRS ordenados y señal determinista 1`] = `"69f9be2aff87236b67028e31b744872877e95a305de9e98e00e71212e200ef5c"`;
 
@@ -48,7 +48,7 @@ exports[`Determinismo y catálogo > hyperk produce muestras finitas, QRS ordenad
 
 exports[`Determinismo y catálogo > hypok produce muestras finitas, QRS ordenados y señal determinista 1`] = `"f3cc53539ae918858f4a351736b3d4c4661456d8bfa1031c72f5fbbeb1cde93a"`;
 
-exports[`Determinismo y catálogo > idioventricular produce muestras finitas, QRS ordenados y señal determinista 1`] = `"aa921fed5cef726766e9070b306608806b6c81a89475bfce5544cc9b19c185bc"`;
+exports[`Determinismo y catálogo > idioventricular produce muestras finitas, QRS ordenados y señal determinista 1`] = `"37f44764c3f6bd051a4606426991d76477b4e7184bbf0f298cd9c3e51e0d7c4b"`;
 
 exports[`Determinismo y catálogo > inferior produce muestras finitas, QRS ordenados y señal determinista 1`] = `"2011286c839971f140c8b9d95f94f45209dad7d4ac132480d73e8216f9145287"`;
 
@@ -80,7 +80,7 @@ exports[`Determinismo y catálogo > pericarditis produce muestras finitas, QRS o
 
 exports[`Determinismo y catálogo > posterior produce muestras finitas, QRS ordenados y señal determinista 1`] = `"02079b960b48bf1c72853ec12aa6b230d3e5e6626b48c800cad6bb27fe60a34d"`;
 
-exports[`Determinismo y catálogo > pvc produce muestras finitas, QRS ordenados y señal determinista 1`] = `"5ddc659b9410d906e4d241f2a5b978d9ecb325015ff779e71c2c01669f7b3ba5"`;
+exports[`Determinismo y catálogo > pvc produce muestras finitas, QRS ordenados y señal determinista 1`] = `"a368cf8b634b16d33f2fa42c1d91e8e420666b1c268e9fd9a65c0939042fcb39"`;
 
 exports[`Determinismo y catálogo > rbbb produce muestras finitas, QRS ordenados y señal determinista 1`] = `"f5228d23b836b234a7f2318ea76d037c98eeb490c28be631132680600eaf64ed"`;
 
@@ -106,11 +106,11 @@ exports[`Determinismo y catálogo > tachy produce muestras finitas, QRS ordenado
 
 exports[`Determinismo y catálogo > torsades produce muestras finitas, QRS ordenados y señal determinista 1`] = `"7336d890be3b9134b689a6239f8a9f12ff8d88a6ec35d27cfc3307c569a57c9e"`;
 
-exports[`Determinismo y catálogo > trigeminy produce muestras finitas, QRS ordenados y señal determinista 1`] = `"b31fdb04b5f43b76d9fbb6d2c490f6248298aada8f52d805ab4cc23d8e2de0e2"`;
+exports[`Determinismo y catálogo > trigeminy produce muestras finitas, QRS ordenados y señal determinista 1`] = `"d3176b9d22dc4bca23b1f03826705375016e6d785f51753ace1e6b311768513c"`;
 
 exports[`Determinismo y catálogo > vf produce muestras finitas, QRS ordenados y señal determinista 1`] = `"7769339d3fa925d485fa36ee9b29aa85b9317fda00ad8b049e4326b199d8356e"`;
 
-exports[`Determinismo y catálogo > vt produce muestras finitas, QRS ordenados y señal determinista 1`] = `"2983fae075a638ace56887d621d1abaed7afe917d4e1700f5f38f7174c6954fb"`;
+exports[`Determinismo y catálogo > vt produce muestras finitas, QRS ordenados y señal determinista 1`] = `"50453ebd8b0b1ff6326bda3aebe563328a9c507d79a01f1376108e3f0327fccf"`;
 
 exports[`Determinismo y catálogo > vvi produce muestras finitas, QRS ordenados y señal determinista 1`] = `"5a15cbc68f170fd28cf1ec62a5f6ab9cd88c987aa583dd558862aa5324cd2ede"`;
 
