@@ -1,4 +1,5 @@
 import { normalizeCase, type ECGCase } from "../engine/types";
+import { repolarizationLimitations } from "./teaching-limits";
 import { fromPreset, presetById, type Preset } from "./catalog";
 
 /** Preset text describes physiology, not a case's free name or acquisition settings. */
@@ -60,6 +61,7 @@ export function caseContext(input: ECGCase): CaseContext {
     warnings.push(
       "Inversión de electrodos de brazos activa. Los hallazgos del preset describen la adquisición basal sin inversión, no este registro. La fisiología se conserva.",
     );
+  warnings.push(...repolarizationLimitations(c));
   return {
     preset,
     displayName:
