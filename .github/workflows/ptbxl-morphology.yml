@@ -29,6 +29,22 @@ jobs:
         run: python scripts/ptbxl-benchmark.py --output "$RUNNER_TEMP/ptbxl-reference"
       - name: Describe median beats and unchanged generated samples separately
         run: node scripts/benchmark-ptbxl-samples.mjs "$RUNNER_TEMP/ptbxl-reference"
+      - name: Preserve structural diagnostics on failure, never clinical comments
+        if: failure()
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          root=Path(os.environ['RUNNER_TEMP'])/'ptbxl-reference'
+          entries=[]
+          for h in sorted((root/'raw'/'ptb-xl-plus'/'median_beats'/'12sl').rglob('*.hea')):
+              rows=[l for l in h.read_text().splitlines() if l.strip() and not l.lstrip().startswith('#')]
+              entries.append({'file':str(h.relative_to(root/'raw')), 'headerFields':rows, 'dataBytes':h.with_suffix('.dat').stat().st_size if h.with_suffix('.dat').exists() else None})
+              if len(entries)==3:break
+          root.mkdir(parents=True,exist_ok=True)
+          (root/'format-diagnostics.json').write_text(json.dumps(entries,indent=2)+'\n')
+          print(json.dumps(entries))
+          PY
       - name: Archive reproducible reference, not demographics or full source tables
         if: always()
         run: |
