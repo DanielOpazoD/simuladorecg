@@ -1,0 +1,279 @@
+diff --git a/docs/p1-acquisition-contract.md b/docs/p1-acquisition-contract.md
+new file mode 100644
+index 0000000..09be748
+--- /dev/null
++++ b/docs/p1-acquisition-contract.md
+@@ -0,0 +1,30 @@
++# P1 · Fisiología basal y adquisición invertida
++
++El preset identifica parámetros fisiológicos, no demuestra que sus hallazgos
++observacionales sigan vigentes después de una transformación de adquisición.
++
++## Contrato
++
++Con inversión de brazos activa, `caseContext` advierte y `caseReading` reemplaza
++el título y los hallazgos basales por las transformaciones implementadas:
++I → −I, II ↔ III, aVR ↔ aVL; aVF y V1–V6 no cambian. No se reinterpreta el
++ECG ni se infiere otra lesión. El nombre almacenado, preset, parámetros, semilla
++y vista se conservan. Sin inversión, la lectura previa permanece intacta.
++La UI, el nombre accesible del canvas y el título del PNG usan esa lectura.
++
++## Aceptación
++
++`tests/acquisition-context.test.ts`: cinco casos, incluidos inferior con filtros
++apagado y diagnóstico; comparación de las doce señales antes/después de
++importar (igualdad exacta) y transformaciones de electrodos con error < 1e−9 mV.
++ST a J+60 usa PR local, definido en el test. El margen de 0,02 mV discrimina este
++fixture; no es criterio de isquemia. La prueba protege signos y orden II/III,
++texto mostrado, URL y nombre personal. Cabrera no se confunde con inversión.
++`tests/browser-fidelity.mjs` comprueba la importación JSON real y el texto visible.
++
++## Límites
++
++No es detección automática de electrodos mal puestos ni un clasificador.
++Las advertencias se ocultan durante el quiz sin respuesta como las demás pistas.
++Otros artefactos y filtros no quedan certificados por esta corrección.
++No cambia ninguna implementación del generador, analizador ni auditoría.
+diff --git a/src/main.ts b/src/main.ts
+index 9429974..edb5805 100644
+--- a/src/main.ts
++++ b/src/main.ts
+@@ -28,7 +28,7 @@ import {
+ } from "./render/ecg";
+ import { icon, btn, esc, select, options } from "./ui/helpers";
+ import { controls, leadOptions, amplitudeControlState } from "./ui/controls";
+-import { caseContext, normalizeImportedCase } from "./presets/case-context";
++import { caseContext, caseReading, normalizeImportedCase } from "./presets/case-context";
+ import {
+   decodeCase,
+   encodeCase,
+@@ -113,19 +113,19 @@ function renderCatalog() {
+ }
+ function renderInfo() {
+   const context = caseContext(c),
++    reading = caseReading(c, context),
+     p = context.preset,
+     concealed = quiz && !quiz.answer;
+-  $("#case-title").textContent = concealed ? "Interpreta este ECG" : context.displayName;
++  $("#case-title").textContent = concealed ? "Interpreta este ECG" : reading.title;
+   $("#case-category").textContent = concealed
+     ? "PRÁCTICA"
+     : p?.group || "CASO PERSONALIZADO";
+   $("#case-subtitle").textContent = concealed
+     ? "Identifica el patrón. Puedes cambiar la vista y utilizar los calibres."
+-    : p?.mechanism ||
+-      "Caso ajustado manualmente. Comprueba los hallazgos sobre la señal.";
++    : reading.subtitle;
+   $("#finding-title").textContent = concealed
+     ? "Análisis sistemático"
+-    : "Hallazgos esperados";
++    : reading.findingsTitle;
+   $("#findings").innerHTML = (
+     concealed
+       ? [
+@@ -133,10 +133,7 @@ function renderInfo() {
+           "Actividad auricular y relación AV",
+           "QRS, eje y repolarización",
+         ]
+-      : p?.findings || [
+-          "Parámetros personalizados",
+-          "Utiliza las medidas como estimaciones",
+-        ]
++      : reading.findings
+   )
+     .map((f) => `<li>${esc(f)}</li>`)
+     .join("");
+@@ -415,7 +412,7 @@ function draw() {
+     width = $("#canvas-wrap").clientWidth;
+   canvas.setAttribute(
+     "aria-label",
+-    `ECG sintético, ${c.view.mode === "paper" ? "12 derivaciones" : c.view.lead}, ${quiz && !quiz.answer ? "caso de práctica" : c.name}`,
++    `ECG sintético, ${c.view.mode === "paper" ? "12 derivaciones" : c.view.lead}, ${quiz && !quiz.answer ? "caso de práctica" : caseReading(c).title}`,
+   );
+   if (c.view.mode === "paper") {
+     monitor = null;
+@@ -424,6 +421,7 @@ function draw() {
+       measurement: measurement ?? undefined,
+       selectedBeat,
+       hideName: !!quiz && !quiz.answer,
++      displayName: caseReading(c).title,
+     });
+   } else if (c.view.mode === "rhythm") {
+     monitor = null;
+@@ -798,6 +796,7 @@ document.addEventListener("click", async (e) => {
+       pxPerMm: 300 / 25.4,
+       ratio: 1,
+       hideName: !!quiz && !quiz.answer,
++      displayName: caseReading(c).title,
+     });
+     canvas.toBlob(async (blob) => {
+       if (blob) {
+diff --git a/src/presets/case-context.ts b/src/presets/case-context.ts
+index 188d0fc..c32b0c0 100644
+--- a/src/presets/case-context.ts
++++ b/src/presets/case-context.ts
+@@ -56,6 +56,10 @@ export function caseContext(input: ECGCase): CaseContext {
+     warnings.push(
+       "La opción «BRI con lesión concordante» requiere conducción BRI y QRS de al menos 120 ms. El caso importado conserva sus parámetros, pero no representa ese ejemplo.",
+     );
++  if (c.artifacts.reversed)
++    warnings.push(
++      "Inversión de electrodos de brazos activa. Los hallazgos del preset describen la adquisición basal sin inversión, no este registro. La fisiología se conserva.",
++    );
+   return {
+     preset,
+     displayName:
+@@ -79,3 +83,30 @@ export function normalizeImportedCase(input: unknown): ECGCase {
+   }
+   return c;
+ }
++
++/** Teaching text follows acquisition; preset identity and stored case stay intact.
++ * No detector or diagnostic inference: only the configured electrode transform.
++ */
++export function caseReading(c: ECGCase, context = caseContext(c)) {
++  if (c.artifacts.reversed)
++    return {
++      title: "Registro con brazos invertidos",
++      subtitle: "Transformación de la adquisición; se conserva la fisiología basal del caso.",
++      findingsTitle: "Transformación de la adquisición",
++      findings: [
++        "I invierte su polaridad respecto del registro basal sin inversión.",
++        "II y III se intercambian; aVR y aVL también se intercambian.",
++        "aVF y las precordiales conservan sus muestras en esta transformación.",
++      ],
++    };
++  return {
++    title: context.displayName,
++    subtitle: context.preset?.mechanism ||
++      "Caso ajustado manualmente. Comprueba los hallazgos sobre la señal.",
++    findingsTitle: "Hallazgos esperados",
++    findings: context.preset?.findings || [
++      "Parámetros personalizados",
++      "Utiliza las medidas como estimaciones",
++    ],
++  };
++}
+diff --git a/src/render/ecg.ts b/src/render/ecg.ts
+index 4a0cde4..c9a2317 100644
+--- a/src/render/ecg.ts
++++ b/src/render/ecg.ts
+@@ -229,6 +229,7 @@ export function renderPaper(
+     measurement?: Measurement;
+     selectedBeat?: number;
+     hideName?: boolean;
++    displayName?: string;
+   } = {},
+ ): Layout {
+   let amplitude = 0;
+@@ -249,7 +250,7 @@ export function renderPaper(
+   ctx.font = "600 3.2px ui-monospace, monospace";
+   ctx.fillText(
+     "ECG LAB  /  " +
+-      (options.hideName ? "CASO DE PRÁCTICA" : c.name.toUpperCase()),
++      (options.hideName ? "CASO DE PRÁCTICA" : (options.displayName ?? c.name).toUpperCase()),
+     5,
+     6,
+   );
+diff --git a/tests/acquisition-context.test.ts b/tests/acquisition-context.test.ts
+new file mode 100644
+index 0000000..ee49a5a
+--- /dev/null
++++ b/tests/acquisition-context.test.ts
+@@ -0,0 +1,69 @@
++import { describe, expect, it } from "vitest";
++import { LEADS, type Lead, type Signal } from "../src/engine/types";
++import { synthesize } from "../src/engine/signal";
++import { fromPreset, presetById } from "../src/presets/catalog";
++import { caseContext, caseReading, normalizeImportedCase } from "../src/presets/case-context";
++import { decodeCase, encodeCase } from "../src/ui/persistence";
++
++function st60(s: Signal, lead: Lead) {
++  const b = s.events.beats.find((beat) => beat.time > 3)!;
++  const lo = Math.round((b.time - 0.035) * s.fs);
++  const hi = Math.round((b.time - 0.020) * s.fs);
++  const baseline = s.leads[lead].slice(lo, hi).reduce((sum, v) => sum + v, 0) / (hi - lo);
++  return s.leads[lead][Math.round((b.time + b.qrs! + 0.060) * s.fs)] - baseline;
++}
++
++describe("Acquisition context is not basal physiology", () => {
++  it("retains the original teaching for an acquisition without reversal", () => {
++    const p = presetById("inferior")!, c = fromPreset(p);
++    expect(caseReading(c)).toMatchObject({ title: p.name, findings: p.findings });
++    expect(caseContext(c).warnings).toEqual([]);
++  });
++
++  it.each(["off", "diagnostic"] as const)("preserves samples and replaces contradictory inferior observations (%s)", (filter) => {
++    const c = fromPreset(presetById("inferior")!);
++    c.filter = filter;
++    const basal = synthesize(c, 10);
++    c.artifacts.reversed = true;
++    const original = structuredClone(c), before = synthesize(c, 10);
++    const imported = normalizeImportedCase(JSON.parse(JSON.stringify(c)));
++    const after = synthesize(imported, 10), context = caseContext(imported), reading = caseReading(imported);
++    expect(imported).toEqual(original); // name, seed, view, physiology and acquisition are preserved
++    expect(c).toEqual(original);
++    expect(context.preset?.id).toBe("inferior");
++    expect(context.warnings.join(" ")).toMatch(/inversión.*brazos/i);
++    expect(reading.title).toBe("Registro con brazos invertidos");
++    expect(reading.findingsTitle).toBe("Transformación de la adquisición");
++    expect(reading.findings.join(" ")).not.toMatch(/III\s*>\s*II|ST↓ recíproco en I/);
++    // This selected example reverses the order and sign; 0.02 mV is a fixture
++    // discrimination margin, NOT an ischemia criterion. The transform itself
++    // must satisfy the project's algebraic tolerance of 1e-9 mV.
++    expect(st60(basal, "III") - st60(basal, "II")).toBeGreaterThan(0.02);
++    expect(st60(after, "II") - st60(after, "III")).toBeGreaterThan(0.02);
++    expect(st60(after, "I")).toBeGreaterThan(0.02);
++    for (const lead of LEADS) {
++      expect(after.leads[lead]).toEqual(before.leads[lead]);
++      const source: Lead = ({ I: "I", II: "III", III: "II", aVR: "aVL", aVL: "aVR" } as Partial<Record<Lead, Lead>>)[lead] ?? lead;
++      const sign = lead === "I" ? -1 : 1;
++      let error = 0;
++      for (let i = 0; i < after.leads[lead].length; i++) error = Math.max(error, Math.abs(after.leads[lead][i] - sign * basal.leads[source][i]));
++      expect(error, lead).toBeLessThan(1e-9);
++    }
++    expect(decodeCase(encodeCase(imported))).toEqual(imported);
++  });
++
++  it("warns for manually adjusted cases without inventing a diagnosis or overwriting a free name", () => {
++    const c = fromPreset(presetById("sinus")!);
++    c.presetId = "custom"; c.name = "Mi ejercicio"; c.artifacts.reversed = true;
++    expect(caseReading(c).title).toBe("Registro con brazos invertidos");
++    expect(caseContext(c).preset).toBeUndefined();
++    expect(caseContext(c).warnings.join(" ")).toMatch(/inversión/i);
++    expect(normalizeImportedCase(c).name).toBe("Mi ejercicio");
++  });
++
++  it("does not confuse Cabrera's display polarity with an electrode reversal", () => {
++    const c = fromPreset(presetById("inferior")!); c.view.cabrera = true;
++    expect(caseReading(c).findings).toEqual(presetById("inferior")!.findings);
++    expect(caseContext(c).warnings).toEqual([]);
++  });
++});
+diff --git a/tests/browser-fidelity.mjs b/tests/browser-fidelity.mjs
+index 2252db0..bba077e 100644
+--- a/tests/browser-fidelity.mjs
++++ b/tests/browser-fidelity.mjs
+@@ -39,6 +39,22 @@ try {
+  assert.equal(await page.locator('[data-action="caliper"]').getAttribute('aria-pressed'),'true');
+  await page.locator('[data-mode="monitor"]').click();await page.locator('[data-mode="paper"]').click();
+  assert.equal(await page.locator('[data-action="caliper"]').getAttribute('aria-pressed'),'false');checks.push('pause and caliper regression');
++ // Use the real JSON import path, not DOM injection of a synthetic title.
++ await select('inferior');
++ await page.locator('[data-action="export"]').click();
++ const exported=page.waitForEvent('download');await page.locator('[data-action="json"]').click();
++ const jsonPath=path.join(out,'inferior-case.json');await (await exported).saveAs(jsonPath);
++ const reversed=JSON.parse(await readFile(jsonPath,'utf8'));reversed.artifacts.reversed=true;
++ await page.locator('#file-input').setInputFiles({name:'inverted.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(reversed))});
++ await page.waitForFunction(()=>document.querySelector('#case-title')?.textContent==='Registro con brazos invertidos');await ready();
++ await page.locator('#dialog').evaluate(d=>d.close());
++ assert.equal(await page.locator('#case-title').innerText(),'Registro con brazos invertidos');
++ assert.equal(await page.locator('#finding-title').innerText(),'Transformación de la adquisición');
++ assert.doesNotMatch(await page.locator('#findings').innerText(),/III\s*>\s*II|ST↓ recíproco en I/);
++ assert.match(await page.locator('#warnings').innerText(),/inversión de electrodos de brazos/i);
++ assert.match(await page.locator('#ecg').getAttribute('aria-label'),/Registro con brazos invertidos/);
++ await page.screenshot({path:path.join(out,'inverted-electrodes.png')});
++ checks.push('P1: actual JSON import preserves reversed acquisition and retires basal observations');
+  await select('inferior');await phase('hyperacute');
+  await page.locator('[data-action="export"]').click();const download=page.waitForEvent('download');await page.locator('[data-action="png"]').click();
+  const pngPath=path.join(out,'export-300dpi.png');await (await download).saveAs(pngPath);
