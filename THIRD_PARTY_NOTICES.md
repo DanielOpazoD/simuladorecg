@@ -35,3 +35,13 @@ Las fuentes, transformaciones y límites están en el [contrato](docs/ptbxl-morp
 Se conservan los textos LICENSE.txt originales de ambas versiones en cada
 artefacto, con sus hashes. PTB-XL+ se publica bajo CC BY 4.0; no se aplica esa
 licencia al código ECG Lab ni se distribuyen tablas completas en el producto.
+
+## NSTDB 1.0.0 (ruido de evaluación offline)
+
+Contiene información de MIT-BIH Noise Stress Test Database, Moody/Mark,
+doi:10.13026/C2HS3T, disponible bajo Open Data Commons Attribution License v1.0:
+https://physionet.org/content/nstdb/1.0.0/ y
+https://physionet.org/content/nstdb/view-license/1.0.0/ .
+Los derivados de evaluación son recortes preespecificados y remuestreados de
+bw/ma/em. Se conserva la atribución, URI de licencia y hashes con cada artefacto.
+No se incorporan al programa web ni se concede otra licencia al código ECG Lab.

@@ -1,0 +1,49 @@
+name: Calibrated ECG noise stress
+on:
+  pull_request:
+    paths: ['benchmarks/noise-stress/**', 'scripts/*noise-stress*', 'scripts/lib/noise-stress.ts', 'tests/*noise*', '.github/workflows/noise-stress.yml']
+  push:
+    branches: ['main']
+    paths: ['benchmarks/noise-stress/**', 'scripts/*noise-stress*', 'scripts/lib/noise-stress.ts', 'tests/*noise*', '.github/workflows/noise-stress.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: noise-stress-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  noise:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22.16.0', cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: npm ci
+      - run: python -m pip install wfdb==4.3.1
+      - name: Discriminative reader, calibration, morphology and abstention tests
+        run: |
+          python -m unittest discover -s tests -p test_noise_stress.py -v
+          npx vitest run tests/noise-stress.test.ts
+      - name: Acquire fixed NSTDB windows and cross-check digital samples
+        run: python scripts/prepare-noise-stress.py --output "$RUNNER_TEMP/noise-stress"
+      - name: Evaluate unchanged filters and sample-only analyzer
+        run: node scripts/benchmark-noise-stress.mjs "$RUNNER_TEMP/noise-stress"
+      - name: Preserve exact code, limits and runtime
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/noise-stress"
+          git archive HEAD | gzip > "$RUNNER_TEMP/noise-stress/source.tar.gz"
+          git rev-parse HEAD > "$RUNNER_TEMP/noise-stress/commit.txt"
+          python -m pip freeze > "$RUNNER_TEMP/noise-stress/python-packages.txt"
+          node -p 'JSON.stringify(process.versions,null,2)' > "$RUNNER_TEMP/noise-stress/node-runtime.json"
+          rm -rf "$RUNNER_TEMP/noise-stress/raw"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: noise-stress-${{ github.sha }}
+          path: ${{ runner.temp }}/noise-stress/
+          retention-days: 30
