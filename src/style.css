@@ -1865,3 +1865,11 @@ textarea {
     display: none;
   }
 }
+
+/* P8: separate observed estimates from the configured exercise reference. */
+.practice-feedback { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.practice-feedback h3 { font-size: 13px; margin: 12px 0 6px; }
+.practice-feedback p, .practice-feedback li, .practice-limits p { font-size: 12px; line-height: 1.55; }
+.practice-feedback ul { padding-left: 18px; margin: 6px 0; }
+.practice-limits { color: var(--muted); }
+@media (max-width: 700px) { .practice-feedback { grid-template-columns: 1fr; gap: 0; } }
