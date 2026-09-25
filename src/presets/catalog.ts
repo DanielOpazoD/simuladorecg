@@ -1,3 +1,4 @@
+import { WPW_REPOLARIZATION_LIMIT, SECONDARY_ST_RATIO_LIMIT } from "./teaching-limits";
 import { DEFAULT_CASE, cloneCase, type ECGCase } from "../engine/types";
 export interface Preset {
   id: string;
@@ -387,6 +388,8 @@ export const PRESETS: Preset[] = [
       "R lateral ancha con muesca",
       "Repolarización secundaria discordante",
     ],
+    "vectorial",
+    SECONDARY_ST_RATIO_LIMIT,
   ),
   p(
     "lafb",
@@ -441,7 +444,7 @@ export const PRESETS: Preset[] = [
     "Adición de una activación ventricular inicial lenta.",
     ["PR corto", "Ascenso inicial empastado", "QRS ancho"],
     "vectorial",
-    "Delta aproximada; sin vías accesorias anatómicas ni circuito AVRT.",
+    "Delta aproximada; sin vías accesorias anatómicas ni circuito AVRT. " + WPW_REPOLARIZATION_LIMIT,
   ),
   p(
     "inferior",
@@ -584,7 +587,7 @@ export const PRESETS: Preset[] = [
     "Se añade lesión al BRI para explorar concordancia del ST.",
     ["QRS ancho tipo BRI", "ST positivo lateral concordante"],
     "vectorial",
-    "Caso ilustrativo; sin cálculo automático de score ni ajuste de criterio proporcional.",
+    "Caso ilustrativo; sin cálculo automático de score. " + SECONDARY_ST_RATIO_LIMIT,
   ),
   p(
     "pericarditis",
@@ -657,7 +660,7 @@ export const PRESETS: Preset[] = [
     "Estimulación ventricular representativa desde VD.",
     ["Espiga antes de QRS", "QRS ancho tipo BRI y eje superior"],
     "vectorial",
-    "Estimulación capturada a frecuencia fija; sensado, demanda y fallos pendientes.",
+    "Estimulación capturada a frecuencia fija; sensado, demanda y fallos pendientes. " + SECONDARY_ST_RATIO_LIMIT,
   ),
   p(
     "ddd",
@@ -668,7 +671,7 @@ export const PRESETS: Preset[] = [
     "Estímulos auricular y ventricular separados por intervalo AV.",
     ["Dos espigas por ciclo", "P seguida de QRS estimulado"],
     "vectorial",
-    "Secuencia fija; no simula demanda, PVARP, seguimiento ni límite superior.",
+    "Secuencia fija; no simula demanda, PVARP, seguimiento ni límite superior. " + SECONDARY_ST_RATIO_LIMIT,
   ),
   p(
     "hyperk",

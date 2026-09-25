@@ -55,6 +55,15 @@ try {
  assert.match(await page.locator('#ecg').getAttribute('aria-label'),/Registro con brazos invertidos/);
  await page.screenshot({path:path.join(out,'inverted-electrodes.png')});
  checks.push('P1: actual JSON import preserves reversed acquisition and retires basal observations');
+ for(const id of ['wpw','lbbb','vvi','ddd']) {
+  await select(id);
+  const message=await page.locator('#warnings').innerText();
+  assert.match(message,id==='wpw'?/delta no modifica el ST-T secundario/:/relación ST\/QRS no está calibrada/);
+  assert.match(await page.locator('#limitation').innerText(),id==='wpw'?/delta no modifica/:/no está calibrada/);
+ }
+ await page.screenshot({path:path.join(out,'secondary-repolarization-limit.png')});
+ await select('aai');assert.doesNotMatch(await page.locator('#warnings').innerText(),/ST\/QRS no está calibrada/);
+ checks.push('P2: WPW / LBBB / VVI / DDD warnings visible; AAI alone excluded');
  await select('inferior');await phase('hyperacute');
  await page.locator('[data-action="export"]').click();const download=page.waitForEvent('download');await page.locator('[data-action="png"]').click();
  const pngPath=path.join(out,'export-300dpi.png');await (await download).saveAs(pngPath);

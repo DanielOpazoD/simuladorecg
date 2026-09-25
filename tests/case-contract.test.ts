@@ -1,3 +1,4 @@
+import { repolarizationLimitations, SECONDARY_ST_RATIO_LIMIT } from "../src/presets/teaching-limits";
 import { describe, expect, it, vi } from "vitest";
 import { cloneCase, DEFAULT_CASE, normalizeCase } from "../src/engine/types";
 import { PRESETS, fromPreset, presetById } from "../src/presets/catalog";
@@ -18,7 +19,7 @@ describe("Declared preset versus imported physiology", () => {
     for (const preset of PRESETS.filter((p) => p.strategy !== "pending")) {
       const context = caseContext(fromPreset(preset));
       expect(context.preset?.id, preset.id).toBe(preset.id);
-      expect(context.warnings, preset.id).toEqual([]);
+      expect(context.warnings, preset.id).toEqual(repolarizationLimitations(fromPreset(preset)));
     }
   });
 
@@ -144,7 +145,7 @@ describe("Concordant injury example requires the existing LBBB substrate", () =>
       presetId: "custom",
     });
     expect(previous).toEqual(original);
-    expect(caseContext(c).warnings).toEqual([]);
+    expect(caseContext(c).warnings).toEqual([SECONDARY_ST_RATIO_LIMIT]);
   });
 
   it("preserves unrelated patient settings when selecting the example", () => {
@@ -169,7 +170,9 @@ describe("Concordant injury example requires the existing LBBB substrate", () =>
     expect(c.qrs).toBe(90);
     c.conduction = "lbbb";
     c.qrs = 100;
-    expect(caseContext(c).warnings).toHaveLength(1);
+    expect(caseContext(c).warnings).toHaveLength(2);
+    expect(caseContext(c).warnings[0]).toMatch(/requiere conducción BRI/);
+    expect(caseContext(c).warnings[1]).toBe(SECONDARY_ST_RATIO_LIMIT);
   });
 
   it("warns when a later conduction change removes the required substrate", () => {
