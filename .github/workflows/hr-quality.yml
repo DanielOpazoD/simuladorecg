@@ -1,0 +1,66 @@
+name: Heart rate detection quality
+on:
+  pull_request:
+    paths: ['src/engine/**', 'scripts/*hr-quality*', 'benchmarks/hr-quality/**', 'tests/heart-rate-quality.test.ts', 'tests/hr-quality-external.test.mjs', 'tests/browser-hr-quality.mjs', '.github/workflows/hr-quality.yml']
+  push:
+    branches: ['main']
+    paths: ['src/engine/**', 'scripts/*hr-quality*', 'benchmarks/hr-quality/**', 'tests/heart-rate-quality.test.ts', 'tests/hr-quality-external.test.mjs', 'tests/browser-hr-quality.mjs', '.github/workflows/hr-quality.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: hr-quality-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22.16.0', cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: npm ci
+      - run: python -m pip install wfdb==4.3.1
+      - name: Restore exact PR19 baseline without changing the evaluated source
+        run: git worktree add --detach "$RUNNER_TEMP/hr-baseline" 784173f94bc103686efb321fc13f1b8f40913f76
+      - name: Acquire exposed and preregistered temporal windows
+        run: python scripts/prepare-hr-quality.py --baseline "$RUNNER_TEMP/hr-baseline" --output "$RUNNER_TEMP/hr-quality"
+      - name: Paired evaluation, never tune to the replication results
+        run: |
+          node scripts/compare-hr-quality.mjs "$RUNNER_TEMP/hr-baseline" "$RUNNER_TEMP/hr-quality/known" "$RUNNER_TEMP/hr-quality/known-results.json"
+          node scripts/compare-hr-quality.mjs "$RUNNER_TEMP/hr-baseline" "$RUNNER_TEMP/hr-quality/replication" "$RUNNER_TEMP/hr-quality/replication-results.json"
+      - name: Build and install isolated browser check
+        run: |
+          npm run build
+          npm install --no-save --package-lock=false playwright@1.63.0
+          npx playwright install --with-deps chromium
+      - name: Verify the actual worker and visible review reason in production
+        env:
+          ECG_TEST_URL: http://127.0.0.1:5173/
+          ECG_EXPECT_COMMIT: ${{ github.sha }}
+          ECG_EVIDENCE_DIR: ${{ runner.temp }}/hr-quality/browser
+        run: |
+          npx vite preview --host 127.0.0.1 --port 5173 --strictPort > "$RUNNER_TEMP/hr-vite.log" 2>&1 &
+          PID=$!
+          trap 'kill $PID 2>/dev/null || true' EXIT
+          for n in {1..40}; do curl --silent --fail "$ECG_TEST_URL" > /dev/null && break; sleep 1; done
+          node scripts/verify-production.mjs
+          node tests/browser-hr-quality.mjs
+      - name: Preserve evaluated code, sources and runtime
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/hr-quality"
+          git archive HEAD | gzip > "$RUNNER_TEMP/hr-quality/source.tar.gz"
+          git rev-parse HEAD > "$RUNNER_TEMP/hr-quality/commit.txt"
+          python -m pip freeze > "$RUNNER_TEMP/hr-quality/python-packages.txt"
+          node -p 'JSON.stringify(process.versions,null,2)' > "$RUNNER_TEMP/hr-quality/node-runtime.json"
+          rm -rf "$RUNNER_TEMP/hr-quality/known/raw" "$RUNNER_TEMP/hr-quality/replication/raw"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hr-quality-${{ github.sha }}
+          path: ${{ runner.temp }}/hr-quality/
+          retention-days: 30

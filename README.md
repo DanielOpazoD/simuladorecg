@@ -56,7 +56,7 @@ Se conservan **61 presets activos y cinco pendientes**, sin nuevas derivaciones 
 | Capa | Fuente | Qué demuestra su aceptación |
 |---|---|---|
 | Generador | `src/engine/signal.ts`, `rhythm.ts`, `morphology.ts` | Coherencia de eventos y muestras sintéticas según contratos acotados. |
-| Analizador | `src/engine/measure.ts`, `analysis/` | Estimaciones desde muestras; la auditoría del modelo es una etapa posterior separada. |
+| Analizador | `src/engine/sample-analysis.ts` → `measure.ts`, `analysis/` | Estimaciones desde muestras; la auditoría del modelo es una etapa posterior separada. |
 | Representación | `src/render/`, `src/ui/` | Tiempo y voltaje de esas muestras; no validez clínica por apariencia. |
 
 La [matriz vigente de alcance por fase](docs/alcance-actual.md) distingue base vectorial, correcciones por derivación y funciones pendientes. [Estado de cada preset](docs/estado-presets.md) conserva sus límites. En inferior/anterior/lateral, las fases hiperaguda/evolutiva añaden T regional solo en el dominio admitido; no son campos anatómicos calibrados ni propagación celular. Selección: **ST y morfología → Hiperaguda/Evolutiva**.
@@ -99,3 +99,12 @@ con ventanas NSTDB fijas, preservación ST/T/QRS y abstención del analizador si
 acceso a la referencia sintética. No modifica el producto ni afirma precisión
 clínica. Distingue el ensayo a 500 Hz de la cadena nativa a 1000 Hz; conserva
 resultados desfavorables y errores etiquetados como utilizables.
+
+## Calidad de FC antes de la auditoría del modelo
+
+El worker utiliza `analyzeSamples({fs, leads})`: preserva las cifras del primitivo
+`measure()` y puede marcar FC como **Revisar** si sus candidatos son sensibles
+al umbral y existe actividad de fondo elevada. No corrige la frecuencia ni
+clasifica una arritmia. [Contrato y evaluación pareada](docs/hr-detection-quality.md).
+Los informes históricos de `measure()` continúan describiendo el primitivo
+congelado; no deben confundirse con la entrada completa actual del worker.
