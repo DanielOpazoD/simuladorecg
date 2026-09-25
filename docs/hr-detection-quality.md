@@ -56,9 +56,12 @@ Una advertencia no afirma que la cifra sea necesariamente incorrecta.
 
 `compare-hr-quality.mjs`: misma señal → primitivo de 784173f frente a pipeline
 actual. Todos los valores, picos, límites y evidencias ajenas a FC deben ser
-idénticos. Se publican errores todavía `usable`, advertencias nuevas acertadas
-e innecesarias (error ≤5 lpm), ausentes y denominadores. `review` conserva el
-error bruto; una reducción de errores `usable` no equivale a mejor detección.
+idénticos. Se publican errores todavía `usable`, avisos nuevos con error >5 lpm
+y avisos sobre cifras dentro del margen (error ≤5 lpm), ausentes y denominadores.
+Una FC dentro del margen no prueba que el aviso sea innecesario: el conteo puede
+coincidir pese a detecciones ambiguas. `accurateNewReviews` nombra ese subconjunto
+operativo en el JSON; no es adjudicación clínica de una falsa alarma. `review`
+conserva el error bruto; una reducción de errores `usable` no equivale a mejor detección.
 
 Se reproducen los 920 escenarios PR19 y se fijan antes de ejecutar otros 920
 con ventanas NSTDB de 90/210/330 s, sin sustituir casos. Son réplicas temporales
@@ -91,3 +94,39 @@ La identidad de versión continúa en 1.5.0; el commit identifica esta modificac
 Moody, Muldrow y Mark, *A noise stress test for arrhythmia detectors* (1984).
 NSTDB 1.0.0: https://physionet.org/content/nstdb/1.0.0/ . La fuente describe
 movimiento de electrodos capaz de imitar ectopia; no valida nuestra regla.
+
+## Resultado del candidato antes de merge
+
+Evaluación del código `171d4d0b6b8c2ab8247f9facf71ba09a75523aff` en el
+merge temporal `e40452f03c8eee138c8c3e324ed36de851acba64`. Workflow
+`36201288076` (calidad) y `36201288043` (fidelidad), ambos correctos.
+Esta tabla no acredita por sí sola integración o despliegue posterior.
+
+| Escenarios | N | FC con error >5 lpm y usable: antes → después | Nuevos avisos | Avisos sobre cifras dentro de 5 lpm | FC ausente |
+|---|---:|---:|---:|---:|---:|
+| Desarrollo expuesto: 60/180/300 s | 920 | 494 → 146 | 360 | 12 | 0 |
+| Réplica temporal: 90/210/330 s | 920 | 485 → 169 | 327 | 11 | 3 |
+
+Los errores brutos >5 lpm permanecen en **511** y **491** respectivamente.
+La mejora consiste en advertir incertidumbre, NO en corregir la estimación.
+En movimiento de electrodos a 0 dB, sin filtro: desarrollo 15 → 0 errores aún
+`usable` sobre 15 escenarios; réplica 12 → 5 sobre 15. Se conserva el resultado menos favorable de la réplica.
+No se ajustaron parámetros tras observarla. Los 20 controles limpios se repiten
+en cada conjunto, por lo que tampoco representan 40 casos independientes.
+
+Se comprueba igualdad de todas las cifras/picos/límites en 981 entradas por
+conjunto (920 de estrés y 61 presets). De los 61 defaults, solo la aproximación
+de TV polimórfica/torsades pasa a revisión; la auditoría posterior sigue siendo
+una etapa distinta. Los ocho LUDB conocidos conservan números y estado de FC
+en la inspección complementaria local; no constituyen una cohorte nueva.
+
+CI: 574/574 pruebas, 31 archivos; TypeScript/build; 16 comprobaciones Chromium
+generales y 5 del nuevo flujo. El recorrido nuevo muestra 75 lpm con aviso en
+EV/ruido muscular nativo, permite leer el motivo y lo retira al volver al caso
+limpio. Pantallas 1440×1000 y 390×844 emuladas, no dispositivo físico.
+El primer intento falló por importar el lector JavaScript desde un test
+TypeScript sin declaración; se separó la prueba, sin desactivar strict.
+
+Artefacto de calidad 10891359443, SHA256:
+`789afd2c84c786cb1e09e125651f5d7c6344007829caf3bf5aa50004eb5ca9de`.
+Incluye resultados desfavorables, fuentes de ruido, licencias y código exacto.
