@@ -1,0 +1,39 @@
+name: ECG fidelity
+on:
+  push:
+    branches: ['improvement/v1.4-*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Unit and signal contracts
+        run: npm test -- --reporter=default --reporter=json --outputFile=${{ runner.temp }}/unit-results.json
+      - name: Types and production build
+        run: npm run build
+      - name: Archive exact reviewed source
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/ecg-evidence"
+          git archive HEAD | gzip > "$RUNNER_TEMP/ecg-evidence/source.tar.gz"
+          git rev-parse HEAD > "$RUNNER_TEMP/ecg-evidence/source-commit.txt"
+          test ! -f "$RUNNER_TEMP/unit-results.json" || cp "$RUNNER_TEMP/unit-results.json" "$RUNNER_TEMP/ecg-evidence/"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ecg-evidence-${{ github.sha }}
+          path: ${{ runner.temp }}/ecg-evidence/
+          retention-days: 14
