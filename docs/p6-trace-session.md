@@ -61,3 +61,11 @@ No se añade reinicio automático de un worker averiado: el mensaje de recarga
 previo continúa. La recuperación probada es de errores de parámetros/modelo con
 el worker operativo. No se modifican generador, analizador, presets, derivaciones,
 ni se acredita despliegue privado o una nueva validación humana.
+
+## Corrección tras revisar las capturas de producción
+
+La primera pasada de P6 recuperaba muestras y PNG, pero el aviso temporal del
+error previo aún podía durar 3,5 s. Invalidar un caso retira ahora ese aviso y
+su temporizador. Un aviso nuevo cancela el temporizador anterior para que no
+lo oculte anticipadamente. El recorrido de recuperación exige también ausencia
+del texto del error previo; no espera su expiración ni modifica la captura.

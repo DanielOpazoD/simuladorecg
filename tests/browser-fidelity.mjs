@@ -101,6 +101,7 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  await page.locator('#dialog').evaluate(d=>d.close());
  await page.screenshot({path:path.join(out,'session-error.png')});
  await select('sinus');assert.ok(await page.locator('#metrics .metric').count()>0);
+ assert.doesNotMatch(await page.locator('#toast').textContent(),/Fuera del alcance del modelo/,'previous domain error must not remain after recovery');
  await page.locator('[data-action="export"]').click();
  assert.equal(await page.locator('[data-action="png"]').isDisabled(),false);
  await page.locator('#dialog').evaluate(d=>d.close());
