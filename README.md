@@ -1,12 +1,16 @@
-# ECG Lab — candidato v1.4
+# ECG Lab — v1.4.0
 
-Simulador educativo de ECG de 12 derivaciones. Vite + TypeScript + Canvas, sin backend ni IA diagnóstica. Señal sintética; los registros públicos de referencia se usan únicamente fuera del producto.
+Simulador educativo de ECG de 12 derivaciones. Vite + TypeScript + Canvas, sin backend ni IA diagnóstica. La señal mostrada es sintética; los registros de referencia se usan únicamente fuera del producto. Ningún preset está validado clínicamente.
 
-Esta rama reúne la entrega **repolarización regional verificable** sobre v1.3 `38c0cd31b5836c96c82556d756e8150cfde99c64`. Es un candidato en PR, no una versión declarada desplegada. La etiqueta de interfaz y `package.json` mantienen 1.3.0 hasta la promoción de versión; `dist/build-info.json` identifica el candidato por commit, hash de fuentes y `revision=v1.4-review`.
+## Estado del código y de la publicación
+
+La repolarización regional y metrología de los PR [#1](https://github.com/DanielOpazoD/simuladorecg/pull/1), [#2](https://github.com/DanielOpazoD/simuladorecg/pull/2) y [#3](https://github.com/DanielOpazoD/simuladorecg/pull/3) están integradas desde `d55cc648cfbaf74754dfce5df647152f274f8f70`. P1–P3 de la auditoría posterior ([#5](https://github.com/DanielOpazoD/simuladorecg/pull/5), [#6](https://github.com/DanielOpazoD/simuladorecg/pull/6), [#7](https://github.com/DanielOpazoD/simuladorecg/pull/7)) están integrados desde `279ef40cfe8d98026d35542039d9709f9e021b73`.
+
+La versión del producto procede de `package.json`; la UI y `dist/build-info.json` la utilizan sin una etiqueta manual separada. La versión del esquema JSON del caso sigue siendo 1: no es la versión del producto. Un merge o un build **no acredita el despliegue** de la URL privada. Para identificar un servidor concreto, comparar su `build-info.json` y sus bytes con el artefacto de CI correspondiente. No se afirma aquí que ese despliegue se haya realizado.
 
 ## Ejecutar y verificar
 
-Node 22.16.0 es el entorno reproducido en CI.
+Entorno de CI: Node **22.16.0**, instalación desde `package-lock.json`.
 
 ```bash
 npm ci
@@ -14,41 +18,52 @@ npm run check
 npm run dev
 ```
 
-`check` ejecuta pruebas, TypeScript y compilación. Abrir mediante HTTP, no como archivo local. La verificación Chromium y PNG se ejecuta además en `.github/workflows/fidelity.yml`; no se incluye implícitamente en `check`.
+`check` ejecuta pruebas, TypeScript y compilación; no incluye navegador. Abrir mediante HTTP, no como archivo local. Los cambios de P4 actualizan metadatos y documentación, no el motor ni el analizador.
 
 ```bash
+# Comparación de señal con la referencia v1.3, sin modificarla:
 node scripts/validate-repolarization.mjs --output .sites-runtime/repolarization.json
-# Requiere historial Git con el commit v1.3. Alternativa: --baseline-dir /ruta/v1.3
+# Requiere historial con 38c0cd3; alternativa: --baseline-dir /ruta/v1.3
+
+# LUDB: subconjunto conocido de regresión, NO una reserva clínica nueva:
+node scripts/validate-analysis.mjs --split=all --output .sites-runtime/analysis-current.json
+
+# Después de npm run build, desde un commit limpio:
 npm install --no-save --package-lock=false playwright@1.63.0
 npx playwright install chromium
-ECG_TEST_URL=http://127.0.0.1:5173/ node tests/browser-fidelity.mjs
+npx vite preview --host 127.0.0.1 --port 5173 --strictPort
+# En otra terminal:
+node scripts/verify-production.mjs
+node tests/browser-fidelity.mjs
 ```
 
-## Cambios revisables
+Las salidas nuevas se guardan en `.sites-runtime/` o la ruta indicada, sin sobrescribir evidencia histórica de `docs/`. El informe de análisis incluye versión real, commit/árbol cuando existen, estado de los archivos evaluados y SHA-256 de sus fuentes. Un archivo fuente sin historial informa procedencia Git desconocida; no inventa un SHA ni un estado limpio.
 
-| PR | Responsabilidad |
-|---|---|
-| [1](https://github.com/DanielOpazoD/simuladorecg/pull/1) | Protocolo, mediciones sobre muestras, referencia congelada, CI y adquisición de referencias |
-| [2](https://github.com/DanielOpazoD/simuladorecg/pull/2) | T regional de los patrones inferior CD/Cx, anterior y lateral en fases hiperaguda/evolutiva |
-| [3](https://github.com/DanielOpazoD/simuladorecg/pull/3) | Escala común de ampliación, metrología del PNG y trazabilidad del build |
+CI (`.github/workflows/fidelity.yml`) comprueba PR, push a `main` y ejecución manual; sirve **dist**, comprueba identidad y ejecuta Chromium. Los artefactos se vinculan al SHA (retención 14 días). El workflow no activa por sí solo la protección administrativa de rama: ver [contrato P3](docs/p3-ci-contract.md).
 
-Son PR dependientes: #2 tiene como base la rama de #1; #3, la de #2. La integración debe respetar ese orden y volver a verificar el resultado. No se presume que se hayan fusionado o desplegado.
+## Alcance actual, contratos y limitaciones
 
-No se amplían los 61 presets ni los controles. Para ver el cambio de T, seleccionar **Inferior, Anterior o Lateral → ST y morfología → Hiperaguda/Evolutiva**. Las configuraciones por defecto conservan sus muestras; los bloqueos, estimulación y causas secundarias mantienen el modelo anterior. El detector no se modifica.
+Se conservan **61 presets activos y cinco pendientes**, sin nuevas derivaciones ni funciones diagnósticas. Tres responsabilidades distintas:
 
-## Evidencia y límites
+| Capa | Fuente | Qué demuestra su aceptación |
+|---|---|---|
+| Generador | `src/engine/signal.ts`, `rhythm.ts`, `morphology.ts` | Coherencia de eventos y muestras sintéticas según contratos acotados. |
+| Analizador | `src/engine/measure.ts`, `analysis/` | Estimaciones desde muestras; la auditoría del modelo es una etapa posterior separada. |
+| Representación | `src/render/`, `src/ui/` | Tiempo y voltaje de esas muestras; no validez clínica por apariencia. |
 
-- [Verificación de v1.4](docs/verificacion-v1.4.md): resultados, rutas reproducibles y límites.
-- [Modelo regional](docs/regional-repolarization-v1.4.md): parámetros explícitos, alcance y pruebas.
-- [Protocolo](docs/repolarization-protocol-v1.4.md) y [metrología de la ampliación](docs/metrologia-v1.4.md).
-- [Referencia STAFF III](docs/staff-exploration-v1.4.md): seis pacientes de desarrollo, tres reservados no descargados; no calibración clínica.
-- [Discrepancia del snapshot de hiperpotasemia](docs/baseline-recheck-v1.4.md).
-- [Enfoque clínico](docs/enfoque-clinico.md) y [documento clínico aportado](docs/referencias/Revision_ECG_SCA_Simulador.md).
+La [matriz vigente de alcance por fase](docs/alcance-actual.md) distingue base vectorial, correcciones por derivación y funciones pendientes. [Estado de cada preset](docs/estado-presets.md) conserva sus límites. En inferior/anterior/lateral, las fases hiperaguda/evolutiva añaden T regional solo en el dominio admitido; no son campos anatómicos calibrados ni propagación celular. Selección: **ST y morfología → Hiperaguda/Evolutiva**.
 
-Las correcciones regionales son perfiles reducidos heurísticos, no campos anatómicos calibrados ni propagación celular. Mayor coherencia de las pruebas no demuestra máxima fidelidad clínica. El inicio/final de T humano y la calibración externa necesitan anotaciones/revisión independientes; no se ajustó el modelo para esconder fallos del detector.
+Los [avisos de adquisición P1](docs/p1-acquisition-contract.md) distinguen la inversión de brazos de la fisiología basal. Los [avisos P2](docs/p2-secondary-repolarization-limits.md) declaran la repolarización secundaria incompleta de WPW y la proporcionalidad ST/QRS no calibrada en BRI/VVI/DDD. Esas limitaciones no se han corregido cambiando las ondas.
 
-El ZIP antiguo en `public/` se retira para evitar distribuir código de v1.3 como si fuera el candidato. El código exacto y el build se conservan como artefactos de CI vinculados al commit (retención 14 días). No se requieren secretos de aplicación. Las fuentes pueden solicitarse a Google Fonts, con alternativas locales.
+## Documentación de entrada
 
-## Documentación histórica
+- [Modelo y decisiones](docs/modelo.md), [enfoque clínico](docs/enfoque-clinico.md) y [contratos por fenotipo](docs/aceptacion-fenotipos.md).
+- [Modelo regional](docs/regional-repolarization-v1.4.md), [protocolo](docs/repolarization-protocol-v1.4.md) y [metrología](docs/metrologia-v1.4.md).
+- [Verificación histórica v1.4](docs/verificacion-v1.4.md), [STAFF III](docs/staff-exploration-v1.4.md) y [LUDB: procedencia/licencia](tests/reference/ludb/README.md).
+- [Contrato de versión y trazabilidad P4](docs/p4-version-provenance.md).
 
-El [README íntegro de v1.3](docs/README-v1.3.md) conserva catálogo, arquitectura, atajos y resultados anteriores. Sus enlaces relativos deben interpretarse desde la raíz original. [Verificación v1.3](docs/verificacion.md), [v1.2](docs/verificacion-v1.2.md) y [v1.1](docs/verificacion-v1.1.md) no equivalen a nuevas ejecuciones.
+La [revisión clínica aportada](docs/referencias/Revision_ECG_SCA_Simulador.md) se conserva íntegra: no se convierte toda su bibliografía ni sus cifras en reglas del producto. Las afirmaciones adoptadas y excluidas están distinguidas en el enfoque clínico. Las pruebas sintéticas no sustituyen revisión humana ni validación externa.
+
+## Histórico
+
+[README de v1.3](docs/README-v1.3.md), [verificación v1.3](docs/verificacion.md), [v1.2](docs/verificacion-v1.2.md) y [v1.1](docs/verificacion-v1.1.md) son registros históricos, no nuevas ejecuciones. Sus cifras no describen automáticamente el HEAD actual. La navegación vigente comienza en este README y la matriz de alcance. No se distribuye el ZIP antiguo de código en `public/`.
