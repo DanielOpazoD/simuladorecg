@@ -1,6 +1,4 @@
-# Verificación v1.4 — evidencia histórica del candidato
-
-> Estado posterior: PR #1–#3 integrados en `d55cc648cfbaf74754dfce5df647152f274f8f70`. P1–P3 posteriores integrados en `279ef40cfe8d98026d35542039d9709f9e021b73`. Los resultados siguientes pertenecen a las ejecuciones identificadas, no a una nueva validación del HEAD. Consultar [README vigente](../README.md).
+# Verificación v1.4 — candidato en tres PR
 
 25 septiembre 2026. Base `38c0cd31b5836c96c82556d756e8150cfde99c64` (v1.3). No nuevos presets ni controles. Esta entrega demuestra contratos de señal y metrología, no calibración clínica poblacional.
 
@@ -43,6 +41,6 @@ Las ventanas de esta comparación se sitúan con eventos del generador. La funci
 
 ## Entrega y limitaciones
 
-Al registrar esta evidencia los PR #1 → #2 → #3 eran dependientes; después se integraron, como indica la nota inicial. La integración no acredita el sitio privado. Antes de publicar se requiere verificar CI sobre el resultado y comprobar build-info.json en el sitio servido. El ZIP histórico de public se retira para no ofrecer v1.3 como código del candidato.
+PR #1 → #2 → #3 dependientes. Main y el sitio privado no se modifican por abrirlos. Antes de publicar se requiere integrar en orden, ejecutar CI sobre el resultado y comprobar build-info.json en el sitio servido. El ZIP histórico de public se retira para no ofrecer v1.3 como código del candidato.
 
 Pendiente: calibración externa con límites revisados, ampliar población, validar gradientes/regiones frente a datos, probar móvil físico/accesibilidad/impresión real y resolver limitaciones previas del detector. Las curvas regionales son heurísticas explícitas; no son un modelo anatómico ni certificación diagnóstica.

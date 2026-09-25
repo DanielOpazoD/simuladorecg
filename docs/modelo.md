@@ -1,7 +1,5 @@
 # Modelo electrocardiográfico y decisiones
 
-> Documento acumulativo: para versión integrada y alcance por fase consultar [README](../README.md) y [matriz vigente](alcance-actual.md). Los apartados históricos no son una nueva validación.
-
 ## Plan aplicado
 
 Se priorizó un motor independiente y verificable, con vista de papel como superficie inicial, un monitor y herramientas docentes. Los ritmos y bloqueos AV se describen mediante eventos; los bloqueos de rama y vectores de ST modifican el dipolo; algunos patrones regionales tienen correcciones locales identificadas. Los casos que no admitían una representación suficiente quedaron señalados como aproximados o pendientes.

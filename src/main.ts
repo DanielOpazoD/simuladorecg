@@ -1,12 +1,12 @@
 import "./style.css";
-import { APP_VERSION } from "./ui/version";
 import {
   DEFAULT_CASE,
   cloneCase,
   type ECGCase,
+  type Signal,
+  type Measurement,
 } from "./engine/types";
 import { SignalController } from "./ui/signal-controller";
-import { TraceSession } from "./ui/trace-session";
 import { changeCase, isCaseControlKey, controlValue } from "./ui/case-state";
 import { beatDetail, representativeBeat, nearestBeat } from "./ui/beat-detail";
 import { measurementDialog } from "./ui/measurement-dialog";
@@ -40,18 +40,23 @@ import {
 
 const $ = <T extends Element = HTMLElement>(selector: string) =>
   document.querySelector<T>(selector)!;
-const session = new TraceSession();
 let c = cloneCase(DEFAULT_CASE),
+  signal: Signal | null = null,
+  measurement: Measurement | null = null,
   layout: Layout | null = null,
   monitor: Monitor | null = null;
-let annotations = false,
+let paused = false,
+  annotations = false,
+  caliperOn = false,
   caliper: Caliper | null = null,
   dragging = false,
+  elapsed = 0,
   lastFrame = 0,
   audioOn = false,
   audioContext: AudioContext | null = null,
   lastBeep = -1;
-let timer = 0,
+let selectedBeat = 0,
+  timer = 0,
   activePanel = "base",
   search = "",
   group = "",
@@ -65,7 +70,7 @@ try {
 }
 const root = $("#app");
 root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="ECG Lab, inicio">${icon("pulse")}<span>ECG<span class="brand-light">lab</span></span><span class="brand-divider"></span><small>Laboratorio de electrocardiografía</small></a><nav aria-label="Herramientas"><button class="btn mobile-cases" data-action="catalog">${icon("menu")}<span>Casos</span></button>${btn("quiz", "Practicar", "quiz")}${btn("about", "Modelo", "book")}${btn("theme", "Tema", "sun", "icon-button")}${btn("export", "Exportar", "download", "primary")}</nav></header>
- <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><div><h2>Casos clínicos</h2><span>${PRESETS.filter((x) => x.strategy !== "pending").length} patrones sintéticos</span></div>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Buscar un patrón…" aria-label="Buscar caso"/></label><label class="category-select"><span class="sr-only">Categoría</span><select id="category">${options([["", "Todas las categorías"], ...Array.from(new Set(PRESETS.map((x) => x.group))).map((x) => [x, x] as [string, string])], "")}</select></label><div id="case-list" class="case-list"></div><div class="sidebar-footer">${icon("pulse")}<div>Señal 100% sintética<small data-product-version="${APP_VERSION}">Modelo educativo · v${APP_VERSION}</small></div></div></aside>
+ <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><div><h2>Casos clínicos</h2><span>${PRESETS.filter((x) => x.strategy !== "pending").length} patrones sintéticos</span></div>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Buscar un patrón…" aria-label="Buscar caso"/></label><label class="category-select"><span class="sr-only">Categoría</span><select id="category">${options([["", "Todas las categorías"], ...Array.from(new Set(PRESETS.map((x) => x.group))).map((x) => [x, x] as [string, string])], "")}</select></label><div id="case-list" class="case-list"></div><div class="sidebar-footer">${icon("pulse")}<div>Señal 100% sintética<small>Modelo educativo · v1.3</small></div></div></aside>
  <main class="workspace"><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-subtitle">Activación auricular sinusal seguida de conducción AV 1:1.</p></div><div class="case-state"><span class="status-label">Prototipo educativo</span>${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
  <section id="metrics" class="metrics" aria-label="Medidas del ECG"><div class="loading-metrics">Generando señal…</div></section>
  <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><div class="trace-tools">${btn("caliper", "Calibres", "ruler")}${btn("annotations", "Ondas", "eye")}${btn("focus", "Ampliar", "search")}${btn("pause", "Congelar", "pause")}</div></div>
@@ -135,7 +140,7 @@ function renderInfo() {
   $("#limitation").innerHTML = concealed
     ? "El diagnóstico se mostrará al responder."
     : `<strong>${p?.strategy === "local" ? "Ajuste morfológico local" : "Modelo aproximado"}</strong><p>${esc(p?.limitation || "Sin validación clínica de este caso personalizado.")}</p>`;
-  $("#warnings").innerHTML = (concealed ? [] : [...context.warnings, ...(session.signal?.warnings || [])])
+  $("#warnings").innerHTML = (concealed ? [] : [...context.warnings, ...(signal?.warnings || [])])
     .map((w) => `<p class="warning">${esc(w)}</p>`)
     .join("");
   $<HTMLButtonElement>('[data-action="export"]').disabled = !!concealed;
@@ -149,7 +154,7 @@ function display(v: number | null | undefined, unit = "") {
     : Math.round(v) + (unit ? `<small>${unit}</small>` : "");
 }
 function renderMetrics() {
-  if (!session.signal || !session.measurement) return;
+  if (!signal || !measurement) return;
   const noOrganized = ["vf", "asystole"].includes(c.rhythm),
     hasPR =
       (c.rhythm === "sinus" && c.av !== "complete") ||
@@ -157,56 +162,56 @@ function renderMetrics() {
   const vals: [string, string, string][] = [
     [
       "FC ventricular",
-      noOrganized || session.measurement.evidence.hr.status === "unavailable"
+      noOrganized || measurement.evidence.hr.status === "unavailable"
         ? "—"
-        : display(session.measurement.hr, "lpm"),
+        : display(measurement.hr, "lpm"),
       "media · 10 s",
     ],
     [
       "PR",
-      hasPR ? display(session.measurement.pr, "ms") : "—",
+      hasPR ? display(measurement.pr, "ms") : "—",
       hasPR ? "estimado" : "sin relación AV estimable",
     ],
     [
       "QRS",
-      noOrganized || session.measurement.evidence.qrs.status === "unavailable"
+      noOrganized || measurement.evidence.qrs.status === "unavailable"
         ? "—"
-        : display(session.measurement.qrs, "ms"),
+        : display(measurement.qrs, "ms"),
       "límites medidos",
     ],
     [
       "QTc",
       noOrganized ||
-      session.measurement.evidence.qt.status === "unavailable" ||
+      measurement.evidence.qt.status === "unavailable" ||
       ["af", "flutter", "torsades"].includes(c.rhythm)
         ? "—"
-        : display(session.measurement.qtc.fridericia, "ms"),
+        : display(measurement.qtc.fridericia, "ms"),
       "Fridericia · estimado",
     ],
     [
       "Eje QRS",
-      noOrganized ? "—" : display(session.measurement.axis, "°"),
+      noOrganized ? "—" : display(measurement.axis, "°"),
       "área neta · estimado",
     ],
   ];
   $("#metrics").innerHTML = vals
     .map(
       ([label, v, sub], i) =>
-        `<button class="metric ${i === 0 ? "main-metric" : ""}" data-action="measurements" title="${esc(session.measurement!.evidence[(["hr", "pr", "qrs", "qt", "axis"] as const)[i]].reason)}"><span>${label}</span><strong>${v}</strong><small><i class="quality-dot ${session.measurement!.evidence[(["hr", "pr", "qrs", "qt", "axis"] as const)[i]].status}"></i>${session.measurement!.evidence[(["hr", "pr", "qrs", "qt", "axis"] as const)[i]].status === "unavailable" ? "No estimable" : session.measurement!.evidence[(["hr", "pr", "qrs", "qt", "axis"] as const)[i]].status === "review" ? "Revisar" : sub}</small></button>`,
+        `<button class="metric ${i === 0 ? "main-metric" : ""}" data-action="measurements" title="${esc(measurement!.evidence[(["hr", "pr", "qrs", "qt", "axis"] as const)[i]].reason)}"><span>${label}</span><strong>${v}</strong><small><i class="quality-dot ${measurement!.evidence[(["hr", "pr", "qrs", "qt", "axis"] as const)[i]].status}"></i>${measurement!.evidence[(["hr", "pr", "qrs", "qt", "axis"] as const)[i]].status === "unavailable" ? "No estimable" : measurement!.evidence[(["hr", "pr", "qrs", "qt", "axis"] as const)[i]].status === "review" ? "Revisar" : sub}</small></button>`,
     )
     .join("");
   $("#monitor-rate").textContent =
-    noOrganized || session.measurement.evidence.hr.status === "unavailable"
+    noOrganized || measurement.evidence.hr.status === "unavailable"
       ? "—"
-      : String(Math.round(session.measurement.hr ?? 0));
+      : String(Math.round(measurement.hr ?? 0));
 }
 function renderDetail() {
-  if (session.signal && session.measurement)
+  if (signal && measurement)
     $("#beat-detail").innerHTML = beatDetail(
-      session.signal,
-      session.measurement,
+      signal,
+      measurement,
       c,
-      session.selectedBeat,
+      selectedBeat,
     );
 }
 function renderControls() {
@@ -307,17 +312,17 @@ function renderScales() {
 }
 /** Project every visible tool state from the same mode, availability and flags. */
 function syncTraceTools() {
-  const ready = session.canExport,
+  const ready = signal !== null,
     monitorMode = c.view.mode === "monitor",
     paper = c.view.mode === "paper",
-    measuring = ready && !monitorMode && session.caliperOn;
+    measuring = ready && !monitorMode && caliperOn;
   const pause = $<HTMLButtonElement>('[data-action="pause"]');
   pause.disabled = !monitorMode || !ready;
-  pause.setAttribute("aria-label", session.paused ? "Reanudar" : "Congelar");
+  pause.setAttribute("aria-label", paused ? "Reanudar" : "Congelar");
   pause.innerHTML =
-    icon(session.paused ? "play" : "pause") +
-    `<span>${session.paused ? "Reanudar" : "Congelar"}</span>`;
-  $("#monitor-state").textContent = !ready ? "SIN SEÑAL" : session.paused ? "CONGELADO" : "REPRODUCCIÓN";
+    icon(paused ? "play" : "pause") +
+    `<span>${paused ? "Reanudar" : "Congelar"}</span>`;
+  $("#monitor-state").textContent = !ready ? "SIN SEÑAL" : paused ? "CONGELADO" : "REPRODUCCIÓN";
   const waves = $<HTMLButtonElement>('[data-action="annotations"]');
   waves.disabled = !paper || !ready;
   waves.classList.toggle("active", ready && paper && annotations);
@@ -333,24 +338,27 @@ function syncTraceTools() {
     : "Arrastra sobre una derivación para medir";
 }
 const controller = new SignalController(
-  (next, measured, requestId) => {
-    if (!session.isCurrentRequest(requestId)) return;
-    const audited = auditMeasurement(next, measured);
-    if (!session.accept(requestId, next, audited, c.view.mode,
-      representativeBeat(audited, visibleSegmentEnd()))) return;
-    resetTracePresentation();
+  (next, measured) => {
+    if (timer) return;
+    signal = next;
+    measurement = auditMeasurement(next, measured);
+    selectedBeat = representativeBeat(measurement, visibleSegmentEnd());
     $("#signal-loading").hidden = true;
     $("#signal-state").textContent = "500 muestras/s · análisis independiente";
+    caliper = null;
+    paused = false;
+    elapsed = c.view.mode === "monitor" ? 4 : 0;
+    monitor = null;
+    lastFrame = 0;
     renderMetrics();
     renderInfo();
     renderScales();
     draw();
     renderDetail();
   },
-  (message, requestId) => {
-    if (!session.fail(requestId)) return;
+  (message) => {
     toast(message);
-    showUnavailableSignal(message, true);
+    invalidateSignal(message, true);
     $("#metrics").innerHTML =
       '<div class="loading-metrics">Medidas no disponibles</div>';
     $("#signal-state").textContent = message.startsWith("Fuera del alcance del modelo:")
@@ -360,16 +368,16 @@ const controller = new SignalController(
     renderInfo();
   },
 );
-/** Render caches and pointer coordinates are presentation, not session validity. */
-function resetTracePresentation() {
+/** A trace and its measurements are valid only for the configuration that produced them. */
+function invalidateSignal(message = "Calculando señal…", unavailable = false) {
+  signal = null;
+  measurement = null;
   layout = null;
   monitor = null;
   caliper = null;
+  caliperOn = false;
+  paused = false;
   dragging = false;
-  lastFrame = 0;
-}
-function showUnavailableSignal(message: string, unavailable = false) {
-  resetTracePresentation();
   const canvas = $<HTMLCanvasElement>("#ecg");
   canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
   canvas.setAttribute("aria-label", "Señal no disponible");
@@ -382,27 +390,24 @@ function showUnavailableSignal(message: string, unavailable = false) {
   } else loading.textContent = message;
   loading.hidden = false;
   $("#signal-state").textContent = "Generando…";
-  $("#metrics").innerHTML = '<div class="loading-metrics">Generando señal…</div>';
+  $("#metrics").innerHTML =
+    '<div class="loading-metrics">Generando señal…</div>';
   $("#monitor-rate").textContent = "—";
   $("#measurement-readout").hidden = true;
-  $("#beat-detail").innerHTML = '<div class="detail-empty">El análisis estará disponible cuando termine de generarse la señal.</div>';
+  $("#beat-detail").innerHTML =
+    '<div class="detail-empty">El análisis estará disponible cuando termine de generarse la señal.</div>';
   $("#warnings").innerHTML = "";
   syncTraceTools();
-}
-function invalidateSignal() {
-  session.invalidate();
-  showUnavailableSignal("Calculando señal…");
 }
 function generate() {
   window.clearTimeout(timer);
   timer = 0;
   invalidateSignal();
-  // Worker messages are asynchronous; register the returned ID before delivery.
-  session.expectRequest(controller.request(c));
+  controller.request(c);
 }
 function draw() {
   syncTraceTools();
-  if (!session.signal) return;
+  if (!signal) return;
   const canvas = $<HTMLCanvasElement>("#ecg"),
     width = $("#canvas-wrap").clientWidth;
   canvas.setAttribute(
@@ -411,20 +416,20 @@ function draw() {
   );
   if (c.view.mode === "paper") {
     monitor = null;
-    layout = renderPaper(canvas, session.signal, c, width, {
+    layout = renderPaper(canvas, signal, c, width, {
       annotations,
-      measurement: session.measurement ?? undefined,
-      selectedBeat: session.selectedBeat,
+      measurement: measurement ?? undefined,
+      selectedBeat,
       hideName: !!quiz && !quiz.answer,
       displayName: caseReading(c).title,
     });
   } else if (c.view.mode === "rhythm") {
     monitor = null;
-    layout = renderRhythm(canvas, session.signal, c, width);
+    layout = renderRhythm(canvas, signal, c, width);
   } else {
-    monitor = new Monitor(canvas, session.signal, c, width);
+    monitor = new Monitor(canvas, signal, c, width);
     layout = monitor.layout;
-    monitor.frame(session.elapsed);
+    monitor.frame(elapsed);
   }
   $("#canvas-wrap").classList.toggle(
     "monitor-canvas",
@@ -442,22 +447,22 @@ function draw() {
     $("#measurement-readout").innerHTML =
       `<strong>Δt ${m.ms.toFixed(0)} ms</strong><span>ΔV ${m.mv.toFixed(2)} mV · ${m.mm.toFixed(1)} mm</span><span>60.000 / Δt = ${m.ms > 0 ? (60000 / m.ms).toFixed(0) : "—"} lpm</span><button data-action="clear-caliper">Limpiar</button>`;
   } else {
-    $("#measurement-readout").hidden = !session.caliperOn;
-    $("#measurement-readout").textContent = session.caliperOn
+    $("#measurement-readout").hidden = !caliperOn;
+    $("#measurement-readout").textContent = caliperOn
       ? "Arrastra dentro de una derivación para medir tiempo y amplitud."
       : "";
   }
 }
 function animate(t: number) {
-  if (c.view.mode === "monitor" && monitor && !session.paused) {
-    if (lastFrame) session.advance(Math.min(0.1, (t - lastFrame) / 1000), c.view.mode);
-    monitor.frame(session.elapsed);
-    if (audioOn && session.signal) {
+  if (c.view.mode === "monitor" && monitor && !paused) {
+    if (lastFrame) elapsed += Math.min(0.1, (t - lastFrame) / 1000);
+    monitor.frame(elapsed);
+    if (audioOn && signal) {
       const seg = monitor.layout.segments[0],
         span = seg.duration,
-        cycle = Math.floor(session.elapsed / span),
-        source = ((cycle * span) % Math.max(1, 60 - span)) + (session.elapsed % span);
-      const b = session.signal.events.beats.find(
+        cycle = Math.floor(elapsed / span),
+        source = ((cycle * span) % Math.max(1, 60 - span)) + (elapsed % span);
+      const b = signal.events.beats.find(
         (b) => b.time >= source - 0.022 && b.time <= source + 0.008,
       );
       if (b && b.time !== lastBeep) {
@@ -487,7 +492,7 @@ function selectPreset(id: string) {
   if (!p || p.strategy === "pending") return;
   c = fromPreset(p, c.view);
   caliper = null;
-  session.resetTools();
+  paused = false;
   annotations = false;
   renderCatalog();
   renderControls();
@@ -498,8 +503,8 @@ function selectPreset(id: string) {
 function setValue(key: string, value: unknown) {
   if (!isCaseControlKey(key)) return;
   c = changeCase(c, key, value);
-  if (session.measurement && (key === "view.timing" || key === "view.format"))
-    session.selectBeat(representativeBeat(session.measurement, visibleSegmentEnd()));
+  if (measurement && (key === "view.timing" || key === "view.format"))
+    selectedBeat = representativeBeat(measurement, visibleSegmentEnd());
   if (!key.startsWith("view.")) renderCatalog();
 }
 function visibleSegmentEnd(): number {
@@ -583,10 +588,10 @@ function closeDialog() {
   $<HTMLDialogElement>("#dialog").close();
 }
 function showMeasurements() {
-  if (session.signal && session.measurement)
+  if (signal && measurement)
     openDialog(
       "Medidas, límites y consistencia",
-      measurementDialog(session.signal, session.measurement, c),
+      measurementDialog(signal, measurement, c),
     );
   else
     toast("Las medidas estarán disponibles al generar correctamente la señal.");
@@ -600,7 +605,7 @@ function showAbout() {
 function exportDialog() {
   openDialog(
     "Exportar y guardar",
-    `<p class="dialog-lead">Conserva el trazado o comparte exactamente el mismo caso y semilla.</p><div class="export-options"><button data-action="png" ${session.canExport ? "" : "disabled"}>${icon("download")}<div><strong>PNG de impresión</strong><span>Papel completo · 300 píxeles por pulgada</span></div>${icon("chevron")}</button><button data-action="json">${icon("save")}<div><strong>Exportar caso JSON</strong><span>Parámetros, vista y semilla reproducible</span></div>${icon("chevron")}</button><button data-action="import">${icon("book")}<div><strong>Importar caso JSON</strong><span>Carga un caso exportado desde ECG Lab</span></div>${icon("chevron")}</button><button data-action="share">${icon("share")}<div><strong>Copiar enlace del caso</strong><span>El estado completo viaja en el enlace</span></div>${icon("chevron")}</button></div><div class="save-form"><label class="field"><span>Nombre del caso personal</span><input id="save-name" maxlength="100" value="${esc(c.name)}"/></label>${btn("save", "Guardar en este navegador", "save")}</div>${
+    `<p class="dialog-lead">Conserva el trazado o comparte exactamente el mismo caso y semilla.</p><div class="export-options"><button data-action="png" ${signal ? "" : "disabled"}>${icon("download")}<div><strong>PNG de impresión</strong><span>Papel completo · 300 píxeles por pulgada</span></div>${icon("chevron")}</button><button data-action="json">${icon("save")}<div><strong>Exportar caso JSON</strong><span>Parámetros, vista y semilla reproducible</span></div>${icon("chevron")}</button><button data-action="import">${icon("book")}<div><strong>Importar caso JSON</strong><span>Carga un caso exportado desde ECG Lab</span></div>${icon("chevron")}</button><button data-action="share">${icon("share")}<div><strong>Copiar enlace del caso</strong><span>El estado completo viaja en el enlace</span></div>${icon("chevron")}</button></div><div class="save-form"><label class="field"><span>Nombre del caso personal</span><input id="save-name" maxlength="100" value="${esc(c.name)}"/></label>${btn("save", "Guardar en este navegador", "save")}</div>${
       savedCases().length
         ? `<h3>Mis casos</h3><div class="saved-list">${savedCases()
             .map(
@@ -674,8 +679,10 @@ document.addEventListener("click", async (e) => {
   }
   if (mode) {
     c.view.mode = mode.dataset.mode as ECGCase["view"]["mode"];
+    paused = false;
     caliper = null;
-    session.changeMode(c.view.mode);
+    caliperOn = false;
+    if (c.view.mode === "monitor" && elapsed === 0) elapsed = 4;
     renderScales();
     draw();
     return;
@@ -711,22 +718,28 @@ document.addEventListener("click", async (e) => {
     });
   }
   if (action === "previous-beat" || action === "next-beat") {
-    if (session.measurement) {
-      session.selectBeat(session.selectedBeat + (action === "next-beat" ? 1 : -1));
+    if (measurement) {
+      selectedBeat = Math.max(
+        0,
+        Math.min(
+          measurement.beats.length - 1,
+          selectedBeat + (action === "next-beat" ? 1 : -1),
+        ),
+      );
       annotations = true;
       renderDetail();
       draw();
     }
   }
   if (action === "pause") {
-    if (!session.signal || c.view.mode !== "monitor") return;
-    session.togglePause(c.view.mode);
+    if (!signal || c.view.mode !== "monitor") return;
+    paused = !paused;
     syncTraceTools();
   }
   if (action === "caliper") {
-    if (!session.signal || c.view.mode === "monitor") return;
-    session.toggleCaliper(c.view.mode);
-    if (!session.caliperOn) caliper = null;
+    if (!signal || c.view.mode === "monitor") return;
+    caliperOn = !caliperOn;
+    if (!caliperOn) caliper = null;
     draw();
   }
   if (action === "clear-caliper") {
@@ -772,14 +785,14 @@ document.addEventListener("click", async (e) => {
     draw();
   }
   if (action === "png") {
-    if (!session.signal || !session.canExport) {
+    if (!signal || !$("#signal-loading").hidden || timer) {
       toast("El PNG estará disponible al generar correctamente la señal.");
       return;
     }
     const canvas = document.createElement("canvas"),
       exportCase = cloneCase(c);
     exportCase.view.palette = "paper";
-    renderPaper(canvas, session.signal, exportCase, 1000, {
+    renderPaper(canvas, signal, exportCase, 1000, {
       pxPerMm: 300 / 25.4,
       ratio: 1,
       hideName: !!quiz && !quiz.answer,
@@ -860,7 +873,7 @@ function pointer(e: PointerEvent) {
   };
 }
 canvas.addEventListener("pointerdown", (e) => {
-  if (!session.caliperOn && layout && session.measurement && c.view.mode === "paper") {
+  if (!caliperOn && layout && measurement && c.view.mode === "paper") {
     const pos = pointer(e);
     const seg = pos
       ? layout.segments.find(
@@ -872,10 +885,10 @@ canvas.addEventListener("pointerdown", (e) => {
         )
       : null;
     if (seg && pos) {
-      session.selectBeat(nearestBeat(
-        session.measurement,
+      selectedBeat = nearestBeat(
+        measurement,
         seg.start + (pos.x - seg.x) / c.view.speed,
-      ));
+      );
       c.view.lead = seg.lead;
       annotations = true;
       renderDetail();
@@ -883,7 +896,7 @@ canvas.addEventListener("pointerdown", (e) => {
     }
     return;
   }
-  if (!session.caliperOn || !layout || (c.view.mode === "monitor" && !session.paused)) return;
+  if (!caliperOn || !layout || (c.view.mode === "monitor" && !paused)) return;
   const pos = pointer(e);
   if (!pos) return;
   const i = layout.segments.findIndex(
