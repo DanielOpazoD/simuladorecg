@@ -1,0 +1,1 @@
+No se distribuyen ZIP históricos de código como parte del sitio. Descargar la fuente del commit o el artefacto correspondiente de GitHub Actions. build-info.json identifica el build, no certifica despliegue ni validez clínica.
