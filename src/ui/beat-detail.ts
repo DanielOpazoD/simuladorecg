@@ -7,6 +7,7 @@ import type {
 } from "../engine/types";
 import { LEADS } from "../engine/types";
 import { esc, icon, options } from "./helpers";
+import { detailScale } from "./detail-scale";
 
 const round = (value: number | null) =>
   value === null ? "—" : Math.round(value);
@@ -50,22 +51,17 @@ function plot(
       Math.max(beat.onset + 0.62, (beat.tEnd ?? beat.onset + 0.5) + 0.12),
     );
   const width = 1000,
-    height = 250,
+    height = 300,
     left = 52,
     right = 978,
     top = 74,
-    bottom = 199;
+    bottom = 249;
   const signal = s.leads[lead],
     lo = Math.floor(start * s.fs),
     hi = Math.min(signal.length - 1, Math.ceil(end * s.fs));
-  let min = 0,
-    max = 0;
-  for (let i = lo; i < hi; i++) {
-    min = Math.min(min, signal[i]);
-    max = Math.max(max, signal[i]);
-  }
-  const range = Math.max(0.8, max - min),
-    center = (max + min) / 2;
+  const voltage = detailScale(s),
+    range = voltage.maxMv - voltage.minMv,
+    center = 0;
   const x = (t: number) =>
     left + ((t - start) / (end - start)) * (right - left);
   const y = (v: number) =>
@@ -85,12 +81,12 @@ function plot(
   ) {
     const t = beat.onset + relative,
       xx = x(t);
-    grid += `<path d="M${xx} ${top}V${bottom}" class="detail-grid"/><text x="${xx}" y="219" text-anchor="middle" class="detail-tick">${Math.round((t - beat.onset) * 1000)}</text>`;
+    grid += `<path d="M${xx} ${top}V${bottom}" class="detail-grid"/><text x="${xx}" y="269" text-anchor="middle" class="detail-tick">${Math.round((t - beat.onset) * 1000)}</text>`;
   }
   for (
-    let v = Math.ceil((center - range / 2) / 0.2) * 0.2;
+    let v = Math.ceil(voltage.minMv / voltage.tickMv) * voltage.tickMv;
     v < center + range / 2;
-    v += 0.2
+    v += voltage.tickMv
   ) {
     const yy = y(v);
     if (yy < top || yy > bottom) continue;
@@ -109,7 +105,7 @@ function plot(
   const blue = dark ? "#7dbbdc" : "#3475a2",
     teal = dark ? "#6dd8c8" : "#007e77",
     purple = dark ? "#c0ace8" : "#785da4";
-  return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Latido ampliado en ${lead}. QRS ${round(beat.qrs)} milisegundos. Los puntos marcan límites medidos." class="beat-plot">
+  return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Latido ampliado en ${lead}. QRS ${round(beat.qrs)} milisegundos. Los puntos marcan límites medidos." class="beat-plot" data-scale-min="${voltage.minMv}" data-scale-max="${voltage.maxMv}">
  <text x="8" y="86" class="detail-tick">mV</text>${grid}
  <rect x="${x(beat.onset)}" y="${top}" width="${x(beat.offset) - x(beat.onset)}" height="${bottom - top}" fill="${teal}" opacity=".07"/>
  ${acceptedPR && beat.pOnset !== null ? band(beat.pOnset, beat.onset, 25, blue, `PR ${round(beat.pr)} ms`) : ""}
@@ -117,7 +113,7 @@ function plot(
  ${acceptedQT && beat.tEnd !== null ? band(beat.onset, beat.tEnd, 65, purple, `QT ${round(beat.qt)} ms`) : ""}
  <path d="${d}" class="detail-wave" fill="none" stroke-width="1.7" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
  ${acceptedPR && beat.pOnset !== null ? marker(beat.pOnset, "P", blue) : ""}${marker(beat.onset, "QRS", teal)}${marker(beat.offset, "J*", teal)}${acceptedQT && beat.tEnd !== null ? marker(beat.tEnd, "T fin", purple) : ""}
- <text x="${right}" y="242" text-anchor="end" class="detail-tick">ms desde QRS</text></svg>`;
+ <text x="${right}" y="292" text-anchor="end" class="detail-tick">ms desde QRS</text></svg>`;
 }
 export function beatDetail(
   s: Signal,
@@ -138,6 +134,6 @@ export function beatDetail(
     c.view.lead,
   )}</select></label></div></div>
  ${plot(s, b, c.view.lead, c.view.palette === "dark", prUsable, m.qt !== null)}
- <div class="detail-footer"><div><span class="quality-dot ${m.evidence.qrs.status}"></span><strong>${m.evidence.qrs.status === "usable" ? "QRS reproducible" : "Revisar límites"}</strong><span>${m.evidence.qrs.count} latidos · resolución ${1000 / s.fs} ms</span></div><button class="text-button" data-action="measurements">Ver detalle de las medidas ${icon("chevron")}</button></div>
- <p class="detail-note">Selecciona un complejo en el papel para ampliarlo. *J estimado por el final del QRS.${m.qt !== null && b.tTangentEnd !== null ? ` QT por tangente de la envolvente: ${Math.round((b.tTangentEnd - b.onset) * 1000)} ms; es otro criterio de final de T.` : ""}${reasons.length ? ` ${esc(reasons[0])}` : ""}</p>`;
+ <div class="detail-footer"><div><span class="quality-dot ${m.evidence.qrs.status}"></span><strong>${m.evidence.qrs.status === "usable" ? "QRS reproducible" : "Revisar límites"}</strong><span>${m.evidence.qrs.count} latidos · paso de muestreo ${1000 / s.fs} ms</span></div><button class="text-button" data-action="measurements">Ver detalle de las medidas ${icon("chevron")}</button></div>
+ <p class="detail-note"><strong>Escala común del caso: ±${detailScale(s).maxMv.toFixed(2)} mV.</strong> No se reajusta al cambiar latido o derivación. Selecciona un complejo en el papel para ampliarlo. *J estimado por el final del QRS.${m.qt !== null && b.tTangentEnd !== null ? ` QT por tangente de la envolvente: ${Math.round((b.tTangentEnd - b.onset) * 1000)} ms; es otro criterio de final de T.` : ""}${reasons.length ? ` ${esc(reasons[0])}` : ""}</p>`;
 }

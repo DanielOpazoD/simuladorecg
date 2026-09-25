@@ -27,7 +27,21 @@ jobs:
         run: npm run build
       - name: Matched repolarization comparison and detector freeze
         run: node scripts/validate-repolarization.mjs --output "${{ runner.temp }}/repolarization-comparison.json"
-      - name: Archive exact reviewed source
+      - name: Install isolated browser test dependency
+        run: |
+          npm install --no-save --package-lock=false playwright@1.63.0
+          npx playwright install --with-deps chromium
+      - name: Real browser flows and PNG pixel metrology
+        env:
+          ECG_TEST_URL: http://127.0.0.1:5173/
+          ECG_EVIDENCE_DIR: ${{ runner.temp }}/ecg-evidence/browser
+        run: |
+          npm run dev -- --host 127.0.0.1 --port 5173 > "$RUNNER_TEMP/vite.log" 2>&1 &
+          PID=$!
+          trap 'kill $PID 2>/dev/null || true' EXIT
+          for n in {1..40}; do curl --silent --fail "$ECG_TEST_URL" > /dev/null && break; sleep 1; done
+          node tests/browser-fidelity.mjs
+      - name: Archive exact reviewed source and reports
         if: always()
         run: |
           mkdir -p "$RUNNER_TEMP/ecg-evidence"
@@ -36,6 +50,8 @@ jobs:
           node -p 'JSON.stringify(process.versions,null,2)' > "$RUNNER_TEMP/ecg-evidence/runtime.json"
           cp "$RUNNER_TEMP"/*results.json "$RUNNER_TEMP/ecg-evidence/" 2>/dev/null || true
           cp "$RUNNER_TEMP/repolarization-comparison.json" "$RUNNER_TEMP/ecg-evidence/" 2>/dev/null || true
+          cp "$RUNNER_TEMP/vite.log" "$RUNNER_TEMP/ecg-evidence/" 2>/dev/null || true
+          test ! -d dist || cp -r dist "$RUNNER_TEMP/ecg-evidence/dist"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
