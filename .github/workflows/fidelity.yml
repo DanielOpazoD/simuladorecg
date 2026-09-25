@@ -17,19 +17,22 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '22.16.0'
           cache: npm
       - run: npm ci
       - name: Unit and signal contracts
         run: npm test -- --reporter=default --reporter=json --outputFile=${{ runner.temp }}/unit-results.json
       - name: Types and production build
+        if: always()
         run: npm run build
-      - name: Archive exact reviewed source
+      - name: Archive exact reviewed source and test runtime
         if: always()
         run: |
           mkdir -p "$RUNNER_TEMP/ecg-evidence"
           git archive HEAD | gzip > "$RUNNER_TEMP/ecg-evidence/source.tar.gz"
+          tar -czf "$RUNNER_TEMP/ecg-evidence/test-runtime.tar.gz" node_modules
           git rev-parse HEAD > "$RUNNER_TEMP/ecg-evidence/source-commit.txt"
+          node -p 'JSON.stringify(process.versions,null,2)' > "$RUNNER_TEMP/ecg-evidence/runtime.json"
           test ! -f "$RUNNER_TEMP/unit-results.json" || cp "$RUNNER_TEMP/unit-results.json" "$RUNNER_TEMP/ecg-evidence/"
       - uses: actions/upload-artifact@v4
         if: always()
