@@ -17,7 +17,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install wfdb==4.3.0
+      - name: Install compatible acquisition environment
+        run: pip install wfdb==4.3.0 pandas==2.2.3 numpy==2.2.6 scipy==1.15.3
       - name: Acquire preselected public signals with provenance
         env:
           REFERENCE_OUTPUT: ${{ runner.temp }}/staff
