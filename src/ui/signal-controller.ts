@@ -7,8 +7,8 @@ export class SignalController {
   private pending: SignalRequest | null = null;
   private serial = 0;
   constructor(
-    onResult: (signal: Signal, measurement: Measurement) => void,
-    onError: (message: string) => void,
+    onResult: (signal: Signal, measurement: Measurement, requestId: number) => void,
+    onError: (message: string, requestId: number) => void,
   ) {
     this.worker = new Worker(new URL("../engine/worker.ts", import.meta.url), {
       type: "module",
@@ -23,19 +23,20 @@ export class SignalController {
       }
       const result = event.data;
       if (result.id !== this.serial) return;
-      if ("error" in result) onError(result.error);
-      else onResult(result.signal, result.measurement);
+      if ("error" in result) onError(result.error, result.id);
+      else onResult(result.signal, result.measurement, result.id);
     };
     this.worker.onerror = () => {
       this.busy = false;
       this.pending = null;
-      onError("No fue posible iniciar el motor. Recarga la página.");
+      onError("No fue posible iniciar el motor. Recarga la página.", this.serial);
     };
   }
-  request(ecg: ECGCase, duration = 65): void {
+  request(ecg: ECGCase, duration = 65): number {
     const request = { id: ++this.serial, ecg: structuredClone(ecg), duration };
     if (this.busy) this.pending = request;
     else this.send(request);
+    return request.id;
   }
   private send(request: SignalRequest): void {
     this.busy = true;
