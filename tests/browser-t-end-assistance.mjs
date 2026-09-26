@@ -21,10 +21,20 @@ try{
   assert.match(await detail.innerText(),/no un límite validado de V5/);
   await detail.locator('[data-action="next-beat"]').click();
   assert.ok(Number(await detail.locator('[data-t-end-candidate]').getAttribute('data-t-end-candidate'))>Number(time));
+  if(width===390){
+   const scroller=detail.locator('.detail-plot-scroll');
+   const headingBefore=await detail.locator('.detail-heading').boundingBox();
+   await scroller.evaluate(e=>{e.scrollLeft=(e.scrollWidth-e.clientWidth)/2;});
+   const clip=await scroller.boundingBox();
+   const markerX=await detail.locator('[data-t-end-candidate] path').evaluate(e=>e.getBoundingClientRect().x);
+   assert.ok(markerX>clip.x&&markerX<clip.x+clip.width,'Proposal must be visible after horizontal scroll');
+   assert.equal((await detail.locator('.detail-heading').boundingBox()).x,headingBefore.x,'Only graph scrolls, not controls');
+   assert.equal(await detail.evaluate(e=>e.scrollWidth>e.clientWidth+1),false,'No whole-card horizontal clipping');
+  }
   await detail.screenshot({path:resolve(out,'t-end-assistance-'+width+'.png')});
   await preset('asystole');await page.waitForFunction(()=>!document.querySelector('#beat-detail [data-t-end-assistance]'));
   assert.equal(await detail.locator('[data-t-end-candidate]').count(),0);
-  checks.push({width,flow:'tachy -> review marker without QT -> V5 same endpoint -> next beat -> asystole clears aid'});
+  checks.push({width,flow:'tachy -> review marker without QT -> V5 same endpoint -> next beat -> mobile graph-only scroll -> asystole clears aid'});
   await page.close();
  }
  assert.deepEqual(errors,[]);assert.deepEqual(warnings,[]);
