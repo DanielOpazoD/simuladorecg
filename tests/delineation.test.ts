@@ -18,12 +18,16 @@ describe("Independent analytic waveform acceptance", () => {
       for (const b of m.beats) {
         close(b.onset % 1, 0.36, 0.01);
         close(b.offset % 1, 0.45, 0.01);
+        close(b.tOnset === null ? null : b.tOnset % 1, 0.52, 0.015);
+        close(b.tPeak === null ? null : b.tPeak % 1, 0.615, 0.015);
+        close(b.tEnd === null ? null : b.tEnd % 1, 0.76, 0.02);
       }
     },
   );
   it("preserves the terminal lobe of a biphasic T", () => {
     const m = measure(fixture({ t: BIPHASIC_T }));
     close(m.qt, 480, 18);
+    expect(m.beats.every((b) => b.tOnset !== null && b.tPeak !== null && b.tEnd !== null)).toBe(true);
   });
   it("keeps a separated U out of QT", () => {
     close(measure(fixture({ u: U })).qt, 400, 18);
