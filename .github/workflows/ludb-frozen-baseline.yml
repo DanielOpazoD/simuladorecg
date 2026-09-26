@@ -1,0 +1,62 @@
+name: Original LUDB frozen baseline
+on:
+  pull_request:
+    paths: ['benchmarks/ludb-baseline/**', 'scripts/*ludb-frozen-baseline*', 'scripts/lib/ludb-frozen-baseline.mjs', 'tests/ludb-frozen-baseline.node.mjs', '.github/workflows/ludb-frozen-baseline.yml']
+  push:
+    branches: ['main']
+    paths: ['benchmarks/ludb-baseline/**', 'scripts/*ludb-frozen-baseline*', 'scripts/lib/ludb-frozen-baseline.mjs', 'tests/ludb-frozen-baseline.node.mjs', '.github/workflows/ludb-frozen-baseline.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22.16.0', cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: npm ci
+      - name: Evaluation adversarial contracts
+        run: node --test tests/ludb-frozen-baseline.node.mjs
+      - name: Product and historical benchmark preservation
+        run: |
+          BASELINE=519267d3b595a27ea8d35a5eae6296c780b58ec4
+          git diff --exit-code "$BASELINE" HEAD -- src public package.json package-lock.json index.html tsconfig.json vite.config.ts
+          git diff --exit-code be820726613ddd7141bd2b9404987da4542da61b HEAD -- benchmarks/hr-quality benchmarks/measurement-quality benchmarks/noise-stress benchmarks/ptbxl-plus tests/reference/ludb tests/reference/ludb-expansion tests/reference/ludb-delineation
+          git worktree add "$RUNNER_TEMP/frozen-product" "$BASELINE"
+      - run: python -m pip install wfdb==4.3.1
+      - name: Reacquire ONLY the original PR17 cohort and cross-check WFDB
+        run: python scripts/prepare-ludb-expansion.py --output "$RUNNER_TEMP/ludb-original" --crosscheck
+      - name: Evaluate exact frozen baseline
+        run: node scripts/validate-ludb-frozen-baseline.mjs --fixtures "$RUNNER_TEMP/ludb-original/fixtures" --source-root "$RUNNER_TEMP/frozen-product" --commit 519267d3b595a27ea8d35a5eae6296c780b58ec4 --role baseline --output "$RUNNER_TEMP/ludb-original/baseline.json"
+      - name: Verify identical analyzer on candidate
+        run: node scripts/validate-ludb-frozen-baseline.mjs --fixtures "$RUNNER_TEMP/ludb-original/fixtures" --source-root "$GITHUB_WORKSPACE" --commit "$GITHUB_SHA" --role candidate --output "$RUNNER_TEMP/ludb-original/candidate.json"
+      - name: Require exact report equality except provenance
+        env:
+          REPORT_DIR: ${{ runner.temp }}/ludb-original
+        run: |
+          node --input-type=module <<'JS'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          import assert from 'node:assert/strict';
+          const dir=process.env.REPORT_DIR;
+          const a=JSON.parse(readFileSync(dir+'/baseline.json')),b=JSON.parse(readFileSync(dir+'/candidate.json'));
+          for(const key of ['protocolSha256','fixtureManifestSha256','analyzerFiles','evaluationFiles','summary','records'])assert.deepEqual(a[key],b[key]);
+          writeFileSync(dir+'/comparison.json',JSON.stringify({baselineCommit:a.productCommit,candidateCommit:b.productCommit,identicalMeasurements:true,identicalAnalyzerFiles:true,holdoutEvaluated:false,clinicalValidation:false},null,2));
+          JS
+      - name: Archive source, protocol, results and anonymized fixtures
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/ludb-original"
+          git archive HEAD | gzip > "$RUNNER_TEMP/ludb-original/source.tar.gz"
+          cp benchmarks/ludb-baseline/protocol.json "$RUNNER_TEMP/ludb-original/evaluation-protocol.json"
+          rm -rf "$RUNNER_TEMP/ludb-original/raw"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ludb-original-baseline-${{ github.sha }}
+          path: ${{ runner.temp }}/ludb-original/
+          retention-days: 30
