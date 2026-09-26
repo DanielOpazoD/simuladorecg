@@ -24,15 +24,15 @@ jobs:
         with: {python-version: '3.11'}
       - run: npm ci
       - run: python -m pip install wfdb==4.3.1
-      - name: Discriminative reader, calibration, morphology and abstention tests
-        run: |
-          python -m unittest discover -s tests -p test_noise_stress.py -v
-          npx vitest run tests/noise-stress.test.ts
-          node --test tests/noise-regression.node.mjs
       - name: Restore reviewed acquisition and acceptance baselines
         run: |
           git worktree add --detach "$RUNNER_TEMP/noise-acquisition" 784173f94bc103686efb321fc13f1b8f40913f76
           git worktree add --detach "$RUNNER_TEMP/noise-baseline" aee59f64a35cdee76133113cfc0da216fc8832cd
+      - name: Discriminative reader, calibration, morphology and abstention tests
+        run: |
+          (cd "$RUNNER_TEMP/noise-acquisition" && python -m unittest discover -s tests -p test_noise_stress.py -v)
+          npx vitest run tests/noise-stress.test.ts
+          node --test tests/noise-regression.node.mjs
       - name: Acquire exposed NSTDB windows with the frozen reader
         run: python "$RUNNER_TEMP/noise-acquisition/scripts/prepare-noise-stress.py" --output "$RUNNER_TEMP/noise-stress"
       - name: Paired current-worker evaluation, same evaluator and noise bytes
