@@ -34,7 +34,16 @@ try {
  const analysisFiles=async dir=>(await readdir(path.join(dir,'src/engine/analysis'))).filter(p=>p.endsWith('.ts')).sort();
  const currentAnalysis=await analysisFiles(root),baselineAnalysis=await analysisFiles(baseDir);
  assert.deepEqual(currentAnalysis,baselineAnalysis,'Detector file set changed');
- const detectorFiles = ['src/engine/measure.ts', ...currentAnalysis.map(p=>'src/engine/analysis/'+p)];
+ // model-audit runs AFTER independent analysis. Its maintenance must not be
+ // mistaken for a numerical detector change; still report its exact identity.
+ const auditPath='src/engine/analysis/model-audit.ts';
+ const auditBefore=await readFile(path.join(baseDir,auditPath));
+ const auditAfter=await readFile(path.join(root,auditPath));
+ const modelAudit={path:auditPath,role:'post-analysis-synthetic-audit',
+   unchanged:auditBefore.equals(auditAfter),
+   beforeSha256:createHash('sha256').update(auditBefore).digest('hex'),
+   afterSha256:createHash('sha256').update(auditAfter).digest('hex')};
+ const detectorFiles = ['src/engine/measure.ts', ...currentAnalysis.filter(p=>p!=='model-audit.ts').map(p=>'src/engine/analysis/'+p)];
  const detector = await Promise.all(detectorFiles.map(async p => {
    const a=await readFile(path.join(baseDir,p)),b=await readFile(path.join(root,p));
    return {path:p,unchanged:a.equals(b),sha256:createHash('sha256').update(b).digest('hex')};
@@ -73,6 +82,6 @@ try {
  }
  const output=options['--output'] || path.join(root,'.sites-runtime','repolarization-comparison.json');
  await mkdir(path.dirname(output),{recursive:true});
- await writeFile(output,JSON.stringify({schema:1,base:BASE,runtime:process.version,measurementScope:'Whole signal in T window; ST can contribute. Not isolated cellular T, HATW score, or diagnostic accuracy.',windowSource:'generator events; not independent delineation',externalValidation:false,detector,defaultPresets:defaults,scenarios:rows},null,2));
+ await writeFile(output,JSON.stringify({schema:1,base:BASE,runtime:process.version,measurementScope:'Whole signal in T window; ST can contribute. Not isolated cellular T, HATW score, or diagnostic accuracy.',windowSource:'generator events; not independent delineation',externalValidation:false,detector,modelAudit,defaultPresets:defaults,scenarios:rows},null,2));
  console.log(JSON.stringify({output,scenarios:rows.length,unchangedDefaults:defaults.filter(x=>x.maxDifferenceMv===0).length,detectorFrozen:detector.every(x=>x.unchanged)}));
 } finally { await rm(temp,{recursive:true,force:true}); }
