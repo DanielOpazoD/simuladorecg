@@ -6,6 +6,13 @@ PR1 de fuentes ventriculares. Es un laboratorio de evaluación offline. No cambi
 ni la auditoría posterior. No entrena un score ni convierte el ECG Lab en un
 instrumento diagnóstico. Los resultados difíciles permanecen en el informe.
 
+## Extensión de aceptación posterior a PR20
+
+La [protección de no regresión](noise-regression-contract.md) ejecuta ahora la
+entrada actual del worker contra `aee59f6`, conservando este protocolo histórico.
+Distingue `review` de abstención y falla por deterioro de muestras o cobertura.
+Este documento describe el ensayo original; sus resultados no son un holdout.
+
 ## Protocolo cerrado antes de ejecutar
 
 `benchmarks/noise-stress/protocol.json`: cinco casos existentes (sinusal,

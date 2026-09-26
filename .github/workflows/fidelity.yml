@@ -22,6 +22,8 @@ jobs:
       - run: npm ci
       - name: Unit and signal contracts
         run: npm test -- --reporter=default --reporter=json --outputFile=${{ runner.temp }}/unit-results.json
+      - name: Discriminative noise-regression contracts
+        run: node --test tests/noise-regression.node.mjs > "${{ runner.temp }}/noise-regression.tap"
       - name: Types and production build
         run: npm run build
       - name: Matched repolarization comparison and detector freeze
@@ -52,6 +54,7 @@ jobs:
           node -p 'JSON.stringify(process.versions,null,2)' > "$RUNNER_TEMP/ecg-evidence/runtime.json"
           cp "$RUNNER_TEMP"/*results.json "$RUNNER_TEMP/ecg-evidence/" 2>/dev/null || true
           cp "$RUNNER_TEMP/repolarization-comparison.json" "$RUNNER_TEMP/ecg-evidence/" 2>/dev/null || true
+          cp "$RUNNER_TEMP/noise-regression.tap" "$RUNNER_TEMP/ecg-evidence/" 2>/dev/null || true
           cp "$RUNNER_TEMP/vite.log" "$RUNNER_TEMP/ecg-evidence/" 2>/dev/null || true
           test ! -d dist || cp -r dist "$RUNNER_TEMP/ecg-evidence/dist"
       - uses: actions/upload-artifact@v4

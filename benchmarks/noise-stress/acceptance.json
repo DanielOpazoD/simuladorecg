@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "baselineCommit": "aee59f64a35cdee76133113cfc0da216fc8832cd",
+  "acquisitionCommit": "784173f94bc103686efb321fc13f1b8f40913f76",
+  "noiseProtocolSha256": "cf67760f2a7f64f3a76dd31248f8dd943985a039ed7d7c1a5e2c4c9a81d13544",
+  "role": "Paired regression on exposed PR19 noise. Not new clinical or holdout validation.",
+  "analyzer": "src/engine/sample-analysis.ts (current worker entry, before model audit)",
+  "numericalTolerance": {
+    "voltageMv": 1e-06,
+    "areaMvS": 1e-08
+  },
+  "toleranceRationale": "Numerical reproducibility slack, well below the existing engineering review flags. Not physiological or clinical accuracy tolerances.",
+  "morphologyGate": "Per preset/noise/SNR/filter/beat-kind/lead: mean, type7 p95 and maximum absolute error may not worsen beyond numerical slack. Native and post-acquisition chains separate. RMSE checked separately.",
+  "qualityGate": "Within each preset/noise/SNR/filter stratum: no increase in usable erroneous estimates, no loss of usable-correct or retained-correct observations, no extra unreferenced outputs. Review retains the number and is NOT abstention. QRS/QT use paired beat errors with global status.",
+  "detectionGate": "No loss of TP or increase in FP/FN with identical reference denominators.",
+  "integrityGate": "Exact clean-source and noise identities, unchanged windows/protocol, complete unique scenarios, 12 leads and finite metrics. Missing values cannot become zero errors.",
+  "baselinePolicy": "Never auto-regenerate the baseline to fix a red check. Intentional source changes or performance tradeoffs require an explicit reviewed amendment and rerun; retain the previous evidence.",
+  "clinicalValidation": false
+}

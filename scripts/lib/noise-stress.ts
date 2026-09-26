@@ -55,12 +55,12 @@ export function injectNoise(clean:Samples,channels:ArrayLike<number>[],mapping:R
     return [l,sp>0&&np>0?10*Math.log10(sp/np):null];}))};
 }
 /** Same kernels/cutoffs, explicitly a POST-acquisition 500 Hz test chain. */
-export function filterSamples(input:Samples,mode:FilterMode):Samples {
+export function filterSamples(input:Samples,mode:FilterMode,kernels:{highpass:typeof highpass;biquad:typeof biquad}={highpass,biquad}):Samples {
   if(!['off','diagnostic','monitor','aggressive'].includes(mode))throw new Error('Unknown filter');
   const leads:Record<string,Float64Array>={};
   for(const l of INDEPENDENT_NOISE_LEADS){const a=new Float64Array(input.leads[l]);finiteArray(a);
-    if(mode!=='off')highpass(a,input.fs,mode==='diagnostic'?.05:mode==='monitor'?.5:2);
-    if(mode==='monitor'||mode==='aggressive')biquad(a,input.fs,40,'lowpass');
+    if(mode!=='off')kernels.highpass(a,input.fs,mode==='diagnostic'?.05:mode==='monitor'?.5:2);
+    if(mode==='monitor'||mode==='aggressive')kernels.biquad(a,input.fs,40,'lowpass');
     leads[l]=a;
   }
   return deriveLimbs({fs:input.fs,leads});

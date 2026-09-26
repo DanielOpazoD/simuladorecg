@@ -6,27 +6,40 @@ import {execFileSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
+import {parseArgs} from 'node:util';
 import assert from 'node:assert/strict';
 import {matchQrsEvents} from '../tests/reference/ludb/load-ludb.mjs';
 import {errorSummary} from './lib/external-qrs-evaluation.mjs';
-const root=process.cwd(),output=process.argv[2];
-if(!output)throw new Error('Usage: node scripts/benchmark-noise-stress.mjs OUTPUT');
+const args=parseArgs({allowPositionals:true,options:{
+  'source-root':{type:'string',default:process.cwd()},
+  'analyzer':{type:'string',default:'primitive'},
+  'noise-dir':{type:'string'},
+}});
+const evaluatorRoot=process.cwd(),root=path.resolve(args.values['source-root']);
+const output=args.positionals[0],noiseDir=args.values['noise-dir']??output;
+if(!output||args.positionals.length!==1||!['primitive','worker'].includes(args.values.analyzer))
+  throw new Error('Usage: benchmark-noise-stress.mjs OUTPUT [--noise-dir INPUT] [--source-root DIR] [--analyzer primitive|worker]');
+const analyzerEntry=args.values.analyzer==='worker'?'src/engine/sample-analysis.ts':'src/engine/measure.ts';
 const protocolBytes=await readFile('benchmarks/noise-stress/protocol.json');
 const p=JSON.parse(protocolBytes), hash=x=>createHash('sha256').update(x).digest('hex');
-const source=JSON.parse(await readFile(path.join(output,'noise-segments.json')));
-const provenance=JSON.parse(await readFile(path.join(output,'noise-provenance.json')));
+const source=JSON.parse(await readFile(path.join(noiseDir,'noise-segments.json')));
+const provenance=JSON.parse(await readFile(path.join(noiseDir,'noise-provenance.json')));
 assert.equal(provenance.protocolSha256,hash(protocolBytes),'Prepared data belongs to a different protocol');
 const expected=p.records.flatMap(r=>p.segmentStartsSeconds.map(t=>`${r}:${t}`));
 assert.deepEqual(source.segments.map(s=>`${s.record}:${s.startSeconds}`),expected,'No omissions/replacement of snippets');
 const temp=await mkdtemp(path.join(tmpdir(),'noise-stress-'));
 const write=(name,obj)=>writeFile(path.join(output,name),JSON.stringify(obj,null,2)+'\n');
 try{
-  const models=await build({stdin:{contents:`export {synthesize} from './src/engine/signal'; export {fromPreset,presetById} from './src/presets/catalog';export {tWaveSupport} from './src/engine/constraints';export * from './scripts/lib/noise-stress';`,resolveDir:root},bundle:true,platform:'node',format:'esm',metafile:true,outfile:path.join(temp,'model.mjs')});
-  const analyzer=await build({entryPoints:['src/engine/measure.ts'],bundle:true,platform:'node',format:'esm',metafile:true,outfile:path.join(temp,'analyzer.mjs')});
+  // The evaluator is identical for baseline and candidate; only product imports vary.
+  const product=f=>JSON.stringify(path.join(root,f));
+  const helpers=JSON.stringify(path.join(evaluatorRoot,'scripts/lib/noise-stress.ts'));
+  const models=await build({stdin:{contents:`export {synthesize} from ${product('src/engine/signal.ts')}; export {fromPreset,presetById} from ${product('src/presets/catalog.ts')}; export {tWaveSupport} from ${product('src/engine/constraints.ts')}; export {highpass,biquad} from ${product('src/engine/filter.ts')}; export * from ${helpers};`,resolveDir:evaluatorRoot},bundle:true,platform:'node',format:'esm',metafile:true,outfile:path.join(temp,'model.mjs')});
+  const analyzer=await build({entryPoints:[path.join(root,analyzerEntry)],bundle:true,platform:'node',format:'esm',metafile:true,outfile:path.join(temp,'analyzer.mjs')});
   assert.ok(!Object.keys(models.metafile.inputs).some(x=>x.endsWith('/measure.ts')||x.endsWith('/model-audit.ts')));
   assert.ok(!Object.keys(analyzer.metafile.inputs).some(x=>/\/(signal|rhythm|reference|model-audit)\.ts$/.test(x)),'Reference leakage into analyzer');
   const M=await import(pathToFileURL(path.join(temp,'model.mjs')).href);
-  const {measure}=await import(pathToFileURL(path.join(temp,'analyzer.mjs')).href);
+  const api=await import(pathToFileURL(path.join(temp,'analyzer.mjs')).href);
+  const measure=args.values.analyzer==='worker'?api.analyzeSamples:api.measure;
   const inputs=Object.keys({...models.metafile.inputs,...analyzer.metafile.inputs}).filter(x=>x!=='<stdin>');
   const evaluatedSources=Object.fromEntries(await Promise.all(inputs.map(async x=>[x,hash(await readFile(x))])));
   const modelSignals={},refs={},morphologyWindows={};
@@ -67,7 +80,7 @@ try{
   function morphology(id,clean,actual){
     return morphologyWindows[id].map(w=>({kind:w.kind,windows:w,byLead:M.compareMorphology(clean,actual,w,p.reviewThresholds)}));
   }
-  const rows=[],native=[];
+  const rows=[],native=[],cleanSourceHashes={};
   for(const id of p.presets){const {c,s}=modelSignals[id];
     for(const mode of p.filters){
       const actual=M.synthesize({...c,filter:mode},p.segmentDurationSeconds);
@@ -75,11 +88,12 @@ try{
       native.push({preset:id,filter:mode,chain:'Native synthesize: 1000Hz filter, antialias, 500Hz output',morphology:morphology(id,s,actual)});
     }
     const cleanHash=hash(Buffer.concat(M.ALL_NOISE_LEADS.map(l=>Buffer.from(s.leads[l].buffer))));
+    cleanSourceHashes[id]=cleanHash;
     for(const segment of [null,...source.segments])for(const snrDb of segment?p.snrDb:[null]){
       const channels=segment?.channels??[new Float64Array(s.leads.I.length),new Float64Array(s.leads.I.length)];
       assert.ok(!segment||segment.fs===s.fs,'Noise/output sampling mismatch');
       const mixed=M.injectNoise(s,channels,p.mapping,snrDb,p.cropSeconds);
-      for(const mode of p.filters){const filtered=M.filterSamples(mixed.signal,mode);M.assertIdentities(filtered);
+      for(const mode of p.filters){const filtered=M.filterSamples(mixed.signal,mode,{highpass:M.highpass,biquad:M.biquad});M.assertIdentities(filtered);
         rows.push({preset:id,noise:segment?.record??'clean',startSeconds:segment?.startSeconds??null,snrDb,filter:mode,
           achievedDb:mixed.achievedDb,perLeadDb:mixed.perLeadDb,scaleMvPerCount:mixed.scaleMvPerCount,
           rmseMv:M.waveformRmse(s,filtered,p.cropSeconds),morphology:morphology(id,s,filtered),
@@ -97,11 +111,14 @@ try{
       statuses:Object.fromEntries(['hr','qrs','qt'].map(k=>[k,Object.fromEntries(['usable','review','unavailable'].map(status=>[status,sum(r=>(k==='hr'?r.analysis.hr.status:r.analysis.metricStatus[k])===status?1:0)]))])),
       retainedErrors:Object.fromEntries(['qrs','qt'].map(k=>[k,sum(r=>r.analysis.retainedBeyondLimits[k].count)]))});
   }
-  await write('noise-results.json',{protocol:p,rows,groups,native,
+  await write('noise-results.json',{schemaVersion:2,analyzerEntry,cleanSourceHashes,noiseProtocolSha256:hash(protocolBytes),
+    sourceCommit:execFileSync('git',['rev-parse','HEAD'],{cwd:root}).toString().trim(),
+    noiseSha256:hash(await readFile(path.join(noiseDir,'noise-segments.json'))),
+    protocol:p,rows,groups,native,
     interpretation:'Engineering stress outcomes, not clinical validation. Global analyzer status is not per-beat reliability. No tuning after viewing this protocol.',
     analyzerReceivesOnlySamples:true,modelAuditUsed:false});
-  await write('evaluation-provenance.json',{commit:execFileSync('git',['rev-parse','HEAD']).toString().trim(),evaluatedSources,
-    preparedNoiseSha256:hash(await readFile(path.join(output,'noise-segments.json'))),protocolSha256:hash(protocolBytes),
+  await write('evaluation-provenance.json',{commit:execFileSync('git',['rev-parse','HEAD'],{cwd:root}).toString().trim(),analyzerEntry,evaluatedSources,
+    preparedNoiseSha256:hash(await readFile(path.join(noiseDir,'noise-segments.json'))),protocolSha256:hash(protocolBytes),
     clinicalValidation:false,generatorChanged:false,analyzerTuned:false});
   console.log(JSON.stringify({scenarios:rows.length,nativeComparisons:native.length,groups:groups.length,analyzerTuned:false}));
 }catch(e){await write('evaluation-failure.json',{error:String(e.stack)});throw e;}
