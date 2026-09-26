@@ -39,6 +39,43 @@ const median = (xs) => {
  * are returned. Endpoint min/max reflects this detector's four input leads.
  * Missing source boundaries remain null, while QRS event identity is retained.
  */
+export function fourLeadWaveReference(meta, wave) {
+  if (!["P", "QRS", "T"].includes(wave)) throw new Error(`Unsupported LUDB wave: ${wave}`);
+  const names = ["I", "II", "V1", "V5"];
+  const byLead = Object.fromEntries(names.map((lead) => [lead, meta.annotations[lead].filter((x) => x.wave === wave)]));
+  const used = Object.fromEntries(names.map((lead) => [lead, new Set()]));
+  const events = [], excluded = [];
+  for (const anchor of byLead.II) {
+    const group = { II: anchor }, candidateIndices = {};
+    for (const lead of ["I", "V1", "V5"]) {
+      const candidates = byLead[lead].map((candidate, index) => ({ candidate, index }))
+        .filter(({ candidate, index }) => !used[lead].has(index) && Math.abs(candidate.peak - anchor.peak) <= 0.15 * meta.fs)
+        .sort((a, b) => Math.abs(a.candidate.peak - anchor.peak) - Math.abs(b.candidate.peak - anchor.peak));
+      if (candidates[0]) {
+        group[lead] = candidates[0].candidate;
+        candidateIndices[lead] = candidates[0].index;
+      }
+    }
+    if (Object.keys(group).length !== 4) {
+      excluded.push({ anchorPeak: anchor.peak / meta.fs, wave, reason: "incomplete four-lead annotation match" });
+      continue;
+    }
+    for (const [lead, index] of Object.entries(candidateIndices)) used[lead].add(index);
+    const waves = Object.values(group);
+    const completeOnsets = waves.every((item) => item.onset !== null);
+    const completeOffsets = waves.every((item) => item.offset !== null);
+    events.push({
+      wave,
+      peak: median(waves.map((item) => item.peak)) / meta.fs,
+      onset: completeOnsets ? Math.min(...waves.map((item) => item.onset)) / meta.fs : null,
+      offset: completeOffsets ? Math.max(...waves.map((item) => item.offset)) / meta.fs : null,
+      boundaryCoverage: { completeOnsets, completeOffsets },
+      originalByLead: group,
+    });
+  }
+  return { events, excluded };
+}
+
 export function fourLeadQrsReference(meta) {
   const names = ["I", "II", "V1", "V5"];
   const byLead = Object.fromEntries(names.map((lead) => [lead, meta.annotations[lead].filter((x) => x.wave === "QRS")]));
