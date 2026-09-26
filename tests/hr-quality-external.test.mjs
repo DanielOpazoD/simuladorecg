@@ -5,7 +5,7 @@ import { loadLudb } from './reference/ludb/load-ludb.mjs';
 import { measure } from '../src/engine/measure';
 import { analyzeSamples } from '../src/engine/sample-analysis';
 const root=fileURLToPath(new URL('./reference/ludb/fixtures',import.meta.url));
-const numeric=m=>({...m,evidence:{...m.evidence,hr:{...m.evidence.hr,status:'review',reason:''}}});
+const numeric=({support,...m})=>({...m,evidence:{...m.evidence,hr:{...m.evidence.hr,status:'review',reason:''}}});
 describe('Known LUDB regression of the full sample-only entry',()=>{
  it.each([1,2,3,4,101,102,103,104])('preserves numerical analysis of known record %s',id=>{
   const {signal}=loadLudb(root,id<100?'development':'control',id);

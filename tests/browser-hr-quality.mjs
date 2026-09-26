@@ -37,6 +37,12 @@ try {
  checks.push('real worker preserves HR and marks review for native noisy PVC');
  await metric.click();
  assert.match(await page.locator('#dialog .evidence-notes').innerText(),/sensible al umbral/);
+ await page.getByText('Qué muestras sostienen cada medida',{exact:true}).click();
+ assert.match(await page.locator('#dialog').innerText(),/antes de la auditoría/);
+ assert.match(await page.locator('#dialog').innerText(),/I, II, V1, V5/);
+ assert.ok(await page.locator('#dialog details[open] tbody tr').count()>0);
+ checks.push('candidate-specific measurement support and channel provenance visible');
+ await page.screenshot({path:path.join(out,'measurement-support-review.png')});
  await page.screenshot({path:path.join(out,'hr-quality-review.png')});
  await page.locator('#dialog').evaluate(d=>d.close());
  checks.push('quality reason visible in measurements dialog');
