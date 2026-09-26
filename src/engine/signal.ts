@@ -203,7 +203,8 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
           l,
           b.time,
           dur,
-          0.75,
+          // This is a QRS component, so the QRS gain must scale it too.
+          0.75 * c.qrsAmp,
           (u) => gaussian(u, 0.47, 0.14) * compact(u),
         );
     if (c.ischemia === "pericarditis" && b.pr) {
