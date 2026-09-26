@@ -45,6 +45,7 @@ jobs:
           curl --silent --fail "$ECG_TEST_URL/build-info.json" > /dev/null
           node scripts/verify-production.mjs
           node tests/browser-fidelity.mjs
+          node tests/browser-worker-recovery.mjs
       - name: Archive exact reviewed source and reports
         if: always()
         run: |
