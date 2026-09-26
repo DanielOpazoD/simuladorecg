@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "baselineCommit": "b46f11c0782add7d2081dd113f9c0b41a7339d6a",
+  "role": "Retrospective characterization only; never changes automatic QT/QTc or hides lower-agreement proposals",
+  "developmentCohorts": [
+    "original PR17 40",
+    "observed PR26 calibration 40"
+  ],
+  "holdoutEnabled": false,
+  "highAgreement": {
+    "maximumSpreadMs": 6,
+    "maximumAreaAmplitudeRatio": 3
+  },
+  "selectionDisclosure": "Thresholds selected after inspecting errors in both exposed development cohorts; descriptive strata, not preregistered validation gates.",
+  "acceptance": {
+    "minimumCombinedMatchedHighAgreement": 80,
+    "maximumCombinedMaeMs": 10,
+    "maximumCombinedP95Ms": 30,
+    "maximumCombinedErrorMs": 50
+  },
+  "limitations": [
+    "Retrospectively selected thresholds may overfit.",
+    "Leads and beats within records are correlated.",
+    "High-agreement is not probability, clinical confidence or authorization for automatic QT.",
+    "All lower-agreement proposals remain visible and reported.",
+    "External untouched validation is required before considering automatic QT."
+  ]
+}

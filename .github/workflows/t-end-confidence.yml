@@ -1,0 +1,42 @@
+name: T end error-tail characterization
+on:
+  pull_request:
+  push:
+    branches: ['main']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  characterize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22.16.0', cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: npm ci
+      - run: npx vitest run tests/t-end-confidence.test.ts tests/t-end-area.test.ts
+      - run: python -m pip install wfdb==4.3.1
+      - name: Reproduce PR30 reports on known development cohorts only
+        run: |
+          python scripts/prepare-ludb-expansion.py --output "$RUNNER_TEMP/original40" --crosscheck
+          python scripts/prepare-ludb-delineation.py --output "$RUNNER_TEMP/calibration40" --crosscheck
+          node scripts/evaluate-t-end-assistance.mjs --original "$RUNNER_TEMP/original40/fixtures" --calibration "$RUNNER_TEMP/calibration40/fixtures" --output "$RUNNER_TEMP/pr30"
+      - name: Characterize tails without modifying or hiding proposals
+        run: node scripts/evaluate-t-end-confidence.mjs --original-report "$RUNNER_TEMP/pr30/original40.json" --calibration-report "$RUNNER_TEMP/pr30/calibration40.json" --output "$RUNNER_TEMP/confidence"
+      - name: Archive exact source and reports
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/confidence"
+          git archive HEAD | gzip > "$RUNNER_TEMP/confidence/source.tar.gz"
+          git rev-parse HEAD > "$RUNNER_TEMP/confidence/commit.txt"
+          cp "$RUNNER_TEMP/pr30/summary.json" "$RUNNER_TEMP/confidence/pr30-summary.json" 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: t-end-confidence-${{ github.sha }}
+          path: ${{ runner.temp }}/confidence/
+          retention-days: 30
