@@ -1,10 +1,10 @@
 name: PTB-XL+ morphology reference
 on:
   pull_request:
-    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/ptbxl-plus/**', 'scripts/*ptbxl*', 'scripts/lib/ptbxl-morphology.mjs', 'tests/*ptbxl*', '.github/workflows/ptbxl-morphology.yml']
+    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/ptbxl-plus/**', 'scripts/*ptbxl*', 'scripts/lib/ptbxl-morphology.mjs', 'tests/*ptbxl*', '.github/workflows/ptbxl-morphology.yml', '.github/workflows/generator-ptbxl-gap.yml']
   push:
     branches: ['main']
-    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/ptbxl-plus/**', 'scripts/*ptbxl*', 'scripts/lib/ptbxl-morphology.mjs', 'tests/*ptbxl*', '.github/workflows/ptbxl-morphology.yml']
+    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/ptbxl-plus/**', 'scripts/*ptbxl*', 'scripts/lib/ptbxl-morphology.mjs', 'tests/*ptbxl*', '.github/workflows/ptbxl-morphology.yml', '.github/workflows/generator-ptbxl-gap.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -28,11 +28,13 @@ jobs:
       - name: Independent selection, statistics and waveform contracts
         run: |
           (cd "$RUNNER_TEMP/ptbxl-acquisition" && python -m unittest discover -s tests -p test_ptbxl_reference.py -v)
-          npx vitest run tests/ptbxl-morphology.test.mjs
+          npx vitest run tests/ptbxl-morphology.test.mjs tests/generator-ptbxl-gap.test.mjs
       - name: Select patients before feature acquisition and verify sources
         run: python "$RUNNER_TEMP/ptbxl-acquisition/scripts/ptbxl-benchmark.py" --output "$RUNNER_TEMP/ptbxl-reference"
       - name: Describe median beats and unchanged generated samples separately
         run: node scripts/benchmark-ptbxl-samples.mjs "$RUNNER_TEMP/ptbxl-reference"
+      - name: Describe generator gaps using the exact reference from this job
+        run: node scripts/compare-generator-ptbxl.mjs "$RUNNER_TEMP/ptbxl-reference" "$RUNNER_TEMP/ptbxl-reference"
       - name: Preserve structural diagnostics on failure, never clinical comments
         if: failure()
         run: |
