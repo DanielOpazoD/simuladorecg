@@ -1,5 +1,5 @@
 /** Offline evaluation. Never imported by the application; no model audit. */
-import { highpass, biquad } from '../../src/engine/filter';
+import { highpass, biquad, applyAcquisitionFilter } from '../../src/engine/filter';
 import { morphologyMetrics, type Windows, type WaveMetrics } from '../../tests/support/morphology-metrics';
 export const INDEPENDENT_NOISE_LEADS = ['I','II','V1','V2','V3','V4','V5','V6'] as const;
 export const ALL_NOISE_LEADS = ['I','II','III','aVR','aVL','aVF','V1','V2','V3','V4','V5','V6'] as const;
@@ -55,12 +55,15 @@ export function injectNoise(clean:Samples,channels:ArrayLike<number>[],mapping:R
     return [l,sp>0&&np>0?10*Math.log10(sp/np):null];}))};
 }
 /** Same kernels/cutoffs, explicitly a POST-acquisition 500 Hz test chain. */
-export function filterSamples(input:Samples,mode:FilterMode,kernels:{highpass:typeof highpass;biquad:typeof biquad}={highpass,biquad}):Samples {
+export function filterSamples(input:Samples,mode:FilterMode,kernels:{highpass:typeof highpass;biquad:typeof biquad;applyAcquisitionFilter?:typeof applyAcquisitionFilter}={highpass,biquad,applyAcquisitionFilter}):Samples {
   if(!['off','diagnostic','monitor','aggressive'].includes(mode))throw new Error('Unknown filter');
   const leads:Record<string,Float64Array>={};
   for(const l of INDEPENDENT_NOISE_LEADS){const a=new Float64Array(input.leads[l]);finiteArray(a);
+    if(kernels.applyAcquisitionFilter) kernels.applyAcquisitionFilter(a,input.fs,mode);
+    else {
     if(mode!=='off')kernels.highpass(a,input.fs,mode==='diagnostic'?.05:mode==='monitor'?.5:2);
     if(mode==='monitor'||mode==='aggressive')kernels.biquad(a,input.fs,40,'lowpass');
+    }
     leads[l]=a;
   }
   return deriveLimbs({fs:input.fs,leads});

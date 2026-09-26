@@ -33,7 +33,7 @@ try{
   // The evaluator is identical for baseline and candidate; only product imports vary.
   const product=f=>JSON.stringify(path.join(root,f));
   const helpers=JSON.stringify(path.join(evaluatorRoot,'scripts/lib/noise-stress.ts'));
-  const models=await build({stdin:{contents:`export {synthesize} from ${product('src/engine/signal.ts')}; export {fromPreset,presetById} from ${product('src/presets/catalog.ts')}; export {tWaveSupport} from ${product('src/engine/constraints.ts')}; export {highpass,biquad} from ${product('src/engine/filter.ts')}; export * from ${helpers};`,resolveDir:evaluatorRoot},bundle:true,platform:'node',format:'esm',metafile:true,outfile:path.join(temp,'model.mjs')});
+  const models=await build({stdin:{contents:`export {synthesize} from ${product('src/engine/signal.ts')}; export {fromPreset,presetById} from ${product('src/presets/catalog.ts')}; export {tWaveSupport} from ${product('src/engine/constraints.ts')}; export * as filterApi from ${product('src/engine/filter.ts')}; export * from ${helpers};`,resolveDir:evaluatorRoot},bundle:true,platform:'node',format:'esm',metafile:true,outfile:path.join(temp,'model.mjs')});
   const analyzer=await build({entryPoints:[path.join(root,analyzerEntry)],bundle:true,platform:'node',format:'esm',metafile:true,outfile:path.join(temp,'analyzer.mjs')});
   assert.ok(!Object.keys(models.metafile.inputs).some(x=>x.endsWith('/measure.ts')||x.endsWith('/model-audit.ts')));
   assert.ok(!Object.keys(analyzer.metafile.inputs).some(x=>/\/(signal|rhythm|reference|model-audit)\.ts$/.test(x)),'Reference leakage into analyzer');
@@ -93,7 +93,7 @@ try{
       const channels=segment?.channels??[new Float64Array(s.leads.I.length),new Float64Array(s.leads.I.length)];
       assert.ok(!segment||segment.fs===s.fs,'Noise/output sampling mismatch');
       const mixed=M.injectNoise(s,channels,p.mapping,snrDb,p.cropSeconds);
-      for(const mode of p.filters){const filtered=M.filterSamples(mixed.signal,mode,{highpass:M.highpass,biquad:M.biquad});M.assertIdentities(filtered);
+      for(const mode of p.filters){const filtered=M.filterSamples(mixed.signal,mode,M.filterApi);M.assertIdentities(filtered);
         rows.push({preset:id,noise:segment?.record??'clean',startSeconds:segment?.startSeconds??null,snrDb,filter:mode,
           achievedDb:mixed.achievedDb,perLeadDb:mixed.perLeadDb,scaleMvPerCount:mixed.scaleMvPerCount,
           rmseMv:M.waveformRmse(s,filtered,p.cropSeconds),morphology:morphology(id,s,filtered),
