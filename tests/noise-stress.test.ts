@@ -34,6 +34,13 @@ describe('Calibrated noise independent contracts',()=>{
     for(const mode of ['off','diagnostic','monitor','aggressive'] as const)assertIdentities(filterSamples(s,mode));
     expect(s.leads.I).toEqual(before);expect(filterSamples(s,'off').leads).toEqual(s.leads);
   });
+  it('paired filter evaluation uses the supplied baseline kernels, not candidate kernels',()=>{
+    const calls:string[]=[];
+    const kernels={highpass:()=>{calls.push('highpass')},biquad:()=>{calls.push('biquad')}};
+    const s=clean(),r=filterSamples(s,'monitor',kernels);
+    expect(r.leads).toEqual(s.leads);expect(calls.filter(x=>x==='highpass')).toHaveLength(8);
+    expect(calls.filter(x=>x==='biquad')).toHaveLength(8);
+  });
   it('rejects corruption in either sign of a limb identity',()=>{
     for(const sign of [-1,1]){const s=clean();s.leads.III[100]+=sign*.1;expect(()=>assertIdentities(s)).toThrow();}
   });

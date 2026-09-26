@@ -1,10 +1,10 @@
 name: Calibrated ECG noise stress
 on:
   pull_request:
-    paths: ['benchmarks/noise-stress/**', 'scripts/*noise-stress*', 'scripts/lib/noise-stress.ts', 'tests/*noise*', '.github/workflows/noise-stress.yml']
+    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/noise-stress/**', 'scripts/*noise*', 'scripts/lib/noise*', 'tests/*noise*', 'tests/support/morphology-metrics.ts', 'package*.json', '.github/workflows/noise-stress.yml']
   push:
     branches: ['main']
-    paths: ['benchmarks/noise-stress/**', 'scripts/*noise-stress*', 'scripts/lib/noise-stress.ts', 'tests/*noise*', '.github/workflows/noise-stress.yml']
+    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/noise-stress/**', 'scripts/*noise*', 'scripts/lib/noise*', 'tests/*noise*', 'tests/support/morphology-metrics.ts', 'package*.json', '.github/workflows/noise-stress.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -17,21 +17,31 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-        with: {persist-credentials: false}
+        with: {fetch-depth: 0, persist-credentials: false}
       - uses: actions/setup-node@v4
         with: {node-version: '22.16.0', cache: npm}
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: npm ci
       - run: python -m pip install wfdb==4.3.1
+      - name: Restore reviewed acquisition and acceptance baselines
+        run: |
+          git worktree add --detach "$RUNNER_TEMP/noise-acquisition" 784173f94bc103686efb321fc13f1b8f40913f76
+          git worktree add --detach "$RUNNER_TEMP/noise-baseline" aee59f64a35cdee76133113cfc0da216fc8832cd
       - name: Discriminative reader, calibration, morphology and abstention tests
         run: |
-          python -m unittest discover -s tests -p test_noise_stress.py -v
+          (cd "$RUNNER_TEMP/noise-acquisition" && python -m unittest discover -s tests -p test_noise_stress.py -v)
           npx vitest run tests/noise-stress.test.ts
-      - name: Acquire fixed NSTDB windows and cross-check digital samples
-        run: python scripts/prepare-noise-stress.py --output "$RUNNER_TEMP/noise-stress"
-      - name: Evaluate unchanged filters and sample-only analyzer
-        run: node scripts/benchmark-noise-stress.mjs "$RUNNER_TEMP/noise-stress"
+          node --test tests/noise-regression.node.mjs
+      - name: Acquire exposed NSTDB windows with the frozen reader
+        run: python "$RUNNER_TEMP/noise-acquisition/scripts/prepare-noise-stress.py" --output "$RUNNER_TEMP/noise-stress"
+      - name: Paired current-worker evaluation, same evaluator and noise bytes
+        run: |
+          mkdir -p "$RUNNER_TEMP/noise-stress/before" "$RUNNER_TEMP/noise-stress/after"
+          node scripts/benchmark-noise-stress.mjs "$RUNNER_TEMP/noise-stress/before" --noise-dir "$RUNNER_TEMP/noise-stress" --source-root "$RUNNER_TEMP/noise-baseline" --analyzer worker
+          node scripts/benchmark-noise-stress.mjs "$RUNNER_TEMP/noise-stress/after" --noise-dir "$RUNNER_TEMP/noise-stress" --analyzer worker
+      - name: Enforce morphology and retained-quality non-regression
+        run: node scripts/check-noise-regression.mjs "$RUNNER_TEMP/noise-stress/before/noise-results.json" "$RUNNER_TEMP/noise-stress/after/noise-results.json" "$RUNNER_TEMP/noise-stress/acceptance-results.json"
       - name: Preserve exact code, limits and runtime
         if: always()
         run: |
