@@ -189,7 +189,7 @@ export function controls(c: ECGCase) {
    [
      ["off", "Sin filtro (antialias activo)"],
      ["diagnostic", "Diagnóstico · 0,05–150 Hz"],
-     ["monitor", "Monitor · 0,5–40 Hz"],
+     ["monitor", "Monitor · 0,5–40 Hz · fase cero"],
      ["aggressive", "Paso alto 2 Hz · demostración ST"],
    ],
    c.filter,

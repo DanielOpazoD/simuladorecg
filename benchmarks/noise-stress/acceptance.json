@@ -15,5 +15,13 @@
   "detectionGate": "No loss of TP or increase in FP/FN with identical reference denominators.",
   "integrityGate": "Exact clean-source and noise identities, unchanged windows/protocol, complete unique scenarios, 12 leads and finite metrics. Missing values cannot become zero errors.",
   "baselinePolicy": "Never auto-regenerate the baseline to fix a red check. Intentional source changes or performance tradeoffs require an explicit reviewed amendment and rerun; retain the previous evidence.",
-  "clinicalValidation": false
+  "clinicalValidation": false,
+  "monitorRevision": {
+    "mode": "monitor",
+    "filterSha256": "4e1fe3f43ea33332b0fe13b68f23ce1bd40f0ca496178bcb1a32c8a1ef3bff16",
+    "maximumTailRatio": 1.1,
+    "primaryMeanRatio": 0.85,
+    "rmseMeanRatio": 0.98,
+    "role": "Explicit monitor-only migration selected using exposed development. Not preregistered clinical evidence. Preserve complete strict failures and old baseline."
+  }
 }

@@ -28,7 +28,7 @@ import {
   compact,
 } from "./morphology";
 import { random, normal } from "./random";
-import { highpass, biquad, antialias } from "./filter";
+import { applyAcquisitionFilter, biquad, antialias } from "./filter";
 import { assignRepolarization } from "./repolarization";
 import { assertRepresentableEvents, tWaveSupport } from "./constraints";
 import { median } from "./analysis/statistics";
@@ -41,8 +41,9 @@ const FS = 1000,
 export function synthesize(c: ECGCase, duration = 65): Signal {
   duration = Math.max(10, Math.min(120, duration));
   const total = duration + WARM,
-    n = Math.ceil((total + GUARD) * FS),
-    events = generateEvents(c, total + GUARD);
+    guard = c.filter === "monitor" ? 4 : GUARD,
+    n = Math.ceil((total + guard) * FS),
+    events = generateEvents(c, total + guard);
   assignRepolarization(c, events.beats);
   assertRepresentableEvents(c, events);
   const xyz = [new Float64Array(n), new Float64Array(n), new Float64Array(n)],
@@ -279,14 +280,7 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
           (0.48 * Math.sin(t * 0.7) +
             0.23 * Math.sin(t * 8) * Math.max(0, Math.sin(t * 1.4)));
     }
-    if (c.filter !== "off")
-      highpass(
-        arr,
-        FS,
-        c.filter === "diagnostic" ? 0.05 : c.filter === "monitor" ? 0.5 : 2,
-      );
-    if (c.filter === "monitor" || c.filter === "aggressive")
-      biquad(arr, FS, 40, "lowpass");
+    applyAcquisitionFilter(arr, FS, c.filter);
     if (c.notch) biquad(arr, FS, c.notch, "notch", 25);
     const filtered = antialias(arr, FS);
     for (let i = 0; i < output[l].length; i++)

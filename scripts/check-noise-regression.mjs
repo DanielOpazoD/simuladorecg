@@ -3,6 +3,7 @@ import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 import path from 'node:path';
+import {reviewMonitorRevision} from './lib/monitor-revision.mjs';
 import {compareReports} from './lib/noise-regression.mjs';
 const [beforeFile,afterFile,output,...extra]=process.argv.slice(2);
 if(!output||extra.length)throw Error('Usage: check-noise-regression.mjs BEFORE AFTER OUTPUT');
@@ -14,6 +15,11 @@ try {
   assert.equal(before.sourceCommit,policy.baselineCommit,'Not the reviewed baseline commit');
   assert.equal(before.noiseProtocolSha256,policy.noiseProtocolSha256,'Unreviewed acquisition protocol');
   result=compareReports(before,after,policy.numericalTolerance);
+  if (policy.monitorRevision) {
+    assert.equal(createHash('sha256').update(await readFile('src/engine/filter.ts')).digest('hex'),policy.monitorRevision.filterSha256,'Unreviewed filter implementation');
+    const revision=reviewMonitorRevision(before,after,result,policy.monitorRevision);
+    result={...result,status:'pass',strictStatus:result.status,reviewedMonitorRevision:revision};
+  }
   result.policy=policy;
   result.reportSha256={before:createHash('sha256').update(beforeBytes).digest('hex'),after:createHash('sha256').update(afterBytes).digest('hex')};
 } catch(error) {

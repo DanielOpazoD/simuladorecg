@@ -1,0 +1,174 @@
+diff --git a/scripts/compare-hr-quality.mjs b/scripts/compare-hr-quality.mjs
+index 3e29dbf..50d40d6 100644
+--- a/scripts/compare-hr-quality.mjs
++++ b/scripts/compare-hr-quality.mjs
+@@ -25,20 +25,31 @@ try {
+   const B = await import(pathToFileURL(path.join(temp,'before.mjs')));
+   const A = await import(pathToFileURL(path.join(temp,'after.mjs')));
+   assert.deepEqual(A.HR_QUALITY_POLICY, policy.qualityPolicy, 'Policy changed after replication protocol');
+-  for (const file of Object.keys(next.metafile.inputs).filter(f => !f.endsWith('/sample-analysis.ts'))) {
++  for (const file of Object.keys(next.metafile.inputs).filter(f => !f.endsWith('/sample-analysis.ts') && !f.endsWith('/measurement-support.ts'))) {
+     assert.equal(hash(await readFile(file)),hash(await readFile(path.join(base,file))),`Unreviewed primitive change: ${file}`);
+   }
+   const rows=[];let identical=0;
+   const compare=(samples,reference,context)=>{
+     const before=B.measure(samples), after=A.analyzeSamples(samples);
+-    const numeric=m=>({...m,evidence:{...m.evidence,hr:{...m.evidence.hr,status:'review',reason:''}}});
+-    assert.deepEqual(numeric(before),numeric(after),'Numerical output or unrelated evidence changed'); identical++;
++    // Candidate-support revision: raw candidates stay exact; a summary may be explicitly retired,
++    // never replaced by another number. Historical HR screen remains frozen.
++    for(const key of ['hr','instantHr','rr','beats','detectedPeaks','window'])
++      assert.deepEqual(after[key],before[key],`Primitive output changed: ${key}`);
++    for(const key of ['pr','qrs','qt','axis']) {
++      if(after[key]!==null)assert.equal(after[key],before[key],`Corrected ${key} without delineation evidence`);
++      else if(before[key]!==null){assert.equal(after.evidence[key].status,'unavailable');assert.equal(after.rejected[key],before[key]);}
++      const rank={usable:0,review:1,unavailable:2};assert.ok(rank[after.evidence[key].status]>=rank[before.evidence[key].status]);
++    }
++    for(const key of ['pAxis','tAxis'])if(after[key]!==null)assert.equal(after[key],before[key]);
++    for(const key of Object.keys(before.qtc))if(after.qtc[key]!==null)assert.equal(after.qtc[key],before.qtc[key]);
++    identical++;
+     if(before.evidence.hr.status!=='usable') assert.deepEqual(before.evidence.hr,after.evidence.hr);
+     const error=before.hr===null||reference===null?null:before.hr-reference;
+     const quality=before.hr===null?null:A.heartRateDetectionQuality(samples,before.detectedPeaks);
+     return {...context,referenceBpm:reference,hr:before.hr,errorBpm:error,
+       beyondReview:error===null?null:Math.abs(error)>policy.heartRateErrorReviewBpm,
+-      before:before.evidence.hr.status,after:after.evidence.hr.status,quality};
++      before:before.evidence.hr.status,after:after.evidence.hr.status,quality,
++      intervalChanges:Object.fromEntries(['pr','qrs','qt','axis'].filter(k=>before[k]!==after[k]||before.evidence[k].status!==after.evidence[k].status).map(k=>[k,{before:before[k],after:after[k],statusBefore:before.evidence[k].status,statusAfter:after.evidence[k].status}]))};
+   };
+   const cleanDefaults=[];
+   for(const preset of B.PRESETS.filter(p=>p.strategy!=='pending')) {
+@@ -70,7 +81,7 @@ try {
+   const groups=[];
+   for(const noise of ['clean',...p.records]) for(const snrDb of noise==='clean'?[null]:p.snrDb) for(const filter of p.filters)
+     groups.push({noise,snrDb,filter,...summarize(rows.filter(r=>r.noise===noise&&r.snrDb===snrDb&&r.filter===filter))});
+-  const report={schemaVersion:1,role,clinicalValidation:false,policy,numericallyIdentical:identical,
++  const report={schemaVersion:1,role,clinicalValidation:false,policy,unchangedPrimitiveCandidates:identical,
+     overall:summarize(rows),groups,cleanDefaults,rows,limitations:policy.limitations,
+     provenance:{commit:execFileSync('git',['rev-parse','HEAD']).toString().trim(),baselineCommit:policy.baselineCommit,
+       noiseSha256:hash(await readFile(path.join(noiseDir,'noise-segments.json'))),
+diff --git a/src/engine/sample-analysis.ts b/src/engine/sample-analysis.ts
+index ac636df..3ca9b15 100644
+--- a/src/engine/sample-analysis.ts
++++ b/src/engine/sample-analysis.ts
+@@ -1,3 +1,4 @@
++import { attachMeasurementSupport } from './measurement-support';
+ import type { Measurement, Signal } from './types';
+ import { measure } from './measure';
+ import { detectVentricularCandidates } from './analysis/ventricular-candidates';
+@@ -40,20 +41,20 @@ export function heartRateDetectionQuality(input: Samples, peaksSeconds: readonly
+     unmatched >= HR_QUALITY_POLICY.minimumUnmatched &&
+     unmatchedFraction >= HR_QUALITY_POLICY.unmatchedFraction;
+   return { requiresReview, backgroundRatio, unmatchedFraction, unmatched, matched,
+-    nominalCount: peaksSeconds.length, challengedCount: challenged.length };
++    nominalCount: peaksSeconds.length, challengedCount: challenged.length, challengedPeaksSeconds: challenged.map(p=>p/input.fs) };
+ }
+ 
+ /** Public sample-only pipeline used by the worker, BEFORE model audit.
+  * The frozen measure() primitive still supplies all candidates and numeric values.
+- * Only HR evidence can be downgraded. Never correct a rate, remove peaks, promote
+- * another status or use synthetic truth to judge the quality of a real signal.
++ * HR has its own screen; interval summaries receive candidate-specific support.
++ * Never correct a rate, remove candidate peaks, promote a status or use truth.
+  */
+ export function analyzeSamples(input: Samples): Measurement {
+   const measurement = measure(input);
+-  if (measurement.hr === null || measurement.evidence.hr.status !== 'usable') return measurement;
+-  const quality = heartRateDetectionQuality(input, measurement.detectedPeaks);
+-  if (!quality.requiresReview) return measurement;
+-  return { ...measurement, evidence: { ...measurement.evidence,
+-    hr: { ...measurement.evidence.hr, status: 'review',
+-      reason: 'Frecuencia sensible al umbral de detección y actividad de fondo elevada: pueden existir detecciones extra u omitidas. Verifica con calibres.' } } };
++  const quality = measurement.detectedPeaks.length >= 3 ? heartRateDetectionQuality(input, measurement.detectedPeaks) : null;
++  const next:Measurement = measurement.hr !== null && measurement.evidence.hr.status === 'usable' && quality?.requiresReview ?
++    { ...measurement, evidence: { ...measurement.evidence,
++      hr: { ...measurement.evidence.hr, status: 'review',
++        reason: 'Frecuencia sensible al umbral de detección y actividad de fondo elevada: pueden existir detecciones extra u omitidas. Verifica con calibres.' } } } : measurement;
++  return attachMeasurementSupport(next, quality);
+ }
+diff --git a/src/engine/types.ts b/src/engine/types.ts
+index e9e2cc3..814f4bd 100644
+--- a/src/engine/types.ts
++++ b/src/engine/types.ts
+@@ -173,6 +173,14 @@ export interface DelineatedBeat {
+   axis: number;
+   noise: number;
+ }
++export type SampleSupport = {
++  leads: readonly string[];
++  domain: 'sample-only-candidates-before-model-audit';
++  candidates: { peak: number; start: number; end: number; stableDetection: boolean }[];
++  stable: number;
++  total: number;
++};
++
+ export interface Measurement {
+   hr: number | null;
+   instantHr: number | null;
+@@ -195,6 +203,7 @@ export interface Measurement {
+   window: { start: number; end: number };
+   detectedPeaks: number[];
+   rejected?: Partial<Record<MetricKey, number>>;
++  support?: Record<MetricKey, SampleSupport>;
+ }
+ export const DEFAULT_CASE: ECGCase = {
+   version: 1,
+diff --git a/src/ui/measurement-dialog.ts b/src/ui/measurement-dialog.ts
+index aa8836f..099f016 100644
+--- a/src/ui/measurement-dialog.ts
++++ b/src/ui/measurement-dialog.ts
+@@ -1,3 +1,4 @@
++import { measurementSupportHtml } from './measurement-support';
+ import type { Signal, Measurement, ECGCase, MetricKey } from "../engine/types";
+ import { referenceForMeasurement } from "../engine/reference";
+ import { esc } from "./helpers";
+@@ -25,6 +26,7 @@ export function measurementDialog(
+    .join("")}</tbody></table></div>
+  <p class="control-note">La señal mostrada y exportada conserva las muestras originales. Los impulsos breves se neutralizan solo en una copia para el análisis. *La referencia contiene tiempos de activación y soporte del generador; no es una anotación clínica. Su eje es el solicitado antes de superponer lesión/sobrecarga. «Reproducible» describe consistencia interna, no exactitud clínica ni una probabilidad de acierto.</p>
+  <div class="evidence-notes">${rows.map(([key, label]) => `<p><strong>${label}.</strong> ${esc(m.evidence[key].reason)}</p>`).join("")}</div>
++ ${measurementSupportHtml(m)}
+  <h3>Corrección del QT</h3><div class="qt-grid">${Object.entries(m.qtc)
+    .map(
+      ([key, v]) =>
+diff --git a/tests/browser-hr-quality.mjs b/tests/browser-hr-quality.mjs
+index 6949ef6..66b7d67 100644
+--- a/tests/browser-hr-quality.mjs
++++ b/tests/browser-hr-quality.mjs
+@@ -37,6 +37,12 @@ try {
+  checks.push('real worker preserves HR and marks review for native noisy PVC');
+  await metric.click();
+  assert.match(await page.locator('#dialog .evidence-notes').innerText(),/sensible al umbral/);
++ await page.getByText('Qué muestras sostienen cada medida',{exact:true}).click();
++ assert.match(await page.locator('#dialog').innerText(),/antes de la auditoría/);
++ assert.match(await page.locator('#dialog').innerText(),/I, II, V1, V5/);
++ assert.ok(await page.locator('#dialog details[open] tbody tr').count()>0);
++ checks.push('candidate-specific measurement support and channel provenance visible');
++ await page.screenshot({path:path.join(out,'measurement-support-review.png')});
+  await page.screenshot({path:path.join(out,'hr-quality-review.png')});
+  await page.locator('#dialog').evaluate(d=>d.close());
+  checks.push('quality reason visible in measurements dialog');
+diff --git a/tests/heart-rate-quality.test.ts b/tests/heart-rate-quality.test.ts
+index 03bb334..991e9de 100644
+--- a/tests/heart-rate-quality.test.ts
++++ b/tests/heart-rate-quality.test.ts
+@@ -8,6 +8,7 @@ import type { Signal } from '../src/engine/types';
+ 
+ function withoutHRReason(m: ReturnType<typeof measure>) {
+   const copy = structuredClone(m);
++  delete copy.support;
+   copy.evidence.hr = { ...copy.evidence.hr, status: 'review', reason: '' };
+   return copy;
+ }
+diff --git a/tests/hr-quality-external.test.mjs b/tests/hr-quality-external.test.mjs
+index c6a1e92..1f13112 100644
+--- a/tests/hr-quality-external.test.mjs
++++ b/tests/hr-quality-external.test.mjs
+@@ -5,7 +5,7 @@ import { loadLudb } from './reference/ludb/load-ludb.mjs';
+ import { measure } from '../src/engine/measure';
+ import { analyzeSamples } from '../src/engine/sample-analysis';
+ const root=fileURLToPath(new URL('./reference/ludb/fixtures',import.meta.url));
+-const numeric=m=>({...m,evidence:{...m.evidence,hr:{...m.evidence.hr,status:'review',reason:''}}});
++const numeric=({support,...m})=>({...m,evidence:{...m.evidence,hr:{...m.evidence.hr,status:'review',reason:''}}});
+ describe('Known LUDB regression of the full sample-only entry',()=>{
+  it.each([1,2,3,4,101,102,103,104])('preserves numerical analysis of known record %s',id=>{
+   const {signal}=loadLudb(root,id<100?'development':'control',id);
