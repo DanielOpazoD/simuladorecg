@@ -9,6 +9,7 @@ import { LEADS } from "../engine/types";
 import { esc, icon, options } from "./helpers";
 import { detailScale } from "./detail-scale";
 import { suggestTEnds, type TEndAreaCandidate } from "../engine/t-end-area";
+import { classifyTEndReviewCandidate } from "../engine/t-end-confidence";
 
 const round = (value: number | null) =>
   value === null ? "—" : Math.round(value);
@@ -133,12 +134,13 @@ export function beatDetail(
     .map((e) => e.reason);
   const prUsable = m.pr !== null;
   const suggestion = suggestTEnds(s, m)[index] ?? null;
+  const suggestionConfidence = suggestion ? classifyTEndReviewCandidate(suggestion) : null;
   return `<div class="detail-heading"><div><div class="section-label">LECTURA DE LA SEÑAL</div><h2>Un latido, de cerca</h2></div><div class="detail-navigation"><span>Latido ${index + 1} <small>/ ${m.beats.length}</small></span><button class="btn icon-button previous-beat" data-action="previous-beat" aria-label="Latido anterior" ${index === 0 ? "disabled" : ""}>${icon("chevron")}</button><button class="btn icon-button" data-action="next-beat" aria-label="Latido siguiente" ${index === m.beats.length - 1 ? "disabled" : ""}>${icon("chevron")}</button><label><span class="sr-only">Derivación ampliada</span><select id="detail-lead">${options(
     LEADS.map((l) => [l, l]),
     c.view.lead,
   )}</select></label></div></div>
  <div class="detail-plot-scroll" role="region" aria-label="Gráfico ampliado; desplazamiento horizontal" tabindex="0" style="overflow-x:auto">${plot(s, b, c.view.lead, c.view.palette === "dark", prUsable, m.qt !== null, suggestion)}</div>
  <div class="detail-footer"><div><span class="quality-dot ${m.evidence.qrs.status}"></span><strong>${m.evidence.qrs.status === "usable" ? "QRS reproducible" : "Revisar límites"}</strong><span>${m.evidence.qrs.count} latidos · paso de muestreo ${1000 / s.fs} ms</span></div><button class="text-button" data-action="measurements">Ver detalle de las medidas ${icon("chevron")}</button></div>
- ${suggestion ? `<p class="detail-note" data-t-end-assistance><strong>Final T propuesto por área · revisión manual.</strong> ${suggestion.supportingLeads.map(esc).join("/")} concordantes; dispersión ${Math.round(suggestion.spreadMs)} ms. El marcador es multiderivación, no un límite validado de ${esc(c.view.lead)}. No modifica QT/QTc ni su calidad. La concordancia no es una probabilidad clínica. En pantallas pequeñas, desplaza el gráfico horizontalmente.</p>` : ""}
+ ${suggestion ? `<p class="detail-note" data-t-end-assistance data-t-end-agreement="${suggestionConfidence!.stratum}"><strong>Final T propuesto por área · revisión manual.</strong> ${suggestionConfidence!.stratum === "high-agreement" ? "Alta concordancia interna en desarrollo" : "Concordancia interna: revisar con cautela"} · ${suggestion.supportingLeads.map(esc).join("/")} · dispersión ${Math.round(suggestion.spreadMs)} ms · razón de amplitud ${Number.isFinite(suggestionConfidence!.areaAmplitudeRatio) ? suggestionConfidence!.areaAmplitudeRatio.toFixed(1) : "—"}. El marcador es multiderivación, no un límite validado de ${esc(c.view.lead)}. Esta etiqueta fue seleccionada retrospectivamente y no es probabilidad clínica. No modifica QT/QTc ni su calidad. En pantallas pequeñas, desplaza el gráfico horizontalmente.</p>` : ""}
  <p class="detail-note"><strong>Escala común del caso: ±${detailScale(s).maxMv.toFixed(2)} mV.</strong> No se reajusta al cambiar latido o derivación. Selecciona un complejo en el papel para ampliarlo. *J estimado por el final del QRS.${b.tPeak !== null && b.tEnd === null ? " Pico T candidato de la envolvente I/II/V1/V5: no equivale al pico de cada derivación ni permite calcular QT sin un final reconocible." : ""}${m.qt !== null && b.tTangentEnd !== null ? ` QT por tangente de la envolvente: ${Math.round((b.tTangentEnd - b.onset) * 1000)} ms; es otro criterio de final de T.` : ""}${reasons.length ? ` ${esc(reasons[0])}` : ""}</p>`;
 }
