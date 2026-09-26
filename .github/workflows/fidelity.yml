@@ -47,6 +47,7 @@ jobs:
           node tests/browser-fidelity.mjs
           node tests/browser-worker-recovery.mjs
           node tests/browser-t-peak-evidence.mjs
+          node tests/browser-t-end-assistance.mjs
       - name: Archive exact reviewed source and reports
         if: always()
         run: |

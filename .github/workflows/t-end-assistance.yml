@@ -1,0 +1,43 @@
+name: T end review assistance
+on:
+  pull_request:
+  push:
+    branches: ['main']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22.16.0', cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: npm ci
+      - run: npx vitest run tests/t-end-area.test.ts tests/t-peak-evidence.test.ts
+      - run: python -m pip install wfdb==4.3.1
+      - name: Reacquire only the two already observed cohorts
+        run: |
+          python scripts/prepare-ludb-expansion.py --output "$RUNNER_TEMP/original40" --crosscheck
+          python scripts/prepare-ludb-delineation.py --output "$RUNNER_TEMP/calibration40" --crosscheck
+      - name: Evaluate aid separately, preserving all automatic outputs and matching
+        run: node scripts/evaluate-t-end-assistance.mjs --original "$RUNNER_TEMP/original40/fixtures" --calibration "$RUNNER_TEMP/calibration40/fixtures" --output "$RUNNER_TEMP/t-end-assistance"
+      - name: Archive exact source and reports without raw demographic headers
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/t-end-assistance"
+          git archive HEAD | gzip > "$RUNNER_TEMP/t-end-assistance/source.tar.gz"
+          git rev-parse HEAD > "$RUNNER_TEMP/t-end-assistance/commit.txt"
+          for name in original40 calibration40; do
+            test ! -d "$RUNNER_TEMP/$name" || { rm -rf "$RUNNER_TEMP/$name/raw"; cp -r "$RUNNER_TEMP/$name" "$RUNNER_TEMP/t-end-assistance/$name"; }
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: t-end-assistance-${{ github.sha }}
+          path: ${{ runner.temp }}/t-end-assistance/
+          retention-days: 30
