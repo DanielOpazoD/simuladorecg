@@ -24,7 +24,7 @@ if(JSON.stringify(Object.keys(built.metafile.inputs).map(f=>relative(sourceRoot,
 const {measure}=await import(pathToFileURL(bundle));
 const records=protocol.records.map(id=>{const {signal,metadata}=loadLudb(fixture,'expansion',id);return {id,unassignedBoundaryEvents:metadata.unassignedBoundaryEvents,...assessExternalQrs(signal,fourLeadQrsReference(metadata),measure,protocol.eventMatchToleranceSeconds)};});
 const evaluationFiles=Object.fromEntries(['scripts/validate-ludb-expansion.mjs','scripts/lib/external-qrs-evaluation.mjs','scripts/prepare-ludb-expansion.py','tests/reference/ludb/prepare_ludb.py','tests/reference/ludb/load-ludb.mjs'].map(f=>[f,sha(readFileSync(f))]));
-const report={schemaVersion:1,provenance:reportIdentity(),evaluationFiles,protocolSha256:sha(protocolBytes),analyzerFiles:protocol.analyzerFiles,
+const report={schemaVersion:1,provenance:reportIdentity(sourceRoot),evaluatorProvenance:reportIdentity(),evaluationFiles,protocolSha256:sha(protocolBytes),analyzerFiles:protocol.analyzerFiles,
   fixtureManifestSha256:sha(readFileSync(resolve(fixture,'manifest.json'))),cohortRole:protocol.cohortRole,
   clinicalValidation:false,detectorTuned:false,method:protocol.reference,matchingWindow:protocol.window,
   eventMatchToleranceSeconds:protocol.eventMatchToleranceSeconds,
