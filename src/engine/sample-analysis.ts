@@ -1,3 +1,4 @@
+import { attachMeasurementSupport } from './measurement-support';
 import type { Measurement, Signal } from './types';
 import { measure } from './measure';
 import { detectVentricularCandidates } from './analysis/ventricular-candidates';
@@ -40,20 +41,20 @@ export function heartRateDetectionQuality(input: Samples, peaksSeconds: readonly
     unmatched >= HR_QUALITY_POLICY.minimumUnmatched &&
     unmatchedFraction >= HR_QUALITY_POLICY.unmatchedFraction;
   return { requiresReview, backgroundRatio, unmatchedFraction, unmatched, matched,
-    nominalCount: peaksSeconds.length, challengedCount: challenged.length };
+    nominalCount: peaksSeconds.length, challengedCount: challenged.length, challengedPeaksSeconds: challenged.map(p=>p/input.fs) };
 }
 
 /** Public sample-only pipeline used by the worker, BEFORE model audit.
  * The frozen measure() primitive still supplies all candidates and numeric values.
- * Only HR evidence can be downgraded. Never correct a rate, remove peaks, promote
- * another status or use synthetic truth to judge the quality of a real signal.
+ * HR has its own screen; interval summaries receive candidate-specific support.
+ * Never correct a rate, remove candidate peaks, promote a status or use truth.
  */
 export function analyzeSamples(input: Samples): Measurement {
   const measurement = measure(input);
-  if (measurement.hr === null || measurement.evidence.hr.status !== 'usable') return measurement;
-  const quality = heartRateDetectionQuality(input, measurement.detectedPeaks);
-  if (!quality.requiresReview) return measurement;
-  return { ...measurement, evidence: { ...measurement.evidence,
-    hr: { ...measurement.evidence.hr, status: 'review',
-      reason: 'Frecuencia sensible al umbral de detección y actividad de fondo elevada: pueden existir detecciones extra u omitidas. Verifica con calibres.' } } };
+  const quality = measurement.detectedPeaks.length >= 3 ? heartRateDetectionQuality(input, measurement.detectedPeaks) : null;
+  const next:Measurement = measurement.hr !== null && measurement.evidence.hr.status === 'usable' && quality?.requiresReview ?
+    { ...measurement, evidence: { ...measurement.evidence,
+      hr: { ...measurement.evidence.hr, status: 'review',
+        reason: 'Frecuencia sensible al umbral de detección y actividad de fondo elevada: pueden existir detecciones extra u omitidas. Verifica con calibres.' } } } : measurement;
+  return attachMeasurementSupport(next, quality);
 }

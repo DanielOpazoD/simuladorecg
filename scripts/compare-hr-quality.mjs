@@ -25,20 +25,31 @@ try {
   const B = await import(pathToFileURL(path.join(temp,'before.mjs')));
   const A = await import(pathToFileURL(path.join(temp,'after.mjs')));
   assert.deepEqual(A.HR_QUALITY_POLICY, policy.qualityPolicy, 'Policy changed after replication protocol');
-  for (const file of Object.keys(next.metafile.inputs).filter(f => !f.endsWith('/sample-analysis.ts'))) {
+  for (const file of Object.keys(next.metafile.inputs).filter(f => !f.endsWith('/sample-analysis.ts') && !f.endsWith('/measurement-support.ts'))) {
     assert.equal(hash(await readFile(file)),hash(await readFile(path.join(base,file))),`Unreviewed primitive change: ${file}`);
   }
   const rows=[];let identical=0;
   const compare=(samples,reference,context)=>{
     const before=B.measure(samples), after=A.analyzeSamples(samples);
-    const numeric=m=>({...m,evidence:{...m.evidence,hr:{...m.evidence.hr,status:'review',reason:''}}});
-    assert.deepEqual(numeric(before),numeric(after),'Numerical output or unrelated evidence changed'); identical++;
+    // Candidate-support revision: raw candidates stay exact; a summary may be explicitly retired,
+    // never replaced by another number. Historical HR screen remains frozen.
+    for(const key of ['hr','instantHr','rr','beats','detectedPeaks','window'])
+      assert.deepEqual(after[key],before[key],`Primitive output changed: ${key}`);
+    for(const key of ['pr','qrs','qt','axis']) {
+      if(after[key]!==null)assert.equal(after[key],before[key],`Corrected ${key} without delineation evidence`);
+      else if(before[key]!==null){assert.equal(after.evidence[key].status,'unavailable');assert.equal(after.rejected[key],before[key]);}
+      const rank={usable:0,review:1,unavailable:2};assert.ok(rank[after.evidence[key].status]>=rank[before.evidence[key].status]);
+    }
+    for(const key of ['pAxis','tAxis'])if(after[key]!==null)assert.equal(after[key],before[key]);
+    for(const key of Object.keys(before.qtc))if(after.qtc[key]!==null)assert.equal(after.qtc[key],before.qtc[key]);
+    identical++;
     if(before.evidence.hr.status!=='usable') assert.deepEqual(before.evidence.hr,after.evidence.hr);
     const error=before.hr===null||reference===null?null:before.hr-reference;
     const quality=before.hr===null?null:A.heartRateDetectionQuality(samples,before.detectedPeaks);
     return {...context,referenceBpm:reference,hr:before.hr,errorBpm:error,
       beyondReview:error===null?null:Math.abs(error)>policy.heartRateErrorReviewBpm,
-      before:before.evidence.hr.status,after:after.evidence.hr.status,quality};
+      before:before.evidence.hr.status,after:after.evidence.hr.status,quality,
+      intervalChanges:Object.fromEntries(['pr','qrs','qt','axis'].filter(k=>before[k]!==after[k]||before.evidence[k].status!==after.evidence[k].status).map(k=>[k,{before:before[k],after:after[k],statusBefore:before.evidence[k].status,statusAfter:after.evidence[k].status}]))};
   };
   const cleanDefaults=[];
   for(const preset of B.PRESETS.filter(p=>p.strategy!=='pending')) {
@@ -70,7 +81,7 @@ try {
   const groups=[];
   for(const noise of ['clean',...p.records]) for(const snrDb of noise==='clean'?[null]:p.snrDb) for(const filter of p.filters)
     groups.push({noise,snrDb,filter,...summarize(rows.filter(r=>r.noise===noise&&r.snrDb===snrDb&&r.filter===filter))});
-  const report={schemaVersion:1,role,clinicalValidation:false,policy,numericallyIdentical:identical,
+  const report={schemaVersion:1,role,clinicalValidation:false,policy,unchangedPrimitiveCandidates:identical,
     overall:summarize(rows),groups,cleanDefaults,rows,limitations:policy.limitations,
     provenance:{commit:execFileSync('git',['rev-parse','HEAD']).toString().trim(),baselineCommit:policy.baselineCommit,
       noiseSha256:hash(await readFile(path.join(noiseDir,'noise-segments.json'))),

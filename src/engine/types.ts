@@ -173,6 +173,14 @@ export interface DelineatedBeat {
   axis: number;
   noise: number;
 }
+export type SampleSupport = {
+  leads: readonly string[];
+  domain: 'sample-only-candidates-before-model-audit';
+  candidates: { peak: number; start: number; end: number; stableDetection: boolean }[];
+  stable: number;
+  total: number;
+};
+
 export interface Measurement {
   hr: number | null;
   instantHr: number | null;
@@ -195,6 +203,7 @@ export interface Measurement {
   window: { start: number; end: number };
   detectedPeaks: number[];
   rejected?: Partial<Record<MetricKey, number>>;
+  support?: Record<MetricKey, SampleSupport>;
 }
 export const DEFAULT_CASE: ECGCase = {
   version: 1,

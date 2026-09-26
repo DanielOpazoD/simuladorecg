@@ -8,6 +8,7 @@ import type { Signal } from '../src/engine/types';
 
 function withoutHRReason(m: ReturnType<typeof measure>) {
   const copy = structuredClone(m);
+  delete copy.support;
   copy.evidence.hr = { ...copy.evidence.hr, status: 'review', reason: '' };
   return copy;
 }

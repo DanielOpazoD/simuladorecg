@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "baselineCommit": "2e7cd106fb3723dcbe2a38c26ecb4b1c989bc0d5",
+  "scope": "Candidate support for interval summaries; not probabilistic confidence. Exposed NSTDB development and known LUDB regression.",
+  "policy": {
+    "matchSeconds": 0.04,
+    "reviewUnsupportedFraction": 0.35,
+    "minimumUnsupported": 2,
+    "minimumStableForSummary": 2
+  },
+  "constraints": [
+    "No change to primitive numerical candidates or retained values",
+    "No changes to HR screening policy",
+    "No metadata/labels/noise level in sample analysis",
+    "Strict per-stratum noise quality non-regression remains required; original monitor amendment preserved",
+    "No promotion; unavailable is distinct from review"
+  ],
+  "clinicalValidation": false
+}
