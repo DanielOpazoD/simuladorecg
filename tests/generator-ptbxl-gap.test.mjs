@@ -1,0 +1,2 @@
+import{describe,it,expect}from'vitest';import{readFileSync}from'node:fs';
+describe('generator/PTB-XL bridge stays descriptive',()=>{it('does not import product source or clinical thresholds',()=>{const s=readFileSync('scripts/compare-generator-ptbxl.mjs','utf8');expect(s).not.toMatch(/src\/engine|measure\(|auditMeasurement|sensitivity|specificity/);expect(s).toMatch(/No coefficient may be changed/)});});
