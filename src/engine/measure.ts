@@ -234,7 +234,8 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
       pOnset: null,
       pPeak: null,
       tPeak: null,
-      tEnd: null,
+      tOnset: null,
+      tEnd: null;
       tTangentEnd: null,
       rr: localRR,
       pr: null,
@@ -300,68 +301,120 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
       }
     }
     const tAmplitude = magnitude(tp);
-    if (te > tp && tp > tLo + 3 && tAmplitude > Math.max(0.05, noise * 12)) {
+    const credibleT =
+      started && tp > tLo + 3 && tAmplitude > Math.max(0.05, noise * 12);
+    if (credibleT) {
+      // Detecting a T peak and measuring T end are separate claims. A visible
+      // repolarization candidate remains reviewable even when QT must abstain.
       beat.tPeak = tp / fs;
-      beat.tEnd = te / fs;
-      beat.qt = ((te - on) / fs) * 1000;
-      taxes.push(
-        axisFromLeads(
-          s.leads.I[tp] - baseline[0],
-          s.leads.II[tp] - baseline[1],
-        ),
+
+      // Per-lead tangent landmarks. QT literature defines T end by the
+      // intersection of the terminal-limb tangent with baseline; limiting the
+      // search to Tpeak + 30% RR reduces capture of a following P/U component.
+      // Leads below 50 uV are not used for tangent landmarks.
+      const tangentHalf = Math.max(1, Math.round(0.005 * fs));
+      const tangentHi = Math.min(
+        tHi - tangentHalf - 1,
+        tp + Math.round(0.3 * localRR * fs),
       );
-      // Tangent to the steepest terminal descent, after the last lobe's peak.
-      let terminalPeak = tp;
-      for (let j = tp + 1; j < te - 1; j++)
-        if (
-          magnitude(j) > tAmplitude * 0.15 &&
-          magnitude(j) >= magnitude(j - 1) &&
-          magnitude(j) > magnitude(j + 1)
-        )
-          terminalPeak = j;
-      const half = Math.max(1, Math.round(0.008 * fs));
-      let steepest = 0,
-        steepestIndex = terminalPeak,
-        tangent: number | null = null;
-      for (let j = terminalPeak + half; j < te - half; j++) {
-        const derivative =
-          (magnitude(j + half) - magnitude(j - half)) / ((2 * half) / fs);
-        if (derivative < steepest) {
-          steepest = derivative;
-          steepestIndex = j;
-          tangent = j / fs - magnitude(j) / derivative;
+      const onsetCandidates: number[] = [],
+        endCandidates: number[] = [];
+      for (let leadIndex = 0; leadIndex < names.length; leadIndex++) {
+        const lead = names[leadIndex];
+        const value = (j: number) => s.leads[lead][j] - baseAt(j, leadIndex);
+        const absValue = (j: number) => Math.abs(value(j));
+        let localMaximum = 0;
+        for (let j = tLo; j <= tangentHi; j++)
+          localMaximum = Math.max(localMaximum, absValue(j));
+        if (localMaximum < Math.max(0.05, noise * 8)) continue;
+
+        const lobeThreshold = Math.max(0.05, localMaximum * 0.15, noise * 8);
+        const extrema: number[] = [];
+        for (let j = tLo + 1; j < tangentHi; j++)
+          if (
+            absValue(j) >= lobeThreshold &&
+            absValue(j) >= absValue(j - 1) &&
+            absValue(j) > absValue(j + 1)
+          )
+            extrema.push(j);
+        if (!extrema.length) {
+          let localPeak = tLo;
+          for (let j = tLo + 1; j <= tangentHi; j++)
+            if (absValue(j) > absValue(localPeak)) localPeak = j;
+          extrema.push(localPeak);
         }
-      }
-      if (
-        tangent !== null &&
-        tangent > terminalPeak / fs &&
-        tangent <= te / fs + 0.04
-      )
-        beat.tTangentEnd = tangent;
-      // A causal high-pass can leave a slowly recovering offset after T. Do not
-      // call that tail repolarization: require terminal slope to remain quiet.
-      let slopeQuiet = 0;
-      for (
-        let j = steepestIndex + half;
-        j < Math.min(tHi - half, te + Math.round(0.04 * fs));
-        j++
-      ) {
-        const d =
-          (magnitude(j + half) - magnitude(j - half)) / ((2 * half) / fs);
-        if (
-          Math.abs(d) < Math.max(0.04, Math.abs(steepest) * 0.08) &&
-          magnitude(j) < tAmplitude * 0.15
-        )
-          slopeQuiet++;
-        else slopeQuiet = 0;
-        if (slopeQuiet >= Math.round(0.024 * fs)) {
-          const slopeEnd = (j - slopeQuiet + 1) / fs;
-          if (slopeEnd > terminalPeak / fs && slopeEnd < beat.tEnd!) {
-            beat.tEnd = slopeEnd;
-            beat.qt = (slopeEnd - beat.onset) * 1000;
+
+        const firstPeak = extrema[0],
+          terminalPeak = extrema.at(-1)!;
+        let onsetSlope = 0,
+          onsetTangent: number | null = null;
+        const onsetSign = Math.sign(value(firstPeak));
+        for (
+          let j = tLo + tangentHalf;
+          j < firstPeak - tangentHalf;
+          j++
+        ) {
+          const d =
+            (value(j + tangentHalf) - value(j - tangentHalf)) /
+            ((2 * tangentHalf) / fs);
+          if (onsetSign !== 0 && d * onsetSign > onsetSlope * onsetSign) {
+            onsetSlope = d;
+            const candidate = j / fs - value(j) / d;
+            if (
+              Number.isFinite(candidate) &&
+              candidate >= tLo / fs - 0.04 &&
+              candidate < firstPeak / fs
+            )
+              onsetTangent = candidate;
           }
-          break;
         }
+        if (onsetTangent !== null) onsetCandidates.push(onsetTangent);
+
+        let terminalStrength = 0,
+          endTangent: number | null = null;
+        const terminalSign = Math.sign(value(terminalPeak));
+        for (
+          let j = terminalPeak + tangentHalf;
+          j < tangentHi - tangentHalf;
+          j++
+        ) {
+          const d =
+            (value(j + tangentHalf) - value(j - tangentHalf)) /
+            ((2 * tangentHalf) / fs);
+          const towardBaseline = -terminalSign * d;
+          if (terminalSign !== 0 && towardBaseline > terminalStrength) {
+            const candidate = j / fs - value(j) / d;
+            if (
+              Number.isFinite(candidate) &&
+              candidate > terminalPeak / fs &&
+              candidate <= tangentHi / fs + 0.04
+            ) {
+              terminalStrength = towardBaseline;
+              endTangent = candidate;
+            }
+          }
+        }
+        if (endTangent !== null) endCandidates.push(endTangent);
+      }
+
+      // LUDB's four-lead aggregate uses the earliest onset. For T end, a robust
+      // upper-quartile landmark preserves late repolarization without allowing
+      // one noisy lead to define QT by itself.
+      if (onsetCandidates.length) beat.tOnset = Math.min(...onsetCandidates);
+      if (endCandidates.length)
+        beat.tTangentEnd = quantile(endCandidates, 0.75);
+
+      const quietEnd = te > tp ? te / fs : null;
+      const chosenEnd = beat.tTangentEnd ?? quietEnd;
+      if (chosenEnd !== null && chosenEnd > beat.tPeak) {
+        beat.tEnd = chosenEnd;
+        beat.qt = (chosenEnd - beat.onset) * 1000;
+        taxes.push(
+          axisFromLeads(
+            s.leads.I[tp] - baseline[0],
+            s.leads.II[tp] - baseline[1],
+          ),
+        );
       }
     }
     beats.push(beat);
