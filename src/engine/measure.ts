@@ -235,7 +235,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
       pPeak: null,
       tPeak: null,
       tOnset: null,
-      tEnd: null;
+      tEnd: null,
       tTangentEnd: null,
       rr: localRR,
       pr: null,
