@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "baselineCommit": "08571bc9d374c361baf2b2aec0bf66a56e1bcbdb",
+  "role": "Manual review assistance only; never changes automatic QT/QTc or reliability",
+  "cohorts": ["original PR17 40", "observed PR26 calibration 40"],
+  "holdoutEnabled": false,
+  "engineeringAcceptance": {"minimumMatchedEndpoints": 75, "maximumMaeMs": 25, "maximumP95Ms": 70, "maximumErrorMs": 160},
+  "acceptanceRole": "Engineering smoke bounds selected on observed development results, not clinical acceptance or prospective validation",
+  "reference": "Unmodified PR28 evaluator and four-lead references; all existing T peaks retained for identical event matching",
+  "limitations": [
+    "Two tested window widths are not independent detectors. Leads are correlated.",
+    "A stable candidate can still be wrong by more than 100ms; never promote QT.",
+    "Agreement may exclude biphasic T, U and weak or overlapping waves; missing outputs are explicit.",
+    "Aggregate annotations are not a human-adjudicated global endpoint.",
+    "Published area-based methods motivate the indicator, not these implementation thresholds or a validation claim.",
+    "Existing bad automatic T-end/QT values are unchanged; this is a separately labeled review aid."
+  ]
+}
