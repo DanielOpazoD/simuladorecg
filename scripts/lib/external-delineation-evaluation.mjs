@@ -81,6 +81,9 @@ export function assessExternalDelineation(signal, references, analyze, protocol)
   const waves={};
   for (const wave of ['P','QRS','T'])
     waves[wave]=assessWave(references[wave],predictedWaves(measurement,wave),protocol.eventMatchToleranceSeconds);
+  const tangentPredicted=measurement.beats.flatMap((beat)=>finite(beat.tPeak)&&finite(beat.tTangentEnd)?
+    [{peak:beat.tPeak,onset:null,offset:beat.tTangentEnd}]:[]);
+  waves.T.tangent=assessWave(references.T,tangentPredicted,protocol.eventMatchToleranceSeconds);
   const reference=referenceIntervals(references,protocol.intervalAssociation);
   const intervals={};
   for (const key of ['pr','qrs','qt']) {
@@ -112,6 +115,17 @@ function poolWave(records,wave) {
     sensitivity:tp+fn?tp/(tp+fn):null,ppv:tp+fp?tp/(tp+fp):null,endpoint};
 }
 
+function poolTangent(records) {
+  const rows=records.map(r=>r.waves.T.tangent);
+  const tp=rows.reduce((s,r)=>s+r.detection.tp,0),fp=rows.reduce((s,r)=>s+r.detection.fp,0),fn=rows.reduce((s,r)=>s+r.detection.fn,0);
+  const values=rows.flatMap(r=>r.errors.flatMap(e=>e.offsetMs===null?[]:[e.offsetMs]));
+  const eligible=rows.reduce((s,r)=>s+r.endpoint.offset.referenceEligible,0);
+  const summary=errorSummary(values);
+  return {predictedEvents:rows.reduce((s,r)=>s+r.predictedEvents,0),tp,fp,fn,
+    sensitivity:tp+fn?tp/(tp+fn):null,ppv:tp+fp?tp/(tp+fp):null,
+    offset:{...summary,referenceEligible:eligible,coverageOfEligible:eligible?summary.n/eligible:null,coverageOfMatched:tp?summary.n/tp:null}};
+}
+
 function poolInterval(records,key) {
   const rows=records.map(r=>r.intervals[key]);
   const withReference=rows.filter(r=>finite(r.referenceMedianMs));
@@ -129,5 +143,6 @@ function poolInterval(records,key) {
 export function poolExternalDelineation(records) {
   return {records:records.length,
     waves:Object.fromEntries(['P','QRS','T'].map(w=>[w,poolWave(records,w)])),
+    tangentTEnd:poolTangent(records),
     intervals:Object.fromEntries(['pr','qrs','qt'].map(k=>[k,poolInterval(records,k)]))};
 }
