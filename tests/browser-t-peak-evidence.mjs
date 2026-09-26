@@ -14,6 +14,7 @@ try{
   page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());if(m.type()==='warning')warnings.push(m.text());});
   await page.goto(url);assert.match(await page.title(),/ECG/);assert.equal(await page.locator('vite-error-overlay').count(),0);
   await page.locator('#signal-loading').waitFor({state:'hidden'});
+  if(width===390)await page.locator('[data-action="catalog"]').click();
   await page.locator('[data-preset="tachy"]').click();await page.locator('#signal-loading').waitFor({state:'hidden'});
   await page.getByText('Pico T candidato de la envolvente',{exact:false}).waitFor({state:'visible'});
   const detail=page.locator('#beat-detail');await detail.scrollIntoViewIfNeeded();
@@ -24,6 +25,7 @@ try{
   assert.doesNotMatch(await detail.innerText(),/QT \d+ ms/);
   await detail.screenshot({path:resolve(out,'t-candidate-'+width+'.png')});
   checks.push({width,flow:'tachy -> visible envelope T candidate -> V5 -> no QT band',text:first});
+  if(width===390)await page.locator('[data-action="catalog"]').click();
   await page.locator('[data-preset="sinus"]').click();await page.locator('#signal-loading').waitFor({state:'hidden'});
   await page.waitForFunction(()=>!document.querySelector('#beat-detail')?.textContent.includes('Pico T candidato de la envolvente'));
   assert.doesNotMatch(await detail.innerText(),/T candidata/);await page.close();
