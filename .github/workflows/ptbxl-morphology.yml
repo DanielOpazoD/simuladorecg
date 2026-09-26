@@ -1,10 +1,10 @@
 name: PTB-XL+ morphology reference
 on:
   pull_request:
-    paths: ['benchmarks/ptbxl-plus/**', 'scripts/*ptbxl*', 'scripts/lib/ptbxl-morphology.mjs', 'tests/*ptbxl*', '.github/workflows/ptbxl-morphology.yml']
+    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/ptbxl-plus/**', 'scripts/*ptbxl*', 'scripts/lib/ptbxl-morphology.mjs', 'tests/*ptbxl*', '.github/workflows/ptbxl-morphology.yml']
   push:
     branches: ['main']
-    paths: ['benchmarks/ptbxl-plus/**', 'scripts/*ptbxl*', 'scripts/lib/ptbxl-morphology.mjs', 'tests/*ptbxl*', '.github/workflows/ptbxl-morphology.yml']
+    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/ptbxl-plus/**', 'scripts/*ptbxl*', 'scripts/lib/ptbxl-morphology.mjs', 'tests/*ptbxl*', '.github/workflows/ptbxl-morphology.yml']
   workflow_dispatch:
 permissions:
   contents: read

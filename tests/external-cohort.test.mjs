@@ -2,6 +2,7 @@ import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {errorSummary,assessExternalQrs,poolExternalQrs} from '../scripts/lib/external-qrs-evaluation.mjs';
+import {T_PEAK_REVISION} from '../scripts/lib/t-peak-revision.mjs';
 const p=JSON.parse(readFileSync('tests/reference/ludb-expansion/protocol.json'));
 const h=s=>createHash('sha256').update(s).digest('hex');
 const ref={beats:[{peak:1,qrsOnset:.95,qrsOffset:1.05},{peak:2,qrsOnset:null,qrsOffset:2.06}],excluded:[]};
@@ -12,7 +13,7 @@ describe('Independent cohort protocol and denominators',()=>{
     const ranked=Array.from({length:200},(_,i)=>i+1).filter(i=>!p.excludedKnownRecords.includes(i)).sort((a,b)=>h(p.seed+':'+a).localeCompare(h(p.seed+':'+b)));
     expect(p.records).toEqual(ranked.slice(0,40).sort((a,b)=>a-b));expect(new Set(p.records).size).toBe(40);
   });
-  it('freezes every actual analyzer input hash',()=>{for(const [f,d]of Object.entries(p.analyzerFiles))expect(h(readFileSync(f))).toBe(d);});
+  it('preserves the historical hash and allows only the reviewed T-peak evidence amendment',()=>{for(const [f,d]of Object.entries(p.analyzerFiles)){if(f==='src/engine/measure.ts'){expect(d).toBe(T_PEAK_REVISION.beforeSha256);expect(h(readFileSync(f))).toBe(T_PEAK_REVISION.afterSha256);}else expect(h(readFileSync(f))).toBe(d);}});
   it('distinguishes matched peaks, absent delineation, missing annotations and FP',()=>{
     const r=assessExternalQrs(sig,ref,()=>m);expect(r.detection).toMatchObject({tp:2,fp:1,fn:0});expect(r.outsideAnnotationWindow).toBe(1);
     expect(r.unavailableDelineations).toBe(1);expect(r.onset.n).toBe(1);expect(r.referenceBounds).toEqual({onset:1,offset:2,width:1});

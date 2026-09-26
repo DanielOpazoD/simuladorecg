@@ -48,7 +48,7 @@ function plot(
   const start = Math.max(0, beat.onset - 0.23),
     end = Math.min(
       s.duration,
-      Math.max(beat.onset + 0.62, (beat.tEnd ?? beat.onset + 0.5) + 0.12),
+      Math.max(beat.onset + 0.62, (beat.tEnd ?? beat.tPeak ?? beat.onset + 0.5) + 0.12),
     );
   const width = 1000,
     height = 300,
@@ -105,14 +105,14 @@ function plot(
   const blue = dark ? "#7dbbdc" : "#3475a2",
     teal = dark ? "#6dd8c8" : "#007e77",
     purple = dark ? "#c0ace8" : "#785da4";
-  return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Latido ampliado en ${lead}. QRS ${round(beat.qrs)} milisegundos. Los puntos marcan límites medidos." class="beat-plot" data-scale-min="${voltage.minMv}" data-scale-max="${voltage.maxMv}">
+  return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Latido ampliado en ${lead}. QRS ${round(beat.qrs)} milisegundos. Los puntos marcan límites o candidatos de la señal; no todos permiten medir un intervalo." class="beat-plot" data-scale-min="${voltage.minMv}" data-scale-max="${voltage.maxMv}">
  <text x="8" y="86" class="detail-tick">mV</text>${grid}
  <rect x="${x(beat.onset)}" y="${top}" width="${x(beat.offset) - x(beat.onset)}" height="${bottom - top}" fill="${teal}" opacity=".07"/>
  ${acceptedPR && beat.pOnset !== null ? band(beat.pOnset, beat.onset, 25, blue, `PR ${round(beat.pr)} ms`) : ""}
  ${band(beat.onset, beat.offset, 47, teal, `QRS ${round(beat.qrs)} ms`)}
  ${acceptedQT && beat.tEnd !== null ? band(beat.onset, beat.tEnd, 65, purple, `QT ${round(beat.qt)} ms`) : ""}
  <path d="${d}" class="detail-wave" fill="none" stroke-width="1.7" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
- ${acceptedPR && beat.pOnset !== null ? marker(beat.pOnset, "P", blue) : ""}${marker(beat.onset, "QRS", teal)}${marker(beat.offset, "J*", teal)}${acceptedQT && beat.tEnd !== null ? marker(beat.tEnd, "T fin", purple) : ""}
+ ${acceptedPR && beat.pOnset !== null ? marker(beat.pOnset, "P", blue) : ""}${marker(beat.onset, "QRS", teal)}${marker(beat.offset, "J*", teal)}${beat.tPeak !== null && beat.tEnd === null ? marker(beat.tPeak, "T candidata", purple) : ""}${acceptedQT && beat.tEnd !== null ? marker(beat.tEnd, "T fin", purple) : ""}
  <text x="${right}" y="292" text-anchor="end" class="detail-tick">ms desde QRS</text></svg>`;
 }
 export function beatDetail(
@@ -135,5 +135,5 @@ export function beatDetail(
   )}</select></label></div></div>
  ${plot(s, b, c.view.lead, c.view.palette === "dark", prUsable, m.qt !== null)}
  <div class="detail-footer"><div><span class="quality-dot ${m.evidence.qrs.status}"></span><strong>${m.evidence.qrs.status === "usable" ? "QRS reproducible" : "Revisar límites"}</strong><span>${m.evidence.qrs.count} latidos · paso de muestreo ${1000 / s.fs} ms</span></div><button class="text-button" data-action="measurements">Ver detalle de las medidas ${icon("chevron")}</button></div>
- <p class="detail-note"><strong>Escala común del caso: ±${detailScale(s).maxMv.toFixed(2)} mV.</strong> No se reajusta al cambiar latido o derivación. Selecciona un complejo en el papel para ampliarlo. *J estimado por el final del QRS.${m.qt !== null && b.tTangentEnd !== null ? ` QT por tangente de la envolvente: ${Math.round((b.tTangentEnd - b.onset) * 1000)} ms; es otro criterio de final de T.` : ""}${reasons.length ? ` ${esc(reasons[0])}` : ""}</p>`;
+ <p class="detail-note"><strong>Escala común del caso: ±${detailScale(s).maxMv.toFixed(2)} mV.</strong> No se reajusta al cambiar latido o derivación. Selecciona un complejo en el papel para ampliarlo. *J estimado por el final del QRS.${b.tPeak !== null && b.tEnd === null ? " Pico T candidato de la envolvente I/II/V1/V5: no equivale al pico de cada derivación ni permite calcular QT sin un final reconocible." : ""}${m.qt !== null && b.tTangentEnd !== null ? ` QT por tangente de la envolvente: ${Math.round((b.tTangentEnd - b.onset) * 1000)} ms; es otro criterio de final de T.` : ""}${reasons.length ? ` ${esc(reasons[0])}` : ""}</p>`;
 }

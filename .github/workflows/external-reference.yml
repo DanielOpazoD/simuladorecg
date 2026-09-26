@@ -14,7 +14,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-        with: {persist-credentials: false}
+        with: {fetch-depth: 0, persist-credentials: false}
       - uses: actions/setup-node@v4
         with: {node-version: '22.16.0', cache: npm}
       - uses: actions/setup-python@v5
@@ -26,7 +26,9 @@ jobs:
       - name: Fetch prespecified cohort and verify against WFDB
         run: python scripts/prepare-ludb-expansion.py --output "$RUNNER_TEMP/ludb-expansion" --crosscheck
       - name: Evaluate frozen sample-only analyzer, without tuning
-        run: node scripts/validate-ludb-expansion.mjs --fixtures "$RUNNER_TEMP/ludb-expansion/fixtures" --output "$RUNNER_TEMP/ludb-expansion/report.json"
+        run: |
+          git worktree add "$RUNNER_TEMP/frozen-ludb-product" 519267d3b595a27ea8d35a5eae6296c780b58ec4
+          node scripts/validate-ludb-expansion.mjs --source-root "$RUNNER_TEMP/frozen-ludb-product" --fixtures "$RUNNER_TEMP/ludb-expansion/fixtures" --output "$RUNNER_TEMP/ludb-expansion/report.json"
       - name: Archive protocol and evaluated sources (no raw headers)
         if: always()
         run: |
