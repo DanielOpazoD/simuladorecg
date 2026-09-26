@@ -14,7 +14,9 @@ export function auditMeasurement(
   const m = structuredClone(measurement),
     comparison = referenceForMeasurement(signal, measurement),
     ref = comparison.reference;
-  m.rejected = {};
+  // Earlier sample-only gates may already have withdrawn an interval.
+  // Keep that record on the cloned result; a later audit must never erase it.
+  m.rejected ??= {};
   const reject = (key: MetricKey, reason: string) => {
     const value = m[key];
     if (value !== null) m.rejected![key] = value;
