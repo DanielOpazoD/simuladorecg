@@ -31,6 +31,17 @@ jobs:
           python scripts/prepare-ludb-delineation.py --output "$RUNNER_TEMP/calibration40" --crosscheck
       - name: Evaluate historical QRS benchmark with its actual frozen analyzer
         run: node scripts/validate-ludb-expansion.mjs --source-root "$RUNNER_TEMP/frozen-product" --fixtures "$RUNNER_TEMP/original40/fixtures" --output "$RUNNER_TEMP/original40/historical-qrs.json"
+      - name: Check historical report identifies the actual analyzed worktree
+        run: |
+          node --input-type=module - "$RUNNER_TEMP/original40/historical-qrs.json" <<'JS'
+          import {readFileSync} from 'node:fs';
+          import assert from 'node:assert/strict';
+          const r=JSON.parse(readFileSync(process.argv[2]));
+          assert.equal(r.provenance.sourceCommit,'519267d3b595a27ea8d35a5eae6296c780b58ec4');
+          assert.equal(r.evaluatorProvenance.sourceCommit,process.env.GITHUB_SHA);
+          assert.equal(r.provenance.worktreeDirty,false);
+          assert.notEqual(r.provenance.evaluatedSourceSha256,r.evaluatorProvenance.evaluatedSourceSha256);
+          JS
       - name: Require evidence-only changes on 80 records and 244 preset/filter scenarios
         run: node scripts/compare-t-peak-evidence.mjs --baseline "$RUNNER_TEMP/frozen-product" --original "$RUNNER_TEMP/original40/fixtures" --calibration "$RUNNER_TEMP/calibration40/fixtures" --output "$RUNNER_TEMP/t-peak-evidence"
       - name: Archive exact source, reports, and source integrity evidence
