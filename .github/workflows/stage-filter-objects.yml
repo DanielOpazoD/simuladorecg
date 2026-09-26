@@ -1,0 +1,20 @@
+name: Stage reviewed filter objects only
+on:
+  push:
+    branches: ['audit/filter-quality-reviewed-objects']
+permissions:
+  contents: write
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact tree before creating objects; never mutate branches
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: python .stage/transform-filter.py
