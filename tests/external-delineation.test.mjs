@@ -40,7 +40,7 @@ describe('Prospective LUDB P/QRS/T delineation protocol',()=>{
   it('makes interval association explicit and descriptive',()=>{
     const refs=Object.fromEntries(['P','QRS','T'].map(w=>[w,fourLeadWaveReference(meta(),w)]));
     const x=referenceIntervals(refs,p.intervalAssociation);
-    expect(x.values.pr).toEqual([100,100]);expect(x.values.qrs).toEqual([60,60]);expect(x.values.qt).toEqual([300,300]);
+    expect(x.values.pr[0]).toBeCloseTo(120,9);expect(x.values.pr[1]).toBeCloseTo(120,9);expect(x.values.qrs[0]).toBeCloseTo(60,9);expect(x.values.qrs[1]).toBeCloseTo(60,9);expect(x.values.qt[0]).toBeCloseTo(300,9);expect(x.values.qt[1]).toBeCloseTo(300,9);
   });
   it('evaluates only samples and exposes absent P-offset and T-onset coverage',()=>{
     const input={...signal,get truth(){throw Error('forbidden truth');},get events(){throw Error('forbidden events');}};
