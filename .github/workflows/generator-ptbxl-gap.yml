@@ -19,13 +19,23 @@ jobs:
         with: {python-version: '3.11'}
       - run: npm ci
       - run: npx vitest run tests/generator-ptbxl-gap.test.mjs tests/ptbxl-morphology.test.mjs
-      - run: python -m pip install wfdb==4.3.1
-      - name: Reproduce frozen PTB-XL+ development reference
+      - name: Download PTB-XL+ artifact produced by this same PR
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          python scripts/ptbxl-benchmark.py --output "$RUNNER_TEMP/ptbxl"
-          node scripts/benchmark-ptbxl-samples.mjs "$RUNNER_TEMP/ptbxl"
+          for n in {1..30}; do
+            run_id=$(gh run list --workflow ptbxl-morphology.yml --branch "${{ github.head_ref || github.ref_name }}" --event "${{ github.event_name }}" --json databaseId,headSha,conclusion --jq '.[] | select(.headSha=="${{ github.event.pull_request.head.sha || github.sha }}") | select(.conclusion=="success") | .databaseId' | head -1)
+            test -n "$run_id" && break
+            sleep 10
+          done
+          test -n "$run_id"
+          mkdir -p "$RUNNER_TEMP/ptbxl-artifact"
+          gh run download "$run_id" --dir "$RUNNER_TEMP/ptbxl-artifact"
+          ref=$(find "$RUNNER_TEMP/ptbxl-artifact" -name median-morphology.json -print -quit)
+          test -n "$ref"
+          dirname "$ref" > "$RUNNER_TEMP/ptbxl-path"
       - name: Describe generator gaps without tuning
-        run: node scripts/compare-generator-ptbxl.mjs "$RUNNER_TEMP/ptbxl" "$RUNNER_TEMP/gap"
+        run: node scripts/compare-generator-ptbxl.mjs "$(cat "$RUNNER_TEMP/ptbxl-path")" "$RUNNER_TEMP/gap"
       - name: Archive exact source and report
         if: always()
         run: |
