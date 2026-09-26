@@ -56,6 +56,7 @@ jobs:
       - name: Archive reproducibility evidence without raw headers
         if: always()
         run: |
+          mkdir -p "$RUNNER_TEMP/ludb-delineation"
           git archive HEAD | gzip > "$RUNNER_TEMP/ludb-delineation/source.tar.gz"
           git rev-parse HEAD > "$RUNNER_TEMP/ludb-delineation/commit.txt"
           rm -rf "$RUNNER_TEMP/ludb-delineation/raw"
