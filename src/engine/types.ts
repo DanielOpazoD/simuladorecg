@@ -164,6 +164,7 @@ export interface DelineatedBeat {
   pOnset: number | null;
   pPeak: number | null;
   tPeak: number | null;
+  tOnset: number | null;
   tEnd: number | null;
   tTangentEnd: number | null;
   rr: number;
