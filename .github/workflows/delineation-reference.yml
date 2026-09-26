@@ -1,0 +1,68 @@
+name: LUDB delineation calibration
+on:
+  pull_request:
+    paths:
+      - 'src/engine/**'
+      - 'scripts/*ludb-delineation*'
+      - 'scripts/lib/external-delineation-evaluation.mjs'
+      - 'scripts/lib/external-qrs-evaluation.mjs'
+      - 'tests/reference/ludb-delineation/**'
+      - 'tests/reference/ludb/load-ludb.mjs'
+      - 'tests/reference/ludb/prepare_ludb.py'
+      - 'tests/external-delineation.test.mjs'
+      - '.github/workflows/delineation-reference.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'src/engine/**'
+      - 'scripts/*ludb-delineation*'
+      - 'scripts/lib/external-delineation-evaluation.mjs'
+      - 'tests/reference/ludb-delineation/**'
+      - 'tests/reference/ludb/load-ludb.mjs'
+      - 'tests/reference/ludb/prepare_ludb.py'
+      - 'tests/external-delineation.test.mjs'
+      - '.github/workflows/delineation-reference.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  calibration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22.16.0', cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: npm ci
+      - run: python -m pip install wfdb==4.3.1
+      - name: Protocol unit contracts
+        run: npx vitest run tests/external-delineation.test.mjs tests/external-cohort.test.mjs
+      - name: Prepare calibration cohort only and cross-check WFDB
+        run: python scripts/prepare-ludb-delineation.py --output "$RUNNER_TEMP/ludb-delineation" --crosscheck
+      - name: Materialize immutable baseline
+        run: |
+          BASELINE=$(python -c "import json;print(json.load(open('tests/reference/ludb-delineation/protocol.json'))['baselineCommit'])")
+          git worktree add "$RUNNER_TEMP/ecg-baseline" "$BASELINE"
+          echo "BASELINE=$BASELINE" >> "$GITHUB_ENV"
+      - name: Evaluate immutable baseline
+        run: node scripts/validate-ludb-delineation.mjs --fixtures "$RUNNER_TEMP/ludb-delineation/fixtures" --source-root "$RUNNER_TEMP/ecg-baseline" --commit "$BASELINE" --role baseline --output "$RUNNER_TEMP/ludb-delineation/baseline.json"
+      - name: Evaluate candidate with identical evaluator and fixtures
+        run: node scripts/validate-ludb-delineation.mjs --fixtures "$RUNNER_TEMP/ludb-delineation/fixtures" --source-root "$GITHUB_WORKSPACE" --commit "$GITHUB_SHA" --role candidate --output "$RUNNER_TEMP/ludb-delineation/candidate.json"
+      - name: Produce descriptive paired delta
+        run: node scripts/compare-delineation-pair.mjs --baseline "$RUNNER_TEMP/ludb-delineation/baseline.json" --candidate "$RUNNER_TEMP/ludb-delineation/candidate.json" --output "$RUNNER_TEMP/ludb-delineation/comparison.json"
+      - name: Archive reproducibility evidence without raw headers
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/ludb-delineation"
+          git archive HEAD | gzip > "$RUNNER_TEMP/ludb-delineation/source.tar.gz"
+          git rev-parse HEAD > "$RUNNER_TEMP/ludb-delineation/commit.txt"
+          rm -rf "$RUNNER_TEMP/ludb-delineation/raw"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ludb-delineation-${{ github.sha }}
+          path: ${{ runner.temp }}/ludb-delineation/
+          retention-days: 30
