@@ -19,8 +19,8 @@ function meta(){
 }
 const signal={fs:500,leads:{I:new Float32Array(5000)}};
 const measurement={beats:[
-  {peak:.30,onset:.28,offset:.34,pPeak:.18,pOnset:.16,tPeak:.50,tEnd:.58,qrs:60},
-  {peak:1.30,onset:1.28,offset:1.34,pPeak:1.18,pOnset:1.16,tPeak:1.50,tEnd:1.58,qrs:60},
+  {peak:.30,onset:.28,offset:.34,pPeak:.18,pOnset:.16,tPeak:.50,tEnd:.58,tTangentEnd:.56,qrs:60},
+  {peak:1.30,onset:1.28,offset:1.34,pPeak:1.18,pOnset:1.16,tPeak:1.50,tEnd:1.58,tTangentEnd:1.56,qrs:60},
 ],pr:120,qrs:60,qt:300,evidence:{pr:{status:'usable',reason:'x'},qrs:{status:'review',reason:'x'},qt:{status:'unavailable',reason:'x'}},detectedPeaks:[.3,1.3],window:{start:0,end:2}};
 
 describe('Prospective LUDB P/QRS/T delineation protocol',()=>{
@@ -48,6 +48,7 @@ describe('Prospective LUDB P/QRS/T delineation protocol',()=>{
     const r=assessExternalDelineation(input,refs,s=>{expect(Object.keys(s)).toEqual(['fs','leads']);return measurement;},p);
     expect(r.waves.P.endpoint.offset.n).toBe(0);expect(r.waves.T.endpoint.onset.n).toBe(0);
     expect(r.waves.QRS.endpoint.onset.n).toBe(2);
+    expect(r.waves.T.tangent.endpoint.offset.n).toBe(2);
   });
   it('separates abstention state from numeric error in pooled summaries',()=>{
     const refs=Object.fromEntries(['P','QRS','T'].map(w=>[w,fourLeadWaveReference(meta(),w)]));
