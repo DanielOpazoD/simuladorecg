@@ -28,6 +28,8 @@ jobs:
         run: npm run build
       - name: Matched repolarization comparison and detector freeze
         run: node scripts/validate-repolarization.mjs --output "${{ runner.temp }}/repolarization-comparison.json"
+      - name: Paired posterior QRS amplitude regression
+        run: node scripts/validate-posterior-amplitude.mjs "${{ runner.temp }}/posterior-amplitude-results.json"
       - name: Install isolated browser test dependency
         run: |
           npm install --no-save --package-lock=false playwright@1.63.0
@@ -48,6 +50,7 @@ jobs:
           node tests/browser-worker-recovery.mjs
           node tests/browser-t-peak-evidence.mjs
           node tests/browser-t-end-assistance.mjs
+          node tests/browser-posterior-amplitude.mjs
       - name: Archive exact reviewed source and reports
         if: always()
         run: |
