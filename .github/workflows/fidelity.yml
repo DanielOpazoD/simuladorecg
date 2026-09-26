@@ -23,7 +23,7 @@ jobs:
       - name: Unit and signal contracts
         run: npm test -- --reporter=default --reporter=json --outputFile=${{ runner.temp }}/unit-results.json
       - name: Discriminative noise-regression contracts
-        run: node --test tests/noise-regression.node.mjs > "${{ runner.temp }}/noise-regression.tap"
+        run: node --test tests/noise-regression.node.mjs tests/t-peak-revision.node.mjs > "${{ runner.temp }}/noise-regression.tap"
       - name: Types and production build
         run: npm run build
       - name: Matched repolarization comparison and detector freeze
@@ -46,6 +46,7 @@ jobs:
           node scripts/verify-production.mjs
           node tests/browser-fidelity.mjs
           node tests/browser-worker-recovery.mjs
+          node tests/browser-t-peak-evidence.mjs
       - name: Archive exact reviewed source and reports
         if: always()
         run: |

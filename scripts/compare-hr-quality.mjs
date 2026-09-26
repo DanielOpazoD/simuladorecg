@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 import assert from 'node:assert/strict';
+import {assertReviewedMeasure,assertPeakOnlyBeats} from './lib/t-peak-revision.mjs';
 const [base, noiseDir, output] = process.argv.slice(2);
 if (!base || !noiseDir || !output) throw new Error('Usage: node scripts/compare-hr-quality.mjs BASELINE_DIR NOISE_DIR OUTPUT');
 const hash = b => createHash('sha256').update(b).digest('hex');
@@ -26,15 +27,17 @@ try {
   const A = await import(pathToFileURL(path.join(temp,'after.mjs')));
   assert.deepEqual(A.HR_QUALITY_POLICY, policy.qualityPolicy, 'Policy changed after replication protocol');
   for (const file of Object.keys(next.metafile.inputs).filter(f => !f.endsWith('/sample-analysis.ts') && !f.endsWith('/measurement-support.ts'))) {
-    assert.equal(hash(await readFile(file)),hash(await readFile(path.join(base,file))),`Unreviewed primitive change: ${file}`);
+    if(file==='src/engine/measure.ts') assertReviewedMeasure(await readFile(path.join(base,file)),await readFile(file));
+    else assert.equal(hash(await readFile(file)),hash(await readFile(path.join(base,file))),`Unreviewed primitive change: ${file}`);
   }
-  const rows=[];let identical=0;
+  const rows=[];let identical=0,addedTPeaks=0;
   const compare=(samples,reference,context)=>{
     const before=B.measure(samples), after=A.analyzeSamples(samples);
-    // Candidate-support revision: raw candidates stay exact; a summary may be explicitly retired,
+    // Candidate-support revision: only absent T peaks may be exposed; all interval candidates stay exact; a summary may be explicitly retired,
     // never replaced by another number. Historical HR screen remains frozen.
-    for(const key of ['hr','instantHr','rr','beats','detectedPeaks','window'])
+    for(const key of ['hr','instantHr','rr','detectedPeaks','window'])
       assert.deepEqual(after[key],before[key],`Primitive output changed: ${key}`);
+    addedTPeaks+=assertPeakOnlyBeats(before.beats,after.beats);
     for(const key of ['pr','qrs','qt','axis']) {
       if(after[key]!==null)assert.equal(after[key],before[key],`Corrected ${key} without delineation evidence`);
       else if(before[key]!==null){assert.equal(after.evidence[key].status,'unavailable');assert.equal(after.rejected[key],before[key]);}
@@ -81,7 +84,7 @@ try {
   const groups=[];
   for(const noise of ['clean',...p.records]) for(const snrDb of noise==='clean'?[null]:p.snrDb) for(const filter of p.filters)
     groups.push({noise,snrDb,filter,...summarize(rows.filter(r=>r.noise===noise&&r.snrDb===snrDb&&r.filter===filter))});
-  const report={schemaVersion:1,role,clinicalValidation:false,policy,unchangedPrimitiveCandidates:identical,
+  const report={schemaVersion:1,role,clinicalValidation:false,policy,unchangedNonTpeakPrimitiveOutputs:identical,addedTPeakCandidates:addedTPeaks,
     overall:summarize(rows),groups,cleanDefaults,rows,limitations:policy.limitations,
     provenance:{commit:execFileSync('git',['rev-parse','HEAD']).toString().trim(),baselineCommit:policy.baselineCommit,
       noiseSha256:hash(await readFile(path.join(noiseDir,'noise-segments.json'))),

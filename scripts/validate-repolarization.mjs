@@ -1,5 +1,6 @@
 /** v1.3 versus working tree, on matched synthetic samples. Not clinical validation. */
 import { build } from 'esbuild';
+import {assertReviewedMeasure,assertPeakOnlyChange} from './lib/t-peak-revision.mjs';
 import assert from 'node:assert/strict';
 import { compareSignalContract, assertPresetSet } from './lib/fidelity-contracts.mjs';
 import { execFileSync } from 'node:child_process';
@@ -48,7 +49,10 @@ try {
    const a=await readFile(path.join(baseDir,p)),b=await readFile(path.join(root,p));
    return {path:p,unchanged:a.equals(b),sha256:createHash('sha256').update(b).digest('hex')};
  }));
- if (detector.some(f=>!f.unchanged)) throw new Error('Detector freeze violated');
+ for(const f of detector.filter(f=>!f.unchanged)) {
+   if(f.path!=='src/engine/measure.ts')throw new Error('Detector freeze violated: '+f.path);
+   assertReviewedMeasure(await readFile(path.join(baseDir,f.path)),await readFile(path.join(root,f.path)));
+ }
  assertPresetSet(before.PRESETS,after.PRESETS);
  const rows=[];
  for(const id of ['inferior','inferior_lcx','anterior','lateral'])
@@ -64,6 +68,8 @@ try {
    for(const lead of Object.keys(b.leads)) leads[lead]={before:morphologyMetrics(a.leads[lead],a.fs,windows),after:morphologyMetrics(b.leads[lead],b.fs,windows)};
    // The product detector sees only samples; model windows are not passed to it.
    const am=after.measure(a),bm=after.measure(b);
+   assertPeakOnlyChange(before.measure(a),am);
+   assertPeakOnlyChange(before.measure(b),bm);
    rows.push({id,phase,filter,case:c,windows,...contract,leads,
     detector:{before:{hr:am.hr,qrs:am.qrs,qt:am.qt},after:{hr:bm.hr,qrs:bm.qrs,qt:bm.qt}}});
  }
@@ -72,6 +78,7 @@ try {
  const defaults=[];
  for(const p of after.PRESETS.filter(p=>p.strategy!=='pending')) {
    const c=after.fromPreset(p),a=before.synthesize(c,10),b=after.synthesize(c,10);
+   assertPeakOnlyChange(before.measure(b),after.measure(b));
    const intendedSourceChange=changedSources.has(p.id);
    const contract=compareSignalContract(a,b,{exact:!intendedSourceChange,label:`default/${p.id}`});
    // All 61 historical signals remain reconstructible with the explicit historical source.
@@ -82,6 +89,6 @@ try {
  }
  const output=options['--output'] || path.join(root,'.sites-runtime','repolarization-comparison.json');
  await mkdir(path.dirname(output),{recursive:true});
- await writeFile(output,JSON.stringify({schema:1,base:BASE,runtime:process.version,measurementScope:'Whole signal in T window; ST can contribute. Not isolated cellular T, HATW score, or diagnostic accuracy.',windowSource:'generator events; not independent delineation',externalValidation:false,detector,modelAudit,defaultPresets:defaults,scenarios:rows},null,2));
+ await writeFile(output,JSON.stringify({schema:1,base:BASE,runtime:process.version,measurementScope:'Whole signal in T window; ST can contribute. Not isolated cellular T, HATW score, or diagnostic accuracy.',windowSource:'generator events; not independent delineation',externalValidation:false,detector,tPeakEvidenceOnly:true,modelAudit,defaultPresets:defaults,scenarios:rows},null,2));
  console.log(JSON.stringify({output,scenarios:rows.length,unchangedDefaults:defaults.filter(x=>x.maxDifferenceMv===0).length,detectorFrozen:detector.every(x=>x.unchanged)}));
 } finally { await rm(temp,{recursive:true,force:true}); }

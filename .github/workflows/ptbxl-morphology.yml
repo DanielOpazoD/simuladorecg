@@ -1,10 +1,10 @@
 name: PTB-XL+ morphology reference
 on:
   pull_request:
-    paths: ['benchmarks/ptbxl-plus/**', 'scripts/*ptbxl*', 'scripts/lib/ptbxl-morphology.mjs', 'tests/*ptbxl*', '.github/workflows/ptbxl-morphology.yml']
+    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/ptbxl-plus/**', 'scripts/*ptbxl*', 'scripts/lib/ptbxl-morphology.mjs', 'tests/*ptbxl*', '.github/workflows/ptbxl-morphology.yml']
   push:
     branches: ['main']
-    paths: ['benchmarks/ptbxl-plus/**', 'scripts/*ptbxl*', 'scripts/lib/ptbxl-morphology.mjs', 'tests/*ptbxl*', '.github/workflows/ptbxl-morphology.yml']
+    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/ptbxl-plus/**', 'scripts/*ptbxl*', 'scripts/lib/ptbxl-morphology.mjs', 'tests/*ptbxl*', '.github/workflows/ptbxl-morphology.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -14,19 +14,23 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-        with: {persist-credentials: false}
+        with: {fetch-depth: 0, persist-credentials: false}
       - uses: actions/setup-node@v4
         with: {node-version: '22.16.0', cache: npm}
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: npm ci
       - run: python -m pip install wfdb==4.3.1
+      - name: Restore actual frozen acquisition and keep its protocol unchanged
+        run: |
+          git worktree add "$RUNNER_TEMP/ptbxl-acquisition" b783fbae5819c3bb3313931d8f2fce43420a9d85
+          git diff --exit-code b783fbae5819c3bb3313931d8f2fce43420a9d85 HEAD -- scripts/ptbxl-benchmark.py tests/test_ptbxl_reference.py benchmarks/ptbxl-plus
       - name: Independent selection, statistics and waveform contracts
         run: |
-          python -m unittest discover -s tests -p test_ptbxl_reference.py -v
+          (cd "$RUNNER_TEMP/ptbxl-acquisition" && python -m unittest discover -s tests -p test_ptbxl_reference.py -v)
           npx vitest run tests/ptbxl-morphology.test.mjs
       - name: Select patients before feature acquisition and verify sources
-        run: python scripts/ptbxl-benchmark.py --output "$RUNNER_TEMP/ptbxl-reference"
+        run: python "$RUNNER_TEMP/ptbxl-acquisition/scripts/ptbxl-benchmark.py" --output "$RUNNER_TEMP/ptbxl-reference"
       - name: Describe median beats and unchanged generated samples separately
         run: node scripts/benchmark-ptbxl-samples.mjs "$RUNNER_TEMP/ptbxl-reference"
       - name: Preserve structural diagnostics on failure, never clinical comments

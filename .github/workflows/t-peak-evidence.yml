@@ -1,0 +1,61 @@
+name: T peak evidence without QT promotion
+on:
+  pull_request:
+  push:
+    branches: ['main']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22.16.0', cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: npm ci
+      - name: Adversarial evidence and reference contracts
+        run: node --test tests/t-peak-revision.node.mjs tests/ludb-frozen-baseline.node.mjs
+      - name: Preserve generator, quality policies and historical protocols
+        run: |
+          git diff --exit-code 2f8247a859badf3f66c307258904ac7c099c38fb HEAD -- src/presets public benchmarks tests/reference package.json package-lock.json
+          git worktree add "$RUNNER_TEMP/frozen-product" 519267d3b595a27ea8d35a5eae6296c780b58ec4
+      - run: python -m pip install wfdb==4.3.1
+      - name: Verify original 40 and separately observed calibration 40 with WFDB
+        run: |
+          python scripts/prepare-ludb-expansion.py --output "$RUNNER_TEMP/original40" --crosscheck
+          python scripts/prepare-ludb-delineation.py --output "$RUNNER_TEMP/calibration40" --crosscheck
+      - name: Evaluate historical QRS benchmark with its actual frozen analyzer
+        run: node scripts/validate-ludb-expansion.mjs --source-root "$RUNNER_TEMP/frozen-product" --fixtures "$RUNNER_TEMP/original40/fixtures" --output "$RUNNER_TEMP/original40/historical-qrs.json"
+      - name: Check historical report identifies the actual analyzed worktree
+        run: |
+          node --input-type=module - "$RUNNER_TEMP/original40/historical-qrs.json" <<'JS'
+          import {readFileSync} from 'node:fs';
+          import assert from 'node:assert/strict';
+          const r=JSON.parse(readFileSync(process.argv[2]));
+          assert.equal(r.provenance.sourceCommit,'519267d3b595a27ea8d35a5eae6296c780b58ec4');
+          assert.equal(r.evaluatorProvenance.sourceCommit,process.env.GITHUB_SHA);
+          assert.equal(r.provenance.worktreeDirty,false);
+          assert.notEqual(r.provenance.evaluatedSourceSha256,r.evaluatorProvenance.evaluatedSourceSha256);
+          JS
+      - name: Require evidence-only changes on 80 records and 244 preset/filter scenarios
+        run: node scripts/compare-t-peak-evidence.mjs --baseline "$RUNNER_TEMP/frozen-product" --original "$RUNNER_TEMP/original40/fixtures" --calibration "$RUNNER_TEMP/calibration40/fixtures" --output "$RUNNER_TEMP/t-peak-evidence"
+      - name: Archive exact source, reports, and source integrity evidence
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/t-peak-evidence"
+          git archive HEAD | gzip > "$RUNNER_TEMP/t-peak-evidence/source.tar.gz"
+          git rev-parse HEAD > "$RUNNER_TEMP/t-peak-evidence/commit.txt"
+          for name in original40 calibration40; do
+            test ! -d "$RUNNER_TEMP/$name" || { rm -rf "$RUNNER_TEMP/$name/raw"; cp -r "$RUNNER_TEMP/$name" "$RUNNER_TEMP/t-peak-evidence/$name"; }
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: t-peak-evidence-${{ github.sha }}
+          path: ${{ runner.temp }}/t-peak-evidence/
+          retention-days: 30

@@ -300,6 +300,10 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
       }
     }
     const tAmplitude = magnitude(tp);
+    // A visible peak is evidence, not a QT measurement. Preserve it even when
+    // the independent terminal-return condition below cannot close the wave.
+    if (started && tp > tLo + 3 && tAmplitude > Math.max(0.05, noise * 12))
+      beat.tPeak = tp / fs;
     if (te > tp && tp > tLo + 3 && tAmplitude > Math.max(0.05, noise * 12)) {
       beat.tPeak = tp / fs;
       beat.tEnd = te / fs;
