@@ -1,4 +1,4 @@
-import type { Lead, Measurement, Signal } from '../types';
+import type { Lead, Measurement, Signal } from './types';
 
 /** An engineering review aid, never an automatic QT or a calibrated probability. */
 export const T_END_AREA_POLICY = Object.freeze({

@@ -8,7 +8,7 @@ import type {
 import { LEADS } from "../engine/types";
 import { esc, icon, options } from "./helpers";
 import { detailScale } from "./detail-scale";
-import { suggestTEnds, type TEndAreaCandidate } from "../engine/analysis/t-end-area";
+import { suggestTEnds, type TEndAreaCandidate } from "../engine/t-end-area";
 
 const round = (value: number | null) =>
   value === null ? "—" : Math.round(value);

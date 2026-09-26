@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { suggestTEnds } from '../src/engine/analysis/t-end-area';
+import { suggestTEnds } from '../src/engine/t-end-area';
 import { measure } from '../src/engine/measure';
 import { fixture, BIPHASIC_T, U } from './fixtures';
 import { synthesize } from '../src/engine/signal';

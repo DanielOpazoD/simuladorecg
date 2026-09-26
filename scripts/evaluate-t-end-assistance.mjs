@@ -19,7 +19,7 @@ const baseline=JSON.parse(readFileSync('benchmarks/ludb-baseline/protocol.json')
 const analyzerFiles=Object.keys(baseline.analyzerFiles).sort();
 for(const f of analyzerFiles) assert.deepEqual(readFileSync(f),execFileSync('git',['show',protocol.baselineCommit+':'+f]),'Automatic analyzer changed: '+f);
 const bundle=resolve(out,'review-aid.mjs');
-await build({stdin:{contents:"export {analyzeSamples} from './src/engine/sample-analysis.ts';export {suggestTEnds,T_END_AREA_POLICY} from './src/engine/analysis/t-end-area.ts';",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',outfile:bundle});
+await build({stdin:{contents:"export {analyzeSamples} from './src/engine/sample-analysis.ts';export {suggestTEnds,T_END_AREA_POLICY} from './src/engine/t-end-area.ts';",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',outfile:bundle});
 const {analyzeSamples,suggestTEnds,T_END_AREA_POLICY}=await import(pathToFileURL(bundle));
 const sampleHash=s=>hash(Buffer.concat(Object.values(s.leads).map(a=>Buffer.from(a.buffer,a.byteOffset,a.byteLength))));
 const all={};
@@ -70,7 +70,7 @@ for(const [name,root,ids,split,protocolHash] of [
 }
 const result={schemaVersion:1,productCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),
  baselineCommit:protocol.baselineCommit,protocolSha256:hash(protocolBytes),policy:T_END_AREA_POLICY,
- algorithmSha256:hash(readFileSync('src/engine/analysis/t-end-area.ts')),cohorts:all,
+ algorithmSha256:hash(readFileSync('src/engine/t-end-area.ts')),cohorts:all,
  automaticQtChanged:false,holdoutEvaluated:false,clinicalValidation:false,
  limitations:protocol.limitations};
 writeFileSync(resolve(out,'summary.json'),JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result));

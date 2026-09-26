@@ -89,3 +89,11 @@ TypeScript/build, benchmarks existentes y navegación de producción escritorio/
 Browser plugin no disponible: se utiliza el Playwright ya establecido por el repositorio
 en CI. No cambia ninguna dependencia del producto. Una CI aprobada no equivale a
 prueba física en iPhone, impresión real o validación clínica.
+
+### Separación física respecto del detector congelado
+
+La primera CI aprobó 654 pruebas y build, pero detuvo la comparación histórica
+porque el archivo nuevo estaba dentro de `src/engine/analysis`. Esa carpeta está
+congelada como conjunto exacto. La ayuda se reubicó a `src/engine/t-end-area.ts`,
+fuera del conjunto del detector automático, sin modificar el algoritmo ni relajar
+la comprobación. Sus consumidores siguen siendo sólo la vista y su evaluador.
