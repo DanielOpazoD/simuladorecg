@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "baselineCommit": "519267d3b595a27ea8d35a5eae6296c780b58ec4",
+  "cohortProtocol": "tests/reference/ludb-expansion/protocol.json",
+  "cohortProtocolSha256": "65e740ec19d301c9dbf2f852839998323b90b608fb3de8b9b9ad4cee7dd3cd0c",
+  "cohortRole": "The original 40 PR17 records, already observed; not a new calibration cohort or untouched holdout.",
+  "split": "expansion",
+  "analysisEntry": "src/engine/sample-analysis.ts",
+  "analyzerFiles": {
+    "src/engine/analysis/statistics.ts": "c8c20531ca3eb5483529d426357360ac1381ac934a3c3ef3d5d3cd21023e5a4b",
+    "src/engine/analysis/impulses.ts": "362814239fb6dcae06025cb065c6f6dfef08bb5341cabaef01c58d8227222cb1",
+    "src/engine/analysis/ventricular-candidates.ts": "0c7d0abb1834fd9407ca9fdd85c735b7794bcaf933d911f13222039ab4c0bec4",
+    "src/engine/lead-registry.ts": "21b9ad7996fc2813156e51d87488f48fae52085ea6935091396e7226589367d3",
+    "src/engine/leads.ts": "d67c47738647a8aa47f98f01de045ab7381a842007c7d5fa3562f570dc711c16",
+    "src/engine/analysis/evidence.ts": "c6e05ae78b0c08718b3cbe848b47d7431d2ad3a3d41bf73f83608c11f3dfefa3",
+    "src/engine/measure.ts": "42549edaa0502121aeca3e736ef6d18622c425b79b7e5a1ce31f9545c8e5a60e",
+    "src/engine/sample-analysis.ts": "ec2e6599b6d0aaacc28d5d8356587218d475c957e573656cf3c800e145a62ccb",
+    "src/engine/measurement-support.ts": "1b6df1bf5c5386a9bdd237109b43a49879fd10c93a4b43eceeb7acdddcf7ba33"
+  },
+  "eventMatchToleranceSeconds": 0.15,
+  "intervalAssociation": {
+    "pMinimumBeforeQrsSeconds": 0.02,
+    "pMaximumBeforeQrsSeconds": 0.45,
+    "tMinimumAfterQrsSeconds": 0.04,
+    "tMaximumAfterQrsSeconds": 0.8,
+    "tMustEndBeforeNextQrsSeconds": 0.02
+  },
+  "statistics": {
+    "median": "ordinary median; average two central observations for even n",
+    "p95": "nearest rank: sorted absolute errors[ceil(0.95*n)-1]",
+    "macro": "unweighted average of per-record MAEs among records with observations",
+    "missing": "null, not zero",
+    "qualityDenominator": "all 40 records; coverage additionally uses reference-eligible records"
+  },
+  "evaluationWindow": "Per wave: first complete aggregate peak minus 150ms through last plus 150ms, clipped to analysis window. Out-of-window and incomplete-reference predictions are counted separately. No complete reference means unscored, not all false positives.",
+  "qrsDetection": "All detectedPeaks, with delineation endpoints only when an actual beat candidate exists.",
+  "intervalReference": "A unique P/T in the prespecified window; overlapping boundaries or multiple possibilities abstain. T offset must precede next QRS onset (or peak if onset missing) minus 20ms. This does not establish AV conduction.",
+  "reference": "Unchanged fourLeadWaveReference (I/II/V1/V5) from PR26; aggregate is not an original human global annotation.",
+  "inputContract": [
+    "fs",
+    "leads"
+  ],
+  "noAlgorithmChanges": true,
+  "holdoutEvaluated": false,
+  "clinicalValidation": false,
+  "failureTriage": "Numerical flags and reference QRS/rate only. Clinical causes require manual adjudication; flags are not diagnoses."
+}
