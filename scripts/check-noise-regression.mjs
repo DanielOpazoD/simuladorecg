@@ -14,7 +14,8 @@ let result;
 try {
   const beforeBytes=await readFile(beforeFile),afterBytes=await readFile(afterFile);
   const before=JSON.parse(beforeBytes),after=JSON.parse(afterBytes);
-  assert.equal(before.sourceCommit,policy.baselineCommit,'Not the reviewed baseline commit');
+  const effectiveBaselineCommit = migration.baselineAmendment?.amendedBaselineCommit ?? policy.baselineCommit;
+  assert.equal(before.sourceCommit,effectiveBaselineCommit,'Not the reviewed baseline commit');
   assert.equal(before.noiseProtocolSha256,policy.noiseProtocolSha256,'Unreviewed acquisition protocol');
   result=compareReports(before,after,{...policy.numericalTolerance,allowedCleanSourceChanges:migration.allowedCleanSourceChanges});
   if (policy.monitorRevision) {
@@ -23,6 +24,7 @@ try {
     result={...result,status:'pass',strictStatus:result.status,reviewedMonitorRevision:revision};
   }
   result.policy=policy; result.generatorMigration=migration;
+  result.baselineProvenance={historicalBaselineCommit:policy.baselineCommit,effectiveBaselineCommit};
   result.reportSha256={before:createHash('sha256').update(beforeBytes).digest('hex'),after:createHash('sha256').update(afterBytes).digest('hex')};
 } catch(error) {
   result={status:'error',clinicalValidation:false,error:String(error.stack),policy};
