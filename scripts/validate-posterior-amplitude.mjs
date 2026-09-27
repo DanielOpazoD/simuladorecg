@@ -1,6 +1,6 @@
 /** Paired generator regression; independent of the sample analyzer and external ECG labels. */
 import { build } from 'esbuild';
-import { assertRvAmplitudeChange, assertFinalQrsAxisChange, assertExactSignal } from './lib/fidelity-contracts.mjs';
+import { assertRvAmplitudeChange, assertFinalQrsAxisChange, assertExactSignal, compareSignalContract } from './lib/fidelity-contracts.mjs';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
@@ -28,6 +28,13 @@ try {
   execFileSync('tar', ['-xf', '-', '-C', axisDir], {input: execFileSync('git', ['archive', axisBaseline], {maxBuffer: 100 * 1024 * 1024})});
   const axisBase = await load(axisDir, 'before-axis');
   const filters = ['off', 'diagnostic', 'monitor', 'aggressive'];
+  // PR43 intentionally derives secondary T from the final activation in these
+  // default presets. Keep this list explicit so unrelated presets remain exact.
+  const coupledSecondaryPresets = new Set([
+    'aivr','bifascicular','bifascicular_pr','bigeminy','complete_v','couplet',
+    'ddd','idioventricular','irbbb','lbbb','mobitz2','pvc','rbbb','rv_acute',
+    'sgarbossa','torsades','trigeminy','vt','vvi',
+  ]);
   const defaults = [];
   if (scope === 'all' || scope === 'defaults') for (const preset of after.PRESETS.filter(p => p.strategy !== 'pending')) for (const filter of filters) {
     const c = {...after.fromPreset(preset), filter};
@@ -35,44 +42,71 @@ try {
     const historical = preset.id === 'rv_chronic'
       ? assertRvAmplitudeChange(before.synthesize, a, reviewed, c)
       : (assertExactSignal(a, reviewed, `historical/default/${preset.id}/${filter}`), null);
-    const finalAxis = ['rv_acute', 'rv_chronic'].includes(preset.id)
-      ? assertFinalQrsAxisChange(axisBase, reviewed, b, c)
-      : preset.id === 'torsades'
-        ? (() => {
-            for (const lead of Object.keys(reviewed.leads))
-              assert.deepEqual(reviewed.leads[lead], b.leads[lead], `current/default/torsades/${filter}: ${lead} samples changed`);
-            assert.deepEqual(reviewed.events, b.events, `current/default/torsades/${filter}: events changed`);
-            assert.deepEqual(reviewed.warnings, b.warnings, `current/default/torsades/${filter}: warnings changed`);
-            assert.deepEqual({...reviewed.truth, axis: null}, b.truth,
-              `current/default/torsades/${filter}: only truth.axis may change`);
-            assert.notEqual(reviewed.truth.axis, null, 'Reviewed torsades baseline must reproduce the former fixed axis');
-            assert.equal(b.truth.axis, null, 'Current torsades must not publish a global axis');
-            return {kind:'torsades-global-axis-withdrawal', from:reviewed.truth.axis, to:null};
-          })()
-        : (assertExactSignal(reviewed, b, `current/default/${preset.id}/${filter}`), null);
+    const intendedSecondaryChange = coupledSecondaryPresets.has(preset.id);
+    let finalAxis = null, secondary = null, reviewedMainExact = true;
+    if (preset.id === 'rv_chronic') {
+      finalAxis = assertFinalQrsAxisChange(axisBase, reviewed, b, c);
+      reviewedMainExact = false;
+    } else if (preset.id === 'rv_acute') {
+      // Isolate the previously reviewed QRS-axis migration from PR43's new T layer.
+      const axisCase = {...c, tAmp: 0, st: 0};
+      finalAxis = assertFinalQrsAxisChange(
+        axisBase,
+        axisBase.synthesize(axisCase, 10),
+        after.synthesize(axisCase, 10),
+        axisCase,
+      );
+      reviewedMainExact = false;
+    }
+    if (preset.id === 'torsades') {
+      secondary = compareSignalContract(reviewed, b, {exact:false,label:`current/default/torsades/${filter}`});
+      assert.ok(secondary.maxDifferenceMv > 1e-6, `missing coupled-secondary change torsades/${filter}`);
+      assert.deepEqual(reviewed.events, b.events, `current/default/torsades/${filter}: events changed`);
+      assert.deepEqual(reviewed.warnings, b.warnings, `current/default/torsades/${filter}: warnings changed`);
+      assert.deepEqual({...reviewed.truth, axis: null}, b.truth,
+        `current/default/torsades/${filter}: only truth.axis may change`);
+      assert.notEqual(reviewed.truth.axis, null, 'Reviewed torsades baseline must reproduce the former fixed axis');
+      assert.equal(b.truth.axis, null, 'Current torsades must not publish a global axis');
+      finalAxis = {kind:'torsades-global-axis-withdrawal', from:reviewed.truth.axis, to:null};
+      reviewedMainExact = false;
+    } else if (intendedSecondaryChange) {
+      secondary = compareSignalContract(reviewed, b, {exact:false,label:`current/default/${preset.id}/${filter}`});
+      assert.ok(secondary.maxDifferenceMv > 1e-6, `missing coupled-secondary change ${preset.id}/${filter}`);
+      assert.deepEqual(reviewed.truth, b.truth, `current/default/${preset.id}/${filter}: truth changed`);
+      assert.deepEqual(reviewed.warnings, b.warnings, `current/default/${preset.id}/${filter}: warnings changed`);
+      reviewedMainExact = false;
+    } else if (finalAxis === null) {
+      assertExactSignal(reviewed, b, `current/default/${preset.id}/${filter}`);
+    }
     defaults.push({preset: preset.id, filter, historicalExact: historical === null,
-      exact: historical === null && finalAxis === null, reviewedMainExact: finalAxis === null,
-      historical, finalAxis});
+      exact: historical === null && reviewedMainExact, reviewedMainExact,
+      intendedSecondaryChange, historical, finalAxis, secondary});
   }
   if (scope === 'all' || scope === 'defaults') {
     assert.equal(defaults.length, 244, 'Require all 61 presets and four filters');
     assert.equal(defaults.filter(r => r.historicalExact).length, 240);
     const expectedRv = new Set(filters.flatMap(filter => ['rv_acute', 'rv_chronic'].map(preset => `${preset}/${filter}`)));
     const expectedTorsades = new Set(filters.map(filter => `torsades/${filter}`));
+    const expectedSecondary = new Set([...coupledSecondaryPresets].flatMap(preset => filters.map(filter => `${preset}/${filter}`)));
     const rvChanges = defaults
       .filter(r => ['rv_acute', 'rv_chronic'].includes(r.preset) && r.finalAxis !== null)
       .map(r => `${r.preset}/${r.filter}`);
     const torsadesChanges = defaults
       .filter(r => r.preset === 'torsades' && r.finalAxis?.kind === 'torsades-global-axis-withdrawal')
       .map(r => `${r.preset}/${r.filter}`);
+    const secondaryChanges = defaults
+      .filter(r => r.secondary !== null)
+      .map(r => `${r.preset}/${r.filter}`);
     const unexpected = defaults.filter(r =>
-      r.finalAxis !== null &&
-      !['rv_acute', 'rv_chronic', 'torsades'].includes(r.preset)
+      !r.reviewedMainExact &&
+      !coupledSecondaryPresets.has(r.preset) &&
+      r.preset !== 'rv_chronic'
     );
     assert.deepEqual(new Set(rvChanges), expectedRv, 'All and only the eight reviewed RV traces must satisfy the dedicated axis oracle');
     assert.deepEqual(new Set(torsadesChanges), expectedTorsades, 'All and only four torsades filters may withdraw truth.axis');
+    assert.deepEqual(new Set(secondaryChanges), expectedSecondary, 'All and only the explicit PR43 presets may change secondary repolarization');
     assert.deepEqual(unexpected, [], 'No other preset/filter may change after the reviewed main baseline');
-    assert.equal(defaults.filter(r => r.finalAxis === null).length, 232, 'Every other preset/filter must remain exact');
+    assert.equal(defaults.filter(r => r.reviewedMainExact).length, 164, 'All unaffected preset/filter traces must remain exact');
   }
   const rows = [];
   const historical = before;
@@ -190,7 +224,7 @@ try {
   const output = process.argv[2]; assert.ok(output, 'Provide result JSON path');
   await mkdir(path.dirname(path.resolve(output)), {recursive: true});
   await writeFile(output, JSON.stringify(report, null, 2) + '\n');
-  console.log(JSON.stringify({defaultScenarios: defaults.length, exactDefaults: defaults.filter(r => r.exact).length, intendedDefaultChanges: defaults.filter(r => r.finalAxis).length, rvScenarios: rvScenarios.length, gainScenarios: rows.length,
+  console.log(JSON.stringify({defaultScenarios: defaults.length, exactDefaults: defaults.filter(r => r.exact).length, intendedDefaultChanges: defaults.filter(r => !r.reviewedMainExact).length, rvScenarios: rvScenarios.length, gainScenarios: rows.length,
     maxOldErrorMv: rows.length ? Math.max(...rows.map(r => r.oldErrorMv)) : null, maxNewErrorMv: rows.length ? Math.max(...rows.map(r => r.newErrorMv)) : null,
     lowVoltageScenarios: lowVoltageScenarios.length, maxLowVoltageErrorMv: lowVoltageScenarios.length ? Math.max(...lowVoltageScenarios.map(r => r.newErrorMv)) : null,
     wpwLowVoltageScenarios: wpwLowVoltageScenarios.length, maxWpwLowVoltageErrorMv: wpwLowVoltageScenarios.length ? Math.max(...wpwLowVoltageScenarios.map(r => r.newErrorMv)) : null}));
