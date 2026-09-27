@@ -10,6 +10,10 @@ jobs:
   amplitude-regression:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        scope: [posterior, wpw, rv]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -20,19 +24,19 @@ jobs:
           node-version: '22.16.0'
           cache: npm
       - run: npm ci
-      - name: Paired posterior, WPW and RV QRS amplitude regression
-        run: node scripts/validate-posterior-amplitude.mjs "${{ runner.temp }}/posterior-amplitude-results.json"
+      - name: Paired QRS amplitude regression (${{ matrix.scope }})
+        run: node scripts/validate-posterior-amplitude.mjs "${{ runner.temp }}/amplitude-${{ matrix.scope }}.json" --scope "${{ matrix.scope }}"
       - name: Archive exact amplitude report
         if: always()
         run: |
           mkdir -p "$RUNNER_TEMP/amplitude-evidence"
           git archive HEAD | gzip > "$RUNNER_TEMP/amplitude-evidence/source.tar.gz"
           git rev-parse HEAD > "$RUNNER_TEMP/amplitude-evidence/source-commit.txt"
-          cp "$RUNNER_TEMP/posterior-amplitude-results.json" "$RUNNER_TEMP/amplitude-evidence/" 2>/dev/null || true
+          cp "$RUNNER_TEMP/amplitude-${{ matrix.scope }}.json" "$RUNNER_TEMP/amplitude-evidence/" 2>/dev/null || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: qrs-amplitude-evidence-${{ github.sha }}
+          name: qrs-amplitude-${{ matrix.scope }}-${{ github.sha }}
           path: ${{ runner.temp }}/amplitude-evidence/
           retention-days: 14
   verify:
