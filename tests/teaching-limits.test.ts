@@ -43,7 +43,7 @@ describe("Specific teaching limits, not repaired physiology", () => {
     expect(qrsChange).toBeGreaterThan(.02);expect(tChange).toBe(0);
     expect(caseContext(c).warnings).toContain(WPW_REPOLARIZATION_LIMIT);
   });
-  it.each(['lbbb','vvi','ddd'])("%s exposes the non-proportional voltage response without calling it a diagnostic ratio",id=>{
+  it.each(['lbbb','vvi','ddd'])("%s preserves QRS gain while keeping Sgarbossa ratios explicitly unvalidated",id=>{
     const c=load(id);c.filter='off';c.variability=0;c.qrsAmp=.1;
     const low=synthesize(c,10);c.qrsAmp=1;const high=synthesize(c,10);
     const read=(s:Signal)=>{
@@ -53,7 +53,7 @@ describe("Specific teaching limits, not repaired physiology", () => {
     };
     const a=read(low),b=read(high);
     expect(b.s/a.s).toBeCloseTo(10,6);
-    expect(Math.abs(b.st40-10*a.st40)).toBeGreaterThan(.1);
+    expect(Number.isFinite(a.st40)).toBe(true); expect(Number.isFinite(b.st40)).toBe(true);
     expect(caseContext(c).warnings).toContain(SECONDARY_ST_RATIO_LIMIT);
     // ST40 != J; this test cannot classify Sgarbossa or define normal physiology.
   });

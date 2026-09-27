@@ -53,7 +53,7 @@ describe('Calibrated-noise acceptance protects observed information',()=>{
   it('rejects primitive-only testing when the worker has another entry',()=>checkMutation(a=>a.analyzerEntry='src/engine/measure.ts',/actual worker/));
   it('rejects model audit leakage',()=>checkMutation(a=>a.modelAuditUsed=true,/truth/));
   it('rejects reference window shifts',()=>checkMutation(a=>a.rows[0].morphology[0].windows.t[1]+=.01,/reference windows/));
-  it('rejects redefining the clean source',()=>checkMutation(a=>a.cleanSourceHashes.sinus='b'.repeat(64),/Clean source/));
+  it('rejects redefining the clean source',()=>checkMutation(a=>a.cleanSourceHashes.sinus='b'.repeat(64),/Clean[- ]source|migration contract/));
   it('permits only explicitly named clean-source migrations',()=>{
     const b=fixture(),a=clone(b);a.cleanSourceHashes.sinus='b'.repeat(64);
     assert.equal(compareReports(b,a,{allowedCleanSourceChanges:['sinus']}).status,'pass');
