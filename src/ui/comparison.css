@@ -1,4 +1,6 @@
 /* A/B lab: one shared scale, graph-only overflow, native controls. */
+/* Adding a trace tool must not push existing tools outside narrow viewports. */
+.trace-tools { flex-wrap: wrap; min-width: 0; }
 .comparison-lab { margin: 20px 0; padding: 22px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); min-width: 0; }
 .comparison-heading, .comparison-actions, .comparison-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
 .comparison-heading { justify-content: space-between; margin-bottom: 14px; }
