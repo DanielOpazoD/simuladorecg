@@ -35,9 +35,13 @@ la documentación general declara 1 µV/LSB y formato 16; los archivos observado
 son formato 32. No se cambia la ganancia ni se aplica /1000 silenciosamente.
 
 Una comprobación de ingeniería cruza QRS pico-pico medido con la tabla armonizada
-12SL. Un cociente mediano fuera de 0,5–2 señala conflicto grueso de escala; ese
-intervalo NO es un umbral clínico ni certifica las unidades. Sin soporte tabular,
-la amplitud queda no verificada. En estos datos se bloquean las 240 comparaciones
+12SL. Desde el bloque posterior al PR35, CADA pareja debe estar entre 0,5–2: una
+mediana global cercana a 1 podía ocultar una derivación a escala 0,001 o 1000.
+Sin soporte positivo y finito en TODAS las parejas, la escala queda no verificada;
+una sola discordancia mantiene el conflicto. Se informan parejas solicitadas,
+ausentes y discordantes. Este intervalo NO es un umbral clínico ni certifica las
+unidades: sólo detecta discrepancias gruesas. No se rescala ninguna muestra.
+En estos datos, las 488 parejas son discordantes y se bloquean las 240 comparaciones
 de amplitud por grupo; siguen utilizables FWHM T y T/QRS, invariantes ante un
 factor de voltaje positivo común dentro de cada derivación. Las 15 métricas
 sintéticas ausentes se conservan. Quedan 145 comparaciones por grupo.
@@ -58,7 +62,8 @@ El ranking es descriptivo: ningún coeficiente puede cambiarse sólo para acerca
 al IQR. No modifica `src/`, señales, QT, filtros, catálogo ni protocolos históricos.
 Los SHA256 de los tres informes de entrada quedan dentro del informe de salida.
 
-Nueve pruebas funcionales cubren cuartiles, ceros, ausencias, IQR cero, escala1000,
-no mutación, duplicados y resultados vacíos. Se ejecutan en Vitest/CI; las mismas
+Catorce pruebas funcionales cubren cuartiles, ceros, ausencias, IQR cero, escala1000,
+escala mixta oculta por la mediana, soporte parcial, no mutación, duplicados y
+resultados vacíos. Cinco de estas pruebas fallan con la auditoría del PR35. Se ejecutan en Vitest/CI; las mismas
 aserciones se ejecutaron localmente con Node22.16 y node:test. La instalación
 limpia y la suite completa se verifican en CI, no se presuponen del ensayo local.

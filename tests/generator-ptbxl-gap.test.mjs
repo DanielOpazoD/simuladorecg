@@ -41,6 +41,39 @@ describe('PTB-XL gap computes real comparisons, never a silent empty success', (
     assert.equal(r.summary.coverage.MI.unavailableByReason['scale-conflict'], 240);
     assert.equal(r.summary.coverage.MI.comparable, 160);
   });
+  for (const factor of [.001, 1000]) it(`does not let the median hide one scale conflict (${factor})`, () => {
+    const inputs = fixture(); inputs[0].records[0].leads.V1.qrsPeakToPeakMv *= factor;
+    const saved = structuredClone(inputs), r = compareGenerator(...inputs);
+    assert.equal(r.summary.amplitudeAudit.median, 1);
+    assert.equal(r.summary.amplitudeAudit.requestedPairs, 32);
+    assert.equal(r.summary.amplitudeAudit.conflictingPairs, 1);
+    assert.equal(r.summary.coverage.MI.unavailableByReason['scale-conflict'], 240);
+    assert.equal(r.summary.coverage.MI.comparable, 160);
+    assert.deepEqual(inputs, saved);
+  });
+  it('does not let supported pairs certify a lead with missing tabular evidence', () => {
+    const inputs = fixture(); delete inputs[2].tables['12sl'][1].QRS_AmpPP_V1;
+    const r = compareGenerator(...inputs);
+    assert.equal(r.summary.amplitudeAudit.median, 1);
+    assert.equal(r.summary.amplitudeAudit.missingPairs, 1);
+    assert.equal(r.summary.amplitudeAudit.conflictingPairs, 0);
+    assert.equal(r.summary.coverage.MI.unavailableByReason.unverified, 240);
+  });
+  it('counts zero or invalid samples as unsupported, never as scale confirmation', () => {
+    for (const value of [0, null, NaN, -1]) {
+      const inputs = fixture(); inputs[0].records[0].leads.I.qrsPeakToPeakMv = value;
+      assert.equal(compareGenerator(...inputs).summary.amplitudeAudit.status, 'unverified');
+    }
+  });
+  it('keeps the original engineering bounds inclusive and reports conflicts even with missing pairs', () => {
+    const inputs = fixture(); inputs[0].records[0].leads.I.qrsPeakToPeakMv = .5;
+    inputs[0].records[0].leads.II.qrsPeakToPeakMv = 2;
+    assert.equal(compareGenerator(...inputs).summary.amplitudeAudit.status, 'consistent-with-tabular');
+    delete inputs[2].tables['12sl'][2].QRS_AmpPP_V1;
+    inputs[0].records[0].leads.II.qrsPeakToPeakMv = 2.01;
+    const audit = compareGenerator(...inputs).summary.amplitudeAudit;
+    assert.equal(audit.status, 'scale-conflict'); assert.equal(audit.conflictingPairs, 1); assert.equal(audit.missingPairs, 1);
+  });
   it('does not declare amplitude comparable without tabular support', () => {
     const inputs = fixture(); inputs[2].tables['12sl'] = {};
     assert.equal(compareGenerator(...inputs).summary.amplitudeAudit.status, 'unverified');

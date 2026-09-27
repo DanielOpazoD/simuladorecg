@@ -33,8 +33,13 @@ export function amplitudeAudit(external, features) {
     if (finite(measured) && measured > 0 && finite(tabular) && tabular > 0) ratios.push(measured / tabular);
   }
   const stats = quartiles(ratios);
-  return { ...stats, status: !stats.n ? 'unverified' : stats.median >= .5 && stats.median <= 2
-    ? 'consistent-with-tabular' : 'scale-conflict', rescalingApplied: false };
+  // A pooled median can hide one differently scaled lead/record. Missing or zero
+  // pairs cannot certify the rest: every requested pair must support this check.
+  const requestedPairs = external.records.length * LEADS.length;
+  const conflictingPairs = ratios.filter(ratio => ratio < .5 || ratio > 2).length;
+  return { ...stats, requestedPairs, missingPairs: requestedPairs - stats.n, conflictingPairs,
+    status: conflictingPairs ? 'scale-conflict' : stats.n > 0 && stats.n === requestedPairs
+      ? 'consistent-with-tabular' : 'unverified', rescalingApplied: false };
 }
 
 export function compareGenerator(external, generated, features) {
