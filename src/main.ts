@@ -1,5 +1,6 @@
 import "./style.css";
 import { APP_VERSION } from "./ui/version";
+import { ComparisonLab } from "./ui/comparison-lab";
 import {
   DEFAULT_CASE,
   cloneCase,
@@ -71,11 +72,12 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><div><h2>Casos clínicos</h2><span>${PRESETS.filter((x) => x.strategy !== "pending").length} patrones sintéticos</span></div>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Buscar un patrón…" aria-label="Buscar caso"/></label><label class="category-select"><span class="sr-only">Categoría</span><select id="category">${options([["", "Todas las categorías"], ...Array.from(new Set(PRESETS.map((x) => x.group))).map((x) => [x, x] as [string, string])], "")}</select></label><div id="case-list" class="case-list"></div><div class="sidebar-footer">${icon("pulse")}<div>Señal 100% sintética<small data-product-version="${APP_VERSION}">Modelo educativo · v${APP_VERSION}</small></div></div></aside>
  <main class="workspace"><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-subtitle">Activación auricular sinusal seguida de conducción AV 1:1.</p></div><div class="case-state"><span class="status-label">Prototipo educativo</span>${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
  <section id="metrics" class="metrics" aria-label="Medidas del ECG"><div class="loading-metrics">Generando señal…</div></section>
- <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><div class="trace-tools">${btn("caliper", "Calibres", "ruler")}${btn("annotations", "Ondas", "eye")}${btn("focus", "Ampliar", "search")}${btn("pause", "Congelar", "pause")}</div></div>
+ <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><div class="trace-tools">${btn("caliper", "Calibres", "ruler")}${btn("annotations", "Ondas", "eye")}${btn("focus", "Ampliar", "search")}${btn("compare", "Comparar A/B", "strip")}${btn("pause", "Congelar", "pause")}</div></div>
  <div id="quiz-panel" hidden></div><details class="keyboard-help"><summary>Teclado y calibres</summary><p id="trace-keyboard-help">Con foco en el trazado: M/P/R cambia vista, V/G cambia escala, C activa calibres y espacio congela el monitor. Calibres: flechas mueven el extremo seleccionado una muestra horizontal o 0,01 mV vertical; Mayús mueve diez pasos. También puedes usar los campos de tiempo y amplitud. Tab sale del trazado.</p></details><div id="caliper-editor" class="caliper-editor" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small>lpm</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
  <div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div>
  <div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><div class="scale-toolbar" id="scale-toolbar"></div><div class="trace-caption"><span id="trace-caption">10 s · Columnas secuenciales</span><span id="signal-state">Señal sintética · 500 muestras/s</span></div></section>
  <section id="beat-detail" class="beat-detail" aria-label="Ampliación del latido"><div class="detail-empty">Preparando análisis…</div></section>
+ <section id="comparison-lab" class="comparison-lab" aria-label="Laboratorio comparativo A/B"></section>
  <section class="lower-grid"><div id="inspector" class="inspector"></div><aside class="interpretation"><div class="section-label">LECTURA DEL CASO</div><h2 id="finding-title">Hallazgos esperados</h2><ul id="findings"></ul><div id="limitation" class="model-note"></div><div id="warnings"></div><button class="text-button" data-action="measurements">Ver medidas y valores del modelo ${icon("chevron")}</button><button class="text-button" data-action="about">Estado y referencias ${icon("chevron")}</button></aside></section>
  <footer class="workspace-footer"><span>Motor paramétrico vectorial · Dower + identidades de Einthoven/Goldberger</span><span>Uso educativo. Sin validación clínica.</span></footer></main></div>
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
@@ -93,6 +95,7 @@ function toast(message: string) {
   $("#toast").classList.add("visible");
   toastTimer = window.setTimeout(clearToast, 3500);
 }
+const comparison = new ComparisonLab($("#comparison-lab"), toast);
 function currentPreset() {
   return caseContext(c).preset;
 }
@@ -334,6 +337,7 @@ function syncTraceTools() {
   waves.classList.toggle("active", ready && paper && annotations);
   waves.setAttribute("aria-pressed", String(ready && paper && annotations));
   $<HTMLButtonElement>('[data-action="focus"]').disabled = !ready;
+  $<HTMLButtonElement>('[data-action="compare"]').disabled = !ready || !!quiz && !quiz.answer;
   const caliperButton = $<HTMLButtonElement>('[data-action="caliper"]');
   caliperButton.disabled = monitorMode || !ready;
   caliperButton.classList.toggle("active", measuring);
@@ -350,6 +354,7 @@ const controller = new SignalController(
     const audited = auditMeasurement(next, measured);
     if (!session.accept(requestId, next, audited, c.view.mode,
       representativeBeat(audited, visibleSegmentEnd()))) return;
+    comparison.update(c, next, audited);
     resetTracePresentation();
     $("#signal-loading").hidden = true;
     $("#signal-state").textContent = "500 muestras/s · análisis independiente";
@@ -363,6 +368,7 @@ const controller = new SignalController(
   (message, requestId) => {
     if (!session.fail(requestId)) return;
     toast(message);
+    comparison.invalidate(message);
     showUnavailableSignal(message, true);
     $("#metrics").innerHTML =
       '<div class="loading-metrics">Medidas no disponibles</div>';
@@ -405,6 +411,7 @@ function showUnavailableSignal(message: string, unavailable = false) {
 function invalidateSignal() {
   clearToast();
   session.invalidate();
+  comparison.invalidate();
   renderQuiz();
   showUnavailableSignal("Calculando señal…");
 }
@@ -621,6 +628,7 @@ function exportDialog() {
   );
 }
 function renderQuiz() {
+  comparison.conceal(!!quiz && !quiz.answer);
   const panel = $("#quiz-panel");
   panel.hidden = !quiz;
   if (!quiz) return;
@@ -682,6 +690,7 @@ document.addEventListener("click", async (e) => {
   }
   const action = target.closest<HTMLElement>("[data-action]")?.dataset.action;
   if (!action) return;
+  if (action === "compare" && session.canExport && (!quiz || quiz.answer)) comparison.focus();
   if (action === "focus") {
     annotations = true;
     draw();
