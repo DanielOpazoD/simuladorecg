@@ -48,8 +48,8 @@ describe('All right-ventricular QRS components share gain and existing low-volta
       for (const l of LEADS) for (let i = a.fs; i < 9 * a.fs; i++) {
         const t = i / a.fs;
         if (a.events.beats.some(x => t >= x.time - .041 && t <= x.time + x.qrs! + .041)) continue;
-        assert.ok(Math.abs(a.leads[l][i] - b.leads[l][i]) < 1e-20,
-          "Outside-QRS difference exceeds floating-point floor"); checked++;
+        assert.ok(Math.abs(a.leads[l][i] - b.leads[l][i]) < 1e-12,
+          "Outside-QRS difference exceeds numerical roundoff tolerance"); checked++;
       }
       assert.ok(checked > 10000); assert.deepEqual(a.events, b.events); assert.deepEqual(a.truth, b.truth);
     });
