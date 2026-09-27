@@ -126,14 +126,13 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
       tStart = b.time + qt - tLen,
       primaryTv = tVector(c, b),
       secondary = secondaryRepolarization(c, b, ks),
+      secondaryScale = c.tAmp / T_REFERENCE_AMPLITUDE,
       tv = secondary.t
-        ? secondary.t.map((x) => x * (c.tAmp / T_REFERENCE_AMPLITUDE)) as Vec
+        ? secondary.t.map((x) => x * secondaryScale) as Vec
         : primaryTv,
       lv = lesionVector(c);
-    if (secondary.st) {
-      const secondaryScale = c.tAmp / T_REFERENCE_AMPLITUDE;
+    if (secondary.st && secondaryScale !== 0)
       for (let j=0;j<3;j++) lv[j] += secondary.st[j] * secondaryScale;
-    }
     add(b.time + dur - 0.012, qt - dur + 0.012, (u) => {
       const envelope = Math.min(
         1,
