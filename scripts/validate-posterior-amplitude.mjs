@@ -20,10 +20,11 @@ try {
     await build({stdin: {contents: "export {synthesize} from './src/engine/signal'; export {PRESETS,fromPreset,presetById} from './src/presets/catalog';", resolveDir: dir}, bundle: true, platform: 'node', format: 'esm', outfile});
     return import(pathToFileURL(outfile));
   }
-  const [before, after] = await Promise.all([load(baseDir, 'before'), load(process.cwd(), 'after')]);
+  const after = await load(process.cwd(), 'after');
+  const before = scope === 'rv' ? null : await load(baseDir, 'before');
   const filters = ['off', 'diagnostic', 'monitor', 'aggressive'];
   const defaults = [];
-  for (const preset of after.PRESETS.filter(p => p.strategy !== 'pending')) for (const filter of filters) {
+  if (scope === 'all') for (const preset of after.PRESETS.filter(p => p.strategy !== 'pending')) for (const filter of filters) {
     const c = {...after.fromPreset(preset), filter};
     const a = before.synthesize(c, 10), b = after.synthesize(c, 10);
     if (preset.id === 'rv_chronic') {
@@ -36,12 +37,13 @@ try {
     }
   }
   const rows = [];
+  const historical = before;
   // Retain the historical posterior oracle and add the same contract for WPW delta.
   for (const preset of ['posterior', 'wpw'].filter(p => scope === 'all' || scope === p)) for (const filter of filters) {
     const c = {...after.fromPreset(after.presetById(preset)), hr: 60, variability: 0, pAmp: 0, tAmp: 0, st: 0};
     const full = after.synthesize({...c, filter, qrsAmp: 1}, 10);
     for (const qrsGain of [.1, .5, 1, 2, 3]) {
-      const a = before.synthesize({...c, filter, qrsAmp: qrsGain}, 10), b = after.synthesize({...c, filter, qrsAmp: qrsGain}, 10);
+      const a = historical.synthesize({...c, filter, qrsAmp: qrsGain}, 10), b = after.synthesize({...c, filter, qrsAmp: qrsGain}, 10);
       let oldError = 0, newError = 0;
       for (const l of Object.keys(b.leads)) for (let i = 0; i < b.leads[l].length; i++) {
         oldError = Math.max(oldError, Math.abs(a.leads[l][i] - qrsGain * full.leads[l][i]));
@@ -59,7 +61,7 @@ try {
   const lowVoltageBaseline = 'e8bb934d9b5b78e15a99d447e2ed61b2279df16c';
   const gainDir = path.join(temp, 'gain-corrected'); await mkdir(gainDir);
   execFileSync('tar', ['-xf', '-', '-C', gainDir], {input: execFileSync('git', ['archive', lowVoltageBaseline], {maxBuffer: 100 * 1024 * 1024})});
-  const gainCorrected = await load(gainDir, 'gain-corrected'), lowVoltageScenarios = [];
+  const gainCorrected = (scope === 'all' || scope === 'posterior') ? await load(gainDir, 'gain-corrected') : null, lowVoltageScenarios = [];
   const posterior = {...after.fromPreset(after.presetById('posterior')), hr: 60, variability: 0, pAmp: 0, tAmp: 0, st: 0};
   if (scope === 'all' || scope === 'posterior') for (const filter of filters) for (const qrsGain of [.1, .5, 1, 2, 3]) {
     const config = {...posterior, filter, qrsAmp: qrsGain};
@@ -86,7 +88,7 @@ try {
   const wpwLowVoltageBaseline = 'd86b193f3deb56649d325d07379206299748ab49';
   const wpwDir = path.join(temp, 'wpw-gain-corrected'); await mkdir(wpwDir);
   execFileSync('tar', ['-xf', '-', '-C', wpwDir], {input: execFileSync('git', ['archive', wpwLowVoltageBaseline], {maxBuffer: 100 * 1024 * 1024})});
-  const wpwCorrected = await load(wpwDir, 'wpw-gain-corrected'), wpwLowVoltageScenarios = [];
+  const wpwCorrected = (scope === 'all' || scope === 'wpw') ? await load(wpwDir, 'wpw-gain-corrected') : null, wpwLowVoltageScenarios = [];
   const wpw = {...after.fromPreset(after.presetById('wpw')), hr: 60, variability: 0, pAmp: 0, tAmp: 0, st: 0};
   if (scope === 'all' || scope === 'wpw') for (const filter of filters) for (const qrsGain of [.1, .5, 1, 2, 3]) {
     const config = {...wpw, filter, qrsAmp: qrsGain};
@@ -111,7 +113,7 @@ try {
   const rvBaseline = 'd2babc398a246787fbb8e3156668b90a31781f30';
   const rvDir = path.join(temp, 'before-rv-gain'); await mkdir(rvDir);
   execFileSync('tar', ['-xf', '-', '-C', rvDir], {input: execFileSync('git', ['archive', rvBaseline], {maxBuffer: 100 * 1024 * 1024})});
-  const rvBefore = await load(rvDir, 'before-rv-gain'), rvScenarios = [];
+  const rvBefore = (scope === 'all' || scope === 'rv') ? await load(rvDir, 'before-rv-gain') : null, rvScenarios = [];
   if (scope === 'all' || scope === 'rv') for (const preset of ['rv_acute', 'rv_chronic']) for (const filter of filters) {
     const c = {...after.fromPreset(after.presetById(preset)), hr: 60, variability: 0, pAmp: 0, tAmp: 0, st: 0, filter, qrsAmp: 1};
     const unit = after.synthesize(c, 10);
