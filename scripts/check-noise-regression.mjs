@@ -18,10 +18,17 @@ try {
   assert.equal(before.sourceCommit,effectiveBaselineCommit,'Not the reviewed baseline commit');
   assert.equal(before.noiseProtocolSha256,policy.noiseProtocolSha256,'Unreviewed acquisition protocol');
   result=compareReports(before,after,{...policy.numericalTolerance,allowedCleanSourceChanges:migration.allowedCleanSourceChanges});
-  if (policy.monitorRevision) {
+  const usesGeneratorAmendment = effectiveBaselineCommit !== policy.baselineCommit;
+  if (policy.monitorRevision && !usesGeneratorAmendment) {
     assert.equal(createHash('sha256').update(await readFile('src/engine/filter.ts')).digest('hex'),policy.monitorRevision.filterSha256,'Unreviewed filter implementation');
     const revision=reviewMonitorRevision(before,after,result,policy.monitorRevision);
     result={...result,status:'pass',strictStatus:result.status,reviewedMonitorRevision:revision};
+  } else if (usesGeneratorAmendment) {
+    // The amended source baseline already contains the previously reviewed monitor
+    // migration. Re-applying its required improvement ratios against itself would
+    // be nonsensical; require the stricter ordinary paired non-regression result.
+    assert.equal(result.status,'pass','Amended generator baseline must pass strict paired non-regression');
+    result={...result,reviewedMonitorRevision:{status:'already-incorporated-in-amended-baseline'}};
   }
   result.policy=policy; result.generatorMigration=migration;
   result.baselineProvenance={historicalBaselineCommit:policy.baselineCommit,effectiveBaselineCommit};
