@@ -1,15 +1,21 @@
 {
-  "schemaVersion": 1,
-  "purpose": "PR43 QRS-coupled secondary T migration; not a clinical acceptance threshold",
-  "allowedCleanSourceChanges": [
+  "schemaVersion": 2,
+  "purpose": "PR43 QRS-coupled secondary T migration; explicit benchmark baseline amendment, not a clinical acceptance threshold",
+  "allowedCleanSourceChanges": [],
+  "migratedCleanSources": [
     "lbbb",
     "pvc"
   ],
+  "baselineAmendment": {
+    "previousBaselineCommit": "aee59f64a35cdee76133113cfc0da216fc8832cd",
+    "amendedBaselineCommit": "d4ca0ba85f2b8e000171a706ed9bfeb41264b13f",
+    "reason": "The clean LBBB and PVC teaching sources intentionally changed because secondary T is now derived from the final ventricular activation. Future noise-stress runs compare against this amended source state instead of permanently exempting those presets."
+  },
   "invariants": [
     "noise bytes unchanged",
     "noise protocol unchanged",
     "all 920 paired scenarios retained",
-    "all clean sources not listed remain byte-identical"
+    "future clean sources must remain byte-identical to the amended baseline unless a new explicit amendment is reviewed"
   ],
-  "scope": "Only secondary T morphology changes in LBBB and ventricular ectopy source represented by PVC in the noise benchmark."
+  "scope": "The amended baseline incorporates the intentional secondary-T migration for LBBB and the ventricular ectopy source represented by PVC in the noise benchmark."
 }
