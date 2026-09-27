@@ -35,6 +35,7 @@ import { assertRepresentableEvents, tWaveSupport } from "./constraints";
 import { median } from "./analysis/statistics";
 import { atrialVector, tWave } from "./morphology";
 import { regionalTerritory, regionalTCorrection } from "./regional-repolarization";
+import { secondaryRepolarization } from "./secondary-repolarization";
 const FS = 1000,
   OUT = 500,
   WARM = 4,
@@ -123,21 +124,13 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
       tLen = tSupport.duration,
       // Preserve the original arithmetic order of absolute sample placement.
       tStart = b.time + qt - tLen,
-      tv = tVector(c, b),
+      primaryTv = tVector(c, b),
+      secondary = secondaryRepolarization(c, b, ks),
+      tv = secondary.t
+        ? secondary.t.map((x) => x * (c.tAmp / T_REFERENCE_AMPLITUDE)) as Vec
+        : primaryTv,
       lv = lesionVector(c);
-    if (c.conduction === "lbbb" || b.kind !== "normal") {
-      const q = project(
-        ks.reduce((acc, k) => acc.map((v, j) => v + k.v[j] * k.sigma) as Vec, [
-          0, 0, 0,
-        ] as Vec),
-      );
-      const s = frontal(
-        (source ? source.axis : c.axis) + 180,
-        Math.min(0.1, Math.abs(q.I) * 0.3),
-        source ? source.secondarySTZ : -0.035,
-      );
-      for (let j = 0; j < 3; j++) lv[j] += s[j];
-    }
+    if (secondary.st) for (let j=0;j<3;j++) lv[j] += secondary.st[j];
     add(b.time + dur - 0.012, qt - dur + 0.012, (u) => {
       const envelope = Math.min(
         1,
