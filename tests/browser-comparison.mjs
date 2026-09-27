@@ -51,6 +51,7 @@ try {
       assert.ok(await scroller.evaluate(e=>e.scrollLeft>0));assert.equal((await lab.locator('.comparison-heading').boundingBox()).x,heading.x);
       assert.ok(await lab.evaluate(e=>e.scrollWidth<=e.clientWidth+1),'Do not scroll the entire card');
     }
+    await page.waitForFunction(()=>!document.querySelector('#toast').classList.contains('visible'));
     await lab.screenshot({path:resolve(out,`comparison-lab-${width}.png`)});
     const pngWait=page.waitForEvent('download');await page.locator('#compare-png').click();const png=resolve(out,`comparison-export-${width}.png`);await(await pngWait).saveAs(png);
     assert.deepEqual([...((await readFile(png)).subarray(0,8))],[137,80,78,71,13,10,26,10]);
@@ -63,8 +64,11 @@ try {
     });
     assert.equal(pending.canvas,false);assert.equal(pending.export,false);assert.equal(pending.pin,true);assert.match(pending.text,/permanece fijada/);
     await ready();assert.equal(hash((await exported('after-pending')).A.leads),referenceHash);
-    await select('asystole');assert.equal(await page.locator('#compare-alignment option[value="beat"]').isDisabled(),true);
-    const empty=await exported('asystole');assert.equal(empty.view.alignment,'record');assert.ok(empty.metrics.every(r=>r.delta===null));
+    await select('asystole');
+    // Read the native OPTION state: isDisabled() retargets through its enclosing LABEL to SELECT.
+    assert.equal(await page.locator('#compare-alignment option[value="beat"]').evaluate(option=>option.disabled),true);
+    assert.equal(await page.locator('#compare-alignment').isDisabled(),false,'Recording-time comparison remains available');
+    const empty=await exported('asystole');assert.equal(empty.B.events.beats.length,0);assert.equal(empty.view.alignment,'record');assert.ok(empty.metrics.every(r=>r.delta===null));
     await select('sinus');const restored=await exported('restored');assert.deepEqual(restored.B.leads,initial.A.leads);
     await page.evaluate(()=>{window.__comparisonFailures=2;});
     if(width===390)await page.locator('[data-action="catalog"]').click();
