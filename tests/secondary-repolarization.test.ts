@@ -6,7 +6,7 @@ import { synthesize } from "../src/engine/signal";
 
 function firstBeat(id:string){const c=fromPreset(presetById(id)!);const s=synthesize(c,10);const b=s.events.beats[0];return{c,b,ks:qrsKernels(c,b)};}
 describe("QRS-coupled secondary repolarization",()=>{
- it.each([["lbbb","mean-qrs"],["rbbb","terminal-qrs"],["wpw","delta"],["vvi","mean-qrs"],["vt","mean-qrs"]] as const)("%s derives T from %s",(id,mode)=>{
+ it.each([["lbbb","mean-qrs"],["rbbb","terminal-qrs"],["vvi","mean-qrs"],["vt","mean-qrs"]] as const)("%s derives T from %s",(id,mode)=>{
   const{c,b,ks}=firstBeat(id);const r=secondaryRepolarization(c,b,ks);expect(r.mode).toBe(mode);expect(r.reference).not.toBeNull();expect(r.t).not.toBeNull();expect(secondaryDiscordanceDot(r.reference!,r.t!)).toBeLessThan(0);
  });
  it("follows requested LBBB axis instead of a fixed T template",()=>{

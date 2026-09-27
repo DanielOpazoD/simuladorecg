@@ -1,6 +1,6 @@
 import type { Beat, ECGCase } from "./types";
 import type { Kernel } from "./morphology";
-import { frontal, project, type Vec } from "./leads";
+import { project, type Vec } from "./leads";
 import { ventricularSource } from "./ventricular-source";
 import { T_REFERENCE_AMPLITUDE } from "./regional-repolarization";
 
@@ -25,7 +25,7 @@ export function secondaryRepolarization(c: ECGCase,b: Beat,ks: readonly Kernel[]
   else if(c.conduction.includes("rbbb")||c.conduction==="irbbb"){
     mode="terminal-qrs"; const delayed=integrated(ks,k=>k.mu>=.55);
     reference=Math.hypot(...delayed)>1e-9?delayed:integrated(ks,()=>true);
-  } else if(c.conduction==="wpw"&&b.kind==="normal"){mode="delta";reference=frontal(c.axis,.25,.03);}
+  }
   if(!reference)return{mode,t:null,st:null,reference:null};
   return{mode,t:opposite(reference,T_REFERENCE_AMPLITUDE*.9),st:null,reference};
 }
