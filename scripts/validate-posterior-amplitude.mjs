@@ -9,7 +9,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 const scopeIndex = process.argv.indexOf('--scope');
 const scope = scopeIndex >= 0 ? process.argv[scopeIndex + 1] : 'all';
-assert.ok(['all', 'posterior', 'wpw', 'rv'].includes(scope), 'Invalid --scope');
+assert.ok(['all', 'posterior', 'wpw', 'rv', 'rv_acute', 'rv_chronic'].includes(scope), 'Invalid --scope');
 const baseline = '91519b2ea3b052f5cd22db6802f674bab6981b96';
 const temp = await mkdtemp(path.join(tmpdir(), 'posterior-gain-'));
 try {
@@ -21,7 +21,7 @@ try {
     return import(pathToFileURL(outfile));
   }
   const after = await load(process.cwd(), 'after');
-  const before = scope === 'rv' ? null : await load(baseDir, 'before');
+  const before = scope.startsWith('rv') ? null : await load(baseDir, 'before');
   const filters = ['off', 'diagnostic', 'monitor', 'aggressive'];
   const defaults = [];
   if (scope === 'all') for (const preset of after.PRESETS.filter(p => p.strategy !== 'pending')) for (const filter of filters) {
@@ -113,8 +113,8 @@ try {
   const rvBaseline = 'd2babc398a246787fbb8e3156668b90a31781f30';
   const rvDir = path.join(temp, 'before-rv-gain'); await mkdir(rvDir);
   execFileSync('tar', ['-xf', '-', '-C', rvDir], {input: execFileSync('git', ['archive', rvBaseline], {maxBuffer: 100 * 1024 * 1024})});
-  const rvBefore = (scope === 'all' || scope === 'rv') ? await load(rvDir, 'before-rv-gain') : null, rvScenarios = [];
-  if (scope === 'all' || scope === 'rv') for (const preset of ['rv_acute', 'rv_chronic']) for (const filter of filters) {
+  const rvBefore = (scope === 'all' || scope.startsWith('rv')) ? await load(rvDir, 'before-rv-gain') : null, rvScenarios = [];
+  if (scope === 'all' || scope.startsWith('rv')) for (const preset of ['rv_acute', 'rv_chronic'].filter(p => scope === 'all' || scope === 'rv' || scope === p)) for (const filter of filters) {
     const c = {...after.fromPreset(after.presetById(preset)), hr: 60, variability: 0, pAmp: 0, tAmp: 0, st: 0, filter, qrsAmp: 1};
     const unit = after.synthesize(c, 10);
     assert.deepEqual(unit, rvBefore.synthesize(c, 10), 'RV unit-gain non-low-voltage source changed');
@@ -135,7 +135,7 @@ try {
         v1PositivePeakMv: {unit: peak(unit), before: peak(a), after: peak(b)}, ...oracle});
     }
   }
-  if (scope === 'all' || scope === 'rv') for (const preset of ['rv_acute', 'rv_chronic'])
+  if (scope === 'all' || scope.startsWith('rv')) for (const preset of ['rv_acute', 'rv_chronic'].filter(p => scope === 'all' || scope === 'rv' || scope === p))
     assert.ok(Math.max(...rvScenarios.filter(r => r.preset === preset).map(r => r.oldErrorMv)) > .5, `Must reproduce old ${preset} defect`);
   const report = {scope, baseline, commit: execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim(),
     defaults, gainScenarios: rows, lowVoltageBaseline, lowVoltageScenarios, wpwLowVoltageBaseline, wpwLowVoltageScenarios, rvBaseline, rvScenarios, nativeTimingsUnchanged: true, clinicalValidation: false};

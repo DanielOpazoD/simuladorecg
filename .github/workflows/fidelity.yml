@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        scope: [posterior, wpw, rv]
+        scope: [posterior, wpw, rv_acute, rv_chronic]
     steps:
       - uses: actions/checkout@v4
         with:
