@@ -59,12 +59,20 @@ try {
     assert.equal(defaults.filter(r => r.historicalExact).length, 240);
     const expectedRv = new Set(filters.flatMap(filter => ['rv_acute', 'rv_chronic'].map(preset => `${preset}/${filter}`)));
     const expectedTorsades = new Set(filters.map(filter => `torsades/${filter}`));
-    const rvChanges = defaults.filter(r => r.finalAxis?.kind === 'final-qrs-axis').map(r => `${r.preset}/${r.filter}`);
-    const torsadesChanges = defaults.filter(r => r.finalAxis?.kind === 'torsades-global-axis-withdrawal').map(r => `${r.preset}/${r.filter}`);
-    const exact = defaults.filter(r => r.finalAxis === null).map(r => `${r.preset}/${r.filter}`);
-    assert.deepEqual(new Set(rvChanges), expectedRv, 'Only the eight reviewed RV traces may change QRS axis/samples');
-    assert.deepEqual(new Set(torsadesChanges), expectedTorsades, 'Only four torsades filters may withdraw truth.axis');
-    assert.equal(exact.length, 232, 'Every other preset/filter must remain exact');
+    const rvChanges = defaults
+      .filter(r => ['rv_acute', 'rv_chronic'].includes(r.preset) && r.finalAxis !== null)
+      .map(r => `${r.preset}/${r.filter}`);
+    const torsadesChanges = defaults
+      .filter(r => r.preset === 'torsades' && r.finalAxis?.kind === 'torsades-global-axis-withdrawal')
+      .map(r => `${r.preset}/${r.filter}`);
+    const unexpected = defaults.filter(r =>
+      r.finalAxis !== null &&
+      !['rv_acute', 'rv_chronic', 'torsades'].includes(r.preset)
+    );
+    assert.deepEqual(new Set(rvChanges), expectedRv, 'All and only the eight reviewed RV traces must satisfy the dedicated axis oracle');
+    assert.deepEqual(new Set(torsadesChanges), expectedTorsades, 'All and only four torsades filters may withdraw truth.axis');
+    assert.deepEqual(unexpected, [], 'No other preset/filter may change after the reviewed main baseline');
+    assert.equal(defaults.filter(r => r.finalAxis === null).length, 232, 'Every other preset/filter must remain exact');
   }
   const rows = [];
   const historical = before;
