@@ -84,6 +84,7 @@ jobs:
           node tests/browser-t-end-assistance.mjs
           node tests/browser-posterior-amplitude.mjs
           node tests/browser-comparison.mjs
+          node tests/browser-external.mjs
       - name: Archive exact reviewed source and reports
         if: always()
         run: |

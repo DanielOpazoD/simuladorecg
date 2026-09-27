@@ -1,1 +1,9 @@
-<!doctype html><html lang="es"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="theme-color" content="#121d27"/><meta name="description" content="Laboratorio educativo de electrocardiografía: señal sintética de 12 derivaciones, arritmias, conducción, isquemia y medición."/><title>ECG Lab · Simulador de electrocardiografía</title></head><body><div id="app"></div><script type="module" src="/src/main.ts"></script></body></html>
+<!doctype html><html lang="es"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="theme-color" content="#121d27"/><meta name="description" content="Laboratorio educativo de electrocardiografía: señal sintética de 12 derivaciones, arritmias, conducción, isquemia y medición."/><title>ECG Lab · Simulador de electrocardiografía</title></head><body><div id="app"></div><script type="module">
+import "/src/main.ts";
+import { ExternalLab } from "/src/ui/external-lab.ts";
+import { btn } from "/src/ui/helpers.ts";
+const external = new ExternalLab();
+const tools = document.querySelector(".trace-tools");
+tools.insertAdjacentHTML("beforeend", btn("external", "Abrir señal", "book"));
+tools.querySelector('[data-action="external"]').addEventListener("click", () => external.open());
+</script></body></html>
