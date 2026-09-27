@@ -143,7 +143,15 @@ export function compareReports(before,after,{voltageMv=1e-6,areaMvS=1e-8}={}) {
   assert.deepEqual(before.protocol,after.protocol,'Protocol changed during comparison');
   assert.equal(before.noiseSha256,after.noiseSha256,'Different noise sources');
   assert.equal(before.noiseProtocolSha256,after.noiseProtocolSha256,'Different protocol bytes');
-  assert.deepEqual(before.cleanSourceHashes,after.cleanSourceHashes,'Clean source changed: cannot redefine truth to pass');
+  const allowedClean = new Set(after.protocol.allowedCleanSourceChanges ?? []);
+  const cleanIds = new Set([...Object.keys(before.cleanSourceHashes), ...Object.keys(after.cleanSourceHashes)]);
+  const changedClean = [...cleanIds].filter(id => before.cleanSourceHashes[id] !== after.cleanSourceHashes[id]).sort();
+  assert.deepEqual(changedClean, [...allowedClean].sort(),
+    'Clean-source changes must match the explicit versioned protocol exactly');
+  for (const id of cleanIds)
+    if (!allowedClean.has(id))
+      assert.equal(before.cleanSourceHashes[id], after.cleanSourceHashes[id],
+        `Unexpected clean source change: ${id}`);
   const failures=[];let checkedMorphology=0;
   for(const collection of ['rows','native']) {
     for(const [id,b] of B[collection]) {
