@@ -117,7 +117,7 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
     });
     if (c.conduction === "wpw" && b.kind === "normal")
       add(b.time, 0.045, (u) =>
-        scale(frontal(c.axis, 0.25, 0.03), c.qrsAmp * Math.sin(Math.PI * u)),
+        scale(frontal(c.axis, 0.25, 0.03), qrsAmplitudeScale(c) * Math.sin(Math.PI * u)),
       );
     const tSupport = tWaveSupport(c, dur, qt),
       tLen = tSupport.duration,

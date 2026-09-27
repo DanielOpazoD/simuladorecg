@@ -58,14 +58,14 @@ try {
     assert.equal(restoredHash, initialHash, 'Returning to gain 1 must restore the exact complete canvas');
     await page.screenshot({path: path.join(out, `${preset}-gain-default-${width}.png`)});
     let lowVoltageEvidence = {};
-    if (preset === 'posterior') {
-      // The existing JSON import path permits posterior + low voltage; no new UI control.
+    {
+      // Exercise the existing JSON import path with both posterior and WPW low voltage.
       await page.locator('[data-action="export"]').click();
       const exported = page.waitForEvent('download'); await page.locator('[data-action="json"]').click();
-      const casePath = path.join(out, `posterior-case-${width}.json`); await (await exported).saveAs(casePath);
+      const casePath = path.join(out, `${preset}-case-${width}.json`); await (await exported).saveAs(casePath);
       const originalCase = JSON.parse(await readFile(casePath, 'utf8'));
       const importCase = async electrolyte => {
-        await page.locator('#file-input').setInputFiles({name: 'posterior-voltage.json', mimeType: 'application/json',
+        await page.locator('#file-input').setInputFiles({name: `${preset}-voltage.json`, mimeType: 'application/json',
           buffer: Buffer.from(JSON.stringify({...originalCase, electrolyte}))});
       };
       await importCase('lowvoltage');
@@ -75,7 +75,7 @@ try {
       const lowVoltageCanvas = await page.locator('#ecg').evaluate(c => c.toDataURL());
       const lowVoltageHash = await recordCanvas('low-voltage', lowVoltageCanvas);
       assert.notEqual(lowVoltageHash, restoredHash);
-      await page.screenshot({path: path.join(out, `posterior-low-voltage-${width}.png`)});
+      await page.screenshot({path: path.join(out, `${preset}-low-voltage-${width}.png`)});
       await importCase('none');
       await page.waitForFunction(initial => document.querySelector('#ecg').toDataURL() === initial, restored);
       await page.locator('#signal-loading').waitFor({state: 'hidden'});
@@ -85,7 +85,7 @@ try {
     }
     assert.equal(await page.locator('vite-error-overlay').count(), 0);
     assert.deepEqual(errors, []); assert.deepEqual(warnings, []);
-    results.push({preset, width, initialHash, lowHash, restoredHash, ...lowVoltageEvidence, state, errors, warnings, flow: `${preset} -> QRS gain 0.1 -> visible change -> gain 1 -> exact canvas restoration` + (preset === 'posterior' ? ' -> JSON low voltage -> visible change -> JSON none -> exact restoration' : '')});
+    results.push({preset, width, initialHash, lowHash, restoredHash, ...lowVoltageEvidence, state, errors, warnings, flow: `${preset} -> QRS gain 0.1 -> visible change -> gain 1 -> exact canvas restoration` + ' -> JSON low voltage -> visible change -> JSON none -> exact restoration'});
     await page.close();
   }
   await writeFile(path.join(out, 'posterior-amplitude-ui-results.json'), JSON.stringify({url, browser: await browser.version(), results, physicalDeviceTest: false}, null, 2));

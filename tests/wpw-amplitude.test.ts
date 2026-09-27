@@ -62,3 +62,35 @@ describe('WPW delta is part of QRS gain, not a separate fixed-amplitude source',
     }
   });
 });
+
+// Reuse the model's existing 0.38 attenuation; this is not a clinical threshold.
+describe('WPW low voltage attenuates the delta and QRS together', () => {
+  for (const filter of ['off', 'diagnostic', 'monitor', 'aggressive'] as const)
+    it(`attenuates every isolated sample at five gains through ${filter}`, () => {
+      for (const qrsAmp of [.1, .5, 1, 2, 3]) {
+        const c = { ...setup(filter), qrsAmp }, normal = synthesize(c, 10);
+        const low = synthesize({ ...c, electrolyte: 'lowvoltage' }, 10);
+        assert.ok(scalingError(normal, low, .38) < 1e-10, `Unattenuated WPW component at gain ${qrsAmp}`);
+        assert.deepEqual(low.events, normal.events); assert.equal(low.truth.qt, normal.truth.qt);
+      }
+    });
+  it('keeps P/ST/T and timings outside the QRS plus antialias support unchanged', () => {
+    const c = { ...setup(), pAmp: .15, tAmp: .28, ischemia: 'anterior' as const, st: 2 };
+    const normal = synthesize(c, 10), low = synthesize({ ...c, electrolyte: 'lowvoltage' }, 10);
+    let compared = 0;
+    for (const lead of LEADS) for (let i = normal.fs; i < 9 * normal.fs; i++) {
+      const t = i / normal.fs;
+      if (normal.events.beats.some(b => t >= b.time - .041 && t <= b.time + b.qrs! + .041)) continue;
+      assert.equal(normal.leads[lead][i], low.leads[lead][i]); compared++;
+    }
+    assert.ok(compared > 10000); assert.deepEqual(normal.events, low.events);
+  });
+  it('does not leave a fixed delta when WPW and posterior corrections coexist', () => {
+    for (const qrsAmp of [.1, 1, 3]) {
+      const c = { ...setup(), ischemia: 'posterior' as const, qrsAmp };
+      const normal = synthesize(c, 10), low = synthesize({ ...c, electrolyte: 'lowvoltage' }, 10);
+      assert.ok(scalingError(normal, low, .38) < 1e-10);
+      assert.deepEqual(normal.events, low.events);
+    }
+  });
+});

@@ -50,3 +50,37 @@ benchmarks históricos y revisión de artefactos/capturas sobre producción comp
 Después de fusionar se verifican las ejecuciones de main y el árbol fuente.
 Las ejecuciones y resultados finales se registran en la conversación del PR.
 No consumir holdout, desplegar el sitio ni modificar dependencias/licencia/versión.
+
+## Bajo voltaje WPW: extensión sobre PR38
+
+Base: `d86b193f3deb56649d325d07379206299748ab49`.
+La delta seguía `qrsAmp`, pero omitía el factor existente de bajo voltaje que sí
+recibía el QRS principal. Se cambia esa expresión por `qrsAmplitudeScale(c)`;
+no se añade otro factor ni se redefine 0,38 como criterio clínico universal.
+No se modifica la función compartida ni el patrón de sobrecarga ventricular.
+
+En señal aislada a FC60, ganancia1 y filtrooff, el pico de II en los primeros45ms
+es0,353223mV sin bajo voltaje. Antes era0,250665mV con bajo voltaje; ahora es
+0,134225mV (=0,38 del original). El máximo residuo de proporcionalidad en20casos
+(cinco ganancias/cuatro filtros) pasa de0,658749mV a4,45e-13mV. Son comparaciones
+matemáticas del modelo; no son errores contra ECG de pacientes.
+
+Se añaden seis pruebas: cinco fallan antes y seis aprueban después. Comprueban
+atenuación multiderivación/cuatro filtros, P/ST/T fuera del QRS más soporte
+antialias y coexistencia WPW+patrón posterior. La réplica local con transformación
+TS/node:test da25/25 pruebas focales (13WPW+12posterior),56/56 adversarias,
+244defaults y48controles personalizados noWPW completos sin cambios.
+
+Se conserva íntegramente el validador histórico, sus baselines y umbrales; se
+agrega un baseline separado PR38 y20casos de atenuación WPW. La prueba Playwright
+existente extiende exportación JSON→importación con bajo voltaje→cambio visible→
+reimportación normal→restauración exacta del canvas también aWPW. Sin workflow,
+control, dependencia, persistencia o documento de resultados en producción nuevos.
+La suite completa/build/navegador y artefactos deben verificarse enCI y después
+del merge. Browser plugin no disponible; se reutiliza Playwright/Chromium deCI.
+
+Fuera de alcance: simulación anatómica de vías accesorias, ajuste clínico de
+voltajes, sobrecarga ventricular combinada, holdout y despliegue. El código del
+analizador no cambia; sus medidas en los casos personalizados corregidos pueden
+variar o abstenerse al cambiar las muestras. Los presets predeterminados y los
+casos sin la combinación WPW+bajo voltaje mantienen su salida anterior.
