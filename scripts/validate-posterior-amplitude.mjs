@@ -24,9 +24,10 @@ try {
     assert.deepEqual(after.synthesize(c, 10), before.synthesize(c, 10), `Changed default ${preset.id}/${filter}`);
     defaults.push({preset: preset.id, filter, exact: true});
   }
-  const c = {...after.fromPreset(after.presetById('posterior')), hr: 60, variability: 0, pAmp: 0, tAmp: 0, st: 0};
   const rows = [];
-  for (const filter of filters) {
+  // Retain the historical posterior oracle and add the same contract for WPW delta.
+  for (const preset of ['posterior', 'wpw']) for (const filter of filters) {
+    const c = {...after.fromPreset(after.presetById(preset)), hr: 60, variability: 0, pAmp: 0, tAmp: 0, st: 0};
     const full = after.synthesize({...c, filter, qrsAmp: 1}, 10);
     for (const qrsGain of [.1, .5, 1, 2, 3]) {
       const a = before.synthesize({...c, filter, qrsAmp: qrsGain}, 10), b = after.synthesize({...c, filter, qrsAmp: qrsGain}, 10);
@@ -35,15 +36,16 @@ try {
         oldError = Math.max(oldError, Math.abs(a.leads[l][i] - qrsGain * full.leads[l][i]));
         newError = Math.max(newError, Math.abs(b.leads[l][i] - qrsGain * full.leads[l][i]));
       }
-      assert.ok(newError < 1e-10, `Unscaled posterior QRS: ${filter}/${qrsGain}`);
+      assert.ok(newError < 1e-10, `Unscaled ${preset} QRS: ${filter}/${qrsGain}`);
       assert.deepEqual(a.events, b.events);
       const beat = b.events.beats[3];
       const peak = (s, lead) => Math.max(...s.leads[lead].slice(Math.floor(beat.time * s.fs), Math.ceil((beat.time + beat.qrs) * s.fs)));
-      rows.push({filter, qrsGain, oldErrorMv: oldError, newErrorMv: newError,
+      rows.push({preset, filter, qrsGain, oldErrorMv: oldError, newErrorMv: newError,
         v1PositivePeakMv: {before: peak(a, 'V1'), after: peak(b, 'V1')}});
     }
   }
-  assert.ok(Math.max(...rows.map(r => r.oldErrorMv)) > 1, 'Regression must expose the old error');
+  for (const [preset, minimumOldError] of [['posterior', 1], ['wpw', .5]])
+    assert.ok(Math.max(...rows.filter(r => r.preset === preset).map(r => r.oldErrorMv)) > minimumOldError, `Regression must expose the old ${preset} error`);
   const report = {baseline, commit: execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim(),
     defaults, gainScenarios: rows, nativeTimingsUnchanged: true, clinicalValidation: false};
   const output = process.argv[2]; assert.ok(output, 'Provide result JSON path');
