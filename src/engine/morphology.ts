@@ -38,6 +38,10 @@ export function bump(u: number) {
     (1 - Math.exp(-0.5 * (0.5 / 0.18) ** 2))
   );
 }
+/** Existing QRS gain and low-voltage factor, shared by vector and local components. */
+export function qrsAmplitudeScale(c: Pick<ECGCase, "qrsAmp" | "electrolyte">): number {
+  return c.qrsAmp * (c.electrolyte === "lowvoltage" ? 0.38 : 1);
+}
 export function qrsKernels(c: ECGCase, beat: Beat): Kernel[] {
   const source = ventricularSource(c, beat);
   const block = source ? "source" : c.conduction;
@@ -72,7 +76,7 @@ export function qrsKernels(c: ECGCase, beat: Beat): Kernel[] {
     }
     k.v[2] += c.transition * 0.23 * Math.hypot(k.v[0], k.v[1]);
     for (let j = 0; j < 3; j++)
-      k.v[j] *= c.qrsAmp * (c.electrolyte === "lowvoltage" ? 0.38 : 1);
+      k.v[j] *= qrsAmplitudeScale(c);
   }
   if (c.overload === "rv_chronic" || c.overload === "rv_acute") {
     ks.push({

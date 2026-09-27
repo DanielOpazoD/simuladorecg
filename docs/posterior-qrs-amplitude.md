@@ -59,3 +59,28 @@ exacta del canvas con metadatos constantes, escritorio1440×1000 y móvil390×84
 Se reutiliza Playwright del repositorio; Browser plugin no disponible. Se usan
 eventosinput de la interfaz real, no una prueba física de gestos de iPhone.
 No despliegue, nueva dependencia ni cambio de licencia/versión.
+
+## Bajo voltaje combinado con patrón posterior (extensión posterior al PR35)
+
+El mismo problema persistía al importar un caso posterior con
+`electrolyte: lowvoltage`: el vector QRS se atenuaba por el factor existente 0,38,
+pero la corrección local posterior no. A ganancia QRS 1, la R positiva aislada
+de V1 subía de 0,223203 a 0,473436 mV en vez de bajar a 0,084817 mV.
+
+La función pura `qrsAmplitudeScale` comparte la ganancia y el factor ya existentes
+entre vector y corrección posterior. No añade un parámetro ni redefine un umbral
+clínico: 0,38 es una decisión previa del modelo, no una regla clínica universal.
+Esta extensión cambia sólo la combinación posterior+bajo voltaje; no rediseña
+las sobrecargas del VD ni resuelve otras mezclas de patologías.
+
+Los 61 presets predeterminados permanecen idénticos. Se conservan los 20 casos de
+ganancia anteriores y se añaden 20 con bajo voltaje frente al PR35 integrado
+`e8bb934d9b5b78e15a99d447e2ed61b2279df16c`. Cuatro pruebas nuevas reproducen el
+defecto anterior; cinco pruebas nuevas verifican atenuación e independencia de
+P/ST/T fuera de QRS más soporte antialias. No cambia el analizador; las mediciones
+de los casos personalizados afectados sí pueden variar al cambiar sus muestras.
+
+Navegador: exportar caso posterior personalizado → importar con bajo voltaje →
+cambio visible → reimportar sin bajo voltaje → restauración exacta del canvas.
+Se usa la ruta de importación real y el Playwright existente en escritorio/móvil
+emulado, sin control nuevo ni prueba física de iPhone.

@@ -64,3 +64,27 @@ describe('Posterior local R follows QRS gain, not lesion or T amplitude', () => 
     }
   });
 });
+
+ describe('Posterior low voltage uses the same QRS attenuation as the vector', () => {
+  for (const filter of ['off', 'diagnostic', 'monitor', 'aggressive'] as const) {
+    it(`attenuates every isolated QRS sample at five gains with ${filter}`, () => {
+      for (const qrsAmp of [.1, .5, 1, 2, 3]) {
+        const c = { ...setup(filter), qrsAmp }, normal = synthesize(c, 10);
+        const low = synthesize({ ...c, electrolyte: 'lowvoltage' }, 10);
+        assert.ok(scalingError(normal, low, .38) < 1e-10, `Unattenuated QRS component at gain ${qrsAmp}`);
+        assert.deepEqual(low.events, normal.events); assert.equal(low.truth.qt, normal.truth.qt);
+      }
+    });
+  }
+  it('does not change P/ST/T outside QRS plus antialias support', () => {
+    const c = { ...setup(), pAmp: .15, tAmp: .28, st: 2 };
+    const a = synthesize(c, 10), b = synthesize({ ...c, electrolyte: 'lowvoltage' }, 10);
+    let compared = 0;
+    for (const l of LEADS) for (let i = a.fs; i < 9 * a.fs; i++) {
+      const t = i / a.fs;
+      if (a.events.beats.some(beat => t >= beat.time - .041 && t <= beat.time + beat.qrs! + .041)) continue;
+      assert.equal(a.leads[l][i], b.leads[l][i]); compared++;
+    }
+    assert.ok(compared > 10000); assert.deepEqual(a.events, b.events);
+  });
+});
