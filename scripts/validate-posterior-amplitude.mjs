@@ -37,7 +37,19 @@ try {
       : (assertExactSignal(a, reviewed, `historical/default/${preset.id}/${filter}`), null);
     const finalAxis = ['rv_acute', 'rv_chronic'].includes(preset.id)
       ? assertFinalQrsAxisChange(axisBase, reviewed, b, c)
-      : (assertExactSignal(reviewed, b, `current/default/${preset.id}/${filter}`), null);
+      : preset.id === 'torsades'
+        ? (() => {
+            for (const lead of Object.keys(reviewed.leads))
+              assert.deepEqual(reviewed.leads[lead], b.leads[lead], `current/default/torsades/${filter}: ${lead} samples changed`);
+            assert.deepEqual(reviewed.events, b.events, `current/default/torsades/${filter}: events changed`);
+            assert.deepEqual(reviewed.warnings, b.warnings, `current/default/torsades/${filter}: warnings changed`);
+            assert.deepEqual({...reviewed.truth, axis: null}, b.truth,
+              `current/default/torsades/${filter}: only truth.axis may change`);
+            assert.notEqual(reviewed.truth.axis, null, 'Reviewed torsades baseline must reproduce the former fixed axis');
+            assert.equal(b.truth.axis, null, 'Current torsades must not publish a global axis');
+            return {kind:'torsades-global-axis-withdrawal', from:reviewed.truth.axis, to:null};
+          })()
+        : (assertExactSignal(reviewed, b, `current/default/${preset.id}/${filter}`), null);
     defaults.push({preset: preset.id, filter, historicalExact: historical === null,
       exact: historical === null && finalAxis === null, reviewedMainExact: finalAxis === null,
       historical, finalAxis});
@@ -45,7 +57,7 @@ try {
   if (scope === 'all' || scope === 'defaults') {
     assert.equal(defaults.length, 244, 'Require all 61 presets and four filters');
     assert.equal(defaults.filter(r => r.historicalExact).length, 240);
-    assert.equal(defaults.filter(r => r.reviewedMainExact).length, 236);
+    assert.equal(defaults.filter(r => r.reviewedMainExact).length, 235);
   }
   const rows = [];
   const historical = before;
