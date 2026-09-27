@@ -142,12 +142,6 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
       if (c.stShape === "convex") shape = 1 + 0.3 * Math.sin(Math.PI * u);
       return scale(lv, Math.max(0, envelope) * shape);
     });
-    if (secondary.st && tStart > b.time + dur + 0.012) {
-      const stStart = b.time + dur + 0.012, stLen = tStart - stStart;
-      add(stStart, stLen, (u) =>
-        scale(secondary.st!, Math.max(0, Math.min(1, u / 0.18, (1 - u) / 0.18))),
-      );
-    }
     add(tStart, tLen, (u) =>
       scale(tv, tWave(u, c.electrolyte === "hyperkalemia")),
     );

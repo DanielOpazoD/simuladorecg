@@ -27,7 +27,7 @@ export function secondaryRepolarization(c: ECGCase,b: Beat,ks: readonly Kernel[]
     reference=Math.hypot(...delayed)>1e-9?delayed:integrated(ks,()=>true);
   } else if(c.conduction==="wpw"&&b.kind==="normal"){mode="delta";reference=frontal(c.axis,.25,.03);}
   if(!reference)return{mode,t:null,st:null,reference:null};
-  return{mode,t:opposite(reference,T_REFERENCE_AMPLITUDE*.9),st:opposite(reference,.045),reference};
+  return{mode,t:opposite(reference,T_REFERENCE_AMPLITUDE*.9),st:null,reference};
 }
 export function secondaryDiscordanceDot(reference:Vec,repolarization:Vec):number{
   const q=project(reference),r=project(repolarization); return q.I*r.I+q.II*r.II;

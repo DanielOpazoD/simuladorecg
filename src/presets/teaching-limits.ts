@@ -2,7 +2,7 @@ import type { ECGCase } from "../engine/types";
 
 /** Limits of this implementation, not diagnostic rules or physiological laws. */
 export const WPW_REPOLARIZATION_LIMIT =
-  "Preexcitación aproximada: ST-T secundario acoplado al vector delta sintético, sin vía accesoria anatómica ni calibración clínica. No uses esta T como criterio diagnóstico de WPW.";
+  "Preexcitación aproximada: onda T secundaria acoplada al vector delta sintético, sin vía accesoria anatómica ni calibración clínica. No uses esta T como criterio diagnóstico de WPW.";
 export const SECONDARY_ST_RATIO_LIMIT =
   "Repolarización secundaria aproximada: al variar el voltaje QRS, la relación ST/QRS no está calibrada. Este modelo no permite validar criterios proporcionales de Sgarbossa.";
 
