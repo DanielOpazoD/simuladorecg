@@ -7,21 +7,30 @@ import { fromPreset, presetById } from "../src/presets/catalog";
 
 describe("Polymorphic ventricular axis reference", () => {
   it("does not publish a single synthetic axis for torsades", () => {
-    const c = fromPreset(presetById("torsades")!);
-    const signal = synthesize(c, 10);
+    const signal = synthesize(fromPreset(presetById("torsades")!), 10);
     expect(signal.truth.axis).toBeNull();
     expect(referenceInWindow(signal, 0, 10).axis).toBeNull();
   });
 
-  it("withdraws a global measured axis when the model has no stable global axis", () => {
-    const signal = synthesize(fromPreset(presetById("torsades")!), 10);
+  it("withdraws an otherwise usable global axis when its model reference is absent", () => {
+    const signal = synthesize(fromPreset(presetById("sinus")!), 10);
     const raw = measure(signal);
-    expect(raw.beats.length).toBeGreaterThanOrEqual(3);
     expect(raw.axis).not.toBeNull();
-    const audited = auditMeasurement(signal, raw);
+    expect(raw.evidence.axis.status).not.toBe("unavailable");
+    const withoutGlobalAxis = { ...signal, truth: { ...signal.truth, axis: null } };
+    const audited = auditMeasurement(withoutGlobalAxis, raw);
     expect(audited.axis).toBeNull();
     expect(audited.evidence.axis.status).toBe("unavailable");
     expect(audited.evidence.axis.reason).toContain("eje ventricular global estable");
+    expect(audited.rejected?.axis).toBe(raw.axis);
+  });
+
+  it("does not manufacture an axis-specific reason when a stronger detection failure already withdrew it", () => {
+    const signal = synthesize(fromPreset(presetById("torsades")!), 10);
+    const raw = measure(signal);
+    const audited = auditMeasurement(signal, raw);
+    expect(audited.axis).toBeNull();
+    expect(audited.evidence.axis.status).toBe("unavailable");
     expect(audited.rejected?.axis).toBe(raw.axis);
   });
 
