@@ -130,7 +130,10 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
         ? secondary.t.map((x) => x * (c.tAmp / T_REFERENCE_AMPLITUDE)) as Vec
         : primaryTv,
       lv = lesionVector(c);
-    if (secondary.st) for (let j=0;j<3;j++) lv[j] += secondary.st[j];
+    if (secondary.st) {
+      const secondaryScale = c.tAmp / T_REFERENCE_AMPLITUDE;
+      for (let j=0;j<3;j++) lv[j] += secondary.st[j] * secondaryScale;
+    }
     add(b.time + dur - 0.012, qt - dur + 0.012, (u) => {
       const envelope = Math.min(
         1,
