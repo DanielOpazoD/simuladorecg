@@ -82,7 +82,9 @@ export function qrsKernels(c: ECGCase, beat: Beat): Kernel[] {
     ks.push({
       mu: 0.6,
       sigma: 0.15,
-      v: [-0.12, 0.08, -0.7 * (c.overload === "rv_acute" ? 0.55 : 1)],
+      // This appended QRS component shares the gain/attenuation of the main kernels.
+      v: [-0.12, 0.08, -0.7 * (c.overload === "rv_acute" ? 0.55 : 1)]
+        .map((v) => v * qrsAmplitudeScale(c)) as Vec,
     });
   }
   if (c.overload === "lv")

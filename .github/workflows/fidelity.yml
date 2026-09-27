@@ -28,7 +28,7 @@ jobs:
         run: npm run build
       - name: Matched repolarization comparison and detector freeze
         run: node scripts/validate-repolarization.mjs --output "${{ runner.temp }}/repolarization-comparison.json"
-      - name: Paired posterior and WPW QRS amplitude regression
+      - name: Paired posterior, WPW and RV QRS amplitude regression
         run: node scripts/validate-posterior-amplitude.mjs "${{ runner.temp }}/posterior-amplitude-results.json"
       - name: Install isolated browser test dependency
         run: |

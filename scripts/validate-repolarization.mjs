@@ -2,7 +2,7 @@
 import { build } from 'esbuild';
 import {assertReviewedMeasure,assertPeakOnlyChange} from './lib/t-peak-revision.mjs';
 import assert from 'node:assert/strict';
-import { compareSignalContract, assertPresetSet } from './lib/fidelity-contracts.mjs';
+import { compareSignalContract, assertPresetSet, assertRvAmplitudeChange } from './lib/fidelity-contracts.mjs';
 import { execFileSync } from 'node:child_process';
 import { mkdtemp, mkdir, readFile, writeFile, rm, readdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
@@ -79,13 +79,15 @@ try {
  for(const p of after.PRESETS.filter(p=>p.strategy!=='pending')) {
    const c=after.fromPreset(p),a=before.synthesize(c,10),b=after.synthesize(c,10);
    assertPeakOnlyChange(before.measure(b),after.measure(b));
-   const intendedSourceChange=changedSources.has(p.id);
-   const contract=compareSignalContract(a,b,{exact:!intendedSourceChange,label:`default/${p.id}`});
-   // All 61 historical signals remain reconstructible with the explicit historical source.
+   const intendedSourceChange=changedSources.has(p.id), intendedRvGainChange=p.id==='rv_chronic';
+   const contract=intendedRvGainChange ? assertRvAmplitudeChange(before.synthesize,a,b,c)
+     : compareSignalContract(a,b,{exact:!intendedSourceChange,label:`default/${p.id}`});
+   // The historical source remains exact except for the independently verified RV gain correction.
    const legacy=after.synthesize({...c,ventricularSource:'rv_apical_pacing'},10);
-   compareSignalContract(a,legacy,{exact:true,label:`legacy-source/${p.id}`});
+   if(intendedRvGainChange) assertRvAmplitudeChange(before.synthesize,a,legacy,c);
+   else compareSignalContract(a,legacy,{exact:true,label:`legacy-source/${p.id}`});
    if(intendedSourceChange) assert.ok(contract.maxDifferenceMv>.03,`missing source change ${p.id}`);
-   defaults.push({id:p.id,intendedSourceChange,legacySourceExact:true,...contract});
+   defaults.push({id:p.id,intendedSourceChange,intendedRvGainChange,legacySourceExact:!intendedRvGainChange,...contract});
  }
  const output=options['--output'] || path.join(root,'.sites-runtime','repolarization-comparison.json');
  await mkdir(path.dirname(output),{recursive:true});
