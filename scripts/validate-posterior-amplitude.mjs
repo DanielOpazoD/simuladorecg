@@ -7,6 +7,9 @@ import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+const scopeIndex = process.argv.indexOf('--scope');
+const scope = scopeIndex >= 0 ? process.argv[scopeIndex + 1] : 'all';
+assert.ok(['all', 'posterior', 'wpw', 'rv'].includes(scope), 'Invalid --scope');
 const baseline = '91519b2ea3b052f5cd22db6802f674bab6981b96';
 const temp = await mkdtemp(path.join(tmpdir(), 'posterior-gain-'));
 try {
@@ -34,7 +37,7 @@ try {
   }
   const rows = [];
   // Retain the historical posterior oracle and add the same contract for WPW delta.
-  for (const preset of ['posterior', 'wpw']) for (const filter of filters) {
+  for (const preset of ['posterior', 'wpw'].filter(p => scope === 'all' || scope === p)) for (const filter of filters) {
     const c = {...after.fromPreset(after.presetById(preset)), hr: 60, variability: 0, pAmp: 0, tAmp: 0, st: 0};
     const full = after.synthesize({...c, filter, qrsAmp: 1}, 10);
     for (const qrsGain of [.1, .5, 1, 2, 3]) {
@@ -58,7 +61,7 @@ try {
   execFileSync('tar', ['-xf', '-', '-C', gainDir], {input: execFileSync('git', ['archive', lowVoltageBaseline], {maxBuffer: 100 * 1024 * 1024})});
   const gainCorrected = await load(gainDir, 'gain-corrected'), lowVoltageScenarios = [];
   const posterior = {...after.fromPreset(after.presetById('posterior')), hr: 60, variability: 0, pAmp: 0, tAmp: 0, st: 0};
-  for (const filter of filters) for (const qrsGain of [.1, .5, 1, 2, 3]) {
+  if (scope === 'all' || scope === 'posterior') for (const filter of filters) for (const qrsGain of [.1, .5, 1, 2, 3]) {
     const config = {...posterior, filter, qrsAmp: qrsGain};
     const normal = after.synthesize(config, 10);
     const oldLow = gainCorrected.synthesize({...config, electrolyte: 'lowvoltage'}, 10);
@@ -76,16 +79,16 @@ try {
     lowVoltageScenarios.push({filter, qrsGain, oldErrorMv, newErrorMv,
       v1PositivePeakMv: {normal: peak(normal), before: peak(oldLow), after: peak(newLow)}});
   }
-  assert.ok(Math.max(...lowVoltageScenarios.map(r => r.oldErrorMv)) > 1, 'Must reproduce the PR35 low-voltage defect');
+  if (scope === 'all' || scope === 'posterior') assert.ok(Math.max(...lowVoltageScenarios.map(r => r.oldErrorMv)) > 1, 'Must reproduce the PR35 low-voltage defect');
   for (const [preset, minimumOldError] of [['posterior', 1], ['wpw', .5]])
-    assert.ok(Math.max(...rows.filter(r => r.preset === preset).map(r => r.oldErrorMv)) > minimumOldError, `Regression must expose the old ${preset} error`);
+    if (scope === 'all' || scope === preset) assert.ok(Math.max(...rows.filter(r => r.preset === preset).map(r => r.oldErrorMv)) > minimumOldError, `Regression must expose the old ${preset} error`);
   // Separate baseline for the residual WPW delta attenuation defect after PR38.
   const wpwLowVoltageBaseline = 'd86b193f3deb56649d325d07379206299748ab49';
   const wpwDir = path.join(temp, 'wpw-gain-corrected'); await mkdir(wpwDir);
   execFileSync('tar', ['-xf', '-', '-C', wpwDir], {input: execFileSync('git', ['archive', wpwLowVoltageBaseline], {maxBuffer: 100 * 1024 * 1024})});
   const wpwCorrected = await load(wpwDir, 'wpw-gain-corrected'), wpwLowVoltageScenarios = [];
   const wpw = {...after.fromPreset(after.presetById('wpw')), hr: 60, variability: 0, pAmp: 0, tAmp: 0, st: 0};
-  for (const filter of filters) for (const qrsGain of [.1, .5, 1, 2, 3]) {
+  if (scope === 'all' || scope === 'wpw') for (const filter of filters) for (const qrsGain of [.1, .5, 1, 2, 3]) {
     const config = {...wpw, filter, qrsAmp: qrsGain};
     const normal = after.synthesize(config, 10);
     const oldLow = wpwCorrected.synthesize({...config, electrolyte: 'lowvoltage'}, 10);
@@ -103,13 +106,13 @@ try {
     wpwLowVoltageScenarios.push({filter, qrsGain, oldErrorMv, newErrorMv,
       initial45msLeadIIPeakMv: {normal: peak(normal), before: peak(oldLow), after: peak(newLow)}});
   }
-  assert.ok(Math.max(...wpwLowVoltageScenarios.map(r => r.oldErrorMv)) > .5, 'Must expose the PR38 WPW low-voltage defect');
+  if (scope === 'all' || scope === 'wpw') assert.ok(Math.max(...wpwLowVoltageScenarios.map(r => r.oldErrorMv)) > .5, 'Must expose the PR38 WPW low-voltage defect');
   // Freeze the complete pre-RV-gain product rather than reusing clinical references.
   const rvBaseline = 'd2babc398a246787fbb8e3156668b90a31781f30';
   const rvDir = path.join(temp, 'before-rv-gain'); await mkdir(rvDir);
   execFileSync('tar', ['-xf', '-', '-C', rvDir], {input: execFileSync('git', ['archive', rvBaseline], {maxBuffer: 100 * 1024 * 1024})});
   const rvBefore = await load(rvDir, 'before-rv-gain'), rvScenarios = [];
-  for (const preset of ['rv_acute', 'rv_chronic']) for (const filter of filters) {
+  if (scope === 'all' || scope === 'rv') for (const preset of ['rv_acute', 'rv_chronic']) for (const filter of filters) {
     const c = {...after.fromPreset(after.presetById(preset)), hr: 60, variability: 0, pAmp: 0, tAmp: 0, st: 0, filter, qrsAmp: 1};
     const unit = after.synthesize(c, 10);
     assert.deepEqual(unit, rvBefore.synthesize(c, 10), 'RV unit-gain non-low-voltage source changed');
@@ -130,15 +133,15 @@ try {
         v1PositivePeakMv: {unit: peak(unit), before: peak(a), after: peak(b)}, ...oracle});
     }
   }
-  for (const preset of ['rv_acute', 'rv_chronic'])
+  if (scope === 'all' || scope === 'rv') for (const preset of ['rv_acute', 'rv_chronic'])
     assert.ok(Math.max(...rvScenarios.filter(r => r.preset === preset).map(r => r.oldErrorMv)) > .5, `Must reproduce old ${preset} defect`);
-  const report = {baseline, commit: execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim(),
+  const report = {scope, baseline, commit: execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim(),
     defaults, gainScenarios: rows, lowVoltageBaseline, lowVoltageScenarios, wpwLowVoltageBaseline, wpwLowVoltageScenarios, rvBaseline, rvScenarios, nativeTimingsUnchanged: true, clinicalValidation: false};
   const output = process.argv[2]; assert.ok(output, 'Provide result JSON path');
   await mkdir(path.dirname(path.resolve(output)), {recursive: true});
   await writeFile(output, JSON.stringify(report, null, 2) + '\n');
   console.log(JSON.stringify({defaultScenarios: defaults.length, exactDefaults: defaults.filter(r => r.exact).length, intendedDefaultChanges: defaults.filter(r => r.intendedRvGainChange).length, rvScenarios: rvScenarios.length, gainScenarios: rows.length,
-    maxOldErrorMv: Math.max(...rows.map(r => r.oldErrorMv)), maxNewErrorMv: Math.max(...rows.map(r => r.newErrorMv)),
-    lowVoltageScenarios: lowVoltageScenarios.length, maxLowVoltageErrorMv: Math.max(...lowVoltageScenarios.map(r => r.newErrorMv)),
-    wpwLowVoltageScenarios: wpwLowVoltageScenarios.length, maxWpwLowVoltageErrorMv: Math.max(...wpwLowVoltageScenarios.map(r => r.newErrorMv))}));
+    maxOldErrorMv: rows.length ? Math.max(...rows.map(r => r.oldErrorMv)) : null, maxNewErrorMv: rows.length ? Math.max(...rows.map(r => r.newErrorMv)) : null,
+    lowVoltageScenarios: lowVoltageScenarios.length, maxLowVoltageErrorMv: lowVoltageScenarios.length ? Math.max(...lowVoltageScenarios.map(r => r.newErrorMv)) : null,
+    wpwLowVoltageScenarios: wpwLowVoltageScenarios.length, maxWpwLowVoltageErrorMv: wpwLowVoltageScenarios.length ? Math.max(...wpwLowVoltageScenarios.map(r => r.newErrorMv)) : null}));
 } finally { await rm(temp, {recursive: true, force: true}); }
