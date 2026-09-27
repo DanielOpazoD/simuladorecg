@@ -18,6 +18,7 @@ import {
 } from "./leads";
 import {
   qrsKernels,
+  qrsAmplitudeScale,
   qrsDuration,
   lesionVector,
   lesionControlEffect,
@@ -203,8 +204,8 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
           l,
           b.time,
           dur,
-          // This is a QRS component, so the QRS gain must scale it too.
-          0.75 * c.qrsAmp,
+          // Apply the same gain and low-voltage attenuation as the QRS vector.
+          0.75 * qrsAmplitudeScale(c),
           (u) => gaussian(u, 0.47, 0.14) * compact(u),
         );
     if (c.ischemia === "pericarditis" && b.pr) {

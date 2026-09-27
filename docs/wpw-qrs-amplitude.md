@@ -2,7 +2,9 @@
 
 Base de desarrollo local: `e8bb934d9b5b78e15a99d447e2ed61b2279df16c` (PR35).
 Base de publicación: `81906c51385ae6f16e9ec35d7ff15f269164cde6` (PR36).
-El parche se aplica sin conflictos y conserva la auditoría de escala del PR36.
+Durante la CI se integró PR37 en main: `c1afb79e4f65feb2b7df3c703e4e39ce113c0c4f`.
+Se reconcilian ambos cambios, conservando íntegramente la auditoría del PR36
+y la atenuación posterior del PR37. No se reutilizan los checks de la base antigua.
 
 ## Corrección acotada
 
@@ -28,14 +30,17 @@ ninguno después, usando Node 22.16 y transformación TS nativa (no Vitest).
 
 Se amplía el validador pareado existente, sin un workflow nuevo: conserva el
 baseline histórico PR33, los 244 presets/filtros predeterminados y los 20 casos
-posteriores, y añade 20 casos WPW. La tolerancia sigue siendo 1e-10 mV.
+posteriores, y añade 20 casos WPW. Además mantiene los 20 casos posteriores
+de bajo voltaje del PR37 con su baseline PR35. La tolerancia sigue siendo 1e-10 mV.
 También se conserva la exigencia histórica de un fallo posterior >1 mV y se
 requiere un fallo WPW previo >0,5 mV. Esto verifica que el test discrimine.
 Los errores de proporcionalidad son matemáticos, no errores clínicos.
 
 El recorrido de navegador existente cubre posterior y WPW en 1440x1000 y390x844:
 control real de amplitud 1 -> 0,1 -> 1, cambio visible y recuperación exacta del
-canvas completo. Usa el evento input, no prueba gestos táctiles ni iPhone físico.
+canvas completo. Mantiene además exportación/importación posterior con y sin
+bajo voltaje, con restauración exacta. Usa el evento input, no prueba gestos
+táctiles ni iPhone físico.
 Browser plugin no disponible: se utiliza Playwright/Chromium ya establecido en CI.
 
 ## Cierre y alcance

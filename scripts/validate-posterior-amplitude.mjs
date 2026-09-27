@@ -44,13 +44,39 @@ try {
         v1PositivePeakMv: {before: peak(a, 'V1'), after: peak(b, 'V1')}});
     }
   }
+  // Isolate the low-voltage correction against the already gain-corrected PR35.
+  const lowVoltageBaseline = 'e8bb934d9b5b78e15a99d447e2ed61b2279df16c';
+  const gainDir = path.join(temp, 'gain-corrected'); await mkdir(gainDir);
+  execFileSync('tar', ['-xf', '-', '-C', gainDir], {input: execFileSync('git', ['archive', lowVoltageBaseline], {maxBuffer: 100 * 1024 * 1024})});
+  const gainCorrected = await load(gainDir, 'gain-corrected'), lowVoltageScenarios = [];
+  const posterior = {...after.fromPreset(after.presetById('posterior')), hr: 60, variability: 0, pAmp: 0, tAmp: 0, st: 0};
+  for (const filter of filters) for (const qrsGain of [.1, .5, 1, 2, 3]) {
+    const config = {...posterior, filter, qrsAmp: qrsGain};
+    const normal = after.synthesize(config, 10);
+    const oldLow = gainCorrected.synthesize({...config, electrolyte: 'lowvoltage'}, 10);
+    const newLow = after.synthesize({...config, electrolyte: 'lowvoltage'}, 10);
+    assert.deepEqual(normal, gainCorrected.synthesize(config, 10), 'Non-low-voltage trace changed');
+    let oldErrorMv = 0, newErrorMv = 0;
+    for (const l of Object.keys(normal.leads)) for (let i = 0; i < normal.leads[l].length; i++) {
+      oldErrorMv = Math.max(oldErrorMv, Math.abs(oldLow.leads[l][i] - .38 * normal.leads[l][i]));
+      newErrorMv = Math.max(newErrorMv, Math.abs(newLow.leads[l][i] - .38 * normal.leads[l][i]));
+      if (!['V1', 'V2', 'V3'].includes(l)) assert.equal(oldLow.leads[l][i], newLow.leads[l][i]);
+    }
+    assert.ok(newErrorMv < 1e-10); assert.deepEqual(oldLow.events, newLow.events);
+    const beat = normal.events.beats[3];
+    const peak = signal => Math.max(...signal.leads.V1.slice(Math.floor(beat.time * signal.fs), Math.ceil((beat.time + beat.qrs) * signal.fs)));
+    lowVoltageScenarios.push({filter, qrsGain, oldErrorMv, newErrorMv,
+      v1PositivePeakMv: {normal: peak(normal), before: peak(oldLow), after: peak(newLow)}});
+  }
+  assert.ok(Math.max(...lowVoltageScenarios.map(r => r.oldErrorMv)) > 1, 'Must reproduce the PR35 low-voltage defect');
   for (const [preset, minimumOldError] of [['posterior', 1], ['wpw', .5]])
     assert.ok(Math.max(...rows.filter(r => r.preset === preset).map(r => r.oldErrorMv)) > minimumOldError, `Regression must expose the old ${preset} error`);
   const report = {baseline, commit: execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim(),
-    defaults, gainScenarios: rows, nativeTimingsUnchanged: true, clinicalValidation: false};
+    defaults, gainScenarios: rows, lowVoltageBaseline, lowVoltageScenarios, nativeTimingsUnchanged: true, clinicalValidation: false};
   const output = process.argv[2]; assert.ok(output, 'Provide result JSON path');
   await mkdir(path.dirname(path.resolve(output)), {recursive: true});
   await writeFile(output, JSON.stringify(report, null, 2) + '\n');
   console.log(JSON.stringify({defaultScenarios: defaults.length, gainScenarios: rows.length,
-    maxOldErrorMv: Math.max(...rows.map(r => r.oldErrorMv)), maxNewErrorMv: Math.max(...rows.map(r => r.newErrorMv))}));
+    maxOldErrorMv: Math.max(...rows.map(r => r.oldErrorMv)), maxNewErrorMv: Math.max(...rows.map(r => r.newErrorMv)),
+    lowVoltageScenarios: lowVoltageScenarios.length, maxLowVoltageErrorMv: Math.max(...lowVoltageScenarios.map(r => r.newErrorMv))}));
 } finally { await rm(temp, {recursive: true, force: true}); }

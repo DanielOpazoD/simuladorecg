@@ -1,7 +1,7 @@
 /** Browser plugin absent: use the repository's established Playwright/Chromium production test. */
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 const url = process.env.ECG_TEST_URL || 'http://127.0.0.1:5173/';
@@ -57,9 +57,35 @@ try {
     await writeFile(path.join(out, `${preset}-render-state-${width}.json`), JSON.stringify({initialHash, lowHash, restoredHash, state}, null, 2));
     assert.equal(restoredHash, initialHash, 'Returning to gain 1 must restore the exact complete canvas');
     await page.screenshot({path: path.join(out, `${preset}-gain-default-${width}.png`)});
+    let lowVoltageEvidence = {};
+    if (preset === 'posterior') {
+      // The existing JSON import path permits posterior + low voltage; no new UI control.
+      await page.locator('[data-action="export"]').click();
+      const exported = page.waitForEvent('download'); await page.locator('[data-action="json"]').click();
+      const casePath = path.join(out, `posterior-case-${width}.json`); await (await exported).saveAs(casePath);
+      const originalCase = JSON.parse(await readFile(casePath, 'utf8'));
+      const importCase = async electrolyte => {
+        await page.locator('#file-input').setInputFiles({name: 'posterior-voltage.json', mimeType: 'application/json',
+          buffer: Buffer.from(JSON.stringify({...originalCase, electrolyte}))});
+      };
+      await importCase('lowvoltage');
+      await page.waitForFunction(initial => document.querySelector('#ecg').toDataURL() !== initial, restored);
+      await page.locator('#signal-loading').waitFor({state: 'hidden'});
+      await page.locator('#ecg').scrollIntoViewIfNeeded();
+      const lowVoltageCanvas = await page.locator('#ecg').evaluate(c => c.toDataURL());
+      const lowVoltageHash = await recordCanvas('low-voltage', lowVoltageCanvas);
+      assert.notEqual(lowVoltageHash, restoredHash);
+      await page.screenshot({path: path.join(out, `posterior-low-voltage-${width}.png`)});
+      await importCase('none');
+      await page.waitForFunction(initial => document.querySelector('#ecg').toDataURL() === initial, restored);
+      await page.locator('#signal-loading').waitFor({state: 'hidden'});
+      const voltageRestoredHash = await recordCanvas('voltage-restored', await page.locator('#ecg').evaluate(c => c.toDataURL()));
+      assert.equal(voltageRestoredHash, restoredHash, 'Removing low voltage must restore the complete canvas');
+      lowVoltageEvidence = {lowVoltageHash, voltageRestoredHash};
+    }
     assert.equal(await page.locator('vite-error-overlay').count(), 0);
     assert.deepEqual(errors, []); assert.deepEqual(warnings, []);
-    results.push({preset, width, initialHash, lowHash, restoredHash, state, errors, warnings, flow: `${preset} -> QRS gain 0.1 -> visible change -> gain 1 -> exact canvas restoration`});
+    results.push({preset, width, initialHash, lowHash, restoredHash, ...lowVoltageEvidence, state, errors, warnings, flow: `${preset} -> QRS gain 0.1 -> visible change -> gain 1 -> exact canvas restoration` + (preset === 'posterior' ? ' -> JSON low voltage -> visible change -> JSON none -> exact restoration' : '')});
     await page.close();
   }
   await writeFile(path.join(out, 'posterior-amplitude-ui-results.json'), JSON.stringify({url, browser: await browser.version(), results, physicalDeviceTest: false}, null, 2));
