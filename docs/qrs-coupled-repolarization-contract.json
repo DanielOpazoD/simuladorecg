@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "purpose": "PR43 QRS-coupled secondary T migration; not a clinical acceptance threshold",
+  "allowedCleanSourceChanges": [
+    "lbbb",
+    "pvc"
+  ],
+  "invariants": [
+    "noise bytes unchanged",
+    "noise protocol unchanged",
+    "all 920 paired scenarios retained",
+    "all clean sources not listed remain byte-identical"
+  ],
+  "scope": "Only secondary T morphology changes in LBBB and ventricular ectopy source represented by PVC in the noise benchmark."
+}

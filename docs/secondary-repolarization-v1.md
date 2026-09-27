@@ -4,7 +4,6 @@ La versión previa usaba plantillas T fijas para varios trastornos de activació
 
 - BRI y activación ventricular: oposición al QRS integrado.
 - BRD/BRD incompleto: oposición al componente terminal retardado.
-- WPW: oposición al vector delta modelado.
 - Conducción normal: sin capa secundaria nueva.
 - Isquemia, electrolitos y sobrecarga siguen separadas.
 
