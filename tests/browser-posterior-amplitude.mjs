@@ -9,7 +9,7 @@ const out = path.resolve(process.env.ECG_EVIDENCE_DIR || '.sites-runtime/browser
 await mkdir(out, {recursive: true});
 const browser = await chromium.launch({headless: true}), results = [];
 try {
-  for (const preset of ['posterior', 'wpw']) for (const width of [1440, 390]) {
+  for (const preset of ['posterior', 'wpw', 'rv_acute', 'rv_chronic']) for (const width of [1440, 390]) {
     const page = await browser.newPage({viewport: {width, height: width === 390 ? 844 : 1000}}), errors = [], warnings = [];
     page.on('pageerror', e => errors.push(e.message));
     page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); if (m.type() === 'warning') warnings.push(m.text()); });
@@ -34,7 +34,8 @@ try {
       return createHash('sha256').update(data).digest('hex');
     };
     // Normalize the metadata to a custom case before comparing pixels.
-    await setGain('1');
+    const referenceGain = preset === 'rv_chronic' ? '1.2' : '1';
+    await setGain(referenceGain);
     const initial = await page.locator('#ecg').evaluate(c => c.toDataURL());
     await setGain('0.1');
     await page.locator('#signal-loading').waitFor({state: 'hidden'});
@@ -46,20 +47,20 @@ try {
     // Capture the viewport, not an overflowing element: element screenshots may resize
     // the mobile viewport and trigger a responsive redraw during this round trip.
     await page.screenshot({path: path.join(out, `${preset}-gain-low-${width}.png`)});
-    await setGain('1');
+    await setGain(referenceGain);
     await page.locator('#signal-loading').waitFor({state: 'hidden'});
-    assert.equal(await gain.inputValue(), '1');
+    assert.equal(await gain.inputValue(), referenceGain);
     const restored = await page.locator('#ecg').evaluate(c => c.toDataURL());
     const restoredHash = await recordCanvas('restored', restored);
     const state = await page.evaluate(() => ({width: innerWidth, dpr: devicePixelRatio,
       canvasWidth: document.querySelector('#ecg').width, canvasHeight: document.querySelector('#ecg').height,
       label: document.querySelector('#ecg').getAttribute('aria-label'), fonts: document.fonts.status}));
     await writeFile(path.join(out, `${preset}-render-state-${width}.json`), JSON.stringify({initialHash, lowHash, restoredHash, state}, null, 2));
-    assert.equal(restoredHash, initialHash, 'Returning to gain 1 must restore the exact complete canvas');
+    assert.equal(restoredHash, initialHash, 'Returning to reference gain must restore the exact complete canvas');
     await page.screenshot({path: path.join(out, `${preset}-gain-default-${width}.png`)});
     let lowVoltageEvidence = {};
     {
-      // Exercise the existing JSON import path with both posterior and WPW low voltage.
+      // Exercise the existing JSON import path; no new product control.
       await page.locator('[data-action="export"]').click();
       const exported = page.waitForEvent('download'); await page.locator('[data-action="json"]').click();
       const casePath = path.join(out, `${preset}-case-${width}.json`); await (await exported).saveAs(casePath);
@@ -85,7 +86,7 @@ try {
     }
     assert.equal(await page.locator('vite-error-overlay').count(), 0);
     assert.deepEqual(errors, []); assert.deepEqual(warnings, []);
-    results.push({preset, width, initialHash, lowHash, restoredHash, ...lowVoltageEvidence, state, errors, warnings, flow: `${preset} -> QRS gain 0.1 -> visible change -> gain 1 -> exact canvas restoration` + ' -> JSON low voltage -> visible change -> JSON none -> exact restoration'});
+    results.push({preset, width, referenceGain, initialHash, lowHash, restoredHash, ...lowVoltageEvidence, state, errors, warnings, flow: `${preset} -> QRS gain 0.1 -> visible change -> gain ${referenceGain} -> exact canvas restoration` + ' -> JSON low voltage -> visible change -> JSON none -> exact restoration'});
     await page.close();
   }
   await writeFile(path.join(out, 'posterior-amplitude-ui-results.json'), JSON.stringify({url, browser: await browser.version(), results, physicalDeviceTest: false}, null, 2));

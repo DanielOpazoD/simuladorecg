@@ -1,5 +1,6 @@
 /** Paired generator regression; independent of the sample analyzer and external ECG labels. */
 import { build } from 'esbuild';
+import { assertRvAmplitudeChange } from './lib/fidelity-contracts.mjs';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
@@ -21,8 +22,15 @@ try {
   const defaults = [];
   for (const preset of after.PRESETS.filter(p => p.strategy !== 'pending')) for (const filter of filters) {
     const c = {...after.fromPreset(preset), filter};
-    assert.deepEqual(after.synthesize(c, 10), before.synthesize(c, 10), `Changed default ${preset.id}/${filter}`);
-    defaults.push({preset: preset.id, filter, exact: true});
+    const a = before.synthesize(c, 10), b = after.synthesize(c, 10);
+    if (preset.id === 'rv_chronic') {
+      // Its gain is 1.2: require the precise RV contribution change, never a blanket exclusion.
+      const oracle = assertRvAmplitudeChange(before.synthesize, a, b, c);
+      defaults.push({preset: preset.id, filter, exact: false, intendedRvGainChange: true, ...oracle});
+    } else {
+      assert.deepEqual(b, a, `Changed default ${preset.id}/${filter}`);
+      defaults.push({preset: preset.id, filter, exact: true});
+    }
   }
   const rows = [];
   // Retain the historical posterior oracle and add the same contract for WPW delta.
@@ -96,12 +104,40 @@ try {
       initial45msLeadIIPeakMv: {normal: peak(normal), before: peak(oldLow), after: peak(newLow)}});
   }
   assert.ok(Math.max(...wpwLowVoltageScenarios.map(r => r.oldErrorMv)) > .5, 'Must expose the PR38 WPW low-voltage defect');
+  // Freeze the complete pre-RV-gain product rather than reusing clinical references.
+  const rvBaseline = 'd2babc398a246787fbb8e3156668b90a31781f30';
+  const rvDir = path.join(temp, 'before-rv-gain'); await mkdir(rvDir);
+  execFileSync('tar', ['-xf', '-', '-C', rvDir], {input: execFileSync('git', ['archive', rvBaseline], {maxBuffer: 100 * 1024 * 1024})});
+  const rvBefore = await load(rvDir, 'before-rv-gain'), rvScenarios = [];
+  for (const preset of ['rv_acute', 'rv_chronic']) for (const filter of filters) {
+    const c = {...after.fromPreset(after.presetById(preset)), hr: 60, variability: 0, pAmp: 0, tAmp: 0, st: 0, filter, qrsAmp: 1};
+    const unit = after.synthesize(c, 10);
+    assert.deepEqual(unit, rvBefore.synthesize(c, 10), 'RV unit-gain non-low-voltage source changed');
+    for (const gain of [.1, .5, 1, 2, 3]) for (const electrolyte of ['none', 'lowvoltage']) {
+      const config = {...c, qrsAmp: gain, electrolyte};
+      const a = rvBefore.synthesize(config, 10), b = after.synthesize(config, 10);
+      const factor = gain * (electrolyte === 'lowvoltage' ? .38 : 1);
+      let oldErrorMv = 0, newErrorMv = 0;
+      for (const l of Object.keys(unit.leads)) for (let i = 0; i < unit.leads[l].length; i++) {
+        oldErrorMv = Math.max(oldErrorMv, Math.abs(a.leads[l][i] - factor * unit.leads[l][i]));
+        newErrorMv = Math.max(newErrorMv, Math.abs(b.leads[l][i] - factor * unit.leads[l][i]));
+      }
+      assert.ok(newErrorMv < 1e-10, `Unscaled RV component: ${preset}/${filter}/${gain}/${electrolyte}`);
+      const oracle = assertRvAmplitudeChange(rvBefore.synthesize, a, b, config);
+      const beat = unit.events.beats[3];
+      const peak = signal => Math.max(...signal.leads.V1.slice(Math.floor(beat.time * signal.fs), Math.ceil((beat.time + beat.qrs) * signal.fs)));
+      rvScenarios.push({preset, filter, gain, electrolyte, oldErrorMv, newErrorMv,
+        v1PositivePeakMv: {unit: peak(unit), before: peak(a), after: peak(b)}, ...oracle});
+    }
+  }
+  for (const preset of ['rv_acute', 'rv_chronic'])
+    assert.ok(Math.max(...rvScenarios.filter(r => r.preset === preset).map(r => r.oldErrorMv)) > .5, `Must reproduce old ${preset} defect`);
   const report = {baseline, commit: execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim(),
-    defaults, gainScenarios: rows, lowVoltageBaseline, lowVoltageScenarios, wpwLowVoltageBaseline, wpwLowVoltageScenarios, nativeTimingsUnchanged: true, clinicalValidation: false};
+    defaults, gainScenarios: rows, lowVoltageBaseline, lowVoltageScenarios, wpwLowVoltageBaseline, wpwLowVoltageScenarios, rvBaseline, rvScenarios, nativeTimingsUnchanged: true, clinicalValidation: false};
   const output = process.argv[2]; assert.ok(output, 'Provide result JSON path');
   await mkdir(path.dirname(path.resolve(output)), {recursive: true});
   await writeFile(output, JSON.stringify(report, null, 2) + '\n');
-  console.log(JSON.stringify({defaultScenarios: defaults.length, gainScenarios: rows.length,
+  console.log(JSON.stringify({defaultScenarios: defaults.length, exactDefaults: defaults.filter(r => r.exact).length, intendedDefaultChanges: defaults.filter(r => r.intendedRvGainChange).length, rvScenarios: rvScenarios.length, gainScenarios: rows.length,
     maxOldErrorMv: Math.max(...rows.map(r => r.oldErrorMv)), maxNewErrorMv: Math.max(...rows.map(r => r.newErrorMv)),
     lowVoltageScenarios: lowVoltageScenarios.length, maxLowVoltageErrorMv: Math.max(...lowVoltageScenarios.map(r => r.newErrorMv)),
     wpwLowVoltageScenarios: wpwLowVoltageScenarios.length, maxWpwLowVoltageErrorMv: Math.max(...wpwLowVoltageScenarios.map(r => r.newErrorMv))}));

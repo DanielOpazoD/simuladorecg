@@ -36,3 +36,32 @@ export function assertPresetSet(before, after) {
   assert.ok(ids(before).length>0,'empty reference catalog');
   assert.deepEqual(ids(after),ids(before),'active preset set changed: revise the explicit scope before acceptance');
 }
+
+/** Narrow, sample-by-sample oracle for the intended RV QRS gain change.
+ * Extract the old RV contribution by subtracting two isolated signals at gain 1.
+ * The new signal must equal old + (gain*attenuation - 1)*that contribution.
+ * No current kernel constants, updated snapshots or detector outputs enter the oracle.
+ * Only normal/IRBBB sinus cases without other lesions are in this contract's scope.
+ */
+export function assertRvAmplitudeChange(synthesizeBefore, before, after, c) {
+  assert.ok(['rv_acute', 'rv_chronic'].includes(c.overload), 'RV oracle: wrong overload');
+  assert.ok(c.rhythm === 'sinus' && ['normal', 'irbbb'].includes(c.conduction) &&
+    c.ectopy === 'none' && c.ischemia === 'none', 'RV oracle: unsupported combined case');
+  assert.ok(['none', 'lowvoltage'].includes(c.electrolyte), 'RV oracle: unsupported electrolyte');
+  const isolated = {...c, qrsAmp: 1, electrolyte: 'none', pAmp: 0, tAmp: 0, st: 0};
+  const withRV = synthesizeBefore(isolated, before.duration);
+  const withoutRV = synthesizeBefore({...isolated, overload: 'none'}, before.duration);
+  const factor = c.qrsAmp * (c.electrolyte === 'lowvoltage' ? .38 : 1) - 1;
+  assert.ok(Number.isFinite(factor), 'RV oracle: nonfinite scale');
+  const contract = compareSignalContract(before, after, {label: 'RV amplitude'});
+  assert.deepEqual(after.truth, before.truth, 'RV oracle: truth changed');
+  let oracleErrorMv = 0, expectedChangeMv = 0;
+  for (const lead of LEADS) for (let i = 0; i < after.leads[lead].length; i++) {
+    const delta = factor * (withRV.leads[lead][i] - withoutRV.leads[lead][i]);
+    expectedChangeMv = Math.max(expectedChangeMv, Math.abs(delta));
+    oracleErrorMv = Math.max(oracleErrorMv, Math.abs(after.leads[lead][i] - before.leads[lead][i] - delta));
+  }
+  assert.ok(oracleErrorMv < 1e-10, `Unexpected RV sample change: ${oracleErrorMv} mV`);
+  if (Math.abs(factor) > .01) assert.ok(expectedChangeMv > .001, 'RV oracle must not be vacuous');
+  return {...contract, oracleErrorMv, expectedChangeMv, oracle: 'frozen-signal-difference-at-unit-gain'};
+}
