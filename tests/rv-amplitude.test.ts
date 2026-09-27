@@ -26,7 +26,7 @@ describe('All right-ventricular QRS components share gain and existing low-volta
       }
     });
   it('scales all three coordinates, including the appended kernel, for every activation kind', () => {
-    for (const id of ['rv_acute', 'rv_chronic']) for (const kind of ['normal', 'pvc', 'escape', 'paced'] as const) {
+    for (const id of ['rv_acute', 'rv_chronic']) for (const kind of ['normal', 'pvc', 'ventricular', 'paced'] as const) {
       const c = setup(id), beat = {time: 1, rr: 1, kind};
       const reference = qrsKernels(c, beat);
       for (const qrsAmp of gains) for (const electrolyte of ['none', 'lowvoltage'] as const) {
