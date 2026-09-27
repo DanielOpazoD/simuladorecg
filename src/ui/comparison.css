@@ -27,9 +27,10 @@
 @media (max-width: 800px) {
   .comparison-lab { padding: 16px; }
   .comparison-results, .comparison-names { grid-template-columns: 1fr; gap: 18px; }
-  .comparison-controls { align-items: stretch; }
-  .comparison-controls label { flex: 1 1 140px; min-width: 0; }
-  .comparison-controls input { width: 100%; }
+  .comparison-controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: end; }
+  .comparison-controls label { min-width: 0; }
+  .comparison-controls label:first-child { grid-column: 1 / -1; }
+  .comparison-controls select, .comparison-controls input { min-width: 0; width: 100%; }
   .comparison-actions { width: 100%; }
   .comparison-lab button, .comparison-lab select, .comparison-lab input { min-height: 44px; }
 }

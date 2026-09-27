@@ -50,8 +50,14 @@ try {
       const scroller=lab.locator('.comparison-scroll');await scroller.evaluate(e=>{e.scrollLeft=e.scrollWidth-e.clientWidth;});
       assert.ok(await scroller.evaluate(e=>e.scrollLeft>0));assert.equal((await lab.locator('.comparison-heading').boundingBox()).x,heading.x);
       assert.ok(await lab.evaluate(e=>e.scrollWidth<=e.clientWidth+1),'Do not scroll the entire card');
+      const controls=await lab.locator('.comparison-controls label').evaluateAll(labels=>labels.map(label=>{
+        const a=label.getBoundingClientRect(),b=label.querySelector('input,select').getBoundingClientRect();
+        return {left:a.left,right:a.right,controlLeft:b.left,controlRight:b.right,height:b.height};
+      }));
+      for(const field of controls)assert.ok(field.controlLeft>=field.left-1&&field.controlRight<=field.right+1&&field.height>=44,'Native controls must fit their columns without overlap');
+      await scroller.evaluate(e=>{e.scrollLeft=0;});
     }
-    await page.waitForFunction(()=>!document.querySelector('#toast').classList.contains('visible'));
+    await page.waitForFunction(()=>getComputedStyle(document.querySelector('#toast')).opacity==='0');
     await lab.screenshot({path:resolve(out,`comparison-lab-${width}.png`)});
     const pngWait=page.waitForEvent('download');await page.locator('#compare-png').click();const png=resolve(out,`comparison-export-${width}.png`);await(await pngWait).saveAs(png);
     assert.deepEqual([...((await readFile(png)).subarray(0,8))],[137,80,78,71,13,10,26,10]);
