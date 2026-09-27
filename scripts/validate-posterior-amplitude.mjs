@@ -71,12 +71,38 @@ try {
   assert.ok(Math.max(...lowVoltageScenarios.map(r => r.oldErrorMv)) > 1, 'Must reproduce the PR35 low-voltage defect');
   for (const [preset, minimumOldError] of [['posterior', 1], ['wpw', .5]])
     assert.ok(Math.max(...rows.filter(r => r.preset === preset).map(r => r.oldErrorMv)) > minimumOldError, `Regression must expose the old ${preset} error`);
+  // Separate baseline for the residual WPW delta attenuation defect after PR38.
+  const wpwLowVoltageBaseline = 'd86b193f3deb56649d325d07379206299748ab49';
+  const wpwDir = path.join(temp, 'wpw-gain-corrected'); await mkdir(wpwDir);
+  execFileSync('tar', ['-xf', '-', '-C', wpwDir], {input: execFileSync('git', ['archive', wpwLowVoltageBaseline], {maxBuffer: 100 * 1024 * 1024})});
+  const wpwCorrected = await load(wpwDir, 'wpw-gain-corrected'), wpwLowVoltageScenarios = [];
+  const wpw = {...after.fromPreset(after.presetById('wpw')), hr: 60, variability: 0, pAmp: 0, tAmp: 0, st: 0};
+  for (const filter of filters) for (const qrsGain of [.1, .5, 1, 2, 3]) {
+    const config = {...wpw, filter, qrsAmp: qrsGain};
+    const normal = after.synthesize(config, 10);
+    const oldLow = wpwCorrected.synthesize({...config, electrolyte: 'lowvoltage'}, 10);
+    const newLow = after.synthesize({...config, electrolyte: 'lowvoltage'}, 10);
+    assert.deepEqual(normal, wpwCorrected.synthesize(config, 10), 'WPW without low voltage changed');
+    let oldErrorMv = 0, newErrorMv = 0;
+    for (const l of Object.keys(normal.leads)) for (let i = 0; i < normal.leads[l].length; i++) {
+      oldErrorMv = Math.max(oldErrorMv, Math.abs(oldLow.leads[l][i] - .38 * normal.leads[l][i]));
+      newErrorMv = Math.max(newErrorMv, Math.abs(newLow.leads[l][i] - .38 * normal.leads[l][i]));
+    }
+    assert.ok(newErrorMv < 1e-10, `Unattenuated WPW delta: ${filter}/${qrsGain}`);
+    assert.deepEqual(oldLow.events, newLow.events);
+    const beat = normal.events.beats[3];
+    const peak = signal => Math.max(...signal.leads.II.slice(Math.floor(beat.time * signal.fs), Math.ceil((beat.time + .045) * signal.fs)));
+    wpwLowVoltageScenarios.push({filter, qrsGain, oldErrorMv, newErrorMv,
+      initial45msLeadIIPeakMv: {normal: peak(normal), before: peak(oldLow), after: peak(newLow)}});
+  }
+  assert.ok(Math.max(...wpwLowVoltageScenarios.map(r => r.oldErrorMv)) > .5, 'Must expose the PR38 WPW low-voltage defect');
   const report = {baseline, commit: execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim(),
-    defaults, gainScenarios: rows, lowVoltageBaseline, lowVoltageScenarios, nativeTimingsUnchanged: true, clinicalValidation: false};
+    defaults, gainScenarios: rows, lowVoltageBaseline, lowVoltageScenarios, wpwLowVoltageBaseline, wpwLowVoltageScenarios, nativeTimingsUnchanged: true, clinicalValidation: false};
   const output = process.argv[2]; assert.ok(output, 'Provide result JSON path');
   await mkdir(path.dirname(path.resolve(output)), {recursive: true});
   await writeFile(output, JSON.stringify(report, null, 2) + '\n');
   console.log(JSON.stringify({defaultScenarios: defaults.length, gainScenarios: rows.length,
     maxOldErrorMv: Math.max(...rows.map(r => r.oldErrorMv)), maxNewErrorMv: Math.max(...rows.map(r => r.newErrorMv)),
-    lowVoltageScenarios: lowVoltageScenarios.length, maxLowVoltageErrorMv: Math.max(...lowVoltageScenarios.map(r => r.newErrorMv))}));
+    lowVoltageScenarios: lowVoltageScenarios.length, maxLowVoltageErrorMv: Math.max(...lowVoltageScenarios.map(r => r.newErrorMv)),
+    wpwLowVoltageScenarios: wpwLowVoltageScenarios.length, maxWpwLowVoltageErrorMv: Math.max(...wpwLowVoltageScenarios.map(r => r.newErrorMv))}));
 } finally { await rm(temp, {recursive: true, force: true}); }
