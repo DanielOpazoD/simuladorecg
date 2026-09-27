@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "baselineCommit": "d4ca0ba85f2b8e000171a706ed9bfeb41264b13f",
+  "baselineCommit": "aee59f64a35cdee76133113cfc0da216fc8832cd",
   "acquisitionCommit": "784173f94bc103686efb321fc13f1b8f40913f76",
   "noiseProtocolSha256": "cf67760f2a7f64f3a76dd31248f8dd943985a039ed7d7c1a5e2c4c9a81d13544",
-  "role": "Paired regression on exposed PR19 noise against the explicit PR43 amended clean-source baseline. Not new clinical or holdout validation.",
+  "role": "Paired regression on exposed PR19 noise. Not new clinical or holdout validation.",
   "analyzer": "src/engine/sample-analysis.ts (current worker entry, before model audit)",
   "numericalTolerance": {
-    "voltageMv": 0.000001,
-    "areaMvS": 1e-8
+    "voltageMv": 1e-06,
+    "areaMvS": 1e-08
   },
   "toleranceRationale": "Numerical reproducibility slack, well below the existing engineering review flags. Not physiological or clinical accuracy tolerances.",
   "morphologyGate": "Per preset/noise/SNR/filter/beat-kind/lead: mean, type7 p95 and maximum absolute error may not worsen beyond numerical slack. Native and post-acquisition chains separate. RMSE checked separately.",
@@ -23,11 +23,5 @@
     "primaryMeanRatio": 0.85,
     "rmseMeanRatio": 0.98,
     "role": "Explicit monitor-only migration selected using exposed development. Not preregistered clinical evidence. Preserve complete strict failures and old baseline."
-  },
-  "previousBaselineCommit": "aee59f64a35cdee76133113cfc0da216fc8832cd",
-  "baselineAmendment": {
-    "contract": "docs/qrs-coupled-repolarization-contract.json",
-    "reason": "Intentional PR43 clean-source migration for QRS-coupled secondary T in LBBB/PVC; previous baseline retained above for provenance.",
-    "clinicalValidation": false
   }
 }
