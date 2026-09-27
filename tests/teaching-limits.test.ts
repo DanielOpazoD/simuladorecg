@@ -29,7 +29,7 @@ describe("Specific teaching limits, not repaired physiology", () => {
     const aai=load('aai');aai.conduction='lbbb';
     expect(repolarizationLimitations(aai)).toEqual([SECONDARY_ST_RATIO_LIMIT]);
   });
-  it("documents the existing absence of WPW secondary T rather than synthesizing a substitute",()=>{
+  it("documents and produces the approximate WPW secondary T",()=>{
     const c=load('wpw');c.filter='off';c.variability=0;
     const preexcited=synthesize(c,10), control=synthesize({...c,conduction:'normal'},10);
     const b=preexcited.events.beats.find(b=>b.time>3)!;
@@ -40,7 +40,7 @@ describe("Specific teaching limits, not repaired physiology", () => {
       for(let i=Math.ceil((b.time+.210)*preexcited.fs);i<Math.floor((b.time+b.qt!)*preexcited.fs);i++)
         tChange=Math.max(tChange,Math.abs(preexcited.leads[lead][i]-control.leads[lead][i]));
     }
-    expect(qrsChange).toBeGreaterThan(.02);expect(tChange).toBe(0);
+    expect(qrsChange).toBeGreaterThan(.02);expect(tChange).toBeGreaterThan(.02);
     expect(caseContext(c).warnings).toContain(WPW_REPOLARIZATION_LIMIT);
   });
   it.each(['lbbb','vvi','ddd'])("%s exposes the non-proportional voltage response without calling it a diagnostic ratio",id=>{

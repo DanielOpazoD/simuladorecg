@@ -131,8 +131,6 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
         ? secondary.t.map((x) => x * secondaryScale) as Vec
         : primaryTv,
       lv = lesionVector(c);
-    if (secondary.st && secondaryScale !== 0)
-      for (let j=0;j<3;j++) lv[j] += secondary.st[j] * secondaryScale;
     add(b.time + dur - 0.012, qt - dur + 0.012, (u) => {
       const envelope = Math.min(
         1,
@@ -144,6 +142,12 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
       if (c.stShape === "convex") shape = 1 + 0.3 * Math.sin(Math.PI * u);
       return scale(lv, Math.max(0, envelope) * shape);
     });
+    if (secondary.st && tStart > b.time + dur + 0.012) {
+      const stStart = b.time + dur + 0.012, stLen = tStart - stStart;
+      add(stStart, stLen, (u) =>
+        scale(secondary.st!, Math.max(0, Math.min(1, u / 0.18, (1 - u) / 0.18))),
+      );
+    }
     add(tStart, tLen, (u) =>
       scale(tv, tWave(u, c.electrolyte === "hyperkalemia")),
     );

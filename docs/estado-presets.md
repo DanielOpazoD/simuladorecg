@@ -42,7 +42,7 @@ Ningún patrón se presenta como validado clínicamente. La columna «Estrategia
 | Hemibloqueo posterior izquierdo | aproximado | vectorial | Reproduce eje; no demuestra criterios clínicos excluyentes de HBPI. |
 | BRD + hemibloqueo anterior izquierdo | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
 | Bifascicular + BAV de primer grado | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
-| Preexcitación ventricular | aproximado | vectorial | Delta aproximada; sin vías accesorias anatómicas ni circuito AVRT. Preexcitación aproximada: la delta no modifica el ST-T secundario en este modelo. No uses esta T para aprender la repolarización típica de WPW. |
+| Preexcitación ventricular | aproximado | vectorial | Delta aproximada; sin vías accesorias anatómicas ni circuito AVRT. Preexcitación aproximada: ST-T secundario acoplado al vector delta sintético, sin vía accesoria anatómica ni calibración clínica. No uses esta T como criterio diagnóstico de WPW. |
 | Lesión inferior · predominio en III | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
 | Lesión inferior · predominio en II | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
 | Lesión anterior | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |

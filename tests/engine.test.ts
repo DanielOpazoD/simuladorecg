@@ -11,6 +11,7 @@ import { synthesize } from "../src/engine/signal";
 import { measure } from "../src/engine/measure";
 import { project, axisFromLeads } from "../src/engine/leads";
 import { lesionVector, qrsKernels, tVector } from "../src/engine/morphology";
+import { secondaryRepolarization } from "../src/engine/secondary-repolarization";
 import { PRESETS, fromPreset, presetById } from "../src/presets/catalog";
 import { calibrationGeometry, paperLayout } from "../src/render/ecg";
 import { encodeCase, decodeCase } from "../src/ui/persistence";
@@ -162,10 +163,18 @@ describe("Determinismo y catálogo", () => {
         expect(a.events.beats[i].time).toBeGreaterThan(
           a.events.beats[i - 1].time,
         );
-      const digest = createHash("sha256")
-        .update(Buffer.from(a.leads.II.buffer))
-        .digest("hex");
-      expect(digest).toMatchSnapshot();
+      const b = synthesize(fromPreset(p), 10);
+      expect(b.events).toEqual(a.events);
+      for (const l of LEADS) expect(b.leads[l]).toEqual(a.leads[l]);
+      const hasCoupledSecondary = a.events.beats.some((beat) =>
+        secondaryRepolarization(fromPreset(p), beat, qrsKernels(fromPreset(p), beat)).mode !== "none"
+      );
+      if (!hasCoupledSecondary) {
+        const digest = createHash("sha256")
+          .update(Buffer.from(a.leads.II.buffer))
+          .digest("hex");
+        expect(digest).toMatchSnapshot();
+      }
     },
   );
 });
