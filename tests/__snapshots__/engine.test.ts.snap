@@ -86,9 +86,9 @@ exports[`Determinismo y catálogo > rbbb produce muestras finitas, QRS ordenados
 
 exports[`Determinismo y catálogo > rsa produce muestras finitas, QRS ordenados y señal determinista 1`] = `"3771bfbbe830460ed90a32dd67a56137a496ed1aabc7a7584ff82281b84b792f"`;
 
-exports[`Determinismo y catálogo > rv_acute produce muestras finitas, QRS ordenados y señal determinista 1`] = `"71edb44f15314a2d676a37de30ad1f884c3ad6c4e6f1606c1023b9dc5b6a048f"`;
+exports[`Determinismo y catálogo > rv_acute produce muestras finitas, QRS ordenados y señal determinista 1`] = `"2758035e7080b409772b463cc8c939cf658fdc1009e28a1c612b20c47864d402"`;
 
-exports[`Determinismo y catálogo > rv_chronic produce muestras finitas, QRS ordenados y señal determinista 1`] = `"3ed705515b7133f00e3041f25c72a247b920569ede54b346eb65d1238e4f5468"`;
+exports[`Determinismo y catálogo > rv_chronic produce muestras finitas, QRS ordenados y señal determinista 1`] = `"af5d06c9a514cd042ba8b9a6c50f13d78f9896219d68dc36297f5c5b75f7ab68"`;
 
 exports[`Determinismo y catálogo > rv_infarct produce muestras finitas, QRS ordenados y señal determinista 1`] = `"70af9c54b0cfdd1f2a93f592835e9f620616b4d102e179ae4fa5d018133024d6"`;
 

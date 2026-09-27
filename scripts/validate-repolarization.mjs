@@ -10,6 +10,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 const BASE = '38c0cd31b5836c96c82556d756e8150cfde99c64';
+const AXIS_BASE = '5bafc2031e73048ff2f5d5e99f0b039d4ef1acca';
 const root = process.cwd(), args = process.argv.slice(2), options = {};
 for (let i=0;i<args.length;i+=2) {
  if (!['--baseline-dir','--output'].includes(args[i]) || !args[i+1]) throw new Error('Use --baseline-dir PATH and/or --output FILE');
@@ -25,10 +26,13 @@ try {
  }
  async function load(dir, name) {
    const outfile = path.join(temp, name+'.mjs');
-   await build({stdin:{contents:`export {synthesize} from './src/engine/signal'; export {measure} from './src/engine/measure'; export {fromPreset,presetById,PRESETS} from './src/presets/catalog';`,resolveDir:dir},bundle:true,platform:'node',format:'esm',outfile});
+   await build({stdin:{contents:`export {synthesize} from './src/engine/signal'; export {measure} from './src/engine/measure'; export {fromPreset,presetById,PRESETS} from './src/presets/catalog'; export {qrsKernels} from './src/engine/morphology'; export {project,axisFromLeads} from './src/engine/leads';`,resolveDir:dir},bundle:true,platform:'node',format:'esm',outfile});
    return import(pathToFileURL(outfile).href);
  }
- const [before, after] = await Promise.all([load(baseDir,'before'),load(root,'after')]);
+ const axisBaseDir = path.join(temp,'axis-base'); await mkdir(axisBaseDir);
+ const axisArchive = execFileSync('git',['archive',AXIS_BASE],{maxBuffer:100*1024*1024});
+ execFileSync('tar',['-xf','-','-C',axisBaseDir],{input:axisArchive});
+ const [before, axisBase, after] = await Promise.all([load(baseDir,'before'),load(axisBaseDir,'axis-base'),load(root,'after')]);
  const outfile = path.join(temp,'metrics.mjs');
  await build({entryPoints:[path.join(root,'tests/support/morphology-metrics.ts')],bundle:true,platform:'node',format:'esm',outfile});
  const {morphologyMetrics} = await import(pathToFileURL(outfile).href);
@@ -75,19 +79,35 @@ try {
  }
  // Explicitly reviewed v1.5 source changes. Never relax conservation for the other defaults.
  const changedSources = new Set(['pvc','bigeminy','trigeminy','couplet','idioventricular','aivr','vt','complete_v']);
+ const integratedAxis=(mod,c)=>{
+   const beat={time:0,rr:1,kind:'normal'}, ks=mod.qrsKernels(c,beat);
+   const sum=ks.reduce((a,k)=>a.map((v,j)=>v+k.v[j]*k.sigma),[0,0,0]);
+   const p=mod.project(sum); return mod.axisFromLeads(p.I,p.II);
+ };
+ const angleError=(a,b)=>Math.abs((((a-b)%360)+540)%360-180);
  const defaults=[];
  for(const p of after.PRESETS.filter(p=>p.strategy!=='pending')) {
-   const c=after.fromPreset(p),a=before.synthesize(c,10),b=after.synthesize(c,10);
+   const c=after.fromPreset(p),a=before.synthesize(c,10),r=axisBase.synthesize(c,10),b=after.synthesize(c,10);
    assertPeakOnlyChange(before.measure(b),after.measure(b));
-   const intendedSourceChange=changedSources.has(p.id), intendedRvGainChange=p.id==='rv_chronic';
-   const contract=intendedRvGainChange ? assertRvAmplitudeChange(before.synthesize,a,b,c)
-     : compareSignalContract(a,b,{exact:!intendedSourceChange,label:`default/${p.id}`});
-   // The historical source remains exact except for the independently verified RV gain correction.
-   const legacy=after.synthesize({...c,ventricularSource:'rv_apical_pacing'},10);
-   if(intendedRvGainChange) assertRvAmplitudeChange(before.synthesize,a,legacy,c);
-   else compareSignalContract(a,legacy,{exact:true,label:`legacy-source/${p.id}`});
-   if(intendedSourceChange) assert.ok(contract.maxDifferenceMv>.03,`missing source change ${p.id}`);
-   defaults.push({id:p.id,intendedSourceChange,intendedRvGainChange,legacySourceExact:!intendedRvGainChange,...contract});
+   const intendedSourceChange=changedSources.has(p.id), intendedRvGainChange=p.id==='rv_chronic',
+     intendedFinalAxisChange=p.id==='rv_acute'||p.id==='rv_chronic';
+   const historicalContract=intendedRvGainChange ? assertRvAmplitudeChange(before.synthesize,a,r,c)
+     : compareSignalContract(a,r,{exact:!intendedSourceChange,label:`historical/default/${p.id}`});
+   const contract=compareSignalContract(r,b,{exact:!intendedFinalAxisChange,label:`axis/default/${p.id}`});
+   if(intendedFinalAxisChange) {
+     assert.ok(contract.maxDifferenceMv>.001,`missing final-axis change ${p.id}`);
+     const oldAxis=integratedAxis(axisBase,c),newAxis=integratedAxis(after,c);
+     assert.ok(angleError(newAxis,c.axis)<1e-9,`final axis not aligned ${p.id}: ${newAxis}`);
+     assert.ok(angleError(oldAxis,c.axis)>1e-3,`axis baseline unexpectedly already aligned ${p.id}`);
+   }
+   // The legacy source path must obey the same reviewed-main boundary.
+   const legacyConfig={...c,ventricularSource:'rv_apical_pacing'};
+   const legacyBefore=axisBase.synthesize(legacyConfig,10),legacy=after.synthesize(legacyConfig,10);
+   const legacyContract=compareSignalContract(legacyBefore,legacy,{exact:!intendedFinalAxisChange,label:`axis/legacy-source/${p.id}`});
+   if(intendedSourceChange) assert.ok(historicalContract.maxDifferenceMv>.03,`missing source change ${p.id}`);
+   defaults.push({id:p.id,intendedSourceChange,intendedRvGainChange,intendedFinalAxisChange,
+     reviewedMainExact:!intendedFinalAxisChange,legacySourceExact:legacyContract.maxDifferenceMv===0,
+     historicalMaxDifferenceMv:historicalContract.maxDifferenceMv,...contract});
  }
  const output=options['--output'] || path.join(root,'.sites-runtime','repolarization-comparison.json');
  await mkdir(path.dirname(output),{recursive:true});

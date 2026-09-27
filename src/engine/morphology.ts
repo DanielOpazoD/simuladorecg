@@ -89,6 +89,23 @@ export function qrsKernels(c: ECGCase, beat: Beat): Kernel[] {
   }
   if (c.overload === "lv")
     for (const k of ks) for (let j = 0; j < 3; j++) k.v[j] *= 1.8;
+
+  // Transition and overload are applied after the initial axis alignment. Close
+  // that small drift so the final integrated QRS, not an intermediate vector,
+  // honors the requested/source frontal axis.
+  sum = [0, 0, 0];
+  for (const k of ks) for (let j = 0; j < 3; j++) sum[j] += k.v[j] * k.sigma;
+  const finalProjection = project(sum),
+    finalAxis = axisFromLeads(finalProjection.I, finalProjection.II),
+    finalRotation = target - finalAxis;
+  if (Math.abs(finalRotation) > 1e-10) {
+    for (const k of ks) {
+      const pr = project(k.v),
+        a = axisFromLeads(pr.I, pr.II) + finalRotation,
+        amp = Math.hypot(pr.I, (2 * pr.II - pr.I) / Math.sqrt(3));
+      k.v = frontal(a, amp, k.v[2]);
+    }
+  }
   return ks;
 }
 export function qrsDuration(c: ECGCase, b: Beat) {

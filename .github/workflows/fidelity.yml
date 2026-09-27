@@ -7,6 +7,38 @@ on:
 permissions:
   contents: read
 jobs:
+  amplitude-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        scope: [posterior, wpw, rv_acute, rv_chronic]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+          cache: npm
+      - run: npm ci
+      - name: Paired QRS amplitude regression (${{ matrix.scope }})
+        run: node scripts/validate-posterior-amplitude.mjs "${{ runner.temp }}/amplitude-${{ matrix.scope }}.json" --scope "${{ matrix.scope }}"
+      - name: Archive exact amplitude report
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/amplitude-evidence"
+          git archive HEAD | gzip > "$RUNNER_TEMP/amplitude-evidence/source.tar.gz"
+          git rev-parse HEAD > "$RUNNER_TEMP/amplitude-evidence/source-commit.txt"
+          cp "$RUNNER_TEMP/amplitude-${{ matrix.scope }}.json" "$RUNNER_TEMP/amplitude-evidence/" 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: qrs-amplitude-${{ matrix.scope }}-${{ github.sha }}
+          path: ${{ runner.temp }}/amplitude-evidence/
+          retention-days: 14
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -28,8 +60,8 @@ jobs:
         run: npm run build
       - name: Matched repolarization comparison and detector freeze
         run: node scripts/validate-repolarization.mjs --output "${{ runner.temp }}/repolarization-comparison.json"
-      - name: Paired posterior, WPW and RV QRS amplitude regression
-        run: node scripts/validate-posterior-amplitude.mjs "${{ runner.temp }}/posterior-amplitude-results.json"
+      - name: Complete historical and current 61-preset by four-filter comparison
+        run: node scripts/validate-posterior-amplitude.mjs "${{ runner.temp }}/qrs-default-results.json" --scope defaults
       - name: Install isolated browser test dependency
         run: |
           npm install --no-save --package-lock=false playwright@1.63.0
