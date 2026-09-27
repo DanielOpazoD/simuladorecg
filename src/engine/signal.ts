@@ -339,7 +339,13 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
       pr: hasPR && c.av !== "mobitz1" ? c.pr : null,
       qrs: bs.length ? widths[Math.floor(widths.length / 2)] : null,
       qt: bs.length ? median(bs.map((b) => b.qt! * 1000)) : null,
-      axis: bs.length ? (allV ? ventricularSource(c, bs[0])!.axis : c.axis) : null,
+      axis: bs.length
+        ? c.rhythm === "torsades"
+          ? null
+          : allV
+            ? ventricularSource(c, bs[0])!.axis
+            : c.axis
+        : null,
     },
     warnings: constraints(c),
   };

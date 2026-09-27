@@ -132,6 +132,11 @@ export function auditMeasurement(
       "pr",
       "La referencia presenta PR variable o ausencia de asociación AV; no se acepta un PR global.",
     );
+  if (m.axis !== null && ref.axis === null)
+    reject(
+      "axis",
+      "La referencia no define un eje ventricular global estable; revisa los complejos individualmente.",
+    );
   if (m.qrs === null) {
     if (m.axis !== null)
       reject("axis", "El eje requiere límites QRS aceptables.");
