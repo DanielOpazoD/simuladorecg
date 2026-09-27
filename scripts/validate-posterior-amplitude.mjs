@@ -37,7 +37,19 @@ try {
       : (assertExactSignal(a, reviewed, `historical/default/${preset.id}/${filter}`), null);
     const finalAxis = ['rv_acute', 'rv_chronic'].includes(preset.id)
       ? assertFinalQrsAxisChange(axisBase, reviewed, b, c)
-      : (assertExactSignal(reviewed, b, `current/default/${preset.id}/${filter}`), null);
+      : preset.id === 'torsades'
+        ? (() => {
+            for (const lead of Object.keys(reviewed.leads))
+              assert.deepEqual(reviewed.leads[lead], b.leads[lead], `current/default/torsades/${filter}: ${lead} samples changed`);
+            assert.deepEqual(reviewed.events, b.events, `current/default/torsades/${filter}: events changed`);
+            assert.deepEqual(reviewed.warnings, b.warnings, `current/default/torsades/${filter}: warnings changed`);
+            assert.deepEqual({...reviewed.truth, axis: null}, b.truth,
+              `current/default/torsades/${filter}: only truth.axis may change`);
+            assert.notEqual(reviewed.truth.axis, null, 'Reviewed torsades baseline must reproduce the former fixed axis');
+            assert.equal(b.truth.axis, null, 'Current torsades must not publish a global axis');
+            return {kind:'torsades-global-axis-withdrawal', from:reviewed.truth.axis, to:null};
+          })()
+        : (assertExactSignal(reviewed, b, `current/default/${preset.id}/${filter}`), null);
     defaults.push({preset: preset.id, filter, historicalExact: historical === null,
       exact: historical === null && finalAxis === null, reviewedMainExact: finalAxis === null,
       historical, finalAxis});
@@ -45,7 +57,22 @@ try {
   if (scope === 'all' || scope === 'defaults') {
     assert.equal(defaults.length, 244, 'Require all 61 presets and four filters');
     assert.equal(defaults.filter(r => r.historicalExact).length, 240);
-    assert.equal(defaults.filter(r => r.reviewedMainExact).length, 236);
+    const expectedRv = new Set(filters.flatMap(filter => ['rv_acute', 'rv_chronic'].map(preset => `${preset}/${filter}`)));
+    const expectedTorsades = new Set(filters.map(filter => `torsades/${filter}`));
+    const rvChanges = defaults
+      .filter(r => ['rv_acute', 'rv_chronic'].includes(r.preset) && r.finalAxis !== null)
+      .map(r => `${r.preset}/${r.filter}`);
+    const torsadesChanges = defaults
+      .filter(r => r.preset === 'torsades' && r.finalAxis?.kind === 'torsades-global-axis-withdrawal')
+      .map(r => `${r.preset}/${r.filter}`);
+    const unexpected = defaults.filter(r =>
+      r.finalAxis !== null &&
+      !['rv_acute', 'rv_chronic', 'torsades'].includes(r.preset)
+    );
+    assert.deepEqual(new Set(rvChanges), expectedRv, 'All and only the eight reviewed RV traces must satisfy the dedicated axis oracle');
+    assert.deepEqual(new Set(torsadesChanges), expectedTorsades, 'All and only four torsades filters may withdraw truth.axis');
+    assert.deepEqual(unexpected, [], 'No other preset/filter may change after the reviewed main baseline');
+    assert.equal(defaults.filter(r => r.finalAxis === null).length, 232, 'Every other preset/filter must remain exact');
   }
   const rows = [];
   const historical = before;
