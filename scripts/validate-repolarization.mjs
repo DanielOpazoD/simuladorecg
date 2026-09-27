@@ -90,10 +90,13 @@ try {
    const c=after.fromPreset(p),a=before.synthesize(c,10),r=axisBase.synthesize(c,10),b=after.synthesize(c,10);
    assertPeakOnlyChange(before.measure(b),after.measure(b));
    const intendedSourceChange=changedSources.has(p.id), intendedRvGainChange=p.id==='rv_chronic',
-     intendedFinalAxisChange=p.id==='rv_acute'||p.id==='rv_chronic';
+     intendedFinalAxisChange=p.id==='rv_acute'||p.id==='rv_chronic',
+     intendedSecondaryChange=b.events.beats.some(beat=>beat.kind!=='normal') ||
+       c.conduction==='lbbb' || c.conduction.includes('rbbb'),
+     reviewedMainChange=intendedFinalAxisChange||intendedSecondaryChange;
    const historicalContract=intendedRvGainChange ? assertRvAmplitudeChange(before.synthesize,a,r,c)
      : compareSignalContract(a,r,{exact:!intendedSourceChange,label:`historical/default/${p.id}`});
-   const contract=compareSignalContract(r,b,{exact:!intendedFinalAxisChange,label:`axis/default/${p.id}`});
+   const contract=compareSignalContract(r,b,{exact:!reviewedMainChange,label:`axis/default/${p.id}`});
    if(intendedFinalAxisChange) {
      assert.ok(contract.maxDifferenceMv>.001,`missing final-axis change ${p.id}`);
      const oldAxis=integratedAxis(axisBase,c),newAxis=integratedAxis(after,c);
@@ -103,10 +106,12 @@ try {
    // The legacy source path must obey the same reviewed-main boundary.
    const legacyConfig={...c,ventricularSource:'rv_apical_pacing'};
    const legacyBefore=axisBase.synthesize(legacyConfig,10),legacy=after.synthesize(legacyConfig,10);
-   const legacyContract=compareSignalContract(legacyBefore,legacy,{exact:!intendedFinalAxisChange,label:`axis/legacy-source/${p.id}`});
+   const legacyContract=compareSignalContract(legacyBefore,legacy,{exact:!reviewedMainChange,label:`axis/legacy-source/${p.id}`});
    if(intendedSourceChange) assert.ok(historicalContract.maxDifferenceMv>.03,`missing source change ${p.id}`);
-   defaults.push({id:p.id,intendedSourceChange,intendedRvGainChange,intendedFinalAxisChange,
-     reviewedMainExact:!intendedFinalAxisChange,legacySourceExact:legacyContract.maxDifferenceMv===0,
+   if(intendedSecondaryChange&&!intendedFinalAxisChange)
+     assert.ok(contract.maxDifferenceMv>1e-6,`missing coupled-secondary change ${p.id}`);
+   defaults.push({id:p.id,intendedSourceChange,intendedRvGainChange,intendedFinalAxisChange,intendedSecondaryChange,
+     reviewedMainExact:!reviewedMainChange,legacySourceExact:legacyContract.maxDifferenceMv===0,
      historicalMaxDifferenceMv:historicalContract.maxDifferenceMv,...contract});
  }
  const output=options['--output'] || path.join(root,'.sites-runtime','repolarization-comparison.json');

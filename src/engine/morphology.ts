@@ -169,21 +169,17 @@ export function tVector(c: ECGCase, b: Beat): Vec {
   if (!regionalTerritory(c, b) && c.phase === "evolving" && c.ischemia !== "none") amp = 1 - 2 * phaseBlend;
   const source = ventricularSource(c, b);
   const ventricular = source !== null;
+  // Preserve the public morphology helper contract. The final synthesizer replaces
+  // these legacy fixed secondary vectors with QRS-coupled vectors.
   if (c.conduction === "lbbb" || ventricular)
     v = frontal(
       (source ? source.axis : c.axis) + 180,
       T_REFERENCE_AMPLITUDE * 0.9,
       source ? source.secondaryTZ : -0.15,
     );
-  if (
-    !ventricular &&
-    (c.conduction.includes("rbbb") || c.conduction === "irbbb")
-  )
+  if (!ventricular && (c.conduction.includes("rbbb") || c.conduction === "irbbb"))
     v = [0.18, 0.12, 0.27];
-  if (
-    !ventricular &&
-    (c.overload === "rv_chronic" || c.overload === "rv_acute")
-  )
+  if (!ventricular && (c.overload === "rv_chronic" || c.overload === "rv_acute"))
     v = [0.12, 0.04, 0.42];
   if (!ventricular && c.overload === "lv") v = [-0.3, -0.08, 0.15];
   if (c.electrolyte === "hyperkalemia") amp = 2.6;

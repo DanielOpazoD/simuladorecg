@@ -1,0 +1,17 @@
+# Acoplamiento QRS → repolarización secundaria
+
+La versión previa usaba plantillas T fijas para varios trastornos de activación. Este bloque deriva la repolarización secundaria desde los mismos kernels QRS finales de cada latido.
+
+- BRI y activación ventricular: oposición al QRS integrado.
+- BRD/BRD incompleto: oposición al componente terminal retardado.
+- Conducción normal: sin capa secundaria nueva.
+- Isquemia, electrolitos y sobrecarga siguen separadas.
+
+AHA/ACCF/HRS describe T secundarios generalmente opuestos al QRS medio en BRI, al componente terminal en BRD y a la delta en preexcitación. La magnitud depende de la alteración QRS. Esta implementación es una aproximación vectorial educativa, no un modelo celular ni una regla diagnóstica calibrada.
+
+Referencias: Surawicz et al., Circulation 2009;119:e235-e240, doi:10.1161/CIRCULATIONAHA.108.191095. Rautaharju et al., Circulation 2009;119:e241-e250, doi:10.1161/CIRCULATIONAHA.108.191096. Potse et al., Europace 2017; PMID 28011826.
+
+
+## Alcance v1
+
+Este PR acopla exclusivamente la **onda T secundaria** al QRS final. El segmento ST secundario permanece con el comportamiento histórico. Se separa deliberadamente para no mezclar este cambio con calibración ST/QRS o criterios de Sgarbossa; ese problema requiere un bloque y protocolo propios.

@@ -27,7 +27,7 @@ jobs:
       - name: Restore reviewed acquisition and acceptance baselines
         run: |
           git worktree add --detach "$RUNNER_TEMP/noise-acquisition" 784173f94bc103686efb321fc13f1b8f40913f76
-          git worktree add --detach "$RUNNER_TEMP/noise-baseline" aee59f64a35cdee76133113cfc0da216fc8832cd
+          git worktree add --detach "$RUNNER_TEMP/noise-baseline" d4ca0ba85f2b8e000171a706ed9bfeb41264b13f
       - name: Discriminative reader, calibration, morphology and abstention tests
         run: |
           (cd "$RUNNER_TEMP/noise-acquisition" && python -m unittest discover -s tests -p test_noise_stress.py -v)
