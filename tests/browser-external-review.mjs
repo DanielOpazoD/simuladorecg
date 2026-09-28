@@ -54,10 +54,19 @@ try {
   await page.locator('#manual-canvas').press('ArrowLeft');await page.locator('#manual-canvas').press('Shift+ArrowRight');
   assert.equal(Number(await page.locator('#manual-readout').getAttribute('data-ms')),expected+20);
   await page.locator('#manual-canvas').press('Shift+ArrowLeft');
+  // The canvas bitmap, client rectangle and Playwright's padding-box origin
+  // must coincide. A decorative border used to shift the 390px click by 2 samples.
+  const canvasInsets=await page.locator('#manual-canvas').evaluate(c=>{
+    const s=getComputedStyle(c);
+    return ['borderLeftWidth','borderRightWidth','borderTopWidth','borderBottomWidth',
+      'paddingLeft','paddingRight','paddingTop','paddingBottom'].map(k=>parseFloat(s[k]));
+  });
+  assert.deepEqual(canvasInsets,Array(8).fill(0),'Manual canvas decoration must not offset the sample grid');
   // Pointer uses the same absolute sample grid at either viewport.
   await page.locator('#manual-canvas').scrollIntoViewIfNeeded();
   const point=await page.locator('#manual-canvas').evaluate((c,sample)=>{const w=parseFloat(c.style.width),b=c.getBoundingClientRect();return{x:(38+(sample-500)/399*(w-54))*b.width/w,y:b.height/2};},qrs.offset+5);
   await page.locator('#manual-canvas').click({position:point});assert.equal(Number(await page.locator('#manual-end-sample').inputValue()),qrs.offset+5);
+  assert.equal(Number(await page.locator('#manual-readout').getAttribute('data-ms')),expected+10);
   await field('manual-end-sample',qrs.onset);assert.equal(await page.locator('[data-review=save]').isDisabled(),true);
   await field('manual-end-sample',qrs.offset);await page.locator('[data-review=save]').click();
   const saved=await sidecar('saved');assert.equal(saved.annotations.length,1);assert.equal(saved.annotations[0].origin,'manual');
