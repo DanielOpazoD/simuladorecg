@@ -3,7 +3,9 @@ import {chromium,firefox,webkit} from 'playwright';
 import assert from 'node:assert/strict';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
+import {isLocalGet} from './support/browser-request-policy.mjs';
 const url=process.env.ECG_TEST_URL||'http://127.0.0.1:5173/';
+const origin=new URL(url).origin;
 const out=resolve(process.env.ECG_EVIDENCE_DIR||'.sites-runtime/accessibility');
 await mkdir(out,{recursive:true});
 const info=JSON.parse(await readFile('dist/build-info.json','utf8'));
@@ -132,7 +134,7 @@ for(const engine of [chromium,webkit,firefox]) {
         // Repeated open/close cannot leave modal background inert or retain the cleared editor.
         for(let n=0;n<2;n++){await key('[data-action=external]');await page.keyboard.press('Escape');await page.locator('#external-lab').waitFor({state:'hidden'});await active('[data-action=external]');}
         assert.equal(await page.locator('.workspace').evaluate(e=>e.inert),false);
-        assert.deepEqual(requests.filter(r=>r.method!=='GET'||!r.url.startsWith(new URL(url).origin)),[]);
+        assert.deepEqual(requests.filter(r=>!isLocalGet(r,origin)),[],'No data upload or third-party request; local blob downloads are reads');
         assert.deepEqual(errors,[]);assert.deepEqual(warnings,[]);
         results.push({engine:engine.name(),version:browser.version(),width,build:info,externalFit,comparisonFit,layouts,samplesVerified:120000,keyboard:true,pointer:width===390&&engine.name()!=='firefox'?'emulated-touch':'mouse',stepMs:2,pointerSample:point.sample,manualMs:(point.sample-640)*2,downloads:6,errors,warnings});
         await writeFile(resolve(out,'accessibility-results.json'),JSON.stringify({results,physicalDevice:false,screenReaderTested:false,zoomNote:'320/720 CSS-pixel reflow; not native browser zoom',wcagCertification:false},null,2));
