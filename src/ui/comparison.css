@@ -35,3 +35,13 @@
   .comparison-lab button, .comparison-lab select, .comparison-lab input { min-height: 44px; }
 }
 @media print { .comparison-lab { display: none !important; } }
+
+/* Scoped A15: navigate between existing workspaces, not a new shell or router. */
+.comparison-navigation { display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; }
+.comparison-navigation button { max-width:100%; }
+.comparison-provenance { margin:14px 0; font-size:13px; line-height:1.6; }
+.comparison-provenance code { overflow-wrap:anywhere; }
+.comparison-provenance p { margin:8px 0; }
+.comparison-controls label { min-width:0; max-width:100%; }
+.comparison-results td { vertical-align:top; }
+@media(max-width:800px) { .comparison-navigation { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); } }
