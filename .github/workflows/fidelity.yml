@@ -58,6 +58,8 @@ jobs:
         run: node --test tests/noise-regression.node.mjs tests/t-peak-revision.node.mjs > "${{ runner.temp }}/noise-regression.tap"
       - name: Types and production build
         run: npm run build
+      - name: Independent repolarization scope against frozen main
+        run: node scripts/validate-repolarization-scope.mjs "${{ runner.temp }}/repolarization-scope-results.json"
       - name: Matched repolarization comparison and detector freeze
         run: node scripts/validate-repolarization.mjs --output "${{ runner.temp }}/repolarization-comparison.json"
       - name: Complete historical and current 61-preset by four-filter comparison
