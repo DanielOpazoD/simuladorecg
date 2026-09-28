@@ -1,6 +1,8 @@
 import "./style.css";
 import { APP_VERSION } from "./ui/version";
 import { ComparisonLab } from "./ui/comparison-lab";
+import { captureTrace } from "./ui/comparison-model";
+import { ExternalLab } from "./ui/external-lab";
 import {
   DEFAULT_CASE,
   cloneCase,
@@ -95,7 +97,19 @@ function toast(message: string) {
   $("#toast").classList.add("visible");
   toastTimer = window.setTimeout(clearToast, 3500);
 }
-const comparison = new ComparisonLab($("#comparison-lab"), toast);
+const comparison = new ComparisonLab($("#comparison-lab"), toast, {
+  currentSynthetic: () => session.canExport && session.signal && session.measurement && (!quiz || quiz.answer)
+    ? captureTrace(c, session.signal, session.measurement) : null,
+  openExternal: () => { if (!quiz || quiz.answer) external.open(); },
+  focusSynthetic: () => { $("#canvas-wrap").scrollIntoView({block:"center"}); $("#ecg").focus({preventScroll:true}); },
+});
+const external = new ExternalLab((slot, trace) => {
+  comparison.acceptExternal(slot, trace);
+  external.park();
+  comparison.focus();
+});
+$(".trace-tools").insertAdjacentHTML("beforeend", btn("external", "Abrir señal", "book"));
+
 function currentPreset() {
   return caseContext(c).preset;
 }
@@ -337,7 +351,8 @@ function syncTraceTools() {
   waves.classList.toggle("active", ready && paper && annotations);
   waves.setAttribute("aria-pressed", String(ready && paper && annotations));
   $<HTMLButtonElement>('[data-action="focus"]').disabled = !ready;
-  $<HTMLButtonElement>('[data-action="compare"]').disabled = !ready || !!quiz && !quiz.answer;
+  $<HTMLButtonElement>('[data-action="compare"]').disabled = !!quiz && !quiz.answer;
+  $<HTMLButtonElement>('[data-action="external"]').disabled = !!quiz && !quiz.answer;
   const caliperButton = $<HTMLButtonElement>('[data-action="caliper"]');
   caliperButton.disabled = monitorMode || !ready;
   caliperButton.classList.toggle("active", measuring);
@@ -629,6 +644,7 @@ function exportDialog() {
 }
 function renderQuiz() {
   comparison.conceal(!!quiz && !quiz.answer);
+  if (quiz && !quiz.answer) external.discard();
   const panel = $("#quiz-panel");
   panel.hidden = !quiz;
   if (!quiz) return;
@@ -690,7 +706,8 @@ document.addEventListener("click", async (e) => {
   }
   const action = target.closest<HTMLElement>("[data-action]")?.dataset.action;
   if (!action) return;
-  if (action === "compare" && session.canExport && (!quiz || quiz.answer)) comparison.focus();
+  if (action === "compare" && (!quiz || quiz.answer)) comparison.focus();
+  if (action === "external" && (!quiz || quiz.answer)) external.open();
   if (action === "focus") {
     annotations = true;
     draw();

@@ -10,6 +10,7 @@ import { fingerprintECG, type SignalIdentity } from '../io/external-review';
 import { ExternalReviewEditor } from './external-review-editor';
 import { validateExternalReply, type ExternalReply } from './external-protocol';
 import { buildProvenance } from './build-provenance';
+import { captureExternalTrace, type ExternalComparisonTrace } from './comparison-model';
 
 const value = (v: number | null) => v === null || !Number.isFinite(v) ? '—' : v.toFixed(1);
 const status = (s: string) => s === 'usable' ? 'Consistente*' : s === 'review' ? 'Revisar' : 'No estimable';
@@ -29,17 +30,18 @@ export class ExternalLab {
   private timer = 0;
   private busy = false;
   private message = '';
-  constructor() {
+  private parked = false;
+  constructor(private readonly compare?: (slot:'A'|'B', trace:ExternalComparisonTrace) => void) {
     this.dialog.id = 'external-lab'; this.dialog.className = 'external-lab';
     this.dialog.setAttribute('aria-labelledby', 'external-title');
     document.body.append(this.dialog);
-    this.dialog.addEventListener('close', () => { if (!this.dialog.open) this.clear(); });
+    this.dialog.addEventListener('close', () => { if (!this.dialog.open && !this.parked) this.clear(); });
     this.dialog.addEventListener('input', e => {
       if ((e.target as HTMLElement).id !== 'external-start' || !this.record) return;
       this.cancel(); this.measurement = null; this.assessment = null; this.review?.setAnalysis(null, 0);
       this.dialog.querySelector('#external-analysis')?.remove();
       this.dialog.querySelector('#external-aptitude')?.remove();
-      this.dialog.querySelectorAll<HTMLButtonElement>('[data-external=png],[data-external=json]').forEach(b => { b.disabled = true; });
+      this.dialog.querySelectorAll<HTMLButtonElement>('[data-external=png],[data-external=json],[data-external=compare-a],[data-external=compare-b]').forEach(b => { b.disabled = true; });
       this.message = 'Inicio modificado: se retiraron medidas y marcas. Pulsa Analizar 10 s.'; this.notify(); this.draw();
     });
     this.dialog.addEventListener('click', e => this.click((e.target as HTMLElement).closest<HTMLButtonElement>('[data-external]')?.dataset.external));
@@ -47,6 +49,7 @@ export class ExternalLab {
   }
   open() {
     if (this.dialog.open) return;
+    if (this.parked) {this.parked=false;this.dialog.showModal();return;}
     this.clear();
     this.dialog.innerHTML = `<div class="external-heading"><div><div class="section-label">LECTOR DE SEÑALES DIGITALES</div><h2 id="external-title">Del archivo al trazado</h2></div><button class="btn" data-external="close">Cerrar y borrar</button></div>
       <p class="dialog-lead">Abre un CSV o selecciona juntos un .hea y su .dat. No digitaliza imágenes/PDF. Este espacio es independiente del simulador: no asigna diagnósticos ni referencias sintéticas.</p>
@@ -55,13 +58,16 @@ export class ExternalLab {
       <label>Unidad del CSV*<select id="external-unit"><option value="">Declarar…</option><option value="mV">mV</option><option value="uV">µV</option></select></label>
       <button class="btn primary" data-external="load">Abrir archivos</button></div>
       <p class="control-note">*Solo para CSV sin metadatos. CSV: columnas I, II, III, aVR, aVL, aVF, V1–V6; time_s opcional, decimal con punto, separador coma. WFDB: formato 16 multiplexado, ganancia/unidades explícitas, checksum; sin offsets, skew ni segmentos. Doce canales completos, 100–1000 Hz, 10–60 s. No se rellenan ni se fabrican derivaciones.</p>
-      <details><summary>Privacidad y límites</summary><p class="control-note">Lectura y análisis en un worker local, sin subir archivos ni guardarlos en el navegador. Cerrar o borrar libera el registro. No se copian comentarios del encabezado, nombres de paciente ni nombres de archivo a las exportaciones. Las señales exportadas pueden seguir siendo datos sensibles: usa datos autorizados y desidentificados. Integridad de archivo no equivale a autenticidad ni validez clínica. El analizador es exploratorio y no está validado para tomar decisiones clínicas.</p></details>
+      <details><summary>Privacidad y límites</summary><p class="control-note">Lectura y análisis en un worker local, sin subir archivos ni guardarlos en el navegador. Cerrar o borrar libera el registro del lector. Si copiaste un tramo a A/B, esa copia permanece allí hasta «Borrar copias A/B» o iniciar práctica. No se copian comentarios del encabezado, nombres de paciente ni nombres de archivo a las exportaciones. Las señales exportadas pueden seguir siendo datos sensibles: usa datos autorizados y desidentificados. Integridad de archivo no equivale a autenticidad ni validez clínica. El analizador es exploratorio y no está validado para tomar decisiones clínicas.</p></details>
       <p id="external-message" class="external-message" role="status" aria-live="polite"></p><div id="external-results"></div>`;
     this.dialog.showModal();
   }
+  /** Navigation hides, but does not reset, the reader or its manual history. */
+  park() {if (this.dialog.open) {this.parked=true;this.dialog.close();}}
+  discard() {this.parked=false;if(this.dialog.open)this.dialog.close();this.clear();}
   private cancel() { this.epoch++; this.worker?.terminate(); this.worker = null; window.clearTimeout(this.timer); this.busy = false; }
   private forgetRecord() { this.record = null; this.measurement = null; this.assessment = null; this.identity = null; this.review?.destroy(); this.review = null; }
-  private clear() { this.cancel(); this.forgetRecord(); this.message = ''; this.view = {start:0, offset:0, seconds:2, range:2, marks:false}; this.dialog.innerHTML = ''; }
+  private clear() { this.parked=false;this.cancel(); this.forgetRecord(); this.message = ''; this.view = {start:0, offset:0, seconds:2, range:2, marks:false}; this.dialog.innerHTML = ''; }
   private notify() { const el = this.dialog.querySelector('#external-message'); if (el) el.textContent = this.message; }
   private run(kind: 'read' | 'analyze', request: object, accept: (data: ExternalReply) => void) {
     this.cancel(); const epoch = this.epoch, startSample = kind === 'read' ? 0 : Math.round(this.view.start * this.record!.fs);
@@ -100,6 +106,14 @@ export class ExternalLab {
       if (action === 'clear') {
         this.cancel(); this.forgetRecord(); this.message = 'Archivo borrado de esta sesión.';
         this.dialog.querySelector<HTMLInputElement>('#external-files')!.value = ''; this.render(); return;
+      }
+      if ((action === 'compare-a' || action === 'compare-b') && this.compare) {
+        if (!this.record || !this.identity || !this.assessment || this.busy)
+          throw Error('Espera una ventana verificada antes de copiar a A/B.');
+        const snapshot = captureExternalTrace({record:this.record, identity:this.identity,
+          assessment:this.assessment, measurement:this.measurement, startSample:Math.round(this.view.start*this.record.fs)});
+        this.compare(action==='compare-a'?'A':'B', snapshot);
+        return;
       }
       if (action === 'load') {
         const files = Array.from(this.dialog.querySelector<HTMLInputElement>('#external-files')!.files ?? []);
@@ -183,6 +197,9 @@ export class ExternalLab {
       <label class="external-check"><input id="external-marks" type="checkbox" ${this.view.marks?'checked':''}/>Marcas automáticas</label></div>
       <div class="external-scroll" tabindex="0" role="region" aria-label="Doce derivaciones importadas; desplaza sólo el gráfico"><canvas id="external-canvas" role="img"></canvas></div><p id="external-clipping" class="control-note"></p>
       <div class="external-actions"><button class="btn" data-external="csv">Exportar CSV completo</button><button class="btn" data-external="json" ${assessment && !this.busy ? '' : 'disabled'}>Informe JSON · 10 s</button><button class="btn" data-external="png" ${assessment && !this.busy ? '' : 'disabled'}>Exportar PNG</button></div>
+      ${this.compare ? `<section class="external-comparison-transfer" aria-label="Copiar un tramo al comparador">
+      <h3>Comparar sin salir de tu revisión</h3><p class="control-note">Copia el tramo de 10 s que comienza en ${this.view.start.toFixed(3)} s. El lector y sus anotaciones quedan abiertos en memoria al navegar a A/B. Cambiar archivo no modifica las copias ya fijadas. A/B no recalcula ni reemplaza anotaciones manuales.</p>
+      <div class="external-actions"><button class="btn" data-external="compare-a" ${assessment && !this.busy ? '' : 'disabled'}>Copiar tramo como A</button><button class="btn" data-external="compare-b" ${assessment && !this.busy ? '' : 'disabled'}>Copiar tramo como B</button></div></section>` : ''}
       <div id="external-manual-host"></div>
       ${m ? `<div id="external-analysis"><h3>Estimaciones de ${this.view.start.toFixed(3)} a ${(this.view.start+10).toFixed(3)} s</h3><p class="control-note">*Consistente describe repetibilidad interna, no exactitud clínica. No se utiliza la referencia de los casos sintéticos ni se completa un valor ausente. La detección usa I, II, V1 y V5: las marcas son globales, no anotaciones por derivación.</p>
       <div class="external-table"><table id="external-metrics"><thead><tr><th>Variable</th><th>Estimación</th><th>Estado</th><th>Soporte / motivo</th></tr></thead><tbody>${rows.map(([key,label,unit])=>`<tr><td>${label}</td><td>${value(m[key])} ${unit}</td><td>${status(m.evidence[key].status)}</td><td>${m.evidence[key].count}/${m.evidence[key].total} · ${esc(m.evidence[key].reason)}</td></tr>`).join('')}</tbody></table></div>

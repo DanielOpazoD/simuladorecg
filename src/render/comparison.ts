@@ -1,5 +1,5 @@
 import { LEADS } from '../engine/types';
-import { comparisonWindow, type ComparisonTrace, type ComparisonView } from '../ui/comparison-model';
+import { comparisonWindow, traceName, traceStart, type ComparisonTrace, type ComparisonView } from '../ui/comparison-model';
 
 /** A and B always use one mapping from seconds/mV to pixels. No normalization. */
 export function comparisonLayout(width: number, rangeMv: number, duration: number) {
@@ -20,11 +20,13 @@ export function renderComparison(canvas: HTMLCanvasElement, a: ComparisonTrace, 
   const text = (value:string,x:number,y:number,bold=false,size=12) => {
     ctx.fillStyle = '#253642'; ctx.font = `${bold?600:400} ${size}px system-ui, sans-serif`; ctx.fillText(value,x,y);
   };
-  text('ECG LAB · COMPARACIÓN A/B · SEÑALES SINTÉTICAS',18,24,true,15);
-  text('A ··· ' + a.case.name.slice(0,65),18,47,true);
-  text('B ━ ' + b.case.name.slice(0,65),g.width/2+13,47,true);
+  text(`ECG LAB · COMPARACIÓN A/B · ${a.sourceKind === 'synthetic' && b.sourceKind === 'synthetic' ? 'SEÑALES SINTÉTICAS' : 'ORÍGENES DECLARADOS'}`,18,24,true,15);
+  text('A ··· ' + traceName(a).slice(0,65),18,47,true);
+  text('B ━ ' + traceName(b).slice(0,65),g.width/2+13,47,true);
   text(`Misma escala ±${view.rangeMv} mV · cada división vertical = 0,5 mV · tiempo sin estirar`,18,68);
-  text(view.alignment === 'beat' ? 'Origen: QRS del generador; no es una detección clínica. Marcas relativas al origen.' : `Tiempo de registro: ${window.startA.toFixed(1)}–${(window.startA+window.duration).toFixed(1)} s. No alinea latidos automáticamente.`,18,85);
+  text(view.alignment === 'beat' ? 'Origen: QRS del generador; no es una detección clínica. Marcas relativas al origen.'
+    : view.alignment === 'manual' ? 'Orígenes manuales por muestra. No implican un límite QRS detectado. Tiempo relativo a cada origen.'
+    : `Tiempo relativo al tramo: ${window.startA.toFixed(1)}–${(window.startA+window.duration).toFixed(1)} s. Sin emparejamiento automático.`,18,85);
   let clippedA = 0, clippedB = 0;
   LEADS.forEach((lead,index) => {
     const col = index < 6 ? 0 : 1, r = index % 6, left = g.margin+col*(g.cell+g.gap), top = g.top+r*g.row;
@@ -61,8 +63,8 @@ export function renderComparison(canvas: HTMLCanvasElement, a: ComparisonTrace, 
     if (r===5) for (let i=0;i<=window.duration+1e-8;i+=.2)
       text((window.axisStart+i).toFixed(1),x+i*g.pxPerSecond-8,top+g.row+12,false,10);
   });
-  text(`A: ${window.startA.toFixed(3)} s · B: ${window.startB.toFixed(3)} s · ${a.signal.fs} muestras/s · valores originales en mV`,18,676);
+  text(`Origen en cada registro: A ${(traceStart(a)+window.startA).toFixed(3)} s · B ${(traceStart(b)+window.startB).toFixed(3)} s · ${a.signal.fs} Hz · muestras originales mV`,18,676);
   text(`Sin validación clínica. ${clippedA+clippedB ? 'Hay muestras fuera del rango vertical: amplía la escala.' : 'No es papel calibrado para imprimir a 25 mm/s.'}`,18,696);
-  canvas.setAttribute('aria-label',`Comparación de doce derivaciones. A: ${a.case.name}. B: ${b.case.name}. Escala compartida ±${view.rangeMv} mV. Línea discontinua A y continua B. ${view.alignment==='beat'?'QRS sintéticos alineados sin estirar tiempo.':'Tiempo de registro compartido.'}`);
+  canvas.setAttribute('aria-label',`Comparación de doce derivaciones. A: ${traceName(a)}. B: ${traceName(b)}. Escala compartida ±${view.rangeMv} mV. Línea discontinua A y continua B. ${view.alignment==='beat'?'QRS sintéticos alineados sin estirar tiempo.':view.alignment==='manual'?'Orígenes manuales, sin remuestreo.':'Tiempo relativo al tramo copiado.'}`);
   return {clippedA,clippedB,window,geometry:g};
 }
