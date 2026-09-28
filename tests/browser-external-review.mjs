@@ -109,7 +109,9 @@ try {
   await page.waitForFunction(()=>document.querySelector('#external-message').textContent.includes('Respuesta del worker inválida'));
   assert.equal(await page.locator('#external-metrics').count(),0);assert.equal(await page.locator('#external-review').count(),0);
   await page.evaluate(()=>window.__badExternalIdentity=false);await load(wfdb);await ready();
-  await page.locator('[data-external=close]').click();assert.equal(await page.locator('#external-review').count(),0);
+  await page.locator('[data-external=close]').click();
+  await page.locator('#external-review').waitFor({state:'detached'}); // Native dialog close dispatches its cleanup event asynchronously.
+  assert.equal(await page.locator('#external-review').count(),0);
   assert.equal(await page.locator('#ecg').evaluate(c=>c.toDataURL()),original);
   assert.deepEqual(requests.filter(r=>r.method!=='GET'||!r.url.startsWith(new URL(url).origin)),[],'No data upload or third-party data request');
   checks.push({width,stepMs500:2,stepMs250:4,signalSha256:before.identity.sha256,build:before.build,manualBounds:saved.annotations[0],originalSamplesPreserved:60000,automaticMeasurementsUnchanged:true,networkRequests:requests.length});
