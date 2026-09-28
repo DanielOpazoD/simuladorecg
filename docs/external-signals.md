@@ -42,13 +42,20 @@ Estos límites de recursos no son criterios de plausibilidad clínica.
 
 ## Vista y análisis
 
+Desde el bloque A05/A10/A17, archivo legible y análisis permitido son estados
+separados. La política operativa restringe el análisis automático a 500 Hz / 10 s
+y comprueba canales constantes, extremos planos prolongados y duplicación exacta
+de canales de detección. No equivale a validación clínica. Otros Hz admitidos
+por el lector conservan visor, exportación y revisión manual, sin remuestreo.
+Reglas, límites y procedencia: [Revisión manual](external-manual-review.md).
+
 Se elige una ventana de 10 s; el visor muestra 2, 5 o 10 s dentro de ella,
 siempre con ejes compartidos entre canales, sin normalización ni filtros nuevos.
 El tiempo inicial se redondea a la muestra más cercana. Se informa recorte visual,
 pero el CSV completo y las muestras JSON no se recortan.
 
-El mismo `analyzeSamples({fs, leads})` existente analiza una copia de esos 10 s
-en un worker. No recibe eventos, truth, parámetros, nombre ni diagnóstico. Sus
+Cuando el control técnico permite analizar, el mismo `analyzeSamples({fs, leads})`
+existente analiza una copia de esos 10 s en un worker. No recibe eventos, truth, parámetros, nombre ni diagnóstico. Sus
 estados `usable`, `review` y `unavailable` se conservan. «Consistente» significa
 consistencia interna, no precisión, validación clínica o probabilidad de acierto.
 El algoritmo puede fallar, especialmente en ruido, ritmos complejos y registros
@@ -56,10 +63,13 @@ con muestreo distinto al evaluado previamente. No se ha recalibrado aquí.
 
 Las marcas Q/J/T son candidatos multiderivación, no anotaciones independientes
 por canal. Al cambiar la ventana se retiran inmediatamente las medidas y se
-bloquean PNG/informe hasta obtener un resultado nuevo. La copia CSV completa
+bloquean PNG/informe hasta obtener un control técnico nuevo (con o sin análisis). La copia CSV completa
 no depende del análisis. El informe `ecg-external-analysis` guarda la ventana
 muestreada, frecuencia, conversión y medidas; tiempos del detector relativos
 a esa ventana. La tabla convierte esos tiempos a segundos absolutos del registro.
+El esquema 2 añade aptitud, huella física, build y anotaciones manuales separadas;
+si no se ejecutó el analizador, `measurement` es null. El sidecar de anotaciones
+es un formato distinto y sólo se reimporta sobre una huella compatible.
 
 ## Privacidad / ciclo de vida
 

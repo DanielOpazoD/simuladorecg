@@ -32,3 +32,31 @@ dialog.external-lab { width: min(1420px, calc(100vw - 32px)); max-width: calc(10
   .external-heading h2 { font-size:22px; }
 }
 @media print { dialog.external-lab { display:none!important; } }
+
+.external-aptitude { margin:18px 0; padding:14px 16px; border:1px solid var(--line); border-left:4px solid #33747c; border-radius:8px; line-height:1.55; font-size:14px; }
+.external-aptitude[data-status=manual-only] { border-left-color:#a76b28; }
+.external-aptitude p { margin:8px 0; }
+.external-provenance code { overflow-wrap:anywhere; }
+.external-review { margin:26px 0; padding-top:20px; border-top:1px solid var(--line); min-width:0; }
+.external-review h3 { margin:0 0 10px; }
+.external-review fieldset { border:1px solid var(--line); border-radius:8px; padding:12px; min-width:0; }
+.external-review legend { padding:0 6px; font-size:13px; }
+.review-controls { display:flex; flex-wrap:wrap; align-items:end; gap:12px; margin:12px 0; }
+.review-controls label { display:grid; gap:6px; font-size:13px; min-width:0; }
+.review-controls input[type=number] { width:145px; }
+.review-controls select { max-width:100%; }
+/* Keep the drawing surface and pointer hit box identical. A CSS border/padding
+   shifts sample selection (especially on narrow screens); paint the frame only. */
+.external-review canvas { display:block; max-width:100%; margin:14px 0; border:0; padding:0; box-shadow:0 0 0 1px var(--line); border-radius:6px; touch-action:none; }
+.external-review canvas:focus-visible { outline:3px solid #22747c; outline-offset:2px; }
+.external-review output { display:block; font-size:15px; line-height:1.7; font-variant-numeric:tabular-nums; }
+.review-import { display:grid; gap:8px; max-width:520px; font-size:14px; }
+.external-review caption { text-align:left; padding:8px 0; font-weight:600; }
+#manual-message { line-height:1.6; overflow-wrap:anywhere; }
+@media(max-width:600px) {
+  .review-controls { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+  .review-controls input[type=number], .review-controls select { width:100%; }
+  .review-controls label:has(#manual-candidate) { grid-column:1/-1; }
+  .external-review fieldset { padding:10px; }
+  .external-review canvas { width:100%; }
+}
