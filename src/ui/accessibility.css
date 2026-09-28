@@ -11,6 +11,9 @@ summary { min-height:44px; align-content:center; }
 .icon-button { min-width:44px; width:44px; }
 .view-tabs button, .control-tabs button, .case-button, .text-button { min-height:44px; }
 .trace-tools { flex-wrap:wrap; }
+.detail-navigation .btn { min-height:44px; height:44px; min-width:44px; width:44px; }
+.detail-navigation select { min-height:44px; }
+.detail-navigation { flex-wrap:wrap; }
 .comparison-controls input, .comparison-controls select { min-height:44px; }
 .external-lab .btn, .comparison-lab .btn { white-space:normal; overflow-wrap:anywhere; }
 .external-table:focus-visible, .measurement-table-wrap:focus-visible { outline-offset:-3px; }
@@ -31,6 +34,7 @@ summary { min-height:44px; align-content:center; }
   .case-state .btn { min-width:44px; width:44px; min-height:44px; }
   .scale-toolbar input, .scale-toolbar select, .external-lab input, .external-lab select,
   .comparison-lab input, .comparison-lab select, .control-panel select, .search-box input, .category-select select { font-size:16px; min-height:44px; }
+  .detail-navigation select { font-size:16px; }
   .control-note { font-size:13px; line-height:1.6; }
   .range-field input[type=range] { min-height:32px; }
   .toggle, .scale-toggles label { min-height:44px; }

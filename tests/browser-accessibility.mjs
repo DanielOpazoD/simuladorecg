@@ -14,7 +14,7 @@ const fixture='tests/reference/ludb/fixtures/development/';
 const meta=JSON.parse(await readFile(fixture+'1.json','utf8')),bytes=await readFile(fixture+'1.dat');
 const leads=Object.fromEntries(meta.channels.map((c,j)=>[c.lead,Array.from({length:5000},(_,i)=>(bytes.readInt16LE((i*12+j)*2)-c.baseline)/c.adcGain)]));
 const csv=Buffer.from(['# ECG-LAB CSV 1; fs=500; units=mV','time_s,'+names.join(','),...Array.from({length:5000},(_,i)=>[i/500,...names.map(l=>leads[l][i])].join(','))].join('\n'));
-const results=[];
+const results=[],failures=[];
 for(const engine of [chromium,webkit,firefox]) {
   const browser=await engine.launch({headless:true});
   try {
@@ -64,7 +64,7 @@ for(const engine of [chromium,webkit,firefox]) {
           await key('[data-action=catalog]');await page.getByRole('dialog',{name:'Casos clínicos'}).waitFor();await active('#case-search');
           assert.equal(await page.locator('.workspace').evaluate(e=>e.inert),true);
           await page.locator('[data-action=close-catalog]').focus();await page.keyboard.press('Shift+Tab');
-          assert.equal(await page.locator('#catalog .case-button').last().evaluate(e=>e===document.activeElement),true);
+          assert.equal(await page.locator('#catalog .case-button:not(:disabled)').last().evaluate(e=>e===document.activeElement),true);
           await page.keyboard.press('Tab');await active('[data-action=close-catalog]');
           await page.keyboard.press('Escape');await active('[data-action=catalog]');
           await key('[data-action=catalog]');await page.locator('#case-search').fill('sinusal');
@@ -85,13 +85,22 @@ for(const engine of [chromium,webkit,firefox]) {
         await key('[data-review=focus]');await active('#manual-canvas');await page.keyboard.press('ArrowRight');
         assert.equal(await page.locator('#manual-end-sample').inputValue(),'681');await page.keyboard.press('ArrowLeft');
         await page.locator('#manual-canvas').scrollIntoViewIfNeeded();
-        const point=await page.locator('#manual-canvas').evaluate(c=>{const w=parseFloat(c.style.width),b=c.getBoundingClientRect();return {x:(38+685/799*(w-54))*b.width/w,y:b.height/2};});
-        if(width===390&&engine.name()!=='firefox')await page.locator('#manual-canvas').tap({position:point});else await page.locator('#manual-canvas').click({position:point});
-        assert.equal(await page.locator('#manual-end-sample').inputValue(),'685');
-        assert.equal(Number(await page.locator('#manual-readout').getAttribute('data-ms')),90);
+        // Send an integer viewport pixel, then predict its nearest sample BEFORE input.
+        // A narrow trace can contain more samples than pixels: keyboard/fields retain
+        // one-sample precision; touch must obey its actual pixel grid, not a fictitious
+        // fractional pixel chosen by a mouse-only test. No production geometry import.
+        const point=await page.locator('#manual-canvas').evaluate(c=>{
+          const w=parseFloat(c.style.width),b=c.getBoundingClientRect();
+          const x=Math.round(b.left+(38+685/799*(w-54))*b.width/w),y=Math.round(b.top+b.height/2);
+          const sample=Math.round(((x-b.left)*w/b.width-38)/(w-54)*799);
+          return {x,y,sample};
+        });
+        if(width===390&&engine.name()!=='firefox')await page.touchscreen.tap(point.x,point.y);else await page.mouse.click(point.x,point.y);
+        assert.equal(Number(await page.locator('#manual-end-sample').inputValue()),point.sample);
+        assert.equal(Number(await page.locator('#manual-readout').getAttribute('data-ms')),(point.sample-640)*2);
         await key('[data-review=save]');await active('[data-review=new]');
         const sidecar=JSON.parse((await file('[data-review=export]','review.json')).toString());
-        assert.equal(sidecar.annotations.length,1);assert.equal(sidecar.annotations[0].endSample,685);
+        assert.equal(sidecar.annotations.length,1);assert.equal(sidecar.annotations[0].endSample,point.sample);
         const after=JSON.parse((await file('[data-external=json]','after.json')).toString());
         assert.deepEqual(after.leads,before.leads);assert.deepEqual(after.measurement,before.measurement);
         await page.locator('#external-review').scrollIntoViewIfNeeded();await page.screenshot({path:resolve(out,stem+'-manual.png')});
@@ -125,13 +134,20 @@ for(const engine of [chromium,webkit,firefox]) {
         assert.equal(await page.locator('.workspace').evaluate(e=>e.inert),false);
         assert.deepEqual(requests.filter(r=>r.method!=='GET'||!r.url.startsWith(new URL(url).origin)),[]);
         assert.deepEqual(errors,[]);assert.deepEqual(warnings,[]);
-        results.push({engine:engine.name(),version:browser.version(),width,build:info,externalFit,comparisonFit,layouts,samplesVerified:120000,keyboard:true,pointer:width===390&&engine.name()!=='firefox'?'emulated-touch':'mouse',stepMs:2,manualMs:90,downloads:6,errors,warnings});
+        results.push({engine:engine.name(),version:browser.version(),width,build:info,externalFit,comparisonFit,layouts,samplesVerified:120000,keyboard:true,pointer:width===390&&engine.name()!=='firefox'?'emulated-touch':'mouse',stepMs:2,pointerSample:point.sample,manualMs:(point.sample-640)*2,downloads:6,errors,warnings});
         await writeFile(resolve(out,'accessibility-results.json'),JSON.stringify({results,physicalDevice:false,screenReaderTested:false,zoomNote:'320/720 CSS-pixel reflow; not native browser zoom',wcagCertification:false},null,2));
       } catch(e) {
         await page.screenshot({path:resolve(out,stem+'-failure.png')}).catch(()=>{});
-        await writeFile(resolve(out,stem+'-failure.json'),JSON.stringify({error:String(e.stack),errors,warnings,results},null,2));throw e;
+        const failure={engine:engine.name(),width,error:String(e.stack),errors,warnings};
+        failures.push(failure);
+        await writeFile(resolve(out,stem+'-failure.json'),JSON.stringify(failure,null,2));
+        // Inspect every independent engine/viewport, then fail the entire job below.
+        // Never turn a failure into a skip or a passing job.
       } finally {await context.close();}
     }
   } finally {await browser.close();}
 }
+await writeFile(resolve(out,'accessibility-summary.json'),JSON.stringify({results,failures,expectedFlows:6,physicalDevice:false,screenReaderTested:false,wcagCertification:false},null,2));
+assert.equal(failures.length,0,JSON.stringify(failures));
+assert.equal(results.length,6,'Every engine/viewport flow must complete');
 console.log(JSON.stringify({accessibilityFlows:results.length,engines:[...new Set(results.map(r=>r.engine))],physicalDevice:false}));
