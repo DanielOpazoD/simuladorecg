@@ -1,0 +1,75 @@
+/* A15: no change to signal or canvas coordinate systems. */
+.skip-links { position:absolute; z-index:100; top:8px; left:8px; display:flex; flex-wrap:wrap; gap:8px; }
+.skip-links a { position:absolute; left:-10000px; padding:12px; background:var(--surface); border:2px solid var(--accent); border-radius:6px; font-weight:600; }
+.skip-links a:focus { position:static; }
+:where(button,a,input,select,textarea,summary,[tabindex]):focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+:where([role=region],[role=tabpanel]):focus-visible { outline-offset:-3px; }
+summary { min-height:44px; align-content:center; }
+#case-title, #inspector, #comparison-lab { scroll-margin-block:20px; }
+.catalog-backdrop { position:fixed; inset:0; background:#152b3a70; z-index:9; }
+.btn, .icon-button { min-height:44px; }
+.icon-button { min-width:44px; width:44px; }
+.view-tabs button, .control-tabs button, .case-button, .text-button { min-height:44px; }
+.trace-tools { flex-wrap:wrap; }
+.detail-navigation .btn { min-height:44px; height:44px; min-width:44px; width:44px; }
+.detail-navigation select { min-height:44px; }
+.detail-navigation { flex-wrap:wrap; }
+.comparison-controls input, .comparison-controls select { min-height:44px; }
+.external-lab .btn, .comparison-lab .btn { white-space:normal; overflow-wrap:anywhere; }
+.external-table:focus-visible, .measurement-table-wrap:focus-visible { outline-offset:-3px; }
+/* Zero geometric insets preserve the manual calibre's absolute sample grid. */
+.external-review canvas { border:0; padding:0; }
+@media(max-width:800px) {
+  .topbar { min-height:62px; height:auto; flex-wrap:wrap; padding-block:12px; }
+  .topbar .brand small, .topbar .brand-divider { display:none; }
+  .topbar nav { flex-wrap:wrap; gap:4px; }
+  .topbar nav > .btn { min-width:44px; min-height:44px; }
+  .sidebar { top:0; height:100dvh; width:min(320px,100vw); padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+  .sidebar:not(.open) { visibility:hidden; }
+  .sidebar.open { visibility:visible; }
+  .sidebar .sidebar-head { padding-top:16px; }
+  .trace-tools { width:100%; justify-content:flex-start; }
+  .view-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); width:100%; }
+  .view-tabs button { min-width:0; white-space:normal; }
+  .case-state .btn { min-width:44px; width:44px; min-height:44px; }
+  .scale-toolbar input, .scale-toolbar select, .external-lab input, .external-lab select,
+  .comparison-lab input, .comparison-lab select, .control-panel select, .search-box input, .category-select select { font-size:16px; min-height:44px; }
+  .detail-navigation select { font-size:16px; }
+  .control-note { font-size:13px; line-height:1.6; }
+  .range-field input[type=range] { min-height:32px; }
+  .toggle, .scale-toggles label { min-height:44px; }
+  .scale-toggles input { min-height:0; }
+}
+@media(max-width:600px) {
+  .topbar .brand { flex:1 1 100%; }
+  .topbar nav { width:100%; justify-content:space-between; }
+  .topbar nav .mobile-cases { width:auto; }
+  .topbar nav .mobile-cases span { display:inline; }
+  .topbar nav > .btn { min-width:44px; }
+  .metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .metric:first-child { grid-column:1/-1; }
+  .metric:nth-child(5) { grid-column:auto; }
+  .metric > span { font-size:12px; }
+  .metric > small { font-size:12px; }
+  .metric + .metric::before { display:none; }
+  .control-tabs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; }
+  .control-tabs button { font-size:13px; white-space:normal; text-align:left; }
+  .field-grid, .range-grid { grid-template-columns:minmax(0,1fr); }
+  .inline-fields { grid-template-columns:minmax(0,1fr); }
+  .external-heading, .comparison-heading { align-items:flex-start; }
+  .external-heading h2, .comparison-heading h2 { overflow-wrap:anywhere; }
+  #dialog-content { padding:18px 16px; }
+  .dialog-head { gap:10px; align-items:flex-start; }
+  .dialog-head .btn { flex-shrink:0; }
+  .comparison-controls, .review-controls { gap:12px; }
+  .comparison-navigation { grid-template-columns:minmax(0,1fr); }
+  .external-lab input[type=number], .review-controls input[type=number] { max-width:100%; }
+  .external-lab input[type=file] { width:100%; }
+}
+@media(prefers-reduced-motion:reduce) { .sidebar { transition:none; } }
+@media(forced-colors:active) {
+  .external-review canvas { outline:1px solid CanvasText; outline-offset:-1px; }
+  :where(button,a,input,select,summary,[tabindex]):focus-visible { outline:3px solid Highlight; }
+  .btn { border:1px solid ButtonText; }
+}
+@media print { .skip-links, .catalog-backdrop { display:none!important; } }
