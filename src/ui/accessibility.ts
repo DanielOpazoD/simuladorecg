@@ -56,7 +56,7 @@ export function installAccessibility() {
   document.addEventListener('focusin', e => {
     const node = e.target as HTMLElement;
     const dialog = node.closest<HTMLDialogElement>('dialog');
-    if (dialog && last && !dialog.contains(last.node)) returns.set(dialog, last);
+    if (dialog && last && last.root !== dialog && !dialog.contains(last.root) && !dialog.contains(last.node)) returns.set(dialog, last);
     last = {node, selector:selectorFor(node), root:node.closest<HTMLElement>('#external-review,#comparison-lab,#inspector,#scale-toolbar,#caliper-editor,#catalog') ?? dialog ?? app};
   });
   function restoreFocus() {
@@ -72,7 +72,8 @@ export function installAccessibility() {
     if (!(e.target instanceof HTMLDialogElement)) return;
     const dialog = e.target, back = returns.get(dialog);
     queueMicrotask(() => {
-      if (dialog.open || document.activeElement !== document.body || !back?.selector) return;
+      if (dialog.open || !back?.selector) return;
+      if (document.activeElement !== document.body && !dialog.contains(document.activeElement)) return;
       const node = back.root.querySelector<HTMLElement>(back.selector);
       if (available(node)) node.focus({preventScroll:true});
     });

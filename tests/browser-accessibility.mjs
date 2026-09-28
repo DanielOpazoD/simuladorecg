@@ -71,8 +71,9 @@ for(const engine of [chromium,webkit,firefox]) {
           await key('[data-preset=sinus]');await ready();await active('#case-title');
           assert.equal(await page.locator('#catalog').evaluate(e=>e.inert),true);
         }
-        await key('[data-action=about]');await page.getByRole('dialog',{name:'Modelo, alcance y referencias'}).waitFor();
-        await page.keyboard.press('Escape');await page.locator('#dialog').waitFor({state:'hidden'});await active('[data-action=about]');
+        await page.locator('#case-title').scrollIntoViewIfNeeded();await page.screenshot({path:resolve(out,stem+'-main.png')});
+        await key('.topbar [data-action=about]');await page.getByRole('dialog',{name:'Modelo, alcance y referencias'}).waitFor();
+        await page.keyboard.press('Escape');await page.locator('#dialog').waitFor({state:'hidden'});await active('.topbar [data-action=about]');
         page.on('request',r=>requests.push({method:r.method(),url:r.url()}));
         // File choice is a test fixture; OS file-picker accessibility is a physical checklist item.
         await key('[data-action=external]');await page.getByRole('dialog',{name:'Del archivo al trazado'}).waitFor();
