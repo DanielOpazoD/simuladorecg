@@ -4,7 +4,7 @@ import { project, type Vec } from "./leads";
 import { ventricularSource } from "./ventricular-source";
 import { T_REFERENCE_AMPLITUDE } from "./regional-repolarization";
 
-export type SecondaryRepolarizationMode = "none" | "mean-qrs" | "terminal-qrs" | "delta";
+export type SecondaryRepolarizationMode = "none" | "mean-qrs" | "terminal-qrs";
 export interface SecondaryRepolarization { mode: SecondaryRepolarizationMode; t: Vec | null; st: Vec | null; reference: Vec | null; }
 
 function integrated(ks: readonly Kernel[], predicate: (k: Kernel) => boolean): Vec {
@@ -27,6 +27,7 @@ export function secondaryRepolarization(c: ECGCase,b: Beat,ks: readonly Kernel[]
     reference=Math.hypot(...delayed)>1e-9?delayed:integrated(ks,()=>true);
   }
   if(!reference)return{mode,t:null,st:null,reference:null};
+  // Secondary ST is explicitly not represented; do not infer normal ST from null.
   return{mode,t:opposite(reference,T_REFERENCE_AMPLITUDE*.9),st:null,reference};
 }
 export function secondaryDiscordanceDot(reference:Vec,repolarization:Vec):number{

@@ -181,7 +181,7 @@ export function controls(c: ECGCase) {
  )}
  ${range("st", "Intensidad de lesión", 0, 8, 0.25, c.st, "escala del patrón", amplitude.stDisabled)}${range("transition", "Rotación precordial", -1, 1, 0.1, c.transition, "")}
  ${range("pAxis", "Eje de P", -180, 180, 5, c.pAxis, "°")}${range("tAxis", "Eje de T", -180, 180, 5, c.tAxis, "°")}${range("pAmp", "Amplitud auricular", 0, 0.5, 0.01, c.pAmp, "mV ref.")}${range("qrsAmp", "Amplitud QRS", 0.1, 3, 0.1, c.qrsAmp, "×")}${range("tAmp", "Amplitud de T", 0, 1, 0.01, c.tAmp, "mV ref.", amplitude.tDisabled)}
- ${toggle("septalQ", "Componente septal", c.septalQ)}</div><p class="control-note" id="amplitude-note">${amplitude.note}</p><p class="control-note">Amplitud de T escala toda la T, incluidas las correcciones locales; 0 la anula. No modifica QRS, ST secundario ni U. Los voltajes de referencia no son amplitudes de una derivación concreta.</p></div>
+ ${toggle("septalQ", "Componente septal", c.septalQ)}</div><p class="control-note" id="amplitude-note">${amplitude.note}</p><p class="control-note">Amplitud de T escala toda la T, incluidas las correcciones locales; 0 la anula. No modifica QRS, el ST primario ni U. Los voltajes de referencia no son amplitudes de una derivación concreta.</p><p class="control-note" id="secondary-repolarization-note">T secundaria: la dirección sigue la activación QRS, no el control Eje de T; la sobrecarga actúa a través del QRS. El ST secundario no está representado. No interpretes su ausencia como normalidad ni uses este modelo para criterios ST/QRS. El ST de lesión primaria es un componente distinto.</p></div>
  <div class="control-panel" data-control-panel="signal" hidden><div class="field-grid">
  ${select(
    "filter",
