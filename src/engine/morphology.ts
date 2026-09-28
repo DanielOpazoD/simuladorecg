@@ -1,5 +1,6 @@
 import type { ECGCase, Beat } from "./types";
 import { ventricularSource } from "./ventricular-source";
+import { secondaryRepolarization } from "./secondary-repolarization";
 import { frontal, project, axisFromLeads, type Vec } from "./leads";
 export type Kernel = { mu: number; sigma: number; v: Vec };
 /** Reference amplitude for the existing T templates, in mV. */
@@ -156,35 +157,35 @@ export function lesionVector(c: ECGCase): Vec {
           : 1);
   return v.map((n) => n * factor) as Vec;
 }
-export function tVector(c: ECGCase, b: Beat): Vec {
+/** Final T vector: choose the activation direction once, then apply modifiers.
+ * Overload already changes coupled QRS kernels; do not add a second strain T.
+ * Constants are existing educational factors, not serum-K or ischemia calibration.
+ */
+export function tVector(c: ECGCase, b: Beat, kernels?: readonly Kernel[]): Vec {
   if (c.tAmp === 0) return [0, 0, 0];
   const tScale = c.tAmp / T_REFERENCE_AMPLITUDE,
-    // The phase effect reaches its existing reference shape at st=2.
-    // Higher intensity continues to scale ST, without amplifying this global T effect.
-    phaseBlend = Math.min(1, Math.max(0, c.st / 2));
-  let v = frontal(c.tAxis, T_REFERENCE_AMPLITUDE, -0.07),
-    amp = 1;
+    phaseBlend = Math.min(1, Math.max(0, c.st / 2)),
+    coupled = secondaryRepolarization(c, b, kernels ?? qrsKernels(c, b)).t;
+  // Preserve the previous torsades example; rotation coherence is a separate PR.
+  if (c.rhythm === "torsades" && coupled)
+    return coupled.map(x => x * tScale) as Vec;
+  const potassium = c.electrolyte === "hyperkalemia" || c.electrolyte === "hypokalemia",
+    activePhase = c.ischemia !== "none" && phaseBlend > 0 &&
+      (c.phase === "hyperacute" || c.phase === "evolving");
+  if (coupled && potassium && activePhase)
+    throw new Error("Combinación fuera de alcance: T secundaria con fase isquémica activa y alteración de potasio simultáneas. Evalúa cada modificador por separado.");
+  let v: Vec = coupled ?? frontal(c.tAxis, T_REFERENCE_AMPLITUDE, -0.07), amp = 1;
   if (!regionalTerritory(c, b) && c.phase === "hyperacute" && c.ischemia !== "none")
     amp = 1 + 1.15 * phaseBlend;
-  if (!regionalTerritory(c, b) && c.phase === "evolving" && c.ischemia !== "none") amp = 1 - 2 * phaseBlend;
-  const source = ventricularSource(c, b);
-  const ventricular = source !== null;
-  // Preserve the public morphology helper contract. The final synthesizer replaces
-  // these legacy fixed secondary vectors with QRS-coupled vectors.
-  if (c.conduction === "lbbb" || ventricular)
-    v = frontal(
-      (source ? source.axis : c.axis) + 180,
-      T_REFERENCE_AMPLITUDE * 0.9,
-      source ? source.secondaryTZ : -0.15,
-    );
-  if (!ventricular && (c.conduction.includes("rbbb") || c.conduction === "irbbb"))
-    v = [0.18, 0.12, 0.27];
-  if (!ventricular && (c.overload === "rv_chronic" || c.overload === "rv_acute"))
-    v = [0.12, 0.04, 0.42];
-  if (!ventricular && c.overload === "lv") v = [-0.3, -0.08, 0.15];
+  if (!regionalTerritory(c, b) && c.phase === "evolving" && c.ischemia !== "none")
+    amp = 1 - 2 * phaseBlend;
+  if (!coupled) {
+    if (c.overload === "rv_chronic" || c.overload === "rv_acute") v = [0.12, 0.04, 0.42];
+    if (c.overload === "lv") v = [-0.3, -0.08, 0.15];
+  }
   if (c.electrolyte === "hyperkalemia") amp = 2.6;
   if (c.electrolyte === "hypokalemia") amp = 0.4;
-  return v.map((x) => x * tScale * amp) as Vec;
+  return v.map(x => x * tScale * amp) as Vec;
 }
 
 /** Two overlapping atrial components give V1 early anterior / late posterior activity.
