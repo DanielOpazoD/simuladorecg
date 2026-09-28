@@ -21,8 +21,8 @@ export function amplitudeControlState(c: ECGCase) {
 }
 export function controls(c: ECGCase) {
   const amplitude = amplitudeControlState(c);
-  return `<div class="inspector-title"><h2>Parámetros del modelo</h2><span>Modifica la fisiología y observa el ECG</span></div>
- <div class="control-tabs" role="tablist" aria-label="Parámetros"><button role="tab" aria-selected="true" data-panel="base">Fisiología</button><button role="tab" aria-selected="false" data-panel="conduction">Conducción</button><button role="tab" aria-selected="false" data-panel="st">ST y morfología</button><button role="tab" aria-selected="false" data-panel="signal">Señal y papel</button></div>
+  return `<div class="inspector-title"><h2>Ajustar el caso</h2><span>Valores programados del modelo, no mediciones del trazado.</span></div>
+ <div class="control-tabs" role="tablist" aria-label="Parámetros"><button role="tab" aria-selected="true" data-panel="base">Intervalos</button><button role="tab" aria-selected="false" data-panel="conduction">Conducción</button><button role="tab" aria-selected="false" data-panel="st">ST y ondas</button><button role="tab" aria-selected="false" data-panel="signal">Señal y papel</button></div>
  <div class="control-panel" data-control-panel="base"><div class="range-grid">
  ${range("hr", c.av === "complete" ? "Frecuencia de escape" : c.av !== "normal" && c.av !== "first" ? "Frecuencia auricular" : "Frecuencia base", 20, 250, 1, c.hr, "lpm")}
  ${range("pr", "Intervalo PR", 80, 400, 5, c.pr, "ms")}${range("qrs", "Duración QRS", 60, 240, 5, c.qrs, "ms")}${range("qtc", "QTc · Fridericia", 260, 650, 5, c.qtc, "ms")}${range("axis", "Eje QRS solicitado", -180, 180, 5, c.axis, "°")}${range("variability", "Variabilidad sinusal RR", 0, 0.3, 0.01, c.variability, "")}

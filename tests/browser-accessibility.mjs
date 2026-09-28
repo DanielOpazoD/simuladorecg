@@ -63,7 +63,7 @@ for(const engine of [chromium,webkit,firefox]) {
         // Mobile off-canvas navigation is truly absent from keyboard/AT until opened.
         if(width===390) {
           assert.equal(await page.locator('#catalog').evaluate(e=>e.inert),true);
-          await key('[data-action=catalog]');await page.getByRole('dialog',{name:'Casos clínicos'}).waitFor();await active('#case-search');
+          await key('[data-action=catalog]');await page.getByRole('dialog',{name:'Biblioteca de patrones'}).waitFor();await active('#case-search');
           assert.equal(await page.locator('.workspace').evaluate(e=>e.inert),true);
           await page.locator('[data-action=close-catalog]').focus();await page.keyboard.press('Shift+Tab');
           assert.equal(await page.locator('#catalog .case-button:not(:disabled)').last().evaluate(e=>e===document.activeElement),true);
@@ -78,7 +78,7 @@ for(const engine of [chromium,webkit,firefox]) {
         await page.keyboard.press('Escape');await page.locator('#dialog').waitFor({state:'hidden'});await active('.topbar [data-action=about]');
         page.on('request',r=>requests.push({method:r.method(),url:r.url()}));
         // File choice is a test fixture; OS file-picker accessibility is a physical checklist item.
-        await key('[data-action=external]');await page.getByRole('dialog',{name:'Del archivo al trazado'}).waitFor();
+        await key('[data-action=external]');await page.getByRole('dialog',{name:'Explorar una señal'}).waitFor();
         await page.locator('#external-files').setInputFiles({name:'development.csv',mimeType:'text/csv',buffer:csv});
         await key('[data-external=load]');await page.locator('#external-aptitude').waitFor();
         const before=JSON.parse((await file('[data-external=json]','before.json')).toString());assert.deepEqual(before.leads,leads);

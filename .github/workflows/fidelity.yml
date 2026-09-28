@@ -90,6 +90,7 @@ jobs:
           node tests/browser-external.mjs
           node tests/browser-external-review.mjs
           node tests/browser-repolarization-coherence.mjs
+          node tests/browser-visual-workspace.mjs
       - name: Archive exact reviewed source and reports
         if: always()
         run: |

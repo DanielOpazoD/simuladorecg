@@ -135,7 +135,7 @@ export function beatDetail(
   const prUsable = m.pr !== null;
   const suggestion = suggestTEnds(s, m)[index] ?? null;
   const suggestionConfidence = suggestion ? classifyTEndReviewCandidate(suggestion) : null;
-  return `<div class="detail-heading"><div><div class="section-label">LECTURA DE LA SEÑAL</div><h2>Un latido, de cerca</h2></div><div class="detail-navigation"><span>Latido ${index + 1} <small>/ ${m.beats.length}</small></span><button class="btn icon-button previous-beat" data-action="previous-beat" aria-label="Latido anterior" ${index === 0 ? "disabled" : ""}>${icon("chevron")}</button><button class="btn icon-button" data-action="next-beat" aria-label="Latido siguiente" ${index === m.beats.length - 1 ? "disabled" : ""}>${icon("chevron")}</button><label><span class="sr-only">Derivación ampliada</span><select id="detail-lead">${options(
+  return `<div class="detail-heading"><div><div class="section-label">Detalle de la señal</div><h2>Examinar un latido</h2></div><div class="detail-navigation"><span>Latido ${index + 1} <small>/ ${m.beats.length}</small></span><button class="btn icon-button previous-beat" data-action="previous-beat" aria-label="Latido anterior" ${index === 0 ? "disabled" : ""}>${icon("chevron")}</button><button class="btn icon-button" data-action="next-beat" aria-label="Latido siguiente" ${index === m.beats.length - 1 ? "disabled" : ""}>${icon("chevron")}</button><label><span class="sr-only">Derivación ampliada</span><select id="detail-lead">${options(
     LEADS.map((l) => [l, l]),
     c.view.lead,
   )}</select></label></div></div>
