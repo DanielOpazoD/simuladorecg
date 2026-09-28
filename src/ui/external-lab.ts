@@ -5,6 +5,11 @@ import { renderExternal, type ExternalView } from '../render/external';
 import { download } from './persistence';
 import { esc } from './helpers';
 import { APP_VERSION } from './version';
+import type { AnalysisAssessment } from '../io/external-assessment';
+import { fingerprintECG, type SignalIdentity } from '../io/external-review';
+import { ExternalReviewEditor } from './external-review-editor';
+import { validateExternalReply, type ExternalReply } from './external-protocol';
+import { buildProvenance } from './build-provenance';
 
 const value = (v: number | null) => v === null || !Number.isFinite(v) ? '—' : v.toFixed(1);
 const status = (s: string) => s === 'usable' ? 'Consistente*' : s === 'review' ? 'Revisar' : 'No estimable';
@@ -15,6 +20,9 @@ export class ExternalLab {
   private dialog = document.createElement('dialog');
   private record: ExternalECG | null = null;
   private measurement: Measurement | null = null;
+  private assessment: AnalysisAssessment | null = null;
+  private identity: SignalIdentity | null = null;
+  private review: ExternalReviewEditor | null = null;
   private view: ExternalView = { start: 0, offset: 0, seconds: 2, range: 2, marks: false };
   private worker: Worker | null = null;
   private epoch = 0;
@@ -28,8 +36,9 @@ export class ExternalLab {
     this.dialog.addEventListener('close', () => { if (!this.dialog.open) this.clear(); });
     this.dialog.addEventListener('input', e => {
       if ((e.target as HTMLElement).id !== 'external-start' || !this.record) return;
-      this.cancel(); this.measurement = null;
+      this.cancel(); this.measurement = null; this.assessment = null; this.review?.setAnalysis(null, 0);
       this.dialog.querySelector('#external-analysis')?.remove();
+      this.dialog.querySelector('#external-aptitude')?.remove();
       this.dialog.querySelectorAll<HTMLButtonElement>('[data-external=png],[data-external=json]').forEach(b => { b.disabled = true; });
       this.message = 'Inicio modificado: se retiraron medidas y marcas. Pulsa Analizar 10 s.'; this.notify(); this.draw();
     });
@@ -51,22 +60,37 @@ export class ExternalLab {
     this.dialog.showModal();
   }
   private cancel() { this.epoch++; this.worker?.terminate(); this.worker = null; window.clearTimeout(this.timer); this.busy = false; }
-  private clear() { this.cancel(); this.record = null; this.measurement = null; this.message = ''; this.view = {start:0, offset:0, seconds:2, range:2, marks:false}; this.dialog.innerHTML = ''; }
+  private forgetRecord() { this.record = null; this.measurement = null; this.assessment = null; this.identity = null; this.review?.destroy(); this.review = null; }
+  private clear() { this.cancel(); this.forgetRecord(); this.message = ''; this.view = {start:0, offset:0, seconds:2, range:2, marks:false}; this.dialog.innerHTML = ''; }
   private notify() { const el = this.dialog.querySelector('#external-message'); if (el) el.textContent = this.message; }
-  private run(request: object, accept: (data: {record?: ExternalECG; measurement: Measurement}) => void) {
-    this.cancel(); const epoch = this.epoch; this.busy = true; this.measurement = null; this.message = 'Procesando localmente…'; this.render();
+  private run(kind: 'read' | 'analyze', request: object, accept: (data: ExternalReply) => void) {
+    this.cancel(); const epoch = this.epoch, startSample = kind === 'read' ? 0 : Math.round(this.view.start * this.record!.fs);
+    this.busy = true; this.measurement = null; this.assessment = null; this.message = 'Procesando localmente…'; this.render();
     const fail = (message: string) => { if (epoch !== this.epoch) return; this.cancel(); this.message = message; this.render(); };
     try {
       this.worker = new Worker(new URL('./external-worker.ts', import.meta.url), {type:'module'});
-      this.worker.onmessage = ({data}) => {
+      this.worker.onmessage = async ({data}) => {
         if (epoch !== this.epoch || !this.dialog.open) return;
-        if (data.error) { fail(data.error); return; }
-        this.cancel(); accept(data); this.message = 'Archivo leído. Estimaciones exploratorias, sin auditoría contra un modelo sintético.'; this.render();
+        try {
+          if (data?.id === epoch && typeof data.error === 'string') { fail(data.error.slice(0, 1000)); return; }
+          const result = validateExternalReply(data, epoch, kind, this.record, startSample);
+          if (kind === 'read') {
+            const identity = await fingerprintECG(result.record!);
+            if (epoch !== this.epoch || !this.dialog.open) return;
+            if (identity.sha256 !== result.identity!.sha256) throw Error('Huella no corresponde a las muestras.');
+          }
+          this.worker?.terminate(); window.clearTimeout(this.timer); this.busy = false;
+          accept(result); this.assessment = result.assessment;
+          this.message = result.assessment.analysisAllowed
+            ? 'Archivo leído. Análisis exploratorio permitido por el control técnico; no implica precisión clínica.'
+            : 'Archivo válido para visualizar y revisar manualmente. No se ejecutó el analizador en esta ventana.';
+          this.render(); this.cancel();
+        } catch { fail('Respuesta del worker inválida o ajena a la ventana. No se aceptan medidas incompletas.'); }
       };
       this.worker.onerror = e => { e.preventDefault(); fail('Error del worker local. Vuelve a abrir el archivo; no se muestra un análisis anterior.'); };
       this.worker.onmessageerror = () => fail('Respuesta del worker no legible. No se acepta un resultado incompleto.');
       this.timer = window.setTimeout(() => fail('Se agotó el tiempo de lectura/análisis. Reduce la duración del archivo.'), 30000);
-      this.worker.postMessage(request);
+      this.worker.postMessage({...request, id:epoch, kind, startSample});
     } catch { fail('No se pudo iniciar el worker local. No hay envío alternativo a un servidor.'); }
   }
   private click(action?: string) {
@@ -74,7 +98,7 @@ export class ExternalLab {
     try {
       if (action === 'close') { this.dialog.close(); return; }
       if (action === 'clear') {
-        this.cancel(); this.record = null; this.measurement = null; this.message = 'Archivo borrado de esta sesión.';
+        this.cancel(); this.forgetRecord(); this.message = 'Archivo borrado de esta sesión.';
         this.dialog.querySelector<HTMLInputElement>('#external-files')!.value = ''; this.render(); return;
       }
       if (action === 'load') {
@@ -86,8 +110,8 @@ export class ExternalLab {
           if (!fsText || !unit) throw Error('Para CSV declara tanto Hz como unidades, o deja ambos vacíos si contiene metadatos.');
           csv = { fs: Number(fsText), unit };
         }
-        this.record = null; this.view = { start:0, offset:0, seconds:2, range:2, marks:false };
-        this.run({kind:'read', files, csv}, data => { this.record = data.record!; this.measurement = data.measurement; });
+        this.forgetRecord(); this.view = { start:0, offset:0, seconds:2, range:2, marks:false };
+        this.run('read', {files, csv}, data => { this.record = data.record!; this.identity = data.identity!; this.measurement = data.measurement; });
       }
       if (action === 'analyze' && this.record) {
         const text = this.dialog.querySelector<HTMLInputElement>('#external-start')!.value;
@@ -95,18 +119,20 @@ export class ExternalLab {
         const start = Number(text);
         const samples = externalWindow(this.record, start);
         this.view.start = Math.round(start * this.record.fs) / this.record.fs;
-        this.run({kind:'analyze', samples}, data => { this.measurement = data.measurement; });
+        this.run('analyze', {samples}, data => { this.measurement = data.measurement; });
       }
       if (action === 'csv' && this.record) download(new Blob([exportECGCsv(this.record)], {type:'text/csv'}), 'ecg-samples.csv');
-      if (action === 'json' && this.record && this.measurement && !this.busy) {
+      if (action === 'json' && this.record && this.assessment && this.identity && !this.busy) {
         const samples = externalWindow(this.record, this.view.start);
-        const data = {kind:'ecg-external-analysis', schemaVersion:1, appVersion:APP_VERSION, clinicalValidation:false, modelAuditUsed:false,
+        const data = {kind:'ecg-external-analysis', schemaVersion:2, appVersion:APP_VERSION, build:buildProvenance(), clinicalValidation:false, modelAuditUsed:false,
+          identity:this.identity, assessment:this.assessment, analysisAttempted:this.assessment.analysisAllowed,
+          manualReview:this.review?.exportData() ?? null,
           provenance:this.record.provenance, fs:this.record.fs, units:'mV', recordSamples:this.record.samples,
           window:{startSample:Math.round(this.view.start*this.record.fs), seconds:10, timeBase:'measurement times relative to this window'},
           leads:Object.fromEntries(LEADS.map(l=>[l,Array.from(samples.leads[l])])), measurement:this.measurement};
         download(new Blob([JSON.stringify(data)], {type:'application/json'}), 'ecg-external-analysis.json');
       }
-      if (action === 'png' && this.record && this.measurement && !this.busy) {
+      if (action === 'png' && this.record && this.assessment && !this.busy) {
         const canvas = document.createElement('canvas'); renderExternal(canvas, this.record, this.measurement, this.view, 1500);
         const epoch = this.epoch; canvas.toBlob(blob => { if (blob && this.dialog.open && epoch === this.epoch) download(blob, 'ecg-external.png'); });
       }
@@ -114,11 +140,11 @@ export class ExternalLab {
   }
   private change(el: HTMLInputElement) {
     if (['external-files','external-fs','external-unit'].includes(el.id)) {
-      this.cancel(); this.record = null; this.measurement = null; this.message = 'Selección lista. Pulsa Abrir archivos para verificarla.'; this.render(); return;
+      this.cancel(); this.forgetRecord(); this.message = 'Selección lista. Pulsa Abrir archivos para verificarla.'; this.render(); return;
     }
     if (!this.record) return;
     if (el.id === 'external-start') {
-      this.cancel(); this.measurement = null;
+      this.cancel(); this.measurement = null; this.assessment = null; this.review?.setAnalysis(null, 0);
       try {
         if (el.value === '') throw Error('Declara un inicio de ventana.');
         externalWindow(this.record, Number(el.value));
@@ -142,19 +168,31 @@ export class ExternalLab {
   private render() {
     this.notify(); const target = this.dialog.querySelector('#external-results'); if (!target) return;
     if (!this.record) { target.innerHTML = ''; return; }
-    const r = this.record, m = this.measurement;
+    const r = this.record, m = this.measurement, assessment = this.assessment;
+    // Keep the manual editor (and draft/undo history) alive across automatic-window renders.
+    this.review?.root.remove();
     target.innerHTML = `<div class="external-summary"><strong>${r.provenance.format === 'wfdb16' ? 'WFDB 16 · checksum verificado' : 'CSV · escala declarada'}</strong><span>${r.fs} Hz · ${r.samples} muestras/canal · ${r.duration.toFixed(3)} s · 12 derivaciones</span><button class="btn subtle" data-external="clear">Borrar archivo</button></div>
+      ${assessment ? `<section id="external-aptitude" class="external-aptitude" data-status="${assessment.status}"><strong>${assessment.analysisAllowed ? 'Análisis exploratorio habilitado' : 'Sólo revisión manual · análisis no ejecutado'}</strong>
+      <p>Política técnica ${assessment.policy}: 500 Hz / 10 s; canales de análisis I, II, V1 y V5. Resolución temporal: ${assessment.resolutionMs.toFixed(3)} ms. No confirma calidad diagnóstica ni validez clínica.</p>
+      ${assessment.issues.length ? `<ul>${assessment.issues.map(i => `<li>${esc(i.reason)}${i.blocks ? '' : ' Este canal no alimenta la detección; el aviso sigue visible.'}</li>`).join('')}</ul>` : '<p>Sin las condiciones técnicas excluyentes comprobadas. Ruido, superposición o patologías aún pueden invalidar las mediciones.</p>'}</section>` : '<p class="control-note">Aptitud y medidas pendientes para esta ventana.</p>'}
+      ${this.identity ? `<details class="external-provenance"><summary>Identidad de señal y build</summary><p>Huella de muestras físicas ${this.identity.scheme}: <code>${this.identity.sha256}</code></p><p>Build: <code>${esc(buildProvenance().commit)}</code>. ${buildProvenance().dirty ? 'Versión de trabajo / no publicada.' : 'Árbol de fuentes limpio.'} La huella no acredita autenticidad ni anonimiza la señal.</p></details>` : ''}
       <div class="external-controls"><label>Inicio del análisis (s)<input id="external-start" type="number" value="${this.view.start}" min="0" max="${r.duration - 10}" step="0.1"/></label><button class="btn" data-external="analyze">Analizar 10 s</button>
       <label>Vista por panel<select id="external-seconds">${[2,5,10].map(n=>`<option value="${n}" ${n===this.view.seconds?'selected':''}>${n} s</option>`).join('')}</select></label>
       <label>Desplazar vista (s)<input id="external-offset" type="number" min="0" max="${10-this.view.seconds}" value="${this.view.offset}" step="0.1"/></label>
       <label>Rango compartido<select id="external-range">${[1,2,4,8,16].map(n=>`<option value="${n}" ${n===this.view.range?'selected':''}>±${n} mV</option>`).join('')}</select></label>
       <label class="external-check"><input id="external-marks" type="checkbox" ${this.view.marks?'checked':''}/>Marcas automáticas</label></div>
       <div class="external-scroll" tabindex="0" role="region" aria-label="Doce derivaciones importadas; desplaza sólo el gráfico"><canvas id="external-canvas" role="img"></canvas></div><p id="external-clipping" class="control-note"></p>
-      <div class="external-actions"><button class="btn" data-external="csv">Exportar CSV completo</button><button class="btn" data-external="json" ${m?'':'disabled'}>Informe JSON · 10 s</button><button class="btn" data-external="png" ${m?'':'disabled'}>Exportar PNG</button></div>
+      <div class="external-actions"><button class="btn" data-external="csv">Exportar CSV completo</button><button class="btn" data-external="json" ${assessment && !this.busy ? '' : 'disabled'}>Informe JSON · 10 s</button><button class="btn" data-external="png" ${assessment && !this.busy ? '' : 'disabled'}>Exportar PNG</button></div>
+      <div id="external-manual-host"></div>
       ${m ? `<div id="external-analysis"><h3>Estimaciones de ${this.view.start.toFixed(3)} a ${(this.view.start+10).toFixed(3)} s</h3><p class="control-note">*Consistente describe repetibilidad interna, no exactitud clínica. No se utiliza la referencia de los casos sintéticos ni se completa un valor ausente. La detección usa I, II, V1 y V5: las marcas son globales, no anotaciones por derivación.</p>
       <div class="external-table"><table id="external-metrics"><thead><tr><th>Variable</th><th>Estimación</th><th>Estado</th><th>Soporte / motivo</th></tr></thead><tbody>${rows.map(([key,label,unit])=>`<tr><td>${label}</td><td>${value(m[key])} ${unit}</td><td>${status(m.evidence[key].status)}</td><td>${m.evidence[key].count}/${m.evidence[key].total} · ${esc(m.evidence[key].reason)}</td></tr>`).join('')}</tbody></table></div>
       <p class="control-note">QTc (ms): ${Object.entries(m.qtc).map(([name,v])=>`${name}: ${value(v)}`).join(' · ')}. Son estimaciones no validadas; pueden fallar con ruido, alteraciones de conducción o repolarización.</p>
       <details><summary>Candidatos por latido (${m.beats.length})</summary><p class="control-note">Tiempos absolutos del registro. Candidatos crudos; no implican que PR/QT globales sean utilizables.</p><div class="external-table"><table><thead><tr><th>#</th><th>Inicio QRS (s)</th><th>Final QRS (s)</th><th>Final T (s)</th><th>QRS (ms)</th><th>QT (ms)</th></tr></thead><tbody>${m.beats.map((b,i)=>`<tr><td>${i+1}</td><td>${(b.onset+this.view.start).toFixed(3)}</td><td>${(b.offset+this.view.start).toFixed(3)}</td><td>${b.tEnd===null?'—':(b.tEnd+this.view.start).toFixed(3)}</td><td>${value(b.qrs)}</td><td>${value(b.qt)}</td></tr>`).join('')}</tbody></table></div></details></div>` : '<p class="control-note">Análisis pendiente o no disponible. No se conservan cifras ni marcas de la ventana anterior.</p>'}`;
+    if (this.identity) {
+      this.review ??= new ExternalReviewEditor(r, this.identity);
+      target.querySelector('#external-manual-host')!.append(this.review.root);
+      this.review.setAnalysis(m, this.view.start);
+    }
     this.draw();
   }
 }
