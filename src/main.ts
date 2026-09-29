@@ -2,6 +2,8 @@ import "./style.css";
 import { APP_VERSION } from "./ui/version";
 import { familyLabel } from "./ui/catalog-presentation";
 import { diagnosisFamilies, diagnosisForPreset } from "./ui/diagnosis-navigation";
+import { createExplorationOrigin, explorationChanges, restoreExplorationOrigin, sameExplorationModel, type ExplorationOrigin } from "./ui/exploration-origin";
+import type { SyntheticComparisonTrace } from "./ui/comparison-model";
 import { ComparisonLab } from "./ui/comparison-lab";
 import { captureTrace } from "./ui/comparison-model";
 import { ExternalLab } from "./ui/external-lab";
@@ -65,6 +67,8 @@ let timer = 0,
   group = "",
   quiz: { preset: Preset; choices: Preset[]; answer: string | null } | null =
     null;
+let explorationOrigin: ExplorationOrigin | null = null;
+let explorationOriginTrace: SyntheticComparisonTrace | null = null;
 let initialError = "";
 try {
   c = decodeCase(location.hash) || c;
@@ -74,7 +78,7 @@ try {
 const root = $("#app");
 root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="ECG Lab, inicio">${icon("pulse")}<span>ECG<span class="brand-light">lab</span></span><span class="brand-divider"></span><small>Explora la electrocardiografía</small></a><nav aria-label="Herramientas"><button class="btn mobile-cases" data-action="catalog">${icon("menu")}<span>Casos</span></button>${btn("quiz", "Practicar", "quiz")}${btn("about", "Guía", "book")}${btn("theme", "Tema", "sun", "icon-button")}${btn("export", "Exportar", "download", "primary")}</nav></header>
  <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><div><h2>Biblioteca de patrones</h2><span>${PRESETS.filter((x) => x.strategy !== "pending").length} ejemplos · agrupados por patrón</span></div>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Patrón, sigla o palabra…" aria-label="Buscar caso"/></label><label class="category-select"><span class="sr-only">Categoría</span><select id="category">${options([["", "Todas las familias"], ...Array.from(new Set(PRESETS.map((x) => x.group))).map((x) => [x, familyLabel(x)] as [string, string])], "")}</select></label><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div><div class="sidebar-footer">${icon("pulse")}<div>Señal 100% sintética<small data-product-version="${APP_VERSION}">Modelo educativo · v${APP_VERSION}</small></div></div></aside>
- <main class="workspace"><nav class="workspace-nav" aria-label="Espacios de trabajo"><span class="workspace-current" aria-current="page">${icon("pulse")}Simulador</span>${btn("external", "Abrir señal", "book")}${btn("compare", "Comparar A/B", "strip")}<button type="button" class="btn workspace-adjust" data-action="parameters">${icon("settings")}<span>Ajustar el caso</span></button></nav><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><p id="case-subtitle">Activación auricular sinusal seguida de conducción AV 1:1.</p></div><div class="case-state"><span class="status-label">Ejemplo sintético</span>${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
+ <main class="workspace"><nav class="workspace-nav" aria-label="Espacios de trabajo"><span class="workspace-current" aria-current="page">${icon("pulse")}Simulador</span>${btn("external", "Abrir señal", "book")}${btn("compare", "Comparar A/B", "strip")}<button type="button" class="btn workspace-adjust" data-action="parameters">${icon("settings")}<span>Ajustar el caso</span></button></nav><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><p id="case-subtitle">Activación auricular sinusal seguida de conducción AV 1:1.</p><div id="exploration-context" class="exploration-context" hidden></div></div><div class="case-state"><span class="status-label">Ejemplo sintético</span>${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
  <section id="diagnosis-navigation" class="diagnosis-navigation" aria-label="Variantes del patrón" hidden></section>
  <div id="diagnosis-content">
  <section id="metrics" class="metrics" aria-label="Medidas del ECG"><div class="loading-metrics">Generando señal…</div></section>
@@ -115,6 +119,7 @@ const external = new ExternalLab((slot, trace) => {
 });
 
 
+if (!location.hash) { const p=presetById(c.presetId); if(p) explorationOrigin=createExplorationOrigin(p,c); }
 function currentPreset() {
   return caseContext(c).preset;
 }
@@ -158,6 +163,9 @@ function renderVariants(preset: Preset | undefined, concealed: boolean) {
     content.removeAttribute("role"); content.removeAttribute("aria-labelledby");
   }
 }
+function formatExplorationValue(value:unknown){if(typeof value==="boolean")return value?"Sí":"No";return value==null?"—":String(value)}
+function renderExplorationContext(concealed:boolean){const root=$("#exploration-context"),changes=explorationOrigin?explorationChanges(explorationOrigin,c):[],custom=!!explorationOrigin&&changes.length>0&&!concealed;root.hidden=!custom;if(!custom){root.innerHTML="";return}root.innerHTML=`<div class="exploration-provenance"><span>Basada en: <strong>${esc(explorationOrigin!.presetName)}</strong></span><span class="exploration-count">${changes.length} ${changes.length===1?"ajuste":"ajustes"} respecto al ejemplo original</span></div><div class="exploration-actions"><button type="button" class="text-button" data-action="exploration-changes">Ver cambios</button><button type="button" class="text-button" data-action="compare-origin" ${explorationOriginTrace&&session.canExport?"":"disabled"}>Comparar con origen</button><button type="button" class="text-button" data-action="restore-origin">Restaurar origen</button></div><p>«Basada en» indica procedencia de la exploración; no diagnostica el trazado modificado.</p>`}
+function showExplorationChanges(){if(!explorationOrigin)return;const changes=explorationChanges(explorationOrigin,c);openDialog("Cambios respecto al origen",`<p class="dialog-lead">Origen: <strong>${esc(explorationOrigin.presetName)}</strong>. Se muestran diferencias reales del modelo; la vista no cuenta como ajuste.</p><div class="measurement-table-wrap"><table><thead><tr><th>Parámetro</th><th>Origen</th><th>Actual</th></tr></thead><tbody>${changes.map(x=>`<tr><td>${esc(x.label)}</td><td>${esc(formatExplorationValue(x.before))}</td><td>${esc(formatExplorationValue(x.after))}</td></tr>`).join("")}</tbody></table></div><p class="control-note">Una acción puede cambiar varios parámetros coordinados; el recuento describe diferencias del estado resultante, no el número de clics.</p>`)}
 function renderInfo() {
   const context = caseContext(c),
     reading = caseReading(c, context),
@@ -165,16 +173,19 @@ function renderInfo() {
     concealed = quiz && !quiz.answer;
   const diagnosis = p && !c.artifacts.reversed ? diagnosisForPreset(p) : undefined;
   const grouped = diagnosis && diagnosis.variants.length > 1;
-  $("#case-title").textContent = concealed ? "Interpreta este ECG" : grouped ? diagnosis.title : reading.title;
+  const customExploration=!!explorationOrigin&&explorationChanges(explorationOrigin,c).length>0&&!concealed;
+  $("#case-title").textContent = concealed ? "Interpreta este ECG" : customExploration ? "Exploración personalizada" : grouped ? diagnosis.title : reading.title;
   $("#case-variant-title").hidden = !!concealed || !grouped || p?.name === diagnosis?.title;
   $("#case-variant-title").textContent = !concealed && grouped ? p!.name : "";
   renderVariants(p, !!concealed);
   $("#case-category").textContent = concealed
     ? "PRÁCTICA"
+    : customExploration ? "EXPLORACIÓN"
     : p ? familyLabel(p.group) : "Caso personalizado";
   $("#case-subtitle").textContent = concealed
     ? "Identifica el patrón. Puedes cambiar la vista y utilizar los calibres."
-    : reading.subtitle;
+    : customExploration ? "Observa cómo los ajustes modifican el ejemplo de origen sin convertir su nombre en un diagnóstico del estado actual." : reading.subtitle;
+  renderExplorationContext(!!concealed);
   $("#finding-title").textContent = concealed
     ? "Análisis sistemático"
     : reading.findingsTitle;
@@ -400,6 +411,7 @@ const controller = new SignalController(
     if (!session.accept(requestId, next, audited, c.view.mode,
       representativeBeat(audited, visibleSegmentEnd()))) return;
     comparison.update(c, next, audited);
+    if(explorationOrigin&&sameExplorationModel(explorationOrigin,c)) explorationOriginTrace=captureTrace(c,next,audited);
     resetTracePresentation();
     $("#signal-loading").hidden = true;
     $("#signal-state").textContent = "500 muestras/s · análisis independiente";
@@ -544,6 +556,7 @@ function selectPreset(id: string) {
   const p = presetById(id);
   if (!p || p.strategy === "pending") return;
   c = fromPreset(p, c.view);
+  explorationOrigin=createExplorationOrigin(p,c); explorationOriginTrace=null;
   caliper = null;
   session.resetTools();
   annotations = false;
@@ -736,6 +749,7 @@ document.addEventListener("click", async (e) => {
   }
   if (saved) {
     c = savedCases()[Number(saved.dataset.saved)];
+    explorationOrigin=null; explorationOriginTrace=null;
     closeDialog();
     quiz = null;
     renderQuiz();
@@ -753,6 +767,9 @@ document.addEventListener("click", async (e) => {
     $<HTMLSelectElement>("#category").value = "";
     renderCatalog(); $("#case-search").focus();
   }
+  if(action==="exploration-changes") showExplorationChanges();
+  if(action==="restore-origin"&&explorationOrigin){c=restoreExplorationOrigin(explorationOrigin,c);caliper=null;session.resetTools();annotations=false;renderCatalog();renderControls();renderInfo();generate();toast("Origen restaurado; se conserva la vista actual.")}
+  if(action==="compare-origin"&&explorationOriginTrace&&session.signal&&session.measurement&&session.canExport){comparison.compareSynthetic(explorationOriginTrace,captureTrace(c,session.signal,session.measurement));comparison.focus();}
   if (action === "parameters") {
     if (quiz && !quiz.answer) return;
     $("#inspector").scrollIntoView({block:"start"}); $("#inspector").focus({preventScroll:true});
@@ -815,10 +832,7 @@ document.addEventListener("click", async (e) => {
     draw();
     renderDetail();
   }
-  if (action === "reset") {
-    selectPreset(c.presetId === "custom" ? "sinus" : c.presetId);
-    toast("Parámetros restablecidos");
-  }
+  if(action==="reset"){if(explorationOrigin&&explorationChanges(explorationOrigin,c).length){c=restoreExplorationOrigin(explorationOrigin,c);caliper=null;session.resetTools();annotations=false;renderCatalog();renderControls();renderInfo();generate();toast("Origen restaurado; se conserva la vista actual.")}else{selectPreset(c.presetId==="custom"?"sinus":c.presetId);toast("Parámetros restablecidos")}}
   if (action === "catalog") $("#catalog").classList.toggle("open");
   if (action === "close-catalog") $("#catalog").classList.remove("open");
   if (action === "about") showAbout();
@@ -898,6 +912,7 @@ $<HTMLInputElement>("#file-input").addEventListener("change", async (e) => {
     if (f.size > 50000)
       throw new Error("El caso excede el tamaño máximo de 50 kB.");
     c = normalizeImportedCase(JSON.parse(await f.text()));
+    explorationOrigin=null; explorationOriginTrace=null;
     quiz = null;
     closeDialog();
     renderQuiz();
@@ -1008,6 +1023,7 @@ window.addEventListener("hashchange", () => {
     const next = decodeCase(location.hash);
     if (next) {
       c = next;
+      explorationOrigin=null; explorationOriginTrace=null;
       quiz = null;
       renderQuiz();
       renderCatalog();

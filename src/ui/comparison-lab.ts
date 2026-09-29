@@ -92,6 +92,11 @@ export class ComparisonLab {
     this.resetView();this.render();
     this.notify(`Copia externa fijada como ${slot}. Cerrar el lector no borra las copias A/B.`);
   }
+  compareSynthetic(origin:SyntheticComparisonTrace,current:SyntheticComparisonTrace) {
+    if(this.concealed) throw Error("La comparación está oculta durante la pregunta.");
+    this.a=structuredClone(origin);this.b=structuredClone(current);this.sourceB="synthetic";
+    this.resetView();this.render();this.notify("Origen fijado como A y exploración actual como B.");
+  }
   update(c:ECGCase,s:Signal,m:Measurement) {
     if (this.sourceB==='external') return; // A pinned external B must not follow unrelated generator changes.
     this.b=captureTrace(c,s,m);this.view.beatB=0;this.revision++;
