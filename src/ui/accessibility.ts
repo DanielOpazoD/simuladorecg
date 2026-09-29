@@ -57,7 +57,7 @@ export function installAccessibility() {
     const node = e.target as HTMLElement;
     const dialog = node.closest<HTMLDialogElement>('dialog');
     if (dialog && last && last.root !== dialog && !dialog.contains(last.root) && !dialog.contains(last.node)) returns.set(dialog, last);
-    last = {node, selector:selectorFor(node), root:node.closest<HTMLElement>('#external-review,#comparison-lab,#inspector,#scale-toolbar,#caliper-editor,#catalog') ?? dialog ?? app};
+    last = {node, selector:selectorFor(node), root:node.closest<HTMLElement>('#diagnosis-navigation,#external-review,#comparison-lab,#inspector,#scale-toolbar,#caliper-editor,#catalog') ?? dialog ?? app};
   });
   function restoreFocus() {
     if (!last || last.node.isConnected || document.activeElement !== document.body) return;
@@ -140,6 +140,13 @@ export function installAccessibility() {
     const synthetic = document.querySelector('#signal-loading');
     if (synthetic) workspace.setAttribute('aria-busy',String(!synthetic.hasAttribute('hidden') && !synthetic.classList.contains('signal-unavailable')));
   }
+  document.addEventListener('focusout', e => {
+    const list = (e.target as Element).closest<HTMLElement>('[role=tablist][data-activation=manual]');
+    if (!list || (e.relatedTarget instanceof Node && list.contains(e.relatedTarget))) return;
+    list.querySelectorAll<HTMLElement>('[role=tab]').forEach(tab => {
+      tab.tabIndex = tab.getAttribute('aria-selected') === 'true' ? 0 : -1;
+    });
+  });
   // Attributes written here are deliberately not observed: no self-triggering loop.
   new MutationObserver(() => {enhance();restoreFocus();}).observe(document.body,{childList:true,subtree:true});
   document.addEventListener('click', () => queueMicrotask(enhance));
@@ -159,8 +166,15 @@ export function installAccessibility() {
     const tabs = [...(list?.querySelectorAll<HTMLElement>('[role=tab]') ?? [])].filter(t => !t.matches(':disabled'));
     const index = tabDestination(e.key,tabs.indexOf(tab),tabs.length);
     if (index !== null) {
-      e.preventDefault();e.stopPropagation();tabs[index].click();enhance();
-      document.getElementById(tabs[index].id)?.focus();
+      e.preventDefault();e.stopPropagation();
+      if (list?.getAttribute('data-activation') === 'manual') {
+        // Changing an ECG triggers generation; arrows only move focus, Enter/Space load it.
+        tabs.forEach((t,i) => {t.tabIndex = i === index ? 0 : -1;});
+        tabs[index].focus();
+      } else {
+        tabs[index].click();enhance();
+        document.getElementById(tabs[index].id)?.focus();
+      }
     }
   },true);
   enhance();

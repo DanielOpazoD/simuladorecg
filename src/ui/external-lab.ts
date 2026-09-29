@@ -51,13 +51,14 @@ export class ExternalLab {
     if (this.dialog.open) return;
     if (this.parked) {this.parked=false;this.dialog.showModal();return;}
     this.clear();
-    this.dialog.innerHTML = `<div class="external-heading"><div><div class="section-label">LECTOR DE SEÑALES DIGITALES</div><h2 id="external-title">Del archivo al trazado</h2></div><button class="btn" data-external="close">Cerrar y borrar</button></div>
+    this.dialog.innerHTML = `<div class="external-heading"><div><h2 id="external-title">Explorar una señal</h2><p class="section-subtitle">Archivos digitales · lectura y revisión local</p></div><button class="btn" data-external="close">Cerrar y borrar</button></div>
       <p class="dialog-lead">Abre un CSV o selecciona juntos un .hea y su .dat. No digitaliza imágenes/PDF. Este espacio es independiente del simulador: no asigna diagnósticos ni referencias sintéticas.</p>
       <div class="external-import"><label class="external-files">Archivos locales<input id="external-files" type="file" multiple accept=".hea,.dat,.csv"/></label>
       <label>Hz del CSV*<input id="external-fs" type="number" min="100" max="1000" step="1" placeholder="Ej. 500"/></label>
       <label>Unidad del CSV*<select id="external-unit"><option value="">Declarar…</option><option value="mV">mV</option><option value="uV">µV</option></select></label>
       <button class="btn primary" data-external="load">Abrir archivos</button></div>
-      <p class="control-note">*Solo para CSV sin metadatos. CSV: columnas I, II, III, aVR, aVL, aVF, V1–V6; time_s opcional, decimal con punto, separador coma. WFDB: formato 16 multiplexado, ganancia/unidades explícitas, checksum; sin offsets, skew ni segmentos. Doce canales completos, 100–1000 Hz, 10–60 s. No se rellenan ni se fabrican derivaciones.</p>
+      <p class="control-note">*Declara Hz y unidad sólo si el CSV no los incluye. Doce derivaciones completas, 100–1000 Hz y 10–60 s.</p>
+      <details class="format-help"><summary>Formatos admitidos y requisitos</summary><p class="control-note">CSV: columnas I, II, III, aVR, aVL, aVF, V1–V6; time_s opcional, decimal con punto, separador coma. WFDB: formato 16 multiplexado, ganancia/unidades explícitas, checksum; sin offsets, skew ni segmentos. Doce canales completos, 100–1000 Hz, 10–60 s. No se rellenan ni se fabrican derivaciones.</p></details>
       <details><summary>Privacidad y límites</summary><p class="control-note">Lectura y análisis en un worker local, sin subir archivos ni guardarlos en el navegador. Cerrar o borrar libera el registro del lector. Si copiaste un tramo a A/B, esa copia permanece allí hasta «Borrar copias A/B» o iniciar práctica. No se copian comentarios del encabezado, nombres de paciente ni nombres de archivo a las exportaciones. Las señales exportadas pueden seguir siendo datos sensibles: usa datos autorizados y desidentificados. Integridad de archivo no equivale a autenticidad ni validez clínica. El analizador es exploratorio y no está validado para tomar decisiones clínicas.</p></details>
       <p id="external-message" class="external-message" role="status" aria-live="polite"></p><div id="external-results"></div>`;
     this.dialog.showModal();

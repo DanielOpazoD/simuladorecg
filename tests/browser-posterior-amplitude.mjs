@@ -1,3 +1,4 @@
+import { chooseCatalogPreset } from './support/catalog-navigation.mjs';
 /** Browser plugin absent: use the repository's established Playwright/Chromium production test. */
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
@@ -17,7 +18,7 @@ try {
     assert.equal(new URL(page.url()).origin, new URL(url).origin);
     await page.locator('#signal-loading').waitFor({state: 'hidden'});
     if (width === 390) await page.locator('[data-action="catalog"]').click();
-    await page.locator(`[data-preset="${preset}"]`).click();
+    await chooseCatalogPreset(page, preset);
     await page.locator('#signal-loading').waitFor({state: 'hidden'});
     assert.ok(await page.locator('#ecg').evaluate(c => c.width > 0 && c.height > 0));
     await page.locator('[data-panel="st"]').click();

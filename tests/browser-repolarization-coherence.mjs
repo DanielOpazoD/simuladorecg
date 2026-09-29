@@ -1,3 +1,4 @@
+import { chooseCatalogPreset } from './support/catalog-navigation.mjs';
 /** Real worker -> A/B exports: potassium acts on rendered T, explicit ST limitation, scope errors recover. */
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
@@ -13,7 +14,7 @@ try{
   const ready=()=>page.locator('#signal-loading').waitFor({state:'hidden'});
   await page.goto(url);await ready();assert.match(await page.title(),/ECG/);
   if(width===390)await page.locator('[data-action="catalog"]').click();
-  await page.locator('[data-preset="lbbb"]').click();await ready();
+  await chooseCatalogPreset(page, 'lbbb');await ready();
   await page.locator('[data-action="export"]').click();const download=page.waitForEvent('download');
   await page.locator('[data-action="json"]').click();const originalFile=resolve(out,`coherence-case-${width}.json`);
   await(await download).saveAs(originalFile);

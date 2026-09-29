@@ -1,3 +1,4 @@
+import { chooseCatalogPreset } from './support/catalog-navigation.mjs';
 /** Production-only worker -> model audit -> visible HR quality, without source imports. */
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
@@ -22,7 +23,7 @@ try {
  assert.equal(await page.locator('vite-error-overlay').count(),0);
  assert.ok(await page.locator('#ecg').evaluate(c=>c.width>0&&c.height>0));
  checks.push('production identity, nonblank, no overlay');
- await page.locator('[data-preset="pvc"]').click();await ready();
+ await chooseCatalogPreset(page, 'pvc');await ready();
  await page.locator('[data-action="export"]').click();
  const pending=page.waitForEvent('download');await page.locator('[data-action="json"]').click();
  const file=path.join(out,'native-pvc.json');await(await pending).saveAs(file);
@@ -50,7 +51,7 @@ try {
  await metric.scrollIntoViewIfNeeded();assert.match(await metric.innerText(),/Revisar/);
  await page.screenshot({path:path.join(out,'hr-quality-mobile.png')});
  await page.setViewportSize({width:1440,height:1000});
- await page.locator('[data-preset="pvc"]').click();await ready();
+ await chooseCatalogPreset(page, 'pvc');await ready();
  assert.doesNotMatch(await metric.getAttribute('title'),/sensible al umbral/);
  checks.push('mobile-sized badge and clean-preset recovery');
  const paths=requests.filter(u=>new URL(u).origin===new URL(url).origin).map(u=>new URL(u).pathname);

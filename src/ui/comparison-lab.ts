@@ -122,7 +122,7 @@ export class ComparisonLab {
   private render() {
     const focused=this.root.contains(document.activeElement)?(document.activeElement as HTMLElement).id:'';
     const ready=!!this.b&&!this.concealed;
-    this.root.innerHTML=`<div class="comparison-heading"><div><div class="section-label">LABORATORIO COMPARATIVO</div><h2>Un cambio, dos ECG</h2></div><div class="comparison-actions"><button id="compare-pin" class="btn" data-compare="pin" ${ready?'':'disabled'}>${this.a?'Reemplazar referencia A':this.sourceB==='external'?'Fijar copia externa B como A':'Fijar ECG actual como A'}</button>${this.a?'<button class="btn subtle" id="compare-clear" data-compare="clear">Borrar A</button>':''}</div></div>`;
+    this.root.innerHTML=`<div class="comparison-heading"><div><h2>Comparar dos ECG</h2><p class="section-subtitle">Dos fuentes. Una misma escala. Muestras originales.</p></div><div class="comparison-actions"><button id="compare-pin" class="btn" data-compare="pin" ${ready?'':'disabled'}>${this.a?'Reemplazar referencia A':this.sourceB==='external'?'Fijar copia externa B como A':'Fijar ECG actual como A'}</button>${this.a?'<button class="btn subtle" id="compare-clear" data-compare="clear">Borrar A</button>':''}</div></div>`;
     if(this.concealed){
       this.root.insertAdjacentHTML('beforeend','<p class="control-note">Comparación desactivada durante la pregunta. Las copias anteriores se han borrado para no revelar respuestas.</p>');return;
     }

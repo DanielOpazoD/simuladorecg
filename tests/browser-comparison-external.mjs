@@ -1,3 +1,4 @@
+import { chooseCatalogPreset } from './support/catalog-navigation.mjs';
 // A11 + scoped A15: original samples, explicit source ownership and reversible navigation.
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
@@ -29,7 +30,7 @@ try {
       };
     });
     const ready=()=>page.locator('#signal-loading').waitFor({state:'hidden'});
-    const select=async id=>{if(width===390)await page.locator('[data-action=catalog]').click();await page.locator(`[data-preset="${id}"]`).click();await ready();};
+    const select=async id=>{if(width===390)await page.locator('[data-action=catalog]').click();await chooseCatalogPreset(page, id);await ready();};
     const reader=()=>page.locator('[data-compare=reader]').click();
     const field=async(id,value)=>{await page.locator('#'+id).fill(String(value));await page.locator('#'+id).press('Tab');};
     const load=async files=>{await page.locator('#external-files').setInputFiles(files);await page.locator('[data-external=load]').click();await page.locator('#external-aptitude').waitFor();};
@@ -74,7 +75,7 @@ try {
     await select('lbbb');assert.equal(hash({A:(await exportAB('retained')).A,B:(await exportAB('retained-b')).B}),snapshotHash);
     await page.evaluate(()=>window.__a11Failures=2);
     if(width===390)await page.locator('[data-action=catalog]').click();
-    await page.locator('[data-preset=brady]').click();await page.locator('#signal-loading.signal-unavailable').waitFor();
+    await chooseCatalogPreset(page, 'brady');await page.locator('#signal-loading.signal-unavailable').waitFor();
     const duringFailure=await exportAB('generator-failed');assert.equal(hash({A:duringFailure.A,B:duringFailure.B}),snapshotHash);
     assert.equal(await page.locator('[data-action=compare]').isDisabled(),false);
     await select('sinus');

@@ -1,3 +1,4 @@
+import { chooseCatalogPreset } from './support/catalog-navigation.mjs';
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
@@ -11,7 +12,7 @@ try{
   page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());if(m.type()==='warning')warnings.push(m.text());});
   await page.goto(url);assert.match(await page.title(),/ECG/);assert.equal(await page.locator('vite-error-overlay').count(),0);
   await page.locator('#signal-loading').waitFor({state:'hidden'});
-  const preset=async id=>{if(width===390)await page.locator('[data-action="catalog"]').click();await page.locator(`[data-preset="${id}"]`).click();await page.locator('#signal-loading').waitFor({state:'hidden'});};
+  const preset=async id=>{if(width===390)await page.locator('[data-action="catalog"]').click();await chooseCatalogPreset(page, id);await page.locator('#signal-loading').waitFor({state:'hidden'});};
   await preset('tachy');const detail=page.locator('#beat-detail');
   await detail.locator('[data-t-end-assistance]').waitFor();await detail.scrollIntoViewIfNeeded();
   assert.match(await detail.innerText(),/revisión manual/);assert.doesNotMatch(await detail.innerText(),/QT \d+ ms/);
