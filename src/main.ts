@@ -180,6 +180,7 @@ function renderInfo() {
   renderVariants(p, !!concealed);
   $("#case-category").textContent = concealed
     ? "PRÁCTICA"
+    : customExploration ? "EXPLORACIÓN"
     : p ? familyLabel(p.group) : "Caso personalizado";
   $("#case-subtitle").textContent = concealed
     ? "Identifica el patrón. Puedes cambiar la vista y utilizar los calibres."
