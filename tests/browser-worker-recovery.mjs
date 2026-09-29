@@ -1,3 +1,4 @@
+import { chooseCatalogPreset } from './support/catalog-navigation.mjs';
 /** Real production Worker after bounded transport fault injection. No source imports. */
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
@@ -47,7 +48,7 @@ try {
  p=await page.evaluate(()=>window.__workerRecoveryProbe);assert.equal(p.workers,2);assert.equal(p.posts,2);probes.push(p);
  await pngEnabled(page,false);await page.screenshot({path:path.join(out,'worker-exhausted.png')});
  checks.push('two failed sends -> bounded terminal error, no stale measures or PNG');
- await page.locator('[data-preset="brady"]').click();await ready(page);
+ await chooseCatalogPreset(page, 'brady');await ready(page);
  assert.doesNotMatch(await page.locator('#toast').textContent(),/único reintento/);
  p=await page.evaluate(()=>window.__workerRecoveryProbe);assert.equal(p.workers,3);probes.push(p);
  await pngEnabled(page,true);await page.screenshot({path:path.join(out,'worker-user-retry.png')});

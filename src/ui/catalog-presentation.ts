@@ -70,15 +70,15 @@ export interface CatalogFamily {
   sections: {title: string; presets: Preset[]}[];
 }
 const acronyms = new Set(['fa','af','tv','vt','fv','vf','brd','bri','tsv','svt','esa','esv','pac','pvc','wpw','qt','bav','riva']);
-function matches(preset: Preset, tokens: readonly string[]): boolean {
-  const text = searchText(`${preset.id} ${preset.name} ${preset.short} ${catalogLabel(preset)} ${preset.group} ${familyLabel(preset.group)} ${aliases[preset.id] ?? ''}`);
+export function matchesCatalog(preset: Preset, tokens: readonly string[], extra = ''): boolean {
+  const text = searchText(`${preset.id} ${preset.name} ${preset.short} ${catalogLabel(preset)} ${preset.group} ${familyLabel(preset.group)} ${aliases[preset.id] ?? ''} ${extra}`);
   const words = text.split(/[^a-z0-9]+/);
   // A short abbreviation must not match an unrelated fragment (FA ≠ fascículos).
   return tokens.every(token => acronyms.has(token) ? words.includes(token) : text.includes(token));
 }
 export function catalogFamilies(presets: readonly Preset[], query = '', group = ''): CatalogFamily[] {
   const tokens = searchText(query).split(/\s+/).filter(Boolean);
-  const matching = presets.filter(p => (!group || p.group === group) && matches(p, tokens));
+  const matching = presets.filter(p => (!group || p.group === group) && matchesCatalog(p, tokens));
   return [...new Set(matching.map(p => p.group))].map(id => {
     const members = matching.filter(p => p.group === id), used = new Set<string>();
     const sections: CatalogFamily['sections'] = [];

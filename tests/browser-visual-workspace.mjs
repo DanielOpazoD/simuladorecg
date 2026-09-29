@@ -1,3 +1,4 @@
+import { chooseCatalogPreset } from './support/catalog-navigation.mjs';
 /** Visual refresh: same production app and numerical objects, not a screenshot mock.
  * Existing fidelity, manual-caliper and cross-engine checks remain mandatory.
  */
@@ -34,11 +35,11 @@ try {
   await page.locator('[data-action=compare]').click();await page.locator('#compare-pin').click();
   const original=await exportPair('before');
   await openCatalog();
-  assert.equal(await page.locator('#case-list [data-preset]').count(),66);
+  assert.equal(await page.locator('#case-list [data-preset]').count(),45);
   assert.equal(await page.locator('#case-list [data-preset]:disabled').count(),5);
   await page.locator('#case-search').fill('FA');
-  assert.deepEqual((await page.locator('[data-preset]').evaluateAll(es=>es.map(e=>e.dataset.preset))).sort(),['af','af_fast','af_slow']);
-  assert.equal(await page.locator('#catalog-count').textContent(),'3 disponibles');
+  assert.deepEqual((await page.locator('[data-preset]').evaluateAll(es=>es.map(e=>e.dataset.preset))).sort(),['af']);
+  assert.equal(await page.locator('#catalog-count').textContent(),'1 patrón · 3 ejemplos');
   await page.locator('#case-search').fill('FIBRILACIÓN');assert.equal(await page.locator('[data-preset=af]').count(),1);
   await page.locator('#case-search').fill('LBBB');await page.locator('[data-preset=lbbb]').click();await ready();
   assert.match(await page.locator('#case-title').textContent(),/rama izquierda/i);
@@ -46,12 +47,12 @@ try {
   await openCatalog();await page.locator('[data-action=clear-search]').click();
   await page.locator('#category').selectOption('Conducción intraventricular');
   assert.deepEqual(await page.locator('.case-subgroup').allTextContents(),['Ramas','Fascículos y combinaciones','Preexcitación']);
-  assert.equal(await page.locator('[data-preset]').count(),8);
+  assert.equal(await page.locator('[data-preset]').count(),5);
   await page.locator('#case-search').fill('zzzz-inexistente');assert.equal(await page.locator('.catalog-empty').isVisible(),true);
   await page.locator('[data-action=clear-search]').click();
-  assert.equal(await page.locator('[data-preset]').count(),66);
+  assert.equal(await page.locator('[data-preset]').count(),45);
   await page.screenshot({path:resolve(out,`visual-catalog-${width}.png`)});
-  await page.locator('[data-preset=sinus]').click();await ready();
+  await chooseCatalogPreset(page,'sinus');await ready();
   await page.locator('[data-action=compare]').click();const restored=await exportPair('restored');
   assert.deepEqual(restored.A,original.A,'Pinned A cannot change after search or selecting another example');
   assert.deepEqual(restored.B,original.B,'Restoring sinus must restore the full signal and measurements');

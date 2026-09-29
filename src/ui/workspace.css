@@ -191,3 +191,25 @@ dialog.external-lab { border-radius:12px; }
   .trace-tools .btn { font-size:10px; }
 }
 @media print { .workspace-nav, .catalog-result-bar { display:none!important; } }
+
+/* Pattern first, variant second. Only navigation changes; the trace retains its scale. */
+.case-button .case-variants-count { display:block; margin-top:3px; font-size:11px; line-height:1.4; font-weight:400; color:var(--muted); }
+.case-button > svg { flex:0 0 16px; }
+.case-heading .case-variant-title { font-size:14px; font-weight:600; color:var(--accent); margin-top:10px; }
+.diagnosis-navigation { margin:-6px 0 22px; padding-bottom:4px; }
+.variant-heading { display:flex; flex-wrap:wrap; gap:6px 18px; align-items:baseline; margin-bottom:9px; }
+.variant-heading > span { font-size:12px; font-weight:600; color:var(--ink); }
+.variant-heading > small { font-size:12px; color:var(--muted); line-height:1.5; }
+.variant-tabs { display:flex; flex-wrap:wrap; gap:6px; }
+.variant-tabs > button { min-height:44px; padding:10px 15px; border:1px solid var(--line); border-radius:7px; background:var(--surface); color:var(--muted); font:inherit; font-size:13px; line-height:1.4; text-align:center; }
+.variant-tabs > button:hover { color:var(--ink); border-color:var(--accent); }
+.variant-tabs > button[aria-selected=true] { color:var(--accent); background:var(--soft); border-color:var(--accent); font-weight:600; }
+.variant-tabs > button:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+#diagnosis-content { min-width:0; }
+@media(max-width:600px) {
+  .diagnosis-navigation { margin-top:0; }
+  .variant-tabs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  .variant-tabs > button { min-width:0; padding:10px 8px; font-size:13px; overflow-wrap:anywhere; }
+  .variant-heading > small { flex-basis:100%; }
+}
+@media print { .diagnosis-navigation { display:none!important; } }

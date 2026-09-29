@@ -1,6 +1,7 @@
 import "./style.css";
 import { APP_VERSION } from "./ui/version";
-import { catalogFamilies, catalogLabel, familyLabel } from "./ui/catalog-presentation";
+import { familyLabel } from "./ui/catalog-presentation";
+import { diagnosisFamilies, diagnosisForPreset } from "./ui/diagnosis-navigation";
 import { ComparisonLab } from "./ui/comparison-lab";
 import { captureTrace } from "./ui/comparison-model";
 import { ExternalLab } from "./ui/external-lab";
@@ -72,14 +73,17 @@ try {
 }
 const root = $("#app");
 root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="ECG Lab, inicio">${icon("pulse")}<span>ECG<span class="brand-light">lab</span></span><span class="brand-divider"></span><small>Explora la electrocardiografía</small></a><nav aria-label="Herramientas"><button class="btn mobile-cases" data-action="catalog">${icon("menu")}<span>Casos</span></button>${btn("quiz", "Practicar", "quiz")}${btn("about", "Guía", "book")}${btn("theme", "Tema", "sun", "icon-button")}${btn("export", "Exportar", "download", "primary")}</nav></header>
- <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><div><h2>Biblioteca de patrones</h2><span>${PRESETS.filter((x) => x.strategy !== "pending").length} patrones sintéticos</span></div>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Patrón, sigla o palabra…" aria-label="Buscar caso"/></label><label class="category-select"><span class="sr-only">Categoría</span><select id="category">${options([["", "Todas las familias"], ...Array.from(new Set(PRESETS.map((x) => x.group))).map((x) => [x, familyLabel(x)] as [string, string])], "")}</select></label><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div><div class="sidebar-footer">${icon("pulse")}<div>Señal 100% sintética<small data-product-version="${APP_VERSION}">Modelo educativo · v${APP_VERSION}</small></div></div></aside>
- <main class="workspace"><nav class="workspace-nav" aria-label="Espacios de trabajo"><span class="workspace-current" aria-current="page">${icon("pulse")}Simulador</span>${btn("external", "Abrir señal", "book")}${btn("compare", "Comparar A/B", "strip")}<button type="button" class="btn workspace-adjust" data-action="parameters">${icon("settings")}<span>Ajustar el caso</span></button></nav><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-subtitle">Activación auricular sinusal seguida de conducción AV 1:1.</p></div><div class="case-state"><span class="status-label">Ejemplo sintético</span>${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
+ <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><div><h2>Biblioteca de patrones</h2><span>${PRESETS.filter((x) => x.strategy !== "pending").length} ejemplos · agrupados por patrón</span></div>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Patrón, sigla o palabra…" aria-label="Buscar caso"/></label><label class="category-select"><span class="sr-only">Categoría</span><select id="category">${options([["", "Todas las familias"], ...Array.from(new Set(PRESETS.map((x) => x.group))).map((x) => [x, familyLabel(x)] as [string, string])], "")}</select></label><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div><div class="sidebar-footer">${icon("pulse")}<div>Señal 100% sintética<small data-product-version="${APP_VERSION}">Modelo educativo · v${APP_VERSION}</small></div></div></aside>
+ <main class="workspace"><nav class="workspace-nav" aria-label="Espacios de trabajo"><span class="workspace-current" aria-current="page">${icon("pulse")}Simulador</span>${btn("external", "Abrir señal", "book")}${btn("compare", "Comparar A/B", "strip")}<button type="button" class="btn workspace-adjust" data-action="parameters">${icon("settings")}<span>Ajustar el caso</span></button></nav><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><p id="case-subtitle">Activación auricular sinusal seguida de conducción AV 1:1.</p></div><div class="case-state"><span class="status-label">Ejemplo sintético</span>${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
+ <section id="diagnosis-navigation" class="diagnosis-navigation" aria-label="Variantes del patrón" hidden></section>
+ <div id="diagnosis-content">
  <section id="metrics" class="metrics" aria-label="Medidas del ECG"><div class="loading-metrics">Generando señal…</div></section>
  <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><div class="trace-tools">${btn("caliper", "Calibres", "ruler")}${btn("annotations", "Ondas", "eye")}${btn("focus", "Ampliar", "search")}${btn("pause", "Congelar", "pause")}</div></div>
  <div id="quiz-panel" hidden></div><div id="caliper-editor" class="caliper-editor" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small>lpm</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
  <div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div>
  <div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><div class="scale-toolbar" id="scale-toolbar"></div><div class="trace-caption"><span id="trace-caption">10 s · Columnas secuenciales</span><span id="signal-state">Señal sintética · 500 muestras/s</span></div><details class="keyboard-help"><summary>Teclado y calibres</summary><p id="trace-keyboard-help">Con foco en el trazado: M/P/R cambia vista, V/G cambia escala, C activa calibres y espacio congela el monitor. Calibres: flechas mueven el extremo seleccionado una muestra horizontal o 0,01 mV vertical; Mayús mueve diez pasos. También puedes usar los campos de tiempo y amplitud. Tab sale del trazado.</p></details></section>
  <section id="beat-detail" class="beat-detail" aria-label="Ampliación del latido"><div class="detail-empty">Preparando análisis…</div></section>
+ </div>
  <section id="comparison-lab" class="comparison-lab" aria-label="Laboratorio comparativo A/B"></section>
  <section class="lower-grid"><div id="inspector" class="inspector"></div><aside class="interpretation"><div class="section-label">Guía de lectura</div><h2 id="finding-title">Hallazgos esperados</h2><ul id="findings"></ul><div id="limitation" class="model-note"></div><div id="warnings"></div><button class="text-button" data-action="measurements">Ver medidas y valores del modelo ${icon("chevron")}</button><button class="text-button" data-action="about">Estado y referencias ${icon("chevron")}</button></aside></section>
  <footer class="workspace-footer"><span>ECG Lab · Laboratorio de electrocardiografía</span><span>Uso educativo. Sin validación clínica.</span></footer></main></div>
@@ -116,25 +120,55 @@ function currentPreset() {
 }
 function renderCatalog() {
   const selectedId = currentPreset()?.id;
-  const families = catalogFamilies(PRESETS, search, group);
+  const families = diagnosisFamilies(PRESETS, search, group, selectedId);
   const available = families.reduce((sum, family) => sum + family.available, 0);
-  const pending = families.reduce((sum, family) => sum + family.count - family.available, 0);
-  $("#catalog-count").textContent = `${available} disponibles${pending ? ` · ${pending} pendientes` : ""}`;
+  const entries = families.reduce((sum, family) => sum + family.availableEntries, 0);
+  $("#catalog-count").textContent = `${entries} ${entries === 1 ? "patrón" : "patrones"} · ${available} ${available === 1 ? "ejemplo" : "ejemplos"}`;
   $("[data-action=clear-search]").hidden = !search && !group;
   $("#case-list").innerHTML = families.map(family =>
-    `<section class="case-group"><h3>${esc(family.label)}<span>${family.count}</span></h3>${family.sections.map(section =>
-      `${section.title ? `<h4 class="case-subgroup">${esc(section.title)}</h4>` : ""}${section.presets.map(p =>
-        `<button type="button" class="case-button ${selectedId === p.id ? "selected" : ""}" data-preset="${esc(p.id)}" title="${esc(p.name)}" aria-label="${esc(catalogLabel(p))} · ${esc(p.name)}" ${p.strategy === "pending" ? "disabled" : ""} ${selectedId === p.id ? 'aria-current="true"' : ""}><span>${esc(catalogLabel(p))}</span>${p.strategy === "pending" ? '<small>Pendiente</small>' : selectedId === p.id ? icon("check") : ""}</button>`
-      ).join("")}`
+    `<section class="case-group"><h3>${esc(family.label)}<span>${family.entryCount}</span></h3>${family.sections.map(section =>
+      `${section.title ? `<h4 class="case-subgroup">${esc(section.title)}</h4>` : ""}${section.entries.map(entry => {
+        const {diagnosis, target, selected, matches} = entry;
+        const pending = target.strategy === "pending";
+        const multiple = diagnosis.variants.length > 1;
+        const detail = pending ? "Pendiente" : search && matches.length === 1 && multiple
+          ? `Coincide: ${diagnosis.variants.find(v => v.id === target.id)!.label}`
+          : multiple ? `${diagnosis.variants.length} variantes` : "";
+        return `<button type="button" class="case-button ${selected ? "selected" : ""}" data-diagnosis="${esc(diagnosis.id)}" data-preset="${esc(target.id)}" title="${esc(target.name)}" aria-label="${esc(diagnosis.title)}${detail ? ` · ${esc(detail)}` : ""}" ${pending ? "disabled" : ""} ${selected ? 'aria-current="true"' : ""}><span>${esc(diagnosis.title)}${detail ? `<small class="case-variants-count">${esc(detail)}</small>` : ""}</span>${selected ? icon("check") : multiple ? icon("chevron") : ""}</button>`;
+      }).join("")}`
     ).join("")}</section>`
   ).join("") || '<div class="catalog-empty"><strong>No encontramos ese patrón</strong><p>Prueba con el nombre completo o una sigla como FA, BRI o WPW.</p></div>';
+}
+let renderedVariants = "";
+function renderVariants(preset: Preset | undefined, concealed: boolean) {
+  const navigation = $("#diagnosis-navigation");
+  const content = $("#diagnosis-content");
+  const diagnosis = preset && !concealed && !c.artifacts.reversed ? diagnosisForPreset(preset) : null;
+  const multi = diagnosis && diagnosis.variants.length > 1;
+  const key = multi ? `${diagnosis.id}/${preset!.id}` : "";
+  navigation.hidden = !multi;
+  if (key !== renderedVariants) {
+    navigation.innerHTML = multi ? `<div class="variant-heading"><span id="variant-label">Variantes del patrón</span><small>Cambiar de variante carga su ejemplo original.</small></div><div class="variant-tabs" role="tablist" aria-labelledby="variant-label" data-activation="manual">${diagnosis.variants.map(v => `<button type="button" role="tab" id="variant-tab-${esc(v.id)}" data-variant="${esc(v.id)}" aria-selected="${v.id === preset!.id}" aria-controls="diagnosis-content" tabindex="${v.id === preset!.id ? 0 : -1}">${esc(v.label)}</button>`).join("")}</div>` : "";
+    renderedVariants = key;
+  }
+  if (multi) {
+    content.setAttribute("role", "tabpanel");
+    content.setAttribute("aria-labelledby", `variant-tab-${preset!.id}`);
+  } else {
+    content.removeAttribute("role"); content.removeAttribute("aria-labelledby");
+  }
 }
 function renderInfo() {
   const context = caseContext(c),
     reading = caseReading(c, context),
     p = context.preset,
     concealed = quiz && !quiz.answer;
-  $("#case-title").textContent = concealed ? "Interpreta este ECG" : reading.title;
+  const diagnosis = p && !c.artifacts.reversed ? diagnosisForPreset(p) : undefined;
+  const grouped = diagnosis && diagnosis.variants.length > 1;
+  $("#case-title").textContent = concealed ? "Interpreta este ECG" : grouped ? diagnosis.title : reading.title;
+  $("#case-variant-title").hidden = !!concealed || !grouped || p?.name === diagnosis?.title;
+  $("#case-variant-title").textContent = !concealed && grouped ? p!.name : "";
+  renderVariants(p, !!concealed);
   $("#case-category").textContent = concealed
     ? "PRÁCTICA"
     : p ? familyLabel(p.group) : "Caso personalizado";
@@ -659,12 +693,23 @@ function startQuiz() {
 }
 document.addEventListener("click", async (e) => {
   const target = e.target as HTMLElement,
+    variant = target.closest<HTMLElement>("[data-variant]"),
     preset = target.closest<HTMLElement>("[data-preset]"),
     panel = target.closest<HTMLElement>("[data-panel]"),
     mode = target.closest<HTMLElement>("[data-mode]"),
     answer = target.closest<HTMLElement>("[data-answer]"),
     saved = target.closest<HTMLElement>("[data-saved]");
+  if (variant) {
+    if (quiz && !quiz.answer) return;
+    const id = variant.dataset.variant!;
+    const active = currentPreset();
+    if (!active || !diagnosisForPreset(active).variants.some(v => v.id === id) || active.id === id) return;
+    quiz = null; renderQuiz(); selectPreset(id);
+    document.getElementById(`variant-tab-${id}`)?.focus({preventScroll:true});
+    return;
+  }
   if (preset) {
+    if (quiz && !quiz.answer) return;
     quiz = null;
     renderQuiz();
     selectPreset(preset.dataset.preset!);

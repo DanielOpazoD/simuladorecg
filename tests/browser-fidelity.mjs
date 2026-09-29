@@ -1,3 +1,4 @@
+import { chooseCatalogPreset } from './support/catalog-navigation.mjs';
 /** Real Chromium checks. Run against the built dist (vite preview): ECG_TEST_URL=http://127.0.0.1:5173.
  * Outputs outside source by default; no patient data, diagnostic labels or network AI.
  * npm install --no-save --package-lock=false playwright@1.63.0
@@ -21,7 +22,7 @@ const requested=[];page.on('request',r=>requested.push(r.url()));
 page.on('pageerror',e=>errors.push(e.message));
 page.on('console',m=>{if(m.type()==='error')errors.push(m.text());else if(m.type()==='warning')warnings.push(m.text());});
 const ready=()=>page.locator('#signal-loading').waitFor({state:'hidden'});
-async function select(id){await page.locator(`[data-preset="${id}"]`).click();await ready();}
+async function select(id){await chooseCatalogPreset(page, id);await ready();}
 async function phase(value){await page.locator('[data-panel="st"]').click();await page.locator('[data-key="phase"]').selectOption(value);await ready();}
 const scale=()=>page.locator('.beat-plot').evaluate(e=>[e.dataset.scaleMin,e.dataset.scaleMax]);
 try {

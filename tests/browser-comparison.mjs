@@ -1,3 +1,4 @@
+import { chooseCatalogPreset } from './support/catalog-navigation.mjs';
 /** The built app: pin A -> change B -> shared-scale overlay -> exports -> invalidation -> quiz isolation. */
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
@@ -21,7 +22,7 @@ try {
       };
     });
     const ready=()=>page.locator('#signal-loading').waitFor({state:'hidden'});
-    const select=async id=>{if(width===390)await page.locator('[data-action="catalog"]').click();await page.locator(`[data-preset="${id}"]`).click();await ready();};
+    const select=async id=>{if(width===390)await page.locator('[data-action="catalog"]').click();await chooseCatalogPreset(page, id);await ready();};
     const exported=async name=>{const wait=page.waitForEvent('download');await page.locator('#compare-json').click();const file=resolve(out,`comparison-${name}-${width}.json`);await(await wait).saveAs(file);return JSON.parse(await readFile(file,'utf8'));};
     await page.goto(url);await ready();assert.match(await page.title(),/ECG/);assert.equal(await page.locator('vite-error-overlay').count(),0);
     await page.screenshot({path:resolve(out,`comparison-entry-${width}.png`)});
@@ -78,7 +79,7 @@ try {
     await select('sinus');const restored=await exported('restored');assert.deepEqual(restored.B.leads,initial.A.leads);
     await page.evaluate(()=>{window.__comparisonFailures=2;});
     if(width===390)await page.locator('[data-action="catalog"]').click();
-    await page.locator('[data-preset="brady"]').click();
+    await chooseCatalogPreset(page, 'brady');
     await page.locator('#signal-loading.signal-unavailable').waitFor({state:'visible'});
     assert.equal(await lab.locator('canvas').count(),0);assert.equal(await lab.locator('#compare-json').count(),0);
     assert.equal(await page.locator('#compare-pin').isDisabled(),true);assert.match(await lab.innerText(),/permanece fijada/);
