@@ -141,7 +141,54 @@ for (const [engine, launcher] of Object.entries(engines)) {
         assert.equal(await page.locator('#activation-choice option[value="representative_vt"]').count(), 0);
         assert.equal(await page.locator('#activation-choice option[value="rbbb"]').count(), 1); await close();
         checks.push('EV uses actual ectopic event; source survives export; AAI is conducted, not ventricular');
-        for (const preset of ['vf', 'wpw', 'posterior', 'torsades']) {
+        await chooseCatalogPreset(page, 'wpw'); await ready();
+        const nativeWpw = await exportCase('wpw-before.json'); await open();
+        assert.equal(await page.locator('#activation-error').isVisible(), false);
+        assert.equal(await page.locator('[data-activation-plane]').count(), 4);
+        assert.equal(await page.locator('[data-activation-lead]').count(), 12);
+        assert.match(await page.locator('[data-activation-model="A"]').innerText(), /Delta sintética adicional: 0–45 ms/);
+        assert.match(await page.locator('[data-activation-model="A"]').innerText(), /no modifica el ST-T/);
+        await page.locator('#activation-choice').selectOption('normal'); await qrs.fill('135');
+        await slider.focus(); await slider.press('Home');
+        for (let n = 0; n < 20; n++) await slider.press('ArrowRight');
+        const wpw = JSON.parse(await download('[data-activation="json"]', 'wpw-experiment.json'));
+        assert.equal(wpw.cursorMs, 20); assert.equal(wpw.a.timing.deltaDurationMs, 45);
+        assert.equal(wpw.b.timing.deltaDurationMs, null); assert.match(wpw.timeReference, /original captured event/);
+        // Equal base kernels, duration, gain and axis: the observed difference
+        // must be precisely the historical delta, not an arbitrary prettier curve.
+        const expectedDeltaII = .25 * Math.cos((55 - 60) * Math.PI / 180) * Math.sin(Math.PI * 20 / 45);
+        assert.ok(Math.abs(wpw.a.leads.II[20] - wpw.b.leads.II[20] - expectedDeltaII) < 1e-10);
+        assert.ok(Math.abs(wpw.a.leads.II[80] - wpw.b.leads.II[80]) < 1e-10);
+        assert.match(await download('[data-activation="svg"]', 'wpw-experiment.svg'), /Delta incluida · A: 45 ms · B: 0 ms/);
+        assert.equal(await page.locator('#activation-dialog').evaluate(d => d.scrollWidth <= d.clientWidth + 1), true);
+        await page.locator('#activation-charts').screenshot({ path: path.join(out, `${tag}-activation-wpw.png`) });
+        checks.push('WPW includes the actual delta; independent lead-II difference and shared scales; JSON/SVG identify the component');
+        await page.locator('[data-activation="reset"]').click(); await qrs.fill('133.7');
+        const fractional = JSON.parse(await download('[data-activation="json"]', 'wpw-fractional.json'));
+        assert.ok(fractional.b.timesMs.includes(45)); assert.equal(fractional.b.timesMs.at(-1), 133.7);
+        assert.equal(fractional.b.timing.deltaDurationMs, 45);
+        await page.locator('[data-activation="reset"]').click();
+        const wpwReset = JSON.parse(await download('[data-activation="json"]', 'wpw-reset.json'));
+        assert.deepEqual(wpwReset.a, wpwReset.b); await close();
+        assert.deepEqual(await exportCase('wpw-cancelled.json'), nativeWpw);
+        checks.push('fractional WPW keeps the exact delta endpoint; reset and cancellation preserve captured case');
+        await chooseCatalogPreset(page, 'sinus'); await ready(); await open();
+        await page.locator('#activation-choice').selectOption('wpw');
+        assert.match(await page.locator('#activation-changes').innerText(), /PR programado \(ms\): 160 → 100/);
+        assert.match(await page.locator('#activation-changes').innerText(), /se recalculan los tiempos/);
+        const proposedWpw = JSON.parse(await download('[data-activation="json"]', 'wpw-proposed.json'));
+        assert.equal(Object.hasOwn(proposedWpw.b.beat, 'qt'), false);
+        assert.equal(proposedWpw.b.beat.time, proposedWpw.a.beat.time);
+        await page.locator('[data-activation="apply"]').click(); await ready();
+        const appliedWpw = await exportCase('wpw-applied.json');
+        assert.equal(appliedWpw.conduction, 'wpw'); assert.equal(appliedWpw.pr, 100); assert.equal(appliedWpw.qrs, 135);
+        await open();
+        const regeneratedWpw = JSON.parse(await download('[data-activation="json"]', 'wpw-regenerated.json'));
+        assert.equal(regeneratedWpw.a.timing.deltaDurationMs, 45);
+        assert.ok(Math.abs(regeneratedWpw.a.beat.time - proposedWpw.a.beat.time + .06) < 1e-9);
+        await close();
+        checks.push('PR change is visible; apply regenerates WPW and event onset through the real worker; no reused QT truth');
+        for (const preset of ['vf', 'posterior', 'torsades']) {
           await chooseCatalogPreset(page, preset); await ready(); await open();
           assert.equal(await page.locator('#activation-error').isVisible(), true);
           assert.equal(await page.locator('[data-activation-plane]').count(), 0); await close();

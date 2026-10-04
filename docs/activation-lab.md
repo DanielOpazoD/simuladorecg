@@ -8,11 +8,11 @@ segundos. No genera un latido ficticio a partir de la etiqueta diagnóstica: AAI
 conserva sus latidos conducidos, una EV conserva su tipo y un escape ventricular
 no se convierte en conducción normal. El selector permite explorar cada evento.
 
-A es la copia capturada. B comienza sin cambios y permite seis ejemplos de
+A es la copia capturada. B comienza sin cambios y permite siete ejemplos de
 conducción para un latido conducido, o selección automática/cuatro fuentes
 ventriculares para un evento no conducido. Las fuentes son los perfiles
 ilustrativos existentes, no localizaciones anatómicas nuevas. Los cambios de
-conducción utilizan `changeCase()` y muestran sus cambios coordinados de QRS y
+conducción utilizan `changeCase()` y muestran sus cambios coordinados de PR, QRS y
 eje. No se modifica el catálogo ni se introducen coeficientes fisiológicos.
 
 ## Duración y modelo de B en el mismo experimento
@@ -50,10 +50,49 @@ invalidación, reset, aplicación real y cancelación en la misma matriz de moto
 No se crean workflows, dependencias ni capas nuevas. Los resultados concretos
 pertenecen al commit evaluado; esta descripción no equivale a CI aprobado.
 
+## WPW: incluir la delta del generador, no dibujar solo sus kernels
+
+WPW ya se puede abrir y elegir como alternativa B. Antes se excluía porque su
+QRS incluye un pulso adicional a los kernels. `wpwDeltaVector()` y su duración
+viven ahora en `morphology.ts`; el sintetizador y el laboratorio usan la misma
+función. La extracción conserva el orden aritmético anterior, los coeficientes,
+el soporte de 45 ms y la regla `conduction=wpw && beat.kind=normal`. No se cambia
+la señal del ECG principal. EV, escape y estimulación no reciben una delta.
+
+El laboratorio suma delta + kernels antes de integrar el eje, calcular la escala
+y proyectar a las doce derivaciones. Un nodo exacto a 45 ms y la interpolación
+por tiempos reales evitan prolongar artificialmente la delta cuando QRS es
+fraccionario. Las curvas siguen alineadas a sus propios inicios QRS; no se
+compara el mismo instante absoluto del ECG completo. La transición existente a
+WPW modifica PR a 100 ms: ahora ese cambio se muestra, y la aplicación regenera
+los eventos por el worker. `beat.time` es siempre el evento originalmente
+capturado, no una predicción del nuevo inicio de B; `timeReference` lo declara
+explícitamente en JSON. El nuevo metadato `timing.deltaDurationMs` es aditivo.
+
+La comparación con el ECG a 500 Hz usa un evento alineado a la rejilla nativa
+(PR 90 ms, HR 60, filtro off y P/T/ST apagados). No equivale a una extracción
+universal: el `floor(start*fs)` histórico puede evaluar la delta antes de su
+inicio en otras fases, incluso por redondeo flotante (observado con PR 100 ms).
+Ese artefacto de adquisición preexistente no se reproduce en el bucle ideal ni se
+corrige en este PR; se conserva para separar una futura intervención de señal.
+
+No se representa una vía accesoria anatómica ni una activación causal nueva. El
+aviso WPW de repolarización incompleta se reutiliza sin modificarlo: la delta no
+modula ST-T secundario. El SVG identifica la delta incluida en cada alternativa.
+Los cambios de PR se anuncian sin afirmar que los eventos conservarán sus tiempos.
+
+Ocho pruebas nuevas contrastan la suma con la fórmula histórica independiente,
+control negativo sin delta, soporte fijo/fraccionario, interpolación/integrales,
+ganancia/bajo voltaje, ECG a 500 Hz tras el FIR, tipos de latido y procedencia.
+El recorrido de producción existente añade WPW capturado, elección B, PR visible,
+SVG/JSON, cursor y tiempos fraccionarios, cancelación/restablecimiento, aplicación
+por worker y retorno al laboratorio. No se añaden módulos, dependencias ni workflows.
+
 ## Qué representa la imagen
 
 `activation-model.ts` suma los componentes temporales de `qrsKernels()` usando
-`qrsKernelValue()`, igual que `signal.ts`, incluido el soporte regional. Se muestrea el
+`qrsKernelValue()`, igual que `signal.ts`, incluido el soporte regional y la
+delta adicional en WPW conducido. Se muestrea el
 QRS aislado con intervalos de como máximo 1 ms, incluyendo ambos extremos. La
 proyección a las doce derivaciones usa el registro físico existente y conserva
 las identidades de Einthoven y Goldberger.
@@ -84,7 +123,7 @@ Un eje con magnitud frontal despreciable se declara indefinido.
   un bucle estático.
 - QRS posterior: incluye una corrección local por derivación sin XYZ único; no
   se oculta esa contribución.
-- WPW conducido: incluye delta adicional; se declara aún no representable aquí.
+- WPW conducido: delta + kernels completos; se declara su repolarización secundaria incompleta, no una localización anatómica.
 
 La vista previa es de QRS. Al aplicar una alternativa, el motor existente vuelve
 a validar y sintetizar el ECG completo. La repolarización de ciertas
@@ -122,8 +161,9 @@ la alternativa**. Sin procedencia inyectada por Vite, la identidad sigue siendo
   inmutabilidad, procedencia temporal y dominios excluidos.
 - `tests/browser-activation.mjs`: recorrido sobre `dist`, worker real y descargas.
 
-No cambia `src/engine/`, `src/presets/`, dependencias, protocolos externos ni
-snapshots. El helper compartido del catálogo espera a que su controlador
+La ampliación WPW extrae su pulso a una función común en `src/engine/` sin
+cambiar su matemática. No cambia `src/presets/`, dependencias, protocolos externos
+ni snapshots. Los contratos congelados del ECG principal siguen exigiendo identidad exacta. El helper compartido del catálogo espera a que su controlador
 responsive actualice `inert`; ya no elimina ese atributo desde el test para
 forzar interactividad. No se relajan umbrales ni se omiten verificaciones.
 
