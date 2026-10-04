@@ -1,7 +1,7 @@
 import { regionalActivationControls } from "./ui/regional-activation";
 import "./style.css";
 import { APP_VERSION } from "./ui/version";
-import { ActivationLab } from "./ui/activation-lab";
+import { ActivationLab, type ActivationApplyResult } from "./ui/activation-lab";
 import { familyLabel } from "./ui/catalog-presentation";
 import { diagnosisFamilies, diagnosisForPreset } from "./ui/diagnosis-navigation";
 import { createExplorationOrigin, explorationChanges, restoreExplorationOrigin, sameExplorationModel, type ExplorationOrigin } from "./ui/exploration-origin";
@@ -13,6 +13,8 @@ import {
   DEFAULT_CASE,
   cloneCase,
   type ECGCase,
+  type Signal,
+  type Measurement,
 } from "./engine/types";
 import { SignalController } from "./ui/signal-controller";
 import { TraceSession } from "./ui/trace-session";
@@ -123,12 +125,16 @@ const external = new ExternalLab((slot, trace) => {
 const activation = new ActivationLab(
   () => session.canExport && session.signal && (!quiz || quiz.answer)
     ? { case: c, beats: session.signal.events.beats } : null,
-  (candidate, original) => {
-    if (!session.canExport || (quiz && !quiz.answer) || JSON.stringify(c) !== JSON.stringify(original)) return false;
-    c = cloneCase(candidate);
-    caliper = null; session.resetTools(); annotations = false;
-    renderCatalog(); renderControls(); renderInfo(); generate();
-    return true;
+  async (candidate, original, signal): Promise<ActivationApplyResult> => {
+    const current = () => session.canExport && (!quiz || !!quiz.answer) && JSON.stringify(c) === JSON.stringify(original);
+    if (!current() || signal.aborted) return { status: "cancelled" };
+    const result = await controller.evaluate(candidate, signal);
+    if (result.status === "cancelled" || signal.aborted) return { status: "cancelled" };
+    if (!current()) return { status: "stale" };
+    if (result.status === "error") return { status: "rejected", message: result.message };
+    // Only a successful full-worker result may replace A; no second synthesis.
+    publishSignal(result.signal, result.measurement, result.requestId, candidate);
+    return { status: "applied" };
   }, toast,
 );
 
@@ -420,10 +426,15 @@ function syncTraceTools() {
     : "Calibres por arrastre, teclado o campos numéricos";
   caliperEditor.update({active:measuring, layout, caliper, view:c.view, fs:session.signal?.fs ?? 500});
 }
-const controller = new SignalController(
-  (next, measured, requestId) => {
-    if (!session.isCurrentRequest(requestId)) return;
+/** Both normal generation and a validated alternative publish the same worker bytes. */
+function publishSignal(next: Signal, measured: Measurement, requestId: number, candidate?: ECGCase) {
+    if (!candidate && !session.isCurrentRequest(requestId)) return;
     const audited = auditMeasurement(next, measured);
+    if (candidate) {
+      c = cloneCase(candidate); annotations = false;
+      session.expectRequest(requestId);
+      clearToast(); renderCatalog(); renderControls();
+    }
     if (!session.accept(requestId, next, audited, c.view.mode,
       representativeBeat(audited, visibleSegmentEnd()))) return;
     comparison.update(c, next, audited);
@@ -437,7 +448,9 @@ const controller = new SignalController(
     renderScales();
     draw();
     renderDetail();
-  },
+}
+const controller = new SignalController(
+  (next, measured, requestId) => publishSignal(next, measured, requestId),
   (message, requestId) => {
     if (!session.fail(requestId)) return;
     toast(message);

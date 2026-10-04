@@ -134,3 +134,106 @@ describe('Bounded worker recovery, latest request wins', () => {
   });
 
 });
+
+// Staged evaluation is isolated from the main trace, but reuses the same transport.
+describe('Transactional worker evaluation for activation alternatives', () => {
+  it('reuses the idle worker, preserves the snapshot and returns real samples without publishing', async () => {
+    const {controller,result,error}=setup(), c=cloneCase(DEFAULT_CASE);
+    const ordinary=controller.request(c); current().reply(ordinary); result.mockClear();
+    const worker=current(), abort=new AbortController();
+    const pending=controller.evaluate(c,abort.signal); c.qrs=240;
+    const request=worker.sent.at(-1)!;
+    expect(request.ecg.qrs).toBe(DEFAULT_CASE.qrs);
+    const signal=synthesize(request.ecg,10),measurement=analyzeSamples(signal);
+    worker.onmessage?.({data:{id:request.id,signal,measurement}} as MessageEvent<SignalResponse>);
+    const evaluated=await pending;
+    expect(evaluated.status).toBe('ready');
+    if(evaluated.status==='ready') {
+      expect(evaluated.signal).toBe(signal); expect(evaluated.measurement).toBe(measurement);
+      expect(evaluated.requestId).toBe(request.id);
+    }
+    expect(FakeWorker.all).toHaveLength(1); expect(result).not.toHaveBeenCalled(); expect(error).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it('keeps a ready trace after a domain rejection and permits a corrected evaluation', async () => {
+    const session=new TraceSession(), errors=vi.fn();
+    const controller=new SignalController((s,m,id)=>session.accept(id,s,m,'paper'),errors,{timeoutMs:100});
+    const id=controller.request(cloneCase(DEFAULT_CASE)); session.expectRequest(id); current().reply(id);
+    const original=session.signal, pending=controller.evaluate(cloneCase(DEFAULT_CASE),new AbortController().signal);
+    current().reply(current().sent.at(-1)!.id,'Fuera del alcance del modelo: combinación no admitida');
+    expect(await pending).toEqual({status:'error',message:'Fuera del alcance del modelo: combinación no admitida'});
+    expect(session.signal).toBe(original); expect(session.canExport).toBe(true); expect(errors).not.toHaveBeenCalled();
+    expect(FakeWorker.all).toHaveLength(1);
+    const retry=controller.evaluate(cloneCase(DEFAULT_CASE),new AbortController().signal);
+    current().reply(current().sent.at(-1)!.id); expect((await retry).status).toBe('ready');
+    expect(session.signal).toBe(original);
+  });
+  it('aborts active computation, clears its watchdog and rejects late success or failure delivery', async () => {
+    const {controller,result,error}=setup(), abort=new AbortController();
+    const pending=controller.evaluate(cloneCase(DEFAULT_CASE),abort.signal),old=current();
+    const late=old.onmessage!,id=old.sent[0].id;
+    abort.abort(); expect(await pending).toEqual({status:'cancelled'});
+    expect(old.terminated).toBe(true); expect(vi.getTimerCount()).toBe(0);
+    const next=controller.request(cloneCase(DEFAULT_CASE));
+    late({data:{id,signal:{duration:999} as Signal,measurement:{} as Measurement}} as MessageEvent<SignalResponse>);
+    late({data:{id,error:'late'}} as MessageEvent<SignalResponse>);
+    expect(result).not.toHaveBeenCalled(); expect(error).not.toHaveBeenCalled();
+    current().reply(next); expect(result.mock.calls[0][0].duration).toBe(next);
+  });
+  it('removes an aborted pending evaluation without sending it or publishing the older request', async () => {
+    const {controller,result,error}=setup(),c=cloneCase(DEFAULT_CASE),abort=new AbortController();
+    const first=controller.request(c),pending=controller.evaluate(c,abort.signal);
+    abort.abort(); expect(await pending).toEqual({status:'cancelled'});
+    current().reply(first); expect(current().sent).toHaveLength(1);
+    expect(result).not.toHaveBeenCalled(); expect(error).not.toHaveBeenCalled();
+    const next=controller.request(c); current().reply(next); expect(result).toHaveBeenCalledOnce();
+  });
+  it('a normal user request supersedes an evaluation without waiting for its timeout', async () => {
+    const {controller,result,error}=setup(),pending=controller.evaluate(cloneCase(DEFAULT_CASE),new AbortController().signal);
+    const old=current(),next=controller.request({...cloneCase(DEFAULT_CASE),hr:80});
+    expect(await pending).toEqual({status:'cancelled'}); expect(old.terminated).toBe(true);
+    expect(current().sent.at(-1)!.ecg.hr).toBe(80); current().reply(next);
+    expect(result).toHaveBeenCalledOnce(); expect(error).not.toHaveBeenCalled();
+  });
+  it('a newer evaluation wins and aborting an already completed attempt cannot cancel it', async () => {
+    const {controller,result,error}=setup(),firstAbort=new AbortController();
+    const first=controller.evaluate(cloneCase(DEFAULT_CASE),firstAbort.signal);
+    current().reply(current().sent.at(-1)!.id); expect((await first).status).toBe('ready');
+    const second=controller.evaluate({...cloneCase(DEFAULT_CASE),qrs:160},new AbortController().signal);
+    firstAbort.abort(); expect(current().terminated).toBe(false);
+    const third=controller.evaluate({...cloneCase(DEFAULT_CASE),qrs:190},new AbortController().signal);
+    expect(await second).toEqual({status:'cancelled'});
+    expect(current().sent.at(-1)!.ecg.qrs).toBe(190); current().reply(current().sent.at(-1)!.id);
+    expect((await third).status).toBe('ready'); expect(result).not.toHaveBeenCalled(); expect(error).not.toHaveBeenCalled();
+  });
+  it('settles synchronous terminal failures through the evaluation only', async () => {
+    FakeWorker.postFailures=2;
+    const {controller,result,error}=setup(),pending=controller.evaluate(cloneCase(DEFAULT_CASE),new AbortController().signal);
+    const evaluated=await pending; expect(evaluated.status).toBe('error');
+    if(evaluated.status==='error') expect(evaluated.message).toMatch(/único reintento/);
+    expect(result).not.toHaveBeenCalled(); expect(error).not.toHaveBeenCalled(); expect(vi.getTimerCount()).toBe(0);
+    const next=controller.request(cloneCase(DEFAULT_CASE)); current().reply(next); expect(result).toHaveBeenCalledOnce();
+  });
+  it('retains the one-retry bound and settles the evaluation after a hung worker', async () => {
+    const {controller,result,error}=setup(),pending=controller.evaluate(cloneCase(DEFAULT_CASE),new AbortController().signal);
+    vi.advanceTimersByTime(100); expect(FakeWorker.all).toHaveLength(2);
+    vi.advanceTimersByTime(100); expect((await pending).status).toBe('error');
+    vi.advanceTimersByTime(10000); expect(FakeWorker.all).toHaveLength(2); expect(vi.getTimerCount()).toBe(0);
+    expect(result).not.toHaveBeenCalled(); expect(error).not.toHaveBeenCalled();
+  });
+  it('settles disposal and already-aborted requests without leaking a promise or creating a worker', async () => {
+    const {controller,result,error}=setup(),abort=new AbortController(); abort.abort();
+    expect(await controller.evaluate(cloneCase(DEFAULT_CASE),abort.signal)).toEqual({status:'cancelled'});
+    expect(FakeWorker.all).toHaveLength(0);
+    const pending=controller.evaluate(cloneCase(DEFAULT_CASE),new AbortController().signal);
+    controller.dispose(); expect(await pending).toEqual({status:'cancelled'}); expect(current().terminated).toBe(true);
+    expect(result).not.toHaveBeenCalled(); expect(error).not.toHaveBeenCalled(); expect(vi.getTimerCount()).toBe(0);
+  });
+  it('an abort retires a deferred terminal error before it can invalidate the main trace', async () => {
+    FakeWorker.postFailures=2;
+    const {controller,result,error}=setup(),abort=new AbortController();
+    const pending=controller.evaluate(cloneCase(DEFAULT_CASE),abort.signal); abort.abort();
+    expect(await pending).toEqual({status:'cancelled'}); await Promise.resolve();
+    expect(result).not.toHaveBeenCalled(); expect(error).not.toHaveBeenCalled();
+  });
+});

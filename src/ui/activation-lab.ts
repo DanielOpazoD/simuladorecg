@@ -7,6 +7,9 @@ import { esc, options } from './helpers';
 import { download } from './persistence';
 import { buildProvenance } from './build-provenance';
 
+export type ActivationApplyResult =
+  | { status: 'applied' | 'cancelled' | 'stale' }
+  | { status: 'rejected'; message: string };
 export interface ActivationInput { case: ECGCase; beats: Beat[] }
 const KIND: Record<Beat['kind'], string> = { normal: 'conducido', pvc: 'EV', ventricular: 'ventricular', paced: 'estimulado' };
 const CHANGES = [['conduction', 'Conducción'], ['qrs', 'QRS programado (ms)'], ['axis', 'Eje solicitado (°)'], ['ventricularSource', 'Fuente ventricular'], ['activationModel', 'Modelo de activación']] as const;
@@ -24,19 +27,22 @@ export class ActivationLab {
   private lead: Lead = 'II';
   private raf = 0;
   private opener: HTMLElement | null = null;
+  private applying: AbortController | null = null;
   constructor(private readonly current: () => ActivationInput | null,
-    private readonly apply: (candidate: ECGCase, original: ECGCase) => boolean,
+    private readonly apply: (candidate: ECGCase, original: ECGCase, signal: AbortSignal) => Promise<ActivationApplyResult>,
     private readonly notify: (message: string) => void) {
     this.dialog.id = 'activation-dialog'; this.dialog.className = 'activation-dialog';
     this.dialog.setAttribute('aria-labelledby', 'activation-title');
     this.dialog.setAttribute('aria-describedby', 'activation-scope');
     document.body.append(this.dialog);
     this.dialog.addEventListener('close', () => {
-      this.stop(); this.snapshot = null; this.pair = null; this.dialog.replaceChildren();
+      this.cancelApply(); this.stop(); this.snapshot = null; this.pair = null; this.dialog.replaceChildren();
       if (this.opener?.isConnected) this.opener.focus({ preventScroll: true });
     });
+    this.dialog.addEventListener('cancel', () => this.cancelApply());
     this.dialog.addEventListener('click', event => this.action((event.target as Element).closest<HTMLElement>('[data-activation]')?.dataset.activation));
     this.dialog.addEventListener('change', event => {
+      if (this.applying) return;
       const target = event.target as HTMLSelectElement;
       if (target.id === 'activation-beat') {
         const hadFocus = document.activeElement === target;
@@ -48,6 +54,7 @@ export class ActivationLab {
       if (target.id === 'activation-lead' && LEADS.includes(target.value as Lead)) { this.lead = target.value as Lead; this.cursor(); }
     });
     this.dialog.addEventListener('input', event => {
+      if (this.applying) return;
       const target = event.target as HTMLInputElement;
       if (target.id === 'activation-qrs') this.refresh();
       if (target.id === 'activation-time') { this.stop(); this.timeMs = Number(target.value); this.cursor(); }
@@ -63,7 +70,7 @@ export class ActivationLab {
     this.beatIndex = Math.max(0, this.snapshot.beats.findIndex(b => b.kind !== 'normal'));
     this.timeMs = 0; this.lead = 'II'; this.render(); this.dialog.showModal();
   }
-  invalidate(): void { this.stop(); if (this.dialog.open) this.dialog.close(); }
+  invalidate(): void { this.cancelApply(); this.stop(); if (this.dialog.open) this.dialog.close(); }
   private get<T extends Element = HTMLElement>(selector: string): T { return this.dialog.querySelector<T>(selector)!; }
   private valid(): boolean {
     const live = this.current();
@@ -75,6 +82,8 @@ export class ActivationLab {
     const { case: c, beats } = this.snapshot, beat = beats[this.beatIndex];
     const limitation = activationLimitation(c, beat);
     this.dialog.innerHTML = `<header class="activation-header"><div><p class="activation-kicker">EL VECTOR DETRÁS DEL TRAZADO</p><h2 id="activation-title">Laboratorio de activación QRS</h2><p>Explora el recorrido eléctrico del modelo y su proyección sobre las 12 derivaciones.</p></div><button type="button" class="btn" data-activation="close" autofocus>Cerrar</button></header>
+      <p id="activation-apply-status" class="activation-note" role="status" hidden></p>
+      <fieldset class="activation-workbench">
       <p id="activation-scope" class="activation-scope">${esc(ACTIVATION_SCOPE)}</p>
       <div class="activation-controls"><label>Latido real del caso<select id="activation-beat" ${beats.length ? '' : 'disabled'}>${beats.map((b, i) => `<option value="${i}" ${i === this.beatIndex ? 'selected' : ''}>${i + 1} · ${KIND[b.kind]} · ${b.time.toFixed(2)} s</option>`).join('')}</select></label><label>Alternativa B ${beat?.kind === 'normal' ? '· conducción' : '· fuente'}<select id="activation-choice" ${limitation ? 'disabled' : ''}>${beat ? options(activationOptions(beat), 'unchanged') : ''}</select></label></div>
       <div class="activation-controls" ${limitation ? 'hidden' : ''}><label>QRS solicitado B (ms)<input id="activation-qrs" type="number" min="60" max="240" step="any" value="${c.qrs}" required aria-describedby="activation-edit-note activation-error"/></label><label>Modelo de activación B<select id="activation-model">${options([['template', 'Plantilla histórica'], ['regional-rbbb-v1', 'BRD regional · experimental']], c.activationModel ?? 'template')}</select></label></div>
@@ -85,7 +94,7 @@ export class ActivationLab {
       <div id="activation-summary" class="activation-summary"></div><p id="activation-changes" class="activation-note"></p>
       <div class="activation-playback"><button type="button" class="btn" data-activation="play">Reproducir lento</button><label>Recorrer QRS (ms)<input id="activation-time" type="range" min="0" max="240" step="1" value="0"/></label><output id="activation-clock">0 ms</output><label>Lectura instantánea<select id="activation-lead">${options([...LEADS], this.lead)}</select></label><output id="activation-instant"></output></div>
       <div id="activation-charts" class="activation-charts"></div><p id="activation-scale" class="activation-note"></p><p class="activation-note">*Pico vectorial en coordenadas sintéticas del modelo, no voltaje de una derivación ni fuerza eléctrica anatómica. Las dos curvas comparten escala y tiempo absoluto desde el inicio del QRS. No se normaliza cada fuente por separado. Reproducción lenta: un recorrido completo en 2 segundos.</p><p class="activation-note">La alternativa es una vista previa del QRS aislado. Al aplicarla, el motor valida y recalcula el ECG completo, incluida la repolarización; ciertas combinaciones de parámetros pueden quedar fuera de alcance.</p>
-      <div class="activation-footer"><button type="button" class="btn primary" data-activation="apply">Aplicar B al caso</button><button type="button" class="btn" data-activation="svg">Exportar SVG</button><button type="button" class="btn" data-activation="json">Exportar experimento JSON</button></div></div>`;
+      <div class="activation-footer"><button type="button" class="btn primary" data-activation="apply">Aplicar B al caso</button><button type="button" class="btn" data-activation="svg">Exportar SVG</button><button type="button" class="btn" data-activation="json">Exportar experimento JSON</button></div></div></fieldset>`;
     if (!limitation) this.refresh(true);
   }
   private refresh(resetControls = false): void {
@@ -145,8 +154,51 @@ export class ActivationLab {
     const play = this.dialog.querySelector('[data-activation="play"]');
     if (play) { play.textContent = 'Reproducir lento'; play.setAttribute('aria-pressed', 'false'); }
   }
+  private cancelApply(): void {
+    const applying = this.applying;
+    this.applying = null;
+    applying?.abort();
+    this.dialog.querySelector('.activation-workbench')?.removeAttribute('aria-busy');
+  }
+  private async applyValidated(): Promise<void> {
+    if (!this.pair || !this.snapshot || this.applying) return;
+    this.stop();
+    const attempt = new AbortController(); this.applying = attempt;
+    const workbench = this.get<HTMLFieldSetElement>('.activation-workbench');
+    const status = this.get('#activation-apply-status');
+    const applyButton = this.get<HTMLButtonElement>('[data-activation="apply"]');
+    applyButton.textContent = 'Validando ECG completo…';
+    workbench.disabled = true; workbench.setAttribute('aria-busy', 'true');
+    this.get<HTMLElement>('[data-activation="close"]').focus({ preventScroll: true });
+    status.hidden = false;
+    status.textContent = 'Validando B con el motor completo. A y el trazado actual se conservan; puedes cancelar con Cerrar o Escape.';
+    this.get('#activation-error').hidden = true;
+    try {
+      const result = await this.apply(cloneCase(this.pair.b.case), cloneCase(this.snapshot.case), attempt.signal);
+      if (this.applying !== attempt || attempt.signal.aborted || !this.dialog.open) return;
+      if (result.status === 'applied') {
+        this.dialog.close(); this.notify('Alternativa validada y aplicada. El ECG completo está disponible; el origen se conserva.');
+      } else if (result.status === 'stale') {
+        this.invalidate(); this.notify('El caso cambió; la alternativa no se aplicó.');
+      } else if (result.status === 'rejected') {
+        const error = this.get('#activation-error'); error.hidden = false;
+        error.textContent = `B no se aplicó. ${result.message} A y el trazado anterior se conservan. Revisa B o restablece B = A.`;
+      }
+    } catch {
+      if (this.applying === attempt && this.dialog.open) {
+        const error = this.get('#activation-error'); error.hidden = false;
+        error.textContent = 'No se pudo completar la aplicación. Revisa el estado del simulador antes de volver a intentarlo.';
+      }
+    } finally {
+      if (this.applying === attempt) {
+        this.applying = null; workbench.removeAttribute('aria-busy');
+        workbench.disabled = false; status.hidden = true; applyButton.textContent = 'Aplicar B al caso';
+      }
+    }
+  }
   private action(action?: string): void {
-    if (action === 'close') { this.dialog.close(); return; }
+    if (action === 'close') { this.invalidate(); return; }
+    if (this.applying) return;
     if (action === 'reset' && this.snapshot) {
       if (!this.valid()) { this.invalidate(); return; }
       this.get<HTMLSelectElement>('#activation-choice').value = 'unchanged'; this.refresh(true); return;
@@ -167,8 +219,7 @@ export class ActivationLab {
     }
     if (action === 'apply') {
       if (this.get<HTMLButtonElement>('[data-activation="apply"]').disabled) return;
-      if (this.apply(cloneCase(this.pair.b.case), cloneCase(this.snapshot.case))) { this.dialog.close(); this.notify('Alternativa aplicada al simulador. Se recalcula el ECG completo; el origen se conserva.'); }
-      else { this.invalidate(); this.notify('El caso cambió; la alternativa no se aplicó.'); }
+      void this.applyValidated();
     }
     if (action === 'svg') download(new Blob([activationSvg(this.pair, this.timeMs)], { type: 'image/svg+xml' }), 'ecg-lab-activacion-QRS.svg');
     if (action === 'json') download(new Blob([JSON.stringify({ schemaVersion: 1, kind: 'ecg-lab-activation', build: buildProvenance(), scope: ACTIVATION_SCOPE,

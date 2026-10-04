@@ -49,3 +49,5 @@
 .activation-timing { font-size:12px; line-height:1.7; }
 .activation-timing summary { cursor:pointer; padding:8px 0; }
 .activation-timing ul { padding-left:20px; margin:4px 0; }
+
+.activation-workbench { min-width: 0; margin: 0; padding: 0; border: 0; }

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { activationAt, activationCandidate, activationLimitation, activationOptions, activationPair, sampleActivation } from '../src/ui/activation-model';
 import { activationSvg, activationPoint } from '../src/render/activation';
 import { fromPreset, PRESETS, presetById } from '../src/presets/catalog';
+import { synthesize } from '../src/engine/signal';
 import { generateEvents } from '../src/engine/rhythm';
 import { qrsKernels } from '../src/engine/morphology';
 import { project } from '../src/engine/leads';
@@ -200,5 +201,22 @@ describe('Activation lab: sampled vector, explicit domains and real beat kinds',
       }
     }
     assert.ok(checked > 50); assert.ok(excluded >= 5);
+  });
+});
+
+// A valid QRS-only preview is not a successful full ECG validation.
+describe('Activation application domain boundary', () => {
+  it('keeps a drawable alternative distinct from a rejected full synthesis, without changing A', () => {
+    const c: ECGCase = { ...load('sinus'), hr: 60, variability: 0, filter: 'off',
+      ischemia: 'anterior', phase: 'hyperacute', electrolyte: 'hyperkalemia', st: 1 };
+    const original = cloneCase(c), signal = synthesize(c, 10), captured = signal.events.beats[1];
+    const pair = activationPair(c, captured, 'rbbb');
+    assert.ok(pair.b.xyz.some(v => Math.hypot(...v) > .1));
+    assert.throws(() => synthesize(pair.b.case, 10), /fuera de alcance/);
+    assert.deepEqual(c, original); assert.deepEqual(pair.a.case, original);
+    assert.deepEqual(synthesize(c, 10), signal);
+    // A corrected alternative goes through the SAME whole-ECG domain checks.
+    const corrected = activationPair(c, captured, 'normal', { qrsMs: 100 });
+    assert.doesNotThrow(() => synthesize(corrected.b.case, 10));
   });
 });
