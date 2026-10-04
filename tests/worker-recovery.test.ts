@@ -158,15 +158,22 @@ describe('Transactional worker evaluation for activation alternatives', () => {
   it('keeps a ready trace after a domain rejection and permits a corrected evaluation', async () => {
     const session=new TraceSession(), errors=vi.fn();
     const controller=new SignalController((s,m,id)=>session.accept(id,s,m,'paper'),errors,{timeoutMs:100});
-    const id=controller.request(cloneCase(DEFAULT_CASE)); session.expectRequest(id); current().reply(id);
-    const original=session.signal, pending=controller.evaluate(cloneCase(DEFAULT_CASE),new AbortController().signal);
+    const c=cloneCase(DEFAULT_CASE),signal=synthesize(c,10),measurement=analyzeSamples(signal);
+    const id=controller.request(c); session.expectRequest(id);
+    current().onmessage?.({data:{id,signal,measurement}} as MessageEvent<SignalResponse>);
+    session.toggleCaliper('paper'); session.selectBeat(1);
+    const original=session.signal, pending=controller.evaluate(c,new AbortController().signal);
     current().reply(current().sent.at(-1)!.id,'Fuera del alcance del modelo: combinación no admitida');
     expect(await pending).toEqual({status:'error',message:'Fuera del alcance del modelo: combinación no admitida'});
-    expect(session.signal).toBe(original); expect(session.canExport).toBe(true); expect(errors).not.toHaveBeenCalled();
+    expect(session.signal).toBe(original); expect(session.measurement).toBe(measurement);
+    expect(session.canExport).toBe(true); expect(errors).not.toHaveBeenCalled();
+    expect(session.caliperOn).toBe(true); expect(session.selectedBeat).toBe(1);
     expect(FakeWorker.all).toHaveLength(1);
-    const retry=controller.evaluate(cloneCase(DEFAULT_CASE),new AbortController().signal);
-    current().reply(current().sent.at(-1)!.id); expect((await retry).status).toBe('ready');
-    expect(session.signal).toBe(original);
+    const retry=controller.evaluate(c,new AbortController().signal),retryId=current().sent.at(-1)!.id;
+    current().onmessage?.({data:{id:retryId,signal,measurement}} as MessageEvent<SignalResponse>);
+    expect((await retry).status).toBe('ready');
+    expect(session.signal).toBe(original); expect(session.measurement).toBe(measurement);
+    expect(session.caliperOn).toBe(true); expect(session.selectedBeat).toBe(1);
   });
   it('aborts active computation, clears its watchdog and rejects late success or failure delivery', async () => {
     const {controller,result,error}=setup(), abort=new AbortController();
