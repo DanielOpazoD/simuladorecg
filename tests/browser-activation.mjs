@@ -52,6 +52,10 @@ for (const [engine, launcher] of Object.entries(engines)) {
       const open = () => page.locator('[data-action="activation"]').click();
       const close = () => page.locator('#activation-dialog [data-activation="close"]').click();
       const applicationReady = async () => { await page.locator('#activation-dialog').waitFor({ state: 'hidden' }); await ready(); };
+      const inViewport = selector => page.locator(selector).evaluate(e => {
+        const r = e.getBoundingClientRect();
+        return r.top >= 0 && r.bottom <= innerHeight && r.left >= 0 && r.right <= innerWidth;
+      });
       async function download(selector, suffix) {
         const waiting = page.waitForEvent('download'); await page.locator(selector).click();
         const file = path.join(out, `${tag}-${suffix}`); await (await waiting).saveAs(file); return readFile(file, 'utf8');
@@ -112,6 +116,7 @@ for (const [engine, launcher] of Object.entries(engines)) {
         assert.equal(await page.locator('[data-activation="json"]').isDisabled(), true);
         assert.equal(await page.locator('[data-activation="close"]').isEnabled(), true);
         assert.match(await page.locator('#activation-apply-status').innerText(), /Validando B/);
+        assert.equal(await inViewport('#activation-apply-status'), true);
         assert.doesNotMatch(await page.locator('#toast').innerText(), /Alternativa.*aplicada/);
         assert.equal(await page.locator('#ecg').evaluate(c => c.toDataURL()), originalCanvas);
         assert.equal(await page.locator('#metrics').innerText(), originalMetrics);
@@ -187,6 +192,7 @@ for (const [engine, launcher] of Object.entries(engines)) {
         assert.equal(await page.locator('#activation-dialog').evaluate(d => d.open), true);
         assert.equal(await page.locator('#activation-qrs').isEnabled(), true);
         assert.match(await page.locator('#activation-error').innerText(), /fuera de alcance/);
+        assert.equal(await inViewport('#activation-error'), true);
         assert.equal(await page.locator('#signal-loading').isVisible(), false);
         assert.equal(await page.locator('#ecg').evaluate(c => c.toDataURL()), preservedCanvas);
         assert.equal(await page.locator('#metrics').innerText(), preservedMetrics);
@@ -197,6 +203,7 @@ for (const [engine, launcher] of Object.entries(engines)) {
         await page.evaluate(() => { window.__activationApplyProbe.failPosts = 2; });
         await page.locator('[data-activation="apply"]').click();
         await page.waitForFunction(() => document.querySelector('#activation-error').textContent.includes('único reintento'));
+        assert.equal(await inViewport('#activation-error'), true);
         assert.equal(await page.locator('#ecg').evaluate(c => c.toDataURL()), preservedCanvas);
         assert.equal(await page.locator('#metrics').innerText(), preservedMetrics);
         await page.locator('[data-activation="apply"]').click(); await applicationReady();

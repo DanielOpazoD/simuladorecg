@@ -169,7 +169,7 @@ export class ActivationLab {
     const applyButton = this.get<HTMLButtonElement>('[data-activation="apply"]');
     applyButton.textContent = 'Validando ECG completo…';
     workbench.disabled = true; workbench.setAttribute('aria-busy', 'true');
-    this.get<HTMLElement>('[data-activation="close"]').focus({ preventScroll: true });
+    this.get<HTMLElement>('[data-activation="close"]').focus();
     status.hidden = false;
     status.textContent = 'Validando B con el motor completo. A y el trazado actual se conservan; puedes cancelar con Cerrar o Escape.';
     this.get('#activation-error').hidden = true;
@@ -183,11 +183,13 @@ export class ActivationLab {
       } else if (result.status === 'rejected') {
         const error = this.get('#activation-error'); error.hidden = false;
         error.textContent = `B no se aplicó. ${result.message} A y el trazado anterior se conservan. Revisa B o restablece B = A.`;
+        error.scrollIntoView({ block: 'center' });
       }
     } catch {
       if (this.applying === attempt && this.dialog.open) {
         const error = this.get('#activation-error'); error.hidden = false;
         error.textContent = 'No se pudo completar la aplicación. Revisa el estado del simulador antes de volver a intentarlo.';
+        error.scrollIntoView({ block: 'center' });
       }
     } finally {
       if (this.applying === attempt) {
