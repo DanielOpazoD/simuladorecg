@@ -4,9 +4,10 @@ import { activationAt, activationCandidate, activationLimitation, activationOpti
 import { activationSvg, activationPoint } from '../src/render/activation';
 import { fromPreset, PRESETS, presetById } from '../src/presets/catalog';
 import { synthesize } from '../src/engine/signal';
+import { antialias } from '../src/engine/filter';
 import { generateEvents } from '../src/engine/rhythm';
 import { qrsKernels } from '../src/engine/morphology';
-import { project } from '../src/engine/leads';
+import { project, frontal, type Vec } from '../src/engine/leads';
 import { LEADS, cloneCase, type Beat, type ECGCase } from '../src/engine/types';
 import { VENTRICULAR_SOURCE_IDS, VENTRICULAR_SOURCES } from '../src/engine/ventricular-source';
 import { normalizeImportedCase, caseContext } from '../src/presets/case-context';
@@ -93,7 +94,7 @@ describe('Activation lab: sampled vector, explicit domains and real beat kinds',
     if (source !== 'representative_pvc') assert.equal(caseContext(imported).preset, undefined);
     assert.deepEqual(c, before); assert.equal(JSON.stringify(VENTRICULAR_SOURCES), profileBefore);
   });
-  for (const id of ['vf', 'asystole', 'torsades', 'wpw', 'posterior']) it(`${id} does not invent an eligible static QRS`, () => {
+  for (const id of ['vf', 'asystole', 'torsades', 'posterior']) it(`${id} does not invent an eligible static QRS`, () => {
     const c = load(id); assert.ok(activationLimitation(c, generateEvents(c, 10).beats[0]));
     assert.throws(() => sampleActivation(c, beat()));
   });
@@ -200,7 +201,117 @@ describe('Activation lab: sampled vector, explicit domains and real beat kinds',
         assert.equal(t.timesMs.at(-1), t.durationMs); checked++;
       }
     }
-    assert.ok(checked > 50); assert.ok(excluded >= 5);
+    assert.ok(checked > 50); assert.equal(excluded, 4); // WPW is now represented; the other four domains remain excluded.
+  });
+});
+
+// Independent reconstruction of the historical bases and delta, never calling
+// wpwDeltaVector(): catches omission/double addition and wrong absolute support.
+function kernelOnly(c: ECGCase, b: Beat, ms: number): Vec {
+  const u = ms / c.qrs, v: Vec = [0, 0, 0];
+  if (u <= 0 || u >= 1) return v;
+  for (const k of qrsKernels(c, b)) {
+    const g = Math.exp(-.5 * ((u - k.mu) / k.sigma) ** 2) * Math.min(1, u / .035, (1 - u) / .035);
+    for (let j = 0; j < 3; j++) v[j] += g * k.v[j];
+  }
+  return v;
+}
+describe('WPW lab represents the entire existing vector QRS, without retuning it', () => {
+  it('adds exactly the historical delta, with a kernels-only negative control', () => {
+    const c = load('wpw'), b = beat(), t = sampleActivation(c, b);
+    let omittedMv = 0;
+    for (let i = 0; i < t.timesMs.length; i++) {
+      const ms = t.timesMs[i], basal = kernelOnly(c, b, ms);
+      const direction = frontal(c.axis, .25, .03);
+      const gain = ms > 0 && ms < 45 ? c.qrsAmp * Math.sin(Math.PI * ms / 45) : 0;
+      const expected = basal.map((v, j) => v + direction[j] * gain) as Vec;
+      for (let j = 0; j < 3; j++) close(t.xyz[i][j], expected[j]);
+      for (const l of LEADS) close(t.leads[l][i], project(expected)[l]);
+      omittedMv = Math.max(omittedMv, Math.abs(t.leads.II[i] - project(basal).II));
+    }
+    assert.ok(omittedMv > .2, 'Kernels alone must fail to represent the delta');
+    assert.equal(t.timing.deltaDurationMs, 45); assert.match(t.timing.note, /no modifica el ST-T/);
+    assert.equal(activationLimitation(c, b), null);
+  });
+  it('preserves a fixed 45 ms delta support at integer and fractional QRS durations', () => {
+    for (const qrs of [60, 100, 135, 190, 233.7, 240]) {
+      const c = { ...load('wpw'), qrs }, b = beat(), t = sampleActivation(c, b);
+      assert.ok(t.timesMs.includes(45)); assert.equal(t.timesMs.at(-1), qrs);
+      assert.equal(t.timesMs.length, new Set(t.timesMs).size);
+      t.timesMs.forEach((ms, i) => {
+        if (i) assert.ok(ms - t.timesMs[i - 1] > 0 && ms - t.timesMs[i - 1] <= 1 + 1e-12);
+        if (ms >= 45) for (let j = 0; j < 3; j++) close(t.xyz[i][j], kernelOnly(c, b, ms)[j]);
+      });
+      const at = t.timesMs.indexOf(45), end = t.timesMs[at + 1], mid = (45 + end) / 2;
+      const a = kernelOnly(c, b, 45), z = kernelOnly(c, b, end);
+      activationAt(t, mid).xyz.forEach((v, j) => close(v, (a[j] + z[j]) / 2));
+      assert.deepEqual(activationAt(t, qrs).xyz, [0, 0, 0]);
+    }
+    assert.throws(() => sampleActivation({ ...load('wpw'), qrs: 30 }, beat()), /delta no cabe/);
+  });
+  it('uses actual nonuniform timestamps for interpolation and integration, including the inserted endpoint', () => {
+    const t = sampleActivation({ ...load('wpw'), qrs: 133.7 }, beat());
+    for (let i = 0; i < t.timesMs.length - 1; i++) {
+      const ms = (t.timesMs[i] + t.timesMs[i + 1]) / 2;
+      activationAt(t, ms).xyz.forEach((v, j) => close(v, (t.xyz[i][j] + t.xyz[i + 1][j]) / 2));
+    }
+    const area = (lead: 'I' | 'II') => t.timesMs.slice(1).reduce((sum, ms, i) =>
+      sum + (t.leads[lead][i] + t.leads[lead][i + 1]) / 2 * (ms - t.timesMs[i]), 0);
+    close(project(t.summary.integral).I, area('I'));
+    close(t.summary.frontalAxisDeg!, Math.atan2((2 * area('II') - area('I')) / Math.sqrt(3), area('I')) * 180 / Math.PI);
+  });
+  it('scales delta and kernels together under gain and low-voltage attenuation', () => {
+    const c = load('wpw'), a = sampleActivation(c, beat());
+    for (const qrsAmp of [.1, .5, 2, 3]) for (const electrolyte of ['none', 'lowvoltage'] as const) {
+      const b = sampleActivation({ ...c, qrsAmp, electrolyte }, beat()), factor = qrsAmp * (electrolyte === 'lowvoltage' ? .38 : 1);
+      for (const l of LEADS) a.leads[l].forEach((v, i) => close(b.leads[l][i], v * factor));
+      close(a.summary.frontalAxisDeg!, b.summary.frontalAxisDeg!);
+    }
+  });
+  it('matches the actual 500 Hz isolated ECG for an explicitly aligned onset after the existing acquisition FIR', () => {
+    // PR 90 ms places the native onset on the sampling lattice. The legacy
+    // floor(start*fs) delta extrapolation at other phases is intentionally NOT
+    // represented by this pre-acquisition loop; documented separately.
+    const c: ECGCase = { ...load('wpw'), pr: 90, hr: 60, variability: 0, filter: 'off', pAmp: 0, tAmp: 0, st: 0 };
+    const signal = synthesize(c, 10), b = signal.events.beats.find(x => x.time > 2)!;
+    const t = sampleActivation(c, b);
+    for (const l of LEADS) {
+      const raw = new Float64Array(1000);
+      for (let ms = 0; ms <= 135; ms++) raw[200 + ms] = t.leads[l][ms];
+      const filtered = antialias(raw, 1000);
+      for (let ms = -50; ms <= 190; ms += 2)
+        close(signal.leads[l][Math.round((b.time + ms / 1000) * signal.fs)], filtered[200 + ms], 1e-9);
+    }
+  });
+  it('never injects delta into a PVC, escape or paced event even inside a WPW case', () => {
+    const c = load('wpw');
+    for (const kind of ['pvc', 'ventricular', 'paced'] as const) {
+      const a = sampleActivation(c, beat(kind)), b = sampleActivation({ ...c, conduction: 'normal' }, beat(kind));
+      assert.deepEqual(a.xyz, b.xyz); assert.equal(a.timing.deltaDurationMs, null);
+      assert.equal(a.timing.applied, 'ventricular-source');
+    }
+    assert.equal(sampleActivation(load('sinus'), beat()).timing.deltaDurationMs, null);
+  });
+  it('coordinates PR/QRS via existing controls without pretending the captured onset is a new event prediction', () => {
+    const c = load('sinus'), saved = cloneCase(c), originalEvents = generateEvents(c, 10);
+    const pair = activationPair(c, originalEvents.beats[0], 'wpw'), next = generateEvents(pair.b.case, 10);
+    assert.equal(pair.b.case.pr, 100); assert.equal(pair.b.case.qrs, 135); assert.equal(pair.b.case.conduction, 'wpw');
+    assert.equal(pair.b.case.rhythm, c.rhythm); assert.deepEqual(pair.a.case, saved); assert.deepEqual(c, saved);
+    close(next.beats[0].time - originalEvents.beats[0].time, -.06);
+    assert.equal(pair.b.beat.time, originalEvents.beats[0].time); // Explicitly captured, not recalculated.
+    assert.equal(Object.hasOwn(pair.b.beat, 'qt'), false);
+    assert.equal(caseContext(normalizeImportedCase(pair.b.case)).preset, undefined);
+    assert.deepEqual(activationCandidate(c, beat(), 'unchanged'), saved);
+  });
+  it('keeps delta in historical fallback and exports its provenance rather than fictitious regional supports', () => {
+    const c = load('wpw'), pair = activationPair(c, beat(), 'normal');
+    assert.equal(pair.a.timing.deltaDurationMs, 45); assert.equal(pair.b.timing.deltaDurationMs, null);
+    const regional = sampleActivation({ ...c, activationModel: 'regional-rbbb-v1' }, beat());
+    assert.deepEqual(regional.xyz, pair.a.xyz); assert.equal(regional.timing.applied, 'template');
+    assert.match(regional.timing.label, /no aplicado/); assert.deepEqual(regional.timing.regions, []);
+    assert.match(regional.timing.note, /Delta sintética adicional/);
+    assert.match(activationSvg(pair, 20), /Delta incluida · A: 45 ms · B: 0 ms/);
+    assert.equal(JSON.parse(JSON.stringify(pair)).a.timing.deltaDurationMs, 45);
   });
 });
 

@@ -21,6 +21,8 @@ import {
   qrsKernelValue,
   qrsAmplitudeScale,
   qrsDuration,
+  WPW_DELTA_SECONDS,
+  wpwDeltaVector,
   lesionVector,
   lesionControlEffect,
   tVector,
@@ -117,9 +119,7 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
       return v;
     });
     if (c.conduction === "wpw" && b.kind === "normal")
-      add(b.time, 0.045, (u) =>
-        scale(frontal(c.axis, 0.25, 0.03), qrsAmplitudeScale(c) * Math.sin(Math.PI * u)),
-      );
+      add(b.time, WPW_DELTA_SECONDS, (u) => wpwDeltaVector(c, u));
     const tSupport = tWaveSupport(c, dur, qt),
       tLen = tSupport.duration,
       // Preserve the original arithmetic order of absolute sample placement.
