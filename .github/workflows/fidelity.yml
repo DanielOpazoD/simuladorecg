@@ -56,6 +56,8 @@ jobs:
         run: npm test -- --reporter=default --reporter=json --outputFile=${{ runner.temp }}/unit-results.json
       - name: Discriminative noise-regression contracts
         run: node --test tests/noise-regression.node.mjs tests/t-peak-revision.node.mjs > "${{ runner.temp }}/noise-regression.tap"
+      - name: Regional activation and exact PR55 default preservation
+        run: node scripts/validate-regional-activation.mjs "${{ runner.temp }}/regional-activation-results.json"
       - name: Types and production build
         run: npm run build
       - name: Independent QRS/ST/T prediction against frozen source
@@ -90,6 +92,7 @@ jobs:
           node tests/browser-external.mjs
           node tests/browser-external-review.mjs
           node tests/browser-repolarization-coherence.mjs
+          node tests/browser-regional-activation.mjs
           node tests/browser-visual-workspace.mjs
           node tests/browser-activation.mjs
           node tests/browser-diagnosis-navigation.mjs
@@ -148,6 +151,7 @@ jobs:
           ECG_ACTIVATION_ENGINES=all node tests/browser-activation.mjs
           node tests/browser-accessibility.mjs
           ECG_GROUP_ENGINES=all node tests/browser-diagnosis-navigation.mjs
+          ECG_REGIONAL_ENGINES=all node tests/browser-regional-activation.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

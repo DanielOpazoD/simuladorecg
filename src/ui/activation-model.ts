@@ -1,7 +1,7 @@
 import { cloneCase, type ECGCase, type Beat } from '../engine/types';
 import { LEADS, type Lead } from '../engine/lead-registry';
 import { project, axisFromLeads, type Vec } from '../engine/leads';
-import { qrsKernels, qrsDuration, gaussian, compact } from '../engine/morphology';
+import { qrsKernels, qrsDuration, qrsKernelValue } from '../engine/morphology';
 import { VENTRICULAR_SOURCE_IDS, VENTRICULAR_SOURCES, ventricularSource } from '../engine/ventricular-source';
 import { changeCase } from './case-state';
 
@@ -58,7 +58,7 @@ export function sampleActivation(c: ECGCase, b: Beat): ActivationTrace {
   for (let i = 0; i <= count; i++) {
     const u = i / count, v: Vec = [0, 0, 0];
     for (const k of kernels) {
-      const g = gaussian(u, k.mu, k.sigma) * compact(u);
+      const g = qrsKernelValue(k, u);
       for (let j = 0; j < 3; j++) v[j] += g * k.v[j];
     }
     if (!v.every(Number.isFinite)) throw Error('Trayectoria no finita.');

@@ -18,7 +18,10 @@ try {
   execFileSync('tar',['-xf','-','-C',base],{input:execFileSync('git',['archive',BASE],{maxBuffer:100*1024*1024})});
   const changedFiles=execFileSync('git',['diff','--name-only',BASE,'HEAD','--','src/engine','src/presets','package.json','package-lock.json'],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
   const nonNumericalContracts=['src/engine/ventricular-trajectory.ts'];
-  assert.ok(changedFiles.every(f=>nonNumericalContracts.includes(f) || (coherence && ['src/engine/signal.ts','src/engine/morphology.ts','src/engine/secondary-repolarization.ts'].includes(f))), 'Unexpected generator/analyzer/catalog/dependency change');
+  // Opt-in regional model: every historical trace below still has to be exact.
+  // The experimental branch has its own mandatory, paired source/sample gate.
+  const optInRegionalFiles=['src/engine/types.ts','src/engine/regional-activation.ts'];
+  assert.ok(changedFiles.every(f=>nonNumericalContracts.includes(f) || (coherence && optInRegionalFiles.includes(f)) || (coherence && ['src/engine/signal.ts','src/engine/morphology.ts','src/engine/secondary-repolarization.ts'].includes(f))), 'Unexpected generator/analyzer/catalog/dependency change');
   async function load(dir,name){
     const outfile=path.join(temp,name+'.mjs');
     await build({stdin:{contents:"export {synthesize} from './src/engine/signal'; export {fromPreset,PRESETS} from './src/presets/catalog';",resolveDir:dir},bundle:true,platform:'node',format:'esm',outfile});

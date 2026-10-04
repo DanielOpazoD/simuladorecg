@@ -18,6 +18,7 @@ import {
 } from "./leads";
 import {
   qrsKernels,
+  qrsKernelValue,
   qrsAmplitudeScale,
   qrsDuration,
   lesionVector,
@@ -99,7 +100,7 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
     add(b.time, dur, (u, t) => {
       let v: Vec = [0, 0, 0];
       for (const k of ks) {
-        const g = gaussian(u, k.mu, k.sigma) * compact(u);
+        const g = qrsKernelValue(k, u);
         for (let j = 0; j < 3; j++) v[j] += g * k.v[j];
       }
       if (tors) {

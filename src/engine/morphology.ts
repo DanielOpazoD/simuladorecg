@@ -1,8 +1,9 @@
+import { kernelWeight, regionalRbbbKernels, regionalWindow, usesRegionalActivation, type RegionalSupport } from "./regional-activation";
 import type { ECGCase, Beat } from "./types";
 import { ventricularSource } from "./ventricular-source";
 import { secondaryRepolarization } from "./secondary-repolarization";
 import { frontal, project, axisFromLeads, type Vec } from "./leads";
-export type Kernel = { mu: number; sigma: number; v: Vec };
+export type Kernel = { mu: number; sigma: number; v: Vec; regional?: RegionalSupport };
 /** Reference amplitude for the existing T templates, in mV. */
 import { regionalTerritory, T_REFERENCE_AMPLITUDE } from "./regional-repolarization";
 export { T_REFERENCE_AMPLITUDE } from "./regional-repolarization";
@@ -46,16 +47,17 @@ export function qrsAmplitudeScale(c: Pick<ECGCase, "qrsAmp" | "electrolyte">): n
 export function qrsKernels(c: ECGCase, beat: Beat): Kernel[] {
   const source = ventricularSource(c, beat);
   const block = source ? "source" : c.conduction;
-  let ks = (
+  let ks: Kernel[] = (
     source ? source.kernels : block === "lbbb"
       ? lbbb
       : block.includes("rbbb") || block === "irbbb"
         ? rbbb
         : normal
   ).map((k) => ({ ...k, v: [...k.v] as Vec }));
+  if (usesRegionalActivation(c, beat)) ks = regionalRbbbKernels(ks, c.qrs);
   if (!c.septalQ && block === "normal") ks = ks.slice(1);
   let sum: Vec = [0, 0, 0];
-  for (const k of ks) for (let j = 0; j < 3; j++) sum[j] += k.v[j] * k.sigma;
+  for (const k of ks) for (let j = 0; j < 3; j++) sum[j] += k.v[j] * kernelWeight(k);
   const p = project(sum),
     baseAxis = axisFromLeads(p.I, p.II);
   let target = c.axis;
@@ -66,7 +68,7 @@ export function qrsKernels(c: ECGCase, beat: Beat): Kernel[] {
       amp = Math.hypot(net.I, (2 * net.II - net.I) / Math.sqrt(3)),
       desired = frontal(target, amp, sum[2]);
     for (let j = 0; j < 2; j++)
-      ks[1].v[j] += (desired[j] - sum[j]) / ks[1].sigma;
+      ks[1].v[j] += (desired[j] - sum[j]) / kernelWeight(ks[1]);
   }
   for (const k of ks) {
     if (!block.includes("rbbb") && block !== "irbbb") {
@@ -95,7 +97,7 @@ export function qrsKernels(c: ECGCase, beat: Beat): Kernel[] {
   // that small drift so the final integrated QRS, not an intermediate vector,
   // honors the requested/source frontal axis.
   sum = [0, 0, 0];
-  for (const k of ks) for (let j = 0; j < 3; j++) sum[j] += k.v[j] * k.sigma;
+  for (const k of ks) for (let j = 0; j < 3; j++) sum[j] += k.v[j] * kernelWeight(k);
   const finalProjection = project(sum),
     finalAxis = axisFromLeads(finalProjection.I, finalProjection.II),
     finalRotation = target - finalAxis;
@@ -108,6 +110,10 @@ export function qrsKernels(c: ECGCase, beat: Beat): Kernel[] {
     }
   }
   return ks;
+}
+/** Shared shape evaluation; the legacy arithmetic remains bit-for-bit intact. */
+export function qrsKernelValue(k: Kernel, u: number): number {
+  return gaussian(u, k.mu, k.sigma) * (k.regional ? regionalWindow(u, k.regional) : compact(u));
 }
 export function qrsDuration(c: ECGCase, b: Beat) {
   const source = ventricularSource(c, b);
