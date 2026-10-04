@@ -172,6 +172,7 @@ export class ActivationLab {
     this.get<HTMLElement>('[data-activation="close"]').focus();
     status.hidden = false;
     status.textContent = 'Validando B con el motor completo. A y el trazado actual se conservan; puedes cancelar con Cerrar o Escape.';
+    this.dialog.scrollTop = 0;
     this.get('#activation-error').hidden = true;
     try {
       const result = await this.apply(cloneCase(this.pair.b.case), cloneCase(this.snapshot.case), attempt.signal);
