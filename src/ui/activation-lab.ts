@@ -1,7 +1,7 @@
 import './activation.css';
 import { cloneCase, type ECGCase, type Beat } from '../engine/types';
 import { LEADS, type Lead } from '../engine/lead-registry';
-import { activationAt, activationPair, activationOptions, activationLimitation, ACTIVATION_SCOPE, type ActivationPair } from './activation-model';
+import { activationAt, activationCandidate, activationPair, activationOptions, activationLimitation, ACTIVATION_SCOPE, type ActivationPair } from './activation-model';
 import { activationCharts, activationSvg, updateActivationCursor } from '../render/activation';
 import { esc, options } from './helpers';
 import { download } from './persistence';
@@ -9,7 +9,7 @@ import { buildProvenance } from './build-provenance';
 
 export interface ActivationInput { case: ECGCase; beats: Beat[] }
 const KIND: Record<Beat['kind'], string> = { normal: 'conducido', pvc: 'EV', ventricular: 'ventricular', paced: 'estimulado' };
-const CHANGES = [['conduction', 'Conducción'], ['qrs', 'QRS programado (ms)'], ['axis', 'Eje solicitado (°)'], ['ventricularSource', 'Fuente ventricular']] as const;
+const CHANGES = [['conduction', 'Conducción'], ['qrs', 'QRS programado (ms)'], ['axis', 'Eje solicitado (°)'], ['ventricularSource', 'Fuente ventricular'], ['activationModel', 'Modelo de activación']] as const;
 const fmt = (v: number | null, places = 1) => v === null ? 'No definido' : v.toFixed(places);
 
 /** Owns only a temporary, explicit what-if experiment. The main trace remains the worker's.
@@ -43,11 +43,13 @@ export class ActivationLab {
         this.beatIndex = Number(target.value); this.render();
         if (hadFocus) this.get<HTMLSelectElement>('#activation-beat').focus({ preventScroll: true });
       }
-      if (target.id === 'activation-choice') this.refresh();
+      if (target.id === 'activation-choice') this.refresh(true);
+      if (target.id === 'activation-model') this.refresh();
       if (target.id === 'activation-lead' && LEADS.includes(target.value as Lead)) { this.lead = target.value as Lead; this.cursor(); }
     });
     this.dialog.addEventListener('input', event => {
       const target = event.target as HTMLInputElement;
+      if (target.id === 'activation-qrs') this.refresh();
       if (target.id === 'activation-time') { this.stop(); this.timeMs = Number(target.value); this.cursor(); }
     });
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.stop(); });
@@ -75,23 +77,36 @@ export class ActivationLab {
     this.dialog.innerHTML = `<header class="activation-header"><div><p class="activation-kicker">EL VECTOR DETRÁS DEL TRAZADO</p><h2 id="activation-title">Laboratorio de activación QRS</h2><p>Explora el recorrido eléctrico del modelo y su proyección sobre las 12 derivaciones.</p></div><button type="button" class="btn" data-activation="close" autofocus>Cerrar</button></header>
       <p id="activation-scope" class="activation-scope">${esc(ACTIVATION_SCOPE)}</p>
       <div class="activation-controls"><label>Latido real del caso<select id="activation-beat" ${beats.length ? '' : 'disabled'}>${beats.map((b, i) => `<option value="${i}" ${i === this.beatIndex ? 'selected' : ''}>${i + 1} · ${KIND[b.kind]} · ${b.time.toFixed(2)} s</option>`).join('')}</select></label><label>Alternativa B ${beat?.kind === 'normal' ? '· conducción' : '· fuente'}<select id="activation-choice" ${limitation ? 'disabled' : ''}>${beat ? options(activationOptions(beat), 'unchanged') : ''}</select></label></div>
+      <div class="activation-controls" ${limitation ? 'hidden' : ''}><label>QRS solicitado B (ms)<input id="activation-qrs" type="number" min="60" max="240" step="any" value="${c.qrs}" required aria-describedby="activation-edit-note activation-error"/></label><label>Modelo de activación B<select id="activation-model">${options([['template', 'Plantilla histórica'], ['regional-rbbb-v1', 'BRD regional · experimental']], c.activationModel ?? 'template')}</select></label></div>
+      <p id="activation-edit-note" class="activation-note" ${limitation ? 'hidden' : ''}>Solo cambia B; A permanece capturado. Cambiar conducción/fuente restablece los parámetros de B. El modelo regional se aplica únicamente dentro de su dominio y a latidos conducidos. La etiqueta de conducción identifica la configuración elegida, no un diagnóstico del QRS ajustado.</p>
+      <button type="button" class="btn" data-activation="reset" ${limitation ? 'hidden' : ''}>Restablecer B = A</button>
       <p id="activation-error" role="status" ${limitation ? '' : 'hidden'}>${esc(limitation ?? '')}</p>
       <div id="activation-experiment" ${limitation ? 'hidden' : ''}><div class="activation-legend"><span><i class="activation-a"></i>A · caso capturado (discontinuo)</span><span><i class="activation-b"></i>B · alternativa (continuo)</span></div>
       <div id="activation-summary" class="activation-summary"></div><p id="activation-changes" class="activation-note"></p>
       <div class="activation-playback"><button type="button" class="btn" data-activation="play">Reproducir lento</button><label>Recorrer QRS (ms)<input id="activation-time" type="range" min="0" max="240" step="1" value="0"/></label><output id="activation-clock">0 ms</output><label>Lectura instantánea<select id="activation-lead">${options([...LEADS], this.lead)}</select></label><output id="activation-instant"></output></div>
       <div id="activation-charts" class="activation-charts"></div><p id="activation-scale" class="activation-note"></p><p class="activation-note">*Pico vectorial en coordenadas sintéticas del modelo, no voltaje de una derivación ni fuerza eléctrica anatómica. Las dos curvas comparten escala y tiempo absoluto desde el inicio del QRS. No se normaliza cada fuente por separado. Reproducción lenta: un recorrido completo en 2 segundos.</p><p class="activation-note">La alternativa es una vista previa del QRS aislado. Al aplicarla, el motor valida y recalcula el ECG completo, incluida la repolarización; ciertas combinaciones de parámetros pueden quedar fuera de alcance.</p>
       <div class="activation-footer"><button type="button" class="btn primary" data-activation="apply">Aplicar B al caso</button><button type="button" class="btn" data-activation="svg">Exportar SVG</button><button type="button" class="btn" data-activation="json">Exportar experimento JSON</button></div></div>`;
-    if (!limitation) this.refresh();
+    if (!limitation) this.refresh(true);
   }
-  private refresh(): void {
+  private refresh(resetControls = false): void {
     this.stop(); this.pair = null;
     if (!this.snapshot) return;
     try {
       const { case: c, beats } = this.snapshot;
-      this.pair = activationPair(c, beats[this.beatIndex], this.get<HTMLSelectElement>('#activation-choice').value);
+      const beat = beats[this.beatIndex], choice = this.get<HTMLSelectElement>('#activation-choice').value;
+      const qrs = this.get<HTMLInputElement>('#activation-qrs'), model = this.get<HTMLSelectElement>('#activation-model');
+      if (resetControls) {
+        const candidate = activationCandidate(c, beat, choice);
+        qrs.value = String(candidate.qrs); model.value = candidate.activationModel ?? 'template';
+      }
+      const qrsMs = qrs.value.trim() === '' ? NaN : Number(qrs.value);
+      const validQrs = Number.isFinite(qrsMs) && qrsMs >= 60 && qrsMs <= 240;
+      qrs.setAttribute('aria-invalid', String(!validQrs));
+      this.pair = activationPair(c, beat, choice, { qrsMs, activationModel: model.value as NonNullable<ECGCase['activationModel']> });
       const { a, b, durationMs, leadRangeMv } = this.pair;
       this.get('#activation-error').hidden = true; this.get('#activation-experiment').hidden = false;
-      this.get('#activation-summary').innerHTML = [a, b].map((t, i) => `<div><strong>${i ? 'B' : 'A'} · ${esc(t.label)}</strong><dl><div><dt>QRS programado</dt><dd>${fmt(t.durationMs, 0)} ms</dd></div><div><dt>Eje integrado XYZ→I/II</dt><dd>${fmt(t.summary.frontalAxisDeg)}${t.summary.frontalAxisDeg === null ? "" : "°"}</dd></div><div><dt>Pico vectorial*</dt><dd>${fmt(t.summary.peakMagnitude, 3)}</dd></div></dl></div>`).join('');
+      const regions = { septal: 'Septal', 'lv-main': 'VI principal', 'lv-terminal': 'VI terminal', 'rv-delayed': 'VD tardío' };
+      this.get('#activation-summary').innerHTML = [a, b].map((t, i) => `<div><strong>${i ? 'B' : 'A'} · ${esc(t.label)}</strong><dl><div><dt>QRS efectivo del modelo</dt><dd>${fmt(t.durationMs, 0)} ms</dd></div><div><dt>Eje integrado XYZ→I/II</dt><dd>${fmt(t.summary.frontalAxisDeg)}${t.summary.frontalAxisDeg === null ? "" : "°"}</dd></div><div><dt>Pico vectorial*</dt><dd>${fmt(t.summary.peakMagnitude, 3)}</dd></div></dl><p class="activation-note" data-activation-model="${i ? 'B' : 'A'}"><strong>${esc(t.timing.label)}.</strong> ${esc(t.timing.note)}</p>${t.timing.regions.length ? `<details class="activation-timing"><summary>Soportes programados (ms)</summary><ul>${t.timing.regions.map(r => `<li>${regions[r.region]}: ${r.startMs}–${r.endMs} ms</li>`).join('')}</ul><p>No son tiempos medidos en pacientes.</p></details>` : ''}</div>`).join('');
       const changes = CHANGES.filter(([key]) => a.case[key] !== b.case[key]);
       this.get('#activation-changes').textContent = changes.length
         ? `Cambios coordinados: ${changes.map(([key, label]) => `${label}: ${a.case[key]} → ${b.case[key]}`).join(' · ')}. El ritmo y el calendario de latidos no cambian.`
@@ -101,8 +116,9 @@ export class ActivationLab {
       this.get('#activation-charts').setAttribute('aria-label', `Escala común en las 12 derivaciones: ±${leadRangeMv.toFixed(2)} mV. Pico vectorial en coordenadas sintéticas del modelo.`);
       this.get('#activation-scale').textContent = `Las 12 derivaciones comparten un rango de ±${leadRangeMv.toFixed(2)} mV. Filtros, ruido e inversión de electrodos del ECG no se aplican aquí.`;
       const slider = this.get<HTMLInputElement>('#activation-time'); slider.max = String(durationMs);
-      this.timeMs = durationMs * .5; this.cursor();
+      this.timeMs = resetControls ? durationMs * .5 : Math.min(this.timeMs, durationMs); this.cursor();
     } catch (error) {
+      this.pair = null; this.get('#activation-charts').replaceChildren();
       this.get('#activation-experiment').hidden = true;
       this.get('#activation-error').hidden = false; this.get('#activation-error').textContent = (error as Error).message;
     }
@@ -131,6 +147,10 @@ export class ActivationLab {
   }
   private action(action?: string): void {
     if (action === 'close') { this.dialog.close(); return; }
+    if (action === 'reset' && this.snapshot) {
+      if (!this.valid()) { this.invalidate(); return; }
+      this.get<HTMLSelectElement>('#activation-choice').value = 'unchanged'; this.refresh(true); return;
+    }
     if (!action || !this.pair || !this.snapshot) return;
     if (!this.valid()) { this.invalidate(); this.notify('El caso cambió. Abre de nuevo el laboratorio para evitar una comparación obsoleta.'); return; }
     if (action === 'play') {
@@ -152,7 +172,7 @@ export class ActivationLab {
     }
     if (action === 'svg') download(new Blob([activationSvg(this.pair, this.timeMs)], { type: 'image/svg+xml' }), 'ecg-lab-activacion-QRS.svg');
     if (action === 'json') download(new Blob([JSON.stringify({ schemaVersion: 1, kind: 'ecg-lab-activation', build: buildProvenance(), scope: ACTIVATION_SCOPE,
-      clinicalValidation: false, sampling: 'QRS isolated, summed temporal kernels; intervals <= 1 ms, inclusive endpoints; no filtering',
+      clinicalValidation: false, sampling: 'QRS isolated, summed temporal kernels (template or regional); intervals <= 1 ms, inclusive endpoints; no filtering',
       cursorMs: this.timeMs, lead: this.lead, ...this.pair }, null, 2)], { type: 'application/json' }), 'ecg-lab-activacion-QRS.json');
   }
 }
