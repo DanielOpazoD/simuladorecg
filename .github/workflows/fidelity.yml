@@ -91,6 +91,7 @@ jobs:
           node tests/browser-external-review.mjs
           node tests/browser-repolarization-coherence.mjs
           node tests/browser-visual-workspace.mjs
+          node tests/browser-activation.mjs
           node tests/browser-diagnosis-navigation.mjs
       - name: Archive exact reviewed source and reports
         if: always()
@@ -146,6 +147,7 @@ jobs:
           node scripts/verify-production.mjs
           node tests/browser-accessibility.mjs
           ECG_GROUP_ENGINES=all node tests/browser-diagnosis-navigation.mjs
+          ECG_ACTIVATION_ENGINES=all node tests/browser-activation.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

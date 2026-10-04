@@ -1,5 +1,6 @@
 import "./style.css";
 import { APP_VERSION } from "./ui/version";
+import { ActivationLab } from "./ui/activation-lab";
 import { familyLabel } from "./ui/catalog-presentation";
 import { diagnosisFamilies, diagnosisForPreset } from "./ui/diagnosis-navigation";
 import { createExplorationOrigin, explorationChanges, restoreExplorationOrigin, sameExplorationModel, type ExplorationOrigin } from "./ui/exploration-origin";
@@ -78,7 +79,7 @@ try {
 const root = $("#app");
 root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="ECG Lab, inicio">${icon("pulse")}<span>ECG<span class="brand-light">lab</span></span><span class="brand-divider"></span><small>Explora la electrocardiografía</small></a><nav aria-label="Herramientas"><button class="btn mobile-cases" data-action="catalog">${icon("menu")}<span>Casos</span></button>${btn("quiz", "Practicar", "quiz")}${btn("about", "Guía", "book")}${btn("theme", "Tema", "sun", "icon-button")}${btn("export", "Exportar", "download", "primary")}</nav></header>
  <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><div><h2>Biblioteca de patrones</h2><span>${PRESETS.filter((x) => x.strategy !== "pending").length} ejemplos · agrupados por patrón</span></div>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Patrón, sigla o palabra…" aria-label="Buscar caso"/></label><label class="category-select"><span class="sr-only">Categoría</span><select id="category">${options([["", "Todas las familias"], ...Array.from(new Set(PRESETS.map((x) => x.group))).map((x) => [x, familyLabel(x)] as [string, string])], "")}</select></label><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div><div class="sidebar-footer">${icon("pulse")}<div>Señal 100% sintética<small data-product-version="${APP_VERSION}">Modelo educativo · v${APP_VERSION}</small></div></div></aside>
- <main class="workspace"><nav class="workspace-nav" aria-label="Espacios de trabajo"><span class="workspace-current" aria-current="page">${icon("pulse")}Simulador</span>${btn("external", "Abrir señal", "book")}${btn("compare", "Comparar A/B", "strip")}<button type="button" class="btn workspace-adjust" data-action="parameters">${icon("settings")}<span>Ajustar el caso</span></button></nav><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><p id="case-subtitle">Activación auricular sinusal seguida de conducción AV 1:1.</p><div id="exploration-context" class="exploration-context" hidden></div></div><div class="case-state"><span class="status-label">Ejemplo sintético</span>${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
+ <main class="workspace"><nav class="workspace-nav" aria-label="Espacios de trabajo"><span class="workspace-current" aria-current="page">${icon("pulse")}Simulador</span>${btn("external", "Abrir señal", "book")}${btn("compare", "Comparar A/B", "strip")}${btn("activation", "Activación QRS", "pulse")}<button type="button" class="btn workspace-adjust" data-action="parameters">${icon("settings")}<span>Ajustar el caso</span></button></nav><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><p id="case-subtitle">Activación auricular sinusal seguida de conducción AV 1:1.</p><div id="exploration-context" class="exploration-context" hidden></div></div><div class="case-state"><span class="status-label">Ejemplo sintético</span>${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
  <section id="diagnosis-navigation" class="diagnosis-navigation" aria-label="Variantes del patrón" hidden></section>
  <div id="diagnosis-content">
  <section id="metrics" class="metrics" aria-label="Medidas del ECG"><div class="loading-metrics">Generando señal…</div></section>
@@ -118,6 +119,17 @@ const external = new ExternalLab((slot, trace) => {
   comparison.focus();
 });
 
+const activation = new ActivationLab(
+  () => session.canExport && session.signal && (!quiz || quiz.answer)
+    ? { case: c, beats: session.signal.events.beats } : null,
+  (candidate, original) => {
+    if (!session.canExport || (quiz && !quiz.answer) || JSON.stringify(c) !== JSON.stringify(original)) return false;
+    c = cloneCase(candidate);
+    caliper = null; session.resetTools(); annotations = false;
+    renderCatalog(); renderControls(); renderInfo(); generate();
+    return true;
+  }, toast,
+);
 
 if (!location.hash) { const p=presetById(c.presetId); if(p) explorationOrigin=createExplorationOrigin(p,c); }
 function currentPreset() {
@@ -210,6 +222,7 @@ function renderInfo() {
   $("#inspector").hidden = !!concealed;
   $<HTMLButtonElement>('[data-action="parameters"]').disabled = !!concealed;
   $("#beat-detail").hidden = !!concealed;
+  if (concealed) activation.invalidate();
   $("#catalog").classList.toggle("quiz-concealed", !!concealed);
 }
 function display(v: number | null | undefined, unit = "") {
@@ -394,6 +407,7 @@ function syncTraceTools() {
   $<HTMLButtonElement>('[data-action="focus"]').disabled = !ready;
   $<HTMLButtonElement>('[data-action="compare"]').disabled = !!quiz && !quiz.answer;
   $<HTMLButtonElement>('[data-action="external"]').disabled = !!quiz && !quiz.answer;
+  $<HTMLButtonElement>('[data-action="activation"]').disabled = !ready || (!!quiz && !quiz.answer);
   const caliperButton = $<HTMLButtonElement>('[data-action="caliper"]');
   caliperButton.disabled = monitorMode || !ready;
   caliperButton.classList.toggle("active", measuring);
@@ -466,6 +480,7 @@ function showUnavailableSignal(message: string, unavailable = false) {
   syncTraceTools();
 }
 function invalidateSignal() {
+  activation.invalidate();
   clearToast();
   session.invalidate();
   comparison.invalidate();
@@ -774,6 +789,7 @@ document.addEventListener("click", async (e) => {
     if (quiz && !quiz.answer) return;
     $("#inspector").scrollIntoView({block:"start"}); $("#inspector").focus({preventScroll:true});
   }
+  if (action === "activation" && (!quiz || quiz.answer)) activation.open();
   if (action === "compare" && (!quiz || quiz.answer)) comparison.focus();
   if (action === "external" && (!quiz || quiz.answer)) external.open();
   if (action === "focus") {
