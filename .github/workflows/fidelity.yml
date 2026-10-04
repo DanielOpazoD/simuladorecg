@@ -94,6 +94,7 @@ jobs:
           node tests/browser-repolarization-coherence.mjs
           node tests/browser-regional-activation.mjs
           node tests/browser-visual-workspace.mjs
+          node tests/browser-activation.mjs
           node tests/browser-diagnosis-navigation.mjs
       - name: Archive exact reviewed source and reports
         if: always()
@@ -147,6 +148,7 @@ jobs:
           trap 'kill $PID 2>/dev/null || true' EXIT
           for n in {1..40}; do curl --silent --fail "$ECG_TEST_URL" > /dev/null && break; sleep 1; done
           node scripts/verify-production.mjs
+          ECG_ACTIVATION_ENGINES=all node tests/browser-activation.mjs
           node tests/browser-accessibility.mjs
           ECG_GROUP_ENGINES=all node tests/browser-diagnosis-navigation.mjs
           ECG_REGIONAL_ENGINES=all node tests/browser-regional-activation.mjs

@@ -11,10 +11,22 @@ La versión del producto procede de `package.json`; la UI y `dist/build-info.jso
 ## Activación ventricular v1.5
 
 El [contrato de fuentes ventriculares](docs/ventricular-source-v1.5.md) separa la
-fuente del ritmo: cuatro perfiles ilustrativos reutilizables, sin nuevo selector.
+fuente del ritmo: cuatro perfiles ilustrativos reutilizables.
 Ocho presets cambian su QRS y la orientación secundaria; 53 conservan exactamente
 sus muestras. La fuente histórica `rv_apical_pacing` permite reproducir todos los
 presets v1.4. No hay calibración anatómica o clínica de esos perfiles.
+
+## Laboratorio de activación QRS
+
+**Activación QRS** abre un [experimento A/B interactivo](docs/activation-lab.md)
+sobre los eventos reales del caso: suma temporal XYZ, vista oblicua y tres planos,
+12 derivaciones, cursor sincronizado en milisegundos y escalas compartidas. Permite
+comparar conducciones o fuentes ventriculares, exportar SVG/JSON y aplicar B de
+forma explícita mediante el flujo existente. Cerrar no modifica el caso.
+
+Es una vista del **QRS vectorial aislado antes de adquisición**, no un VCG clínico
+ni una simulación anatómica nueva. No cambia los coeficientes del generador. Los
+componentes no representables se declaran en lugar de omitirse silenciosamente.
 
 ## Ejecutar y verificar
 
