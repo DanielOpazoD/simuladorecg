@@ -1,3 +1,4 @@
+import { regionalActivationState, REGIONAL_ACTIVATION_LIMIT } from "./regional-activation";
 import { VENTRICULAR_SOURCE_IDS, type VentricularSourceId } from "./ventricular-source";
 import { LEADS, type Lead } from "./lead-registry";
 export { LEADS, type Lead } from "./lead-registry";
@@ -53,6 +54,8 @@ export interface ECGCase {
   rhythm: Rhythm;
   /** Optional in schema v1. Auto selects an illustrative source, not an origin diagnosis. */
   ventricularSource?: "auto" | VentricularSourceId;
+  /** Opt-in engineering model; missing schema-v1 fields preserve historical samples. */
+  activationModel?: "template" | "regional-rbbb-v1";
   av: AV;
   conduction: Conduction;
   ischemia: Ischemia;
@@ -212,6 +215,7 @@ export const DEFAULT_CASE: ECGCase = {
   seed: 2026,
   rhythm: "sinus",
   ventricularSource: "auto",
+  activationModel: "template",
   av: "normal",
   conduction: "normal",
   ischemia: "none",
@@ -284,6 +288,7 @@ export function normalizeCase(input: unknown): ECGCase {
       "paced",
     ],
     ventricularSource: ["auto", ...VENTRICULAR_SOURCE_IDS],
+    activationModel: ["template", "regional-rbbb-v1"],
     av: [
       "normal",
       "first",
@@ -411,6 +416,9 @@ export function normalizeCase(input: unknown): ECGCase {
 }
 export function constraints(c: ECGCase): string[] {
   const out: string[] = [];
+  const regional = regionalActivationState(c);
+  if (regional.requested) out.push(regional.active ? REGIONAL_ACTIVATION_LIMIT :
+    `Activación regional solicitada pero no aplicada: ${regional.reason} Se usa la plantilla histórica.`);
   if (c.rhythm !== "sinus" && c.av !== "normal")
     out.push(
       "Los bloqueos AV seleccionables requieren actividad sinusal; se utiliza conducción propia del ritmo.",

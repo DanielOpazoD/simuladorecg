@@ -1,3 +1,4 @@
+import { regionalActivationControls } from "./ui/regional-activation";
 import "./style.css";
 import { APP_VERSION } from "./ui/version";
 import { familyLabel } from "./ui/catalog-presentation";
@@ -289,6 +290,7 @@ function syncAmplitudeControls() {
   $<HTMLInputElement>('[data-key="st"]').disabled = state.stDisabled;
   $<HTMLInputElement>('[data-key="tAmp"]').disabled = state.tDisabled;
   $("#amplitude-note").textContent = state.note;
+  $("#regional-activation-controls").innerHTML = regionalActivationControls(c);
 }
 function setPanel(name: string) {
   activePanel = name;

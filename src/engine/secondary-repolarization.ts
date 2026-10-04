@@ -1,3 +1,4 @@
+import { kernelWeight } from "./regional-activation";
 import type { Beat, ECGCase } from "./types";
 import type { Kernel } from "./morphology";
 import { project, type Vec } from "./leads";
@@ -9,7 +10,7 @@ export interface SecondaryRepolarization { mode: SecondaryRepolarizationMode; t:
 
 function integrated(ks: readonly Kernel[], predicate: (k: Kernel) => boolean): Vec {
   const v: Vec = [0, 0, 0];
-  for (const k of ks) if (predicate(k)) for (let j=0;j<3;j++) v[j] += k.v[j] * k.sigma;
+  for (const k of ks) if (predicate(k)) for (let j=0;j<3;j++) v[j] += k.v[j] * kernelWeight(k);
   return v;
 }
 function opposite(reference: Vec, frontalAmplitude: number): Vec | null {
@@ -23,7 +24,11 @@ export function secondaryRepolarization(c: ECGCase,b: Beat,ks: readonly Kernel[]
   let mode:SecondaryRepolarizationMode="none", reference:Vec|null=null;
   if(source||c.conduction==="lbbb"){mode="mean-qrs";reference=integrated(ks,()=>true);}
   else if(c.conduction.includes("rbbb")||c.conduction==="irbbb"){
-    mode="terminal-qrs"; const delayed=integrated(ks,k=>k.mu>=.55);
+    mode="terminal-qrs";
+    // Region identity, not relative QRS phase: an early LV basis can pass .55
+    // in a shorter complex without becoming delayed right-ventricular tissue.
+    const regional=ks.some(k=>k.regional), delayed=integrated(ks,k=>
+      regional ? k.regional?.region==="rv-delayed" : k.mu>=.55);
     reference=Math.hypot(...delayed)>1e-9?delayed:integrated(ks,()=>true);
   }
   if(!reference)return{mode,t:null,st:null,reference:null};

@@ -1,3 +1,5 @@
+import { regionalActivationState } from "../engine/regional-activation";
+import { regionalActivationControls } from "./regional-activation";
 import { LEADS, type ECGCase } from "../engine/types";
 import { lesionControlEffect } from "../engine/morphology";
 import { range, select, toggle } from "./helpers";
@@ -25,7 +27,7 @@ export function controls(c: ECGCase) {
  <div class="control-tabs" role="tablist" aria-label="Parámetros"><button role="tab" aria-selected="true" data-panel="base">Intervalos</button><button role="tab" aria-selected="false" data-panel="conduction">Conducción</button><button role="tab" aria-selected="false" data-panel="st">ST y ondas</button><button role="tab" aria-selected="false" data-panel="signal">Señal y papel</button></div>
  <div class="control-panel" data-control-panel="base"><div class="range-grid">
  ${range("hr", c.av === "complete" ? "Frecuencia de escape" : c.av !== "normal" && c.av !== "first" ? "Frecuencia auricular" : "Frecuencia base", 20, 250, 1, c.hr, "lpm")}
- ${range("pr", "Intervalo PR", 80, 400, 5, c.pr, "ms")}${range("qrs", "Duración QRS", 60, 240, 5, c.qrs, "ms")}${range("qtc", "QTc · Fridericia", 260, 650, 5, c.qtc, "ms")}${range("axis", "Eje QRS solicitado", -180, 180, 5, c.axis, "°")}${range("variability", "Variabilidad sinusal RR", 0, 0.3, 0.01, c.variability, "")}
+ ${range("pr", "Intervalo PR", 80, 400, 5, c.pr, "ms")}${range("qrs", "Duración QRS", regionalActivationState(c).active ? 100 : 60, 240, 5, c.qrs, "ms")}${range("qtc", "QTc · Fridericia", 260, 650, 5, c.qtc, "ms")}${range("axis", "Eje QRS solicitado", -180, 180, 5, c.axis, "°")}${range("variability", "Variabilidad sinusal RR", 0, 0.3, 0.01, c.variability, "")}
  </div><div class="inline-fields">${range("respiratoryRate", "Frecuencia respiratoria", 6, 40, 1, c.respiratoryRate, "rpm")}${range("atrialRate", "FC auricular independiente", 40, 350, 5, c.atrialRate, "lpm")}</div><p class="control-note">FC auricular independiente: flutter, BAV completo y TV. El QT se adapta a la historia de RR con memoria exponencial de ≈40 s; no responde de golpe a un RR aislado.</p></div>
  <div class="control-panel" data-control-panel="conduction" hidden><div class="field-grid">
  ${select(
@@ -124,7 +126,7 @@ export function controls(c: ECGCase) {
    c.rhythm !== "paced",
  )}
  ${range("coupling", "Acoplamiento de ectopia", 0.3, 0.85, 0.01, c.coupling, "× RR")}
- </div><p class="control-note">Las combinaciones no implementadas se desactivan. FA + BAV completo es posible clínicamente, pero queda fuera del modelo actual. La estimulación representa captura fija; no simula demanda.</p></div>
+ </div><p class="control-note">Las combinaciones no implementadas se desactivan. FA + BAV completo es posible clínicamente, pero queda fuera del modelo actual. La estimulación representa captura fija; no simula demanda.</p><section id="regional-activation-controls" aria-label="Activación regional experimental">${regionalActivationControls(c)}</section></div>
  <div class="control-panel" data-control-panel="st" hidden><div class="field-grid">
  ${select(
    "ischemia",
