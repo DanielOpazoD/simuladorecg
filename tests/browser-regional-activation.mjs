@@ -38,6 +38,11 @@ for(const [engine,launcher] of Object.entries(engines)){
    assert.ok(regional.changedSettings.some(r=>r.key==='activationModel'));
    assert.match(await page.locator('#regional-activation-status').innerText(),/Regional activo/);
    assert.equal(await page.locator('#regional-activation-controls svg').count(),1);
+   assert.match(await page.locator('#exploration-context').innerText(),/1 ajuste/);
+   await page.locator('[data-action="compare-origin"]').click();
+   const origin=await exported('origin');
+   assert.deepEqual(origin.A.leads,original.A.leads,'Regional synthesis must not overwrite the original trace');
+   assert.deepEqual(origin.B.leads,regional.B.leads);
    await page.locator('#regional-activation-controls').screenshot({path:resolve(out,`regional-controls-${engine}-${width}.png`)});
    await page.locator('[data-panel="base"]').click();
    const pending=await page.locator('[data-key="qrs"]').evaluate(el=>{
@@ -51,6 +56,11 @@ for(const [engine,launcher] of Object.entries(engines)){
    assert.match(await page.locator('#regional-activation-controls svg').textContent(),/190/);
    await page.locator('#compare-alignment').selectOption('beat');
    await page.locator('#comparison-lab').screenshot({path:resolve(out,`regional-comparison-${engine}-${width}.png`)});
+   // Restore through the real origin action before testing file import boundaries.
+   await page.locator('[data-action="restore-origin"]').click();await ready();
+   const originRestored=await exported('origin-restored');
+   assert.deepEqual(originRestored.B.leads,original.B.leads);
+   assert.equal(await page.locator('#exploration-context').isVisible(),false);
    // Import the actual accepted B case. This retains its explicit experimental identity.
    await page.locator('#file-input').setInputFiles({name:'regional-case.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(delayed.B.case))});
    await ready();const imported=await exported('imported');assert.equal(imported.B.case.activationModel,'regional-rbbb-v1');
