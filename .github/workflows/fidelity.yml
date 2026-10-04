@@ -145,9 +145,9 @@ jobs:
           trap 'kill $PID 2>/dev/null || true' EXIT
           for n in {1..40}; do curl --silent --fail "$ECG_TEST_URL" > /dev/null && break; sleep 1; done
           node scripts/verify-production.mjs
+          ECG_ACTIVATION_ENGINES=all node tests/browser-activation.mjs
           node tests/browser-accessibility.mjs
           ECG_GROUP_ENGINES=all node tests/browser-diagnosis-navigation.mjs
-          ECG_ACTIVATION_ENGINES=all node tests/browser-activation.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
