@@ -4,6 +4,7 @@ import { project, axisFromLeads, type Vec } from '../engine/leads';
 import { qrsKernels, qrsDuration, qrsKernelValue } from '../engine/morphology';
 import { VENTRICULAR_SOURCE_IDS, VENTRICULAR_SOURCES, ventricularSource } from '../engine/ventricular-source';
 import { changeCase } from './case-state';
+import { regionalActivationState, regionalActivationTimeline, usesRegionalActivation } from '../engine/regional-activation';
 
 export interface ActivationTrace {
   case: ECGCase;
@@ -11,6 +12,7 @@ export interface ActivationTrace {
   beat: Pick<Beat, "time" | "kind" | "rr">;
   label: string;
   durationMs: number;
+  timing: ReturnType<typeof activationTiming>;
   timesMs: number[];
   xyz: Vec[];
   leads: Record<Lead, number[]>;
@@ -36,9 +38,39 @@ export function activationOptions(b: Beat): [string, string][] {
     ? CONDUCTION_EXAMPLES.map(([id, label]): [string, string] => [id, label])
     : [['auto', 'Fuente automática del caso'] as [string, string], ...VENTRICULAR_SOURCE_IDS.map(id => [id, VENTRICULAR_SOURCES[id].label] as [string, string])])];
 }
-export function activationCandidate(c: ECGCase, b: Beat, choice: string): ECGCase {
+/** Only two existing controls, applied after the coordinated conduction/source choice. */
+export interface ActivationEdits {
+  qrsMs?: number;
+  activationModel?: NonNullable<ECGCase['activationModel']>;
+}
+export function activationCandidate(c: ECGCase, b: Beat, choice: string, edits: ActivationEdits = {}): ECGCase {
   if (!activationOptions(b).some(([id]) => id === choice)) throw Error('Alternativa de activación no válida.');
-  return choice === 'unchanged' ? cloneCase(c) : changeCase(c, b.kind === 'normal' ? 'conduction' : 'ventricularSource', choice);
+  let next = choice === 'unchanged' ? cloneCase(c) : changeCase(c, b.kind === 'normal' ? 'conduction' : 'ventricularSource', choice);
+  if (edits.qrsMs !== undefined) {
+    // Unlike imported cases, an interactive experiment must not silently clamp input.
+    if (!Number.isFinite(edits.qrsMs) || edits.qrsMs < 60 || edits.qrsMs > 240)
+      throw Error('Introduce un QRS solicitado entre 60 y 240 ms. No se ajusta silenciosamente.');
+    if (edits.qrsMs !== next.qrs) next = changeCase(next, 'qrs', edits.qrsMs);
+  }
+  if (edits.activationModel !== undefined) {
+    if (!['template', 'regional-rbbb-v1'].includes(edits.activationModel)) throw Error('Modelo de activación no válido.');
+    if (edits.activationModel !== (next.activationModel ?? 'template')) next = changeCase(next, 'activationModel', edits.activationModel);
+  }
+  return next;
+}
+/** Per-event state: a PVC inside a regional case still uses its ventricular source. */
+export function activationTiming(c: ECGCase, b: Beat) {
+  const state = regionalActivationState(c), regional = usesRegionalActivation(c, b);
+  const applied = b.kind !== 'normal' ? 'ventricular-source' : regional ? 'regional-rbbb-v1' : 'template';
+  const label = regional ? 'BRD regional · experimental' : state.requested ? 'Regional no aplicado'
+    : b.kind !== 'normal' ? 'Fuente ventricular' : 'Plantilla histórica';
+  const note = b.kind !== 'normal'
+    ? 'Este latido usa su fuente ventricular, no el reloj regional de los latidos conducidos. El perfil puede imponer un QRS mínimo.'
+    : regional ? 'Reloj septal/VI fijo; el soporte VD va de 55 ms al final del QRS. Son bases de ingeniería, no tiempos anatómicos medidos.'
+      : state.requested ? `${state.reason} Se usa la plantilla histórica, conservando la selección solicitada.`
+        : 'Al variar QRS se estiran conjuntamente las bases temporales de la plantilla.';
+  return { requested: c.activationModel ?? 'template', applied, label, note,
+    regions: regional ? regionalActivationTimeline(c.qrs) : [] };
 }
 
 /** Sum the SAME temporal basis functions as signal.ts, not the polygon of kernel coefficients.
@@ -74,11 +106,11 @@ export function sampleActivation(c: ECGCase, b: Beat): ActivationTrace {
   const p = project(integral), source = ventricularSource(c, b);
   const frontalMagnitude = Math.hypot(p.I, (2 * p.II - p.I) / Math.sqrt(3));
   const label = source?.label ?? CONDUCTION_EXAMPLES.find(([id]) => id === c.conduction)?.[1] ?? c.conduction;
-  return { case: cloneCase(c), beat: { time: b.time, kind: b.kind, rr: b.rr }, label, durationMs, timesMs, xyz, leads,
+  return { case: cloneCase(c), beat: { time: b.time, kind: b.kind, rr: b.rr }, label, durationMs, timing: activationTiming(c, b), timesMs, xyz, leads,
     summary: { integral, frontalAxisDeg: frontalMagnitude > 1e-9 ? axisFromLeads(p.I, p.II) : null, peakMagnitude, pathLength } };
 }
-export function activationPair(c: ECGCase, b: Beat, choice: string): ActivationPair {
-  const a = sampleActivation(c, b), next = activationCandidate(c, b, choice), other = sampleActivation(next, b);
+export function activationPair(c: ECGCase, b: Beat, choice: string, edits: ActivationEdits = {}): ActivationPair {
+  const a = sampleActivation(c, b), next = activationCandidate(c, b, choice, edits), other = sampleActivation(next, b);
   const peakLead = Math.max(...LEADS.flatMap(l => [...a.leads[l], ...other.leads[l]].map(Math.abs)));
   const range = (peak: number) => Math.max(.25, Math.ceil(peak * 1.15 * 4) / 4);
   return { a, b: other, vectorRange: range(Math.max(a.summary.peakMagnitude, other.summary.peakMagnitude)),

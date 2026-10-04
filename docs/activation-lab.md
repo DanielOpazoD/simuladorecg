@@ -15,10 +15,45 @@ ilustrativos existentes, no localizaciones anatómicas nuevas. Los cambios de
 conducción utilizan `changeCase()` y muestran sus cambios coordinados de QRS y
 eje. No se modifica el catálogo ni se introducen coeficientes fisiológicos.
 
+## Duración y modelo de B en el mismo experimento
+
+**QRS solicitado B** y **Modelo de activación B** reutilizan `changeCase()` y el
+modelo regional de BRD existente. No hay otro generador ni coeficientes nuevos.
+A permanece capturado; variar QRS/modelo conserva el instante absoluto del cursor
+hasta el final del rango compartido. Cambiar conducción/fuente recupera sus
+parámetros coordinados y los del caso capturado. **Restablecer B = A** descarta
+los ajustes, incluso después de una entrada inválida, sin cerrar el diálogo.
+
+Ejemplo: abrir BRD, mantener su conducción/eje, elegir el modelo regional y
+comparar 150 frente a 190 ms. La interfaz distingue **QRS solicitado** del
+**QRS efectivo del modelo**: una fuente ventricular puede imponer su mínimo.
+El estado es por evento, no solo por caso: una EV dentro de un caso regional usa
+su propia fuente. Los soportes septal/VI/VD proceden del módulo regional existente;
+son parámetros de ingeniería y no tiempos de activación anatómicos medidos.
+Fuera del dominio se conserva la solicitud, se muestra **Regional no aplicado**
+y se identifica la plantilla utilizada. La etiqueta de conducción no diagnostica
+un QRS cuya duración se haya modificado.
+
+Una entrada vacía, no finita o fuera de 60–240 ms invalida y retira inmediatamente
+el experimento: no se puede aplicar ni exportar la vista anterior. No se redondea
+ni limita silenciosamente el valor. SVG identifica el modelo aplicado de A/B;
+JSON añade `timing` con solicitud, modo realmente aplicado, motivo y soportes.
+El formato del caso permanece v1 y el nuevo metadato del experimento es aditivo.
+Aplicar pasa por el worker existente; el QRS aislado no calcula un nuevo QT ni
+asegura que todas las combinaciones de repolarización estén admitidas.
+
+Aceptación adicional: ocho pruebas del modelo cubren inmutabilidad, transiciones,
+restablecimiento, entradas inválidas, procedencia, el reloj inicial fijo con
+control negativo de plantilla, fallback y la distinción entre EV/conducción.
+El recorrido de navegador ya existente verifica edición, cursor, SVG/JSON,
+invalidación, reset, aplicación real y cancelación en la misma matriz de motores.
+No se crean workflows, dependencias ni capas nuevas. Los resultados concretos
+pertenecen al commit evaluado; esta descripción no equivale a CI aprobado.
+
 ## Qué representa la imagen
 
 `activation-model.ts` suma los componentes temporales de `qrsKernels()` usando
-las mismas funciones `gaussian()` y `compact()` que `signal.ts`. Se muestrea el
+`qrsKernelValue()`, igual que `signal.ts`, incluido el soporte regional. Se muestrea el
 QRS aislado con intervalos de como máximo 1 ms, incluyendo ambos extremos. La
 proyección a las doce derivaciones usa el registro físico existente y conserva
 las identidades de Einthoven y Goldberger.

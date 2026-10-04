@@ -105,6 +105,85 @@ describe('Activation lab: sampled vector, explicit domains and real beat kinds',
     assert.equal((svg.match(/data-activation-plane=/g) ?? []).length, 4);
     assert.match(svg, /No es VCG clínico/);
   });
+  it('edits only B with the existing transitions, leaving A, source and rhythm untouched', () => {
+    const c = load('rbbb'), original = cloneCase(c), event = beat();
+    const pair = activationPair(c, event, 'unchanged', { qrsMs: 190, activationModel: 'regional-rbbb-v1' });
+    assert.deepEqual(c, original); assert.deepEqual(pair.a.case, original);
+    assert.equal(pair.b.case.qrs, 190); assert.equal(pair.b.case.axis, c.axis);
+    assert.equal(pair.b.case.activationModel, 'regional-rbbb-v1');
+    assert.equal(pair.b.timing.applied, 'regional-rbbb-v1');
+    assert.equal(pair.b.durationMs, 190); assert.equal(pair.durationMs, 190);
+    assert.equal(caseContext(normalizeImportedCase(pair.b.case)).preset, undefined);
+    assert.deepEqual(generateEvents(c, 10), generateEvents(pair.b.case, 10));
+    assert.deepEqual(pair.b.beat, { time: 1, kind: 'normal', rr: 1 });
+    assert.deepEqual(event, beat());
+  });
+  it('explicit duration overrides coordinated choice defaults, not the other way around', () => {
+    const c = load('sinus'), candidate = activationCandidate(c, beat(), 'rbbb', { qrsMs: 190, activationModel: 'regional-rbbb-v1' });
+    assert.equal(candidate.conduction, 'rbbb'); assert.equal(candidate.qrs, 190); assert.equal(candidate.axis, 35);
+    assert.equal(activationCandidate(c, beat(), 'rbbb').qrs, 150);
+  });
+  it('no-op edits and reset recover exactly A, including a legacy case without activationModel', () => {
+    const c = load('rbbb'); delete c.activationModel;
+    const pair = activationPair(c, beat(), 'unchanged', { qrsMs: c.qrs, activationModel: 'template' });
+    assert.deepEqual(pair.a, pair.b); assert.deepEqual(pair.b.case, c);
+    activationPair(c, beat(), 'unchanged', { qrsMs: 230, activationModel: 'regional-rbbb-v1' });
+    assert.deepEqual(activationCandidate(c, beat(), 'unchanged'), c);
+  });
+  it('rejects invalid duration or model before any clamping or input mutation', () => {
+    const c = load('rbbb'), original = cloneCase(c);
+    for (const qrsMs of [NaN, Infinity, -Infinity, 0, 59, 241])
+      assert.throws(() => activationPair(c, beat(), 'unchanged', { qrsMs }), /60 y 240/);
+    assert.throws(() => activationCandidate(c, beat(), 'unchanged', { activationModel: 'unknown' as never }), /no válido/);
+    assert.deepEqual(c, original);
+  });
+  it('reports the actual regional supports, including fractional endpoints in exported metadata', () => {
+    const pair = activationPair(load('rbbb'), beat(), 'unchanged', { qrsMs: 190.5, activationModel: 'regional-rbbb-v1' });
+    assert.deepEqual(pair.a.timing.regions, []);
+    assert.deepEqual(pair.b.timing.regions, [
+      { region: 'septal', startMs: 0, endMs: 30 }, { region: 'lv-main', startMs: 12, endMs: 80 },
+      { region: 'lv-terminal', startMs: 42, endMs: 96 }, { region: 'rv-delayed', startMs: 55, endMs: 190.5 },
+    ]);
+    assert.match(activationSvg(pair), /Modelo A: Plantilla histórica · Modelo B: BRD regional/);
+    assert.equal(JSON.parse(JSON.stringify(pair)).b.timing.applied, 'regional-rbbb-v1');
+    assert.equal(pair.b.timesMs.at(-1), 190.5);
+  });
+  it('shows the fixed early clock and delayed RV change rather than globally stretching a regional trace', () => {
+    const c = load('rbbb');
+    const trace = (qrsMs: number, activationModel: 'template' | 'regional-rbbb-v1') =>
+      activationPair(c, beat(), 'unchanged', { qrsMs, activationModel }).b;
+    const earlyDifference = (a: ReturnType<typeof trace>, b: ReturnType<typeof trace>) =>
+      Math.max(...Array.from({length: 41}, (_, ms) => Math.abs(activationAt(a, ms).leads.II - activationAt(b, ms).leads.II)));
+    const short = trace(115, 'regional-rbbb-v1'), long = trace(230, 'regional-rbbb-v1');
+    // Isolated unfiltered 1 ms samples: numerical tolerance, not a clinical threshold.
+    assert.ok(earlyDifference(short, long) < 1e-8);
+    assert.ok(earlyDifference(trace(115, 'template'), trace(230, 'template')) > .01);
+    const peakMs = (t: ReturnType<typeof trace>) => {
+      let best = 55;
+      for (let ms = 56; ms <= t.durationMs; ms++) if (t.leads.V1[ms] > t.leads.V1[best]) best = ms;
+      return best;
+    };
+    assert.ok(peakMs(long) > peakMs(short) + 30);
+    assert.deepEqual(activationAt(short, 150).xyz, [0, 0, 0]);
+    assert.ok(Math.hypot(...activationAt(long, 150).xyz) > .01);
+  });
+  it('retains an out-of-domain request but labels the historical fallback, never fake regional supports', () => {
+    for (const c of [load('lbbb'), { ...load('rbbb'), overload: 'lv' as const }, { ...load('rbbb'), qrs: 90 }]) {
+      const regional = activationPair(c, beat(), 'unchanged', { activationModel: 'regional-rbbb-v1' }).b;
+      assert.equal(regional.case.activationModel, 'regional-rbbb-v1');
+      assert.equal(regional.timing.applied, 'template'); assert.match(regional.timing.label, /no aplicado/);
+      assert.deepEqual(regional.timing.regions, []);
+      assert.deepEqual(regional.xyz, sampleActivation(c, beat()).xyz);
+    }
+  });
+  it('one regional case correctly distinguishes a conducted beat from its PVC source and effective minimum', () => {
+    const c = { ...load('rbbb'), ectopy: 'pvc' as const, activationModel: 'regional-rbbb-v1' as const };
+    assert.equal(sampleActivation(c, beat()).timing.applied, 'regional-rbbb-v1');
+    const pair = activationPair(c, beat('pvc'), 'unchanged', { qrsMs: 100 });
+    assert.equal(pair.b.case.qrs, 100); assert.equal(pair.b.durationMs, 150);
+    assert.equal(pair.b.timing.applied, 'ventricular-source'); assert.match(pair.b.timing.label, /no aplicado/);
+    assert.deepEqual(pair.b.timing.regions, []);
+  });
   it('covers every actual beat kind in the active catalog, marking unsupported domains rather than fabricating a beat', () => {
     let checked = 0, excluded = 0;
     const cata = PRESETS.filter(p => p.strategy !== 'pending'); assert.equal(cata.length, 61);
