@@ -9,7 +9,7 @@ import { buildProvenance } from './build-provenance';
 
 export interface ActivationInput { case: ECGCase; beats: Beat[] }
 const KIND: Record<Beat['kind'], string> = { normal: 'conducido', pvc: 'EV', ventricular: 'ventricular', paced: 'estimulado' };
-const CHANGES = [['conduction', 'Conducción'], ['qrs', 'QRS programado (ms)'], ['axis', 'Eje solicitado (°)'], ['ventricularSource', 'Fuente ventricular'], ['activationModel', 'Modelo de activación']] as const;
+const CHANGES = [['conduction', 'Conducción'], ['pr', 'PR programado (ms)'], ['qrs', 'QRS programado (ms)'], ['axis', 'Eje solicitado (°)'], ['ventricularSource', 'Fuente ventricular'], ['activationModel', 'Modelo de activación']] as const;
 const fmt = (v: number | null, places = 1) => v === null ? 'No definido' : v.toFixed(places);
 
 /** Owns only a temporary, explicit what-if experiment. The main trace remains the worker's.
@@ -109,7 +109,7 @@ export class ActivationLab {
       this.get('#activation-summary').innerHTML = [a, b].map((t, i) => `<div><strong>${i ? 'B' : 'A'} · ${esc(t.label)}</strong><dl><div><dt>QRS efectivo del modelo</dt><dd>${fmt(t.durationMs, 0)} ms</dd></div><div><dt>Eje integrado XYZ→I/II</dt><dd>${fmt(t.summary.frontalAxisDeg)}${t.summary.frontalAxisDeg === null ? "" : "°"}</dd></div><div><dt>Pico vectorial*</dt><dd>${fmt(t.summary.peakMagnitude, 3)}</dd></div></dl><p class="activation-note" data-activation-model="${i ? 'B' : 'A'}"><strong>${esc(t.timing.label)}.</strong> ${esc(t.timing.note)}</p>${t.timing.regions.length ? `<details class="activation-timing"><summary>Soportes programados (ms)</summary><ul>${t.timing.regions.map(r => `<li>${regions[r.region]}: ${r.startMs}–${r.endMs} ms</li>`).join('')}</ul><p>No son tiempos medidos en pacientes.</p></details>` : ''}</div>`).join('');
       const changes = CHANGES.filter(([key]) => a.case[key] !== b.case[key]);
       this.get('#activation-changes').textContent = changes.length
-        ? `Cambios coordinados: ${changes.map(([key, label]) => `${label}: ${a.case[key]} → ${b.case[key]}`).join(' · ')}. El ritmo y el calendario de latidos no cambian.`
+        ? `Cambios coordinados: ${changes.map(([key, label]) => `${label}: ${a.case[key]} → ${b.case[key]}`).join(' · ')}. ${a.case.pr !== b.case.pr ? 'El PR cambia: al aplicar se recalculan los tiempos de los eventos. Las curvas se alinean a sus propios inicios QRS, no al reloj absoluto del ECG.' : 'El ritmo y el calendario de latidos no cambian.'}`
         : 'Control sin cambios: A y B coinciden. Elige otra conducción o fuente para explorar.';
       this.get<HTMLButtonElement>('[data-activation="apply"]').disabled = !changes.length;
       this.get('#activation-charts').innerHTML = activationCharts(this.pair);
@@ -172,7 +172,8 @@ export class ActivationLab {
     }
     if (action === 'svg') download(new Blob([activationSvg(this.pair, this.timeMs)], { type: 'image/svg+xml' }), 'ecg-lab-activacion-QRS.svg');
     if (action === 'json') download(new Blob([JSON.stringify({ schemaVersion: 1, kind: 'ecg-lab-activation', build: buildProvenance(), scope: ACTIVATION_SCOPE,
-      clinicalValidation: false, sampling: 'QRS isolated, summed temporal kernels (template or regional); intervals <= 1 ms, inclusive endpoints; no filtering',
+      clinicalValidation: false, sampling: 'QRS isolated, summed temporal kernels (template or regional) plus eligible WPW delta; intervals <= 1 ms, inclusive endpoints; no filtering',
+      timeReference: 'Curves aligned to their own QRS onsets. beat.time is the original captured event, not a predicted onset for B; Apply regenerates events.',
       cursorMs: this.timeMs, lead: this.lead, ...this.pair }, null, 2)], { type: 'application/json' }), 'ecg-lab-activacion-QRS.json');
   }
 }

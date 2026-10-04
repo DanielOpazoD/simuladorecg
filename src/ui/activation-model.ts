@@ -1,14 +1,15 @@
 import { cloneCase, type ECGCase, type Beat } from '../engine/types';
 import { LEADS, type Lead } from '../engine/lead-registry';
 import { project, axisFromLeads, type Vec } from '../engine/leads';
-import { qrsKernels, qrsDuration, qrsKernelValue } from '../engine/morphology';
+import { qrsKernels, qrsDuration, qrsKernelValue, WPW_DELTA_SECONDS, wpwDeltaVector } from '../engine/morphology';
 import { VENTRICULAR_SOURCE_IDS, VENTRICULAR_SOURCES, ventricularSource } from '../engine/ventricular-source';
+import { WPW_REPOLARIZATION_LIMIT } from '../presets/teaching-limits';
 import { changeCase } from './case-state';
 import { regionalActivationState, regionalActivationTimeline, usesRegionalActivation } from '../engine/regional-activation';
 
 export interface ActivationTrace {
   case: ECGCase;
-  /** Captured event timing only; a QRS-only experiment cannot publish a new QT. */
+  /** Original event timing, NOT a prediction for B after a PR change. No new QT. */
   beat: Pick<Beat, "time" | "kind" | "rr">;
   label: string;
   durationMs: number;
@@ -23,6 +24,7 @@ export const ACTIVATION_SCOPE = 'QRS vectorial aislado del generador, antes de f
 export const CONDUCTION_EXAMPLES = [
   ['normal', 'Conducción normal'], ['rbbb', 'BRD completo'], ['irbbb', 'BRD incompleto'],
   ['lbbb', 'BRI completo'], ['lafb', 'Hemibloqueo anterior'], ['lpfb', 'Hemibloqueo posterior'],
+  ['wpw', 'WPW · preexcitación'],
 ] as const;
 
 /** Reject components that cannot be represented by a single static QRS vector loop. */
@@ -30,7 +32,6 @@ export function activationLimitation(c: ECGCase, b?: Beat): string | null {
   if (c.rhythm === 'vf' || c.rhythm === 'asystole' || !b) return 'Sin complejos QRS organizados para explorar.';
   if (c.rhythm === 'torsades') return 'La TV polimórfica rota durante el tiempo absoluto. Un bucle estático no representa esa señal; no se dibuja una sustitución.';
   if (c.ischemia === 'posterior') return 'El QRS posterior incluye una corrección local por derivación sin equivalente XYZ único. No se omite silenciosamente.';
-  if (c.conduction === 'wpw' && b.kind === 'normal') return 'La preexcitación incorpora una onda delta adicional. Este laboratorio no representa todavía su activación completa.';
   return null;
 }
 export function activationOptions(b: Beat): [string, string][] {
@@ -61,19 +62,21 @@ export function activationCandidate(c: ECGCase, b: Beat, choice: string, edits: 
 /** Per-event state: a PVC inside a regional case still uses its ventricular source. */
 export function activationTiming(c: ECGCase, b: Beat) {
   const state = regionalActivationState(c), regional = usesRegionalActivation(c, b);
+  const deltaDurationMs = c.conduction === 'wpw' && b.kind === 'normal' ? WPW_DELTA_SECONDS * 1000 : null;
   const applied = b.kind !== 'normal' ? 'ventricular-source' : regional ? 'regional-rbbb-v1' : 'template';
   const label = regional ? 'BRD regional · experimental' : state.requested ? 'Regional no aplicado'
-    : b.kind !== 'normal' ? 'Fuente ventricular' : 'Plantilla histórica';
+    : b.kind !== 'normal' ? 'Fuente ventricular' : deltaDurationMs ? 'Plantilla histórica + delta' : 'Plantilla histórica';
   const note = b.kind !== 'normal'
     ? 'Este latido usa su fuente ventricular, no el reloj regional de los latidos conducidos. El perfil puede imponer un QRS mínimo.'
     : regional ? 'Reloj septal/VI fijo; el soporte VD va de 55 ms al final del QRS. Son bases de ingeniería, no tiempos anatómicos medidos.'
       : state.requested ? `${state.reason} Se usa la plantilla histórica, conservando la selección solicitada.`
         : 'Al variar QRS se estiran conjuntamente las bases temporales de la plantilla.';
-  return { requested: c.activationModel ?? 'template', applied, label, note,
+  return { requested: c.activationModel ?? 'template', applied, label, deltaDurationMs,
+    note: deltaDurationMs ? `${note} Delta sintética adicional: 0–${deltaDurationMs} ms fijos, incluida en XYZ y en las doce derivaciones; no localiza una vía accesoria. ${WPW_REPOLARIZATION_LIMIT}` : note,
     regions: regional ? regionalActivationTimeline(c.qrs) : [] };
 }
 
-/** Sum the SAME temporal basis functions as signal.ts, not the polygon of kernel coefficients.
+/** Sum the SAME temporal bases and eligible WPW delta as signal.ts, not the polygon of coefficients.
  * Sampling includes both zero endpoints; integrals use trapezoids in model-coordinate milliseconds.
  * Unlike the historical sigma-weighted contract, the reported axis integrates the sampled loop.
  */
@@ -83,30 +86,41 @@ export function sampleActivation(c: ECGCase, b: Beat): ActivationTrace {
   const durationMs = qrsDuration(c, b) * 1000;
   if (!Number.isFinite(durationMs) || durationMs <= 0 || durationMs > 1000) throw Error('Duración QRS no válida.');
   const kernels = qrsKernels(c, b), count = Math.ceil(durationMs), step = durationMs / count;
-  const timesMs: number[] = [], xyz: Vec[] = [];
+  const timing = activationTiming(c, b), deltaEnd = timing.deltaDurationMs;
+  if (deltaEnd !== null && durationMs < deltaEnd) throw Error('La delta no cabe en el QRS solicitado.');
+  const timesMs = Array.from({ length: count + 1 }, (_, i) => i === count ? durationMs : i * step);
+  // Preserve the exact delta endpoint even with fractional QRS durations; cursor
+  // interpolation must not leak the extra component beyond its 45 ms support.
+  if (deltaEnd !== null && !timesMs.includes(deltaEnd)) timesMs.push(deltaEnd);
+  timesMs.sort((a, b) => a - b);
+  const xyz: Vec[] = [];
   const leads = Object.fromEntries(LEADS.map(l => [l, []])) as unknown as Record<Lead, number[]>;
   const integral: Vec = [0, 0, 0];
   let peakMagnitude = 0, pathLength = 0;
-  for (let i = 0; i <= count; i++) {
-    const u = i / count, v: Vec = [0, 0, 0];
+  for (let i = 0; i < timesMs.length; i++) {
+    const elapsed = timesMs[i], u = elapsed / durationMs, v: Vec = [0, 0, 0];
     for (const k of kernels) {
       const g = qrsKernelValue(k, u);
       for (let j = 0; j < 3; j++) v[j] += g * k.v[j];
     }
+    if (deltaEnd !== null && elapsed > 0 && elapsed < deltaEnd) {
+      const delta = wpwDeltaVector(c, elapsed / deltaEnd);
+      for (let j = 0; j < 3; j++) v[j] += delta[j];
+    }
     if (!v.every(Number.isFinite)) throw Error('Trayectoria no finita.');
-    timesMs.push(i === count ? durationMs : i * step); xyz.push(v);
+    xyz.push(v);
     const p = project(v);
     for (const lead of LEADS) leads[lead].push(p[lead]);
     peakMagnitude = Math.max(peakMagnitude, Math.hypot(...v));
     if (i) {
-      for (let j = 0; j < 3; j++) integral[j] += (xyz[i - 1][j] + v[j]) * step / 2;
+      for (let j = 0; j < 3; j++) integral[j] += (xyz[i - 1][j] + v[j]) * (elapsed - timesMs[i - 1]) / 2;
       pathLength += Math.hypot(...v.map((n, j) => n - xyz[i - 1][j]));
     }
   }
   const p = project(integral), source = ventricularSource(c, b);
   const frontalMagnitude = Math.hypot(p.I, (2 * p.II - p.I) / Math.sqrt(3));
   const label = source?.label ?? CONDUCTION_EXAMPLES.find(([id]) => id === c.conduction)?.[1] ?? c.conduction;
-  return { case: cloneCase(c), beat: { time: b.time, kind: b.kind, rr: b.rr }, label, durationMs, timing: activationTiming(c, b), timesMs, xyz, leads,
+  return { case: cloneCase(c), beat: { time: b.time, kind: b.kind, rr: b.rr }, label, durationMs, timing, timesMs, xyz, leads,
     summary: { integral, frontalAxisDeg: frontalMagnitude > 1e-9 ? axisFromLeads(p.I, p.II) : null, peakMagnitude, pathLength } };
 }
 export function activationPair(c: ECGCase, b: Beat, choice: string, edits: ActivationEdits = {}): ActivationPair {
@@ -120,7 +134,12 @@ export function activationPair(c: ECGCase, b: Beat, choice: string, edits: Activ
 export function activationAt(t: ActivationTrace, timeMs: number): { xyz: Vec; leads: Record<Lead, number> } {
   if (!Number.isFinite(timeMs)) throw Error('Instante no válido.');
   if (timeMs < 0 || timeMs > t.durationMs) return { xyz: [0, 0, 0], leads: project([0, 0, 0]) };
-  const position = timeMs / t.durationMs * (t.xyz.length - 1), lo = Math.floor(position), hi = Math.min(lo + 1, t.xyz.length - 1);
-  const v = t.xyz[lo].map((n, j) => n + (t.xyz[hi][j] - n) * (position - lo)) as Vec;
+  let lo = 0, hi = t.timesMs.length - 1;
+  while (hi - lo > 1) {
+    const mid = (lo + hi) >>> 1;
+    if (t.timesMs[mid] <= timeMs) lo = mid; else hi = mid;
+  }
+  const fraction = (timeMs - t.timesMs[lo]) / (t.timesMs[hi] - t.timesMs[lo]);
+  const v = t.xyz[lo].map((n, j) => n + (t.xyz[hi][j] - n) * fraction) as Vec;
   return { xyz: v, leads: project(v) };
 }

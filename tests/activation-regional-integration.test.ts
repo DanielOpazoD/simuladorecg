@@ -4,7 +4,7 @@ import { sampleActivation, activationPair, activationLimitation } from '../src/u
 import { generateEvents } from '../src/engine/rhythm';
 import { qrsKernels } from '../src/engine/morphology';
 import { fromPreset, PRESETS, presetById } from '../src/presets/catalog';
-import { project, type Vec } from '../src/engine/leads';
+import { project, frontal, type Vec } from '../src/engine/leads';
 import { LEADS, type Beat, type ECGCase } from '../src/engine/types';
 
 const beat: Beat = { time: 1, rr: 1, kind: 'normal' };
@@ -54,8 +54,8 @@ describe('Merged regional engine and QRS laboratory share the same temporal supp
     assert.deepEqual(activationPair(c, beat, 'unchanged').a, activationPair(c, beat, 'unchanged').b);
   });
 
-  it('preserves the old basis exactly for every active preset and actual eligible beat kind', () => {
-    let checked = 0;
+  it('preserves the historical basis plus independently specified WPW delta for every eligible preset and beat kind', () => {
+    let checked = 0, deltaChecked = 0;
     for (const preset of PRESETS.filter(p => p.strategy !== 'pending')) {
       const c = fromPreset(preset), events = generateEvents(c, 10);
       for (const kind of new Set(events.beats.map(b => b.kind))) {
@@ -63,19 +63,29 @@ describe('Merged regional engine and QRS laboratory share the same temporal supp
         if (activationLimitation(c, event)) continue;
         const trace = sampleActivation(c, event), kernels = qrsKernels(c, event);
         assert.ok(kernels.every(k => !k.regional));
+        const hasDelta = c.conduction === 'wpw' && event.kind === 'normal';
+        if (hasDelta) deltaChecked++;
         trace.xyz.forEach((actual, i) => {
-          const u = i / (trace.xyz.length - 1), v: Vec = [0, 0, 0];
+          const elapsed = trace.timesMs[i], u = elapsed / trace.durationMs, v: Vec = [0, 0, 0];
           const taper = u <= 0 || u >= 1 ? 0 : Math.min(1, u / .035, (1 - u) / .035);
           for (const k of kernels) {
             const basis = Math.exp(-.5 * ((u - k.mu) / k.sigma) ** 2) * taper;
             for (let j = 0; j < 3; j++) v[j] += basis * k.v[j];
           }
-          assert.deepEqual(actual, v);
+          // WPW was outside the old lab domain. Its newly eligible loop must
+          // include the historical pulse, independently of wpwDeltaVector().
+          if (hasDelta && elapsed > 0 && elapsed < 45) {
+            const direction = frontal(c.axis, .25, .03);
+            const gain = c.qrsAmp * (c.electrolyte === 'lowvoltage' ? .38 : 1) * Math.sin(Math.PI * (elapsed / 45));
+            for (let j = 0; j < 3; j++) v[j] += direction[j] * gain;
+          }
+          assert.deepEqual(actual, v, `${preset.id}/${kind}/${elapsed} ms`);
         });
         checked++;
       }
     }
     assert.ok(checked > 50);
+    assert.equal(deltaChecked, 1, 'The WPW preset must participate, not be silently skipped');
   });
 
   it('keeps the legacy fallback for an incompatible requested regional mode', () => {
