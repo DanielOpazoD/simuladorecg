@@ -56,3 +56,5 @@ Punto de entrada a `docs/`. La navegación vigente empieza en el [README](../REA
 - Análisis congelado: [freeze](analysis-freeze.json) · [comparación pareada](analysis-paired-comparison.json) · [revisión post-freeze](analysis-post-freeze-review.json) · validación [completa](analysis-validation-all.json) y [desarrollo](analysis-validation-development.json)
 - Fidelidad: [informe](fidelity-report.json) · [antes/después](fidelity-before-after.json) · [regresión de detección](detection-regression.json)
 - Material gráfico y casos: `browser-captures/`, `trazados/`, `casos/`
+
+- [Referencia tabular QRS con unidades trazables](ptbxl-tabular-amplitude-reference.md)
