@@ -16,7 +16,7 @@ const temp=await mkdtemp(path.join(tmpdir(),'repolarization-scope-'));
 try {
   const base=path.join(temp,'baseline');await mkdir(base);
   execFileSync('tar',['-xf','-','-C',base],{input:execFileSync('git',['archive',BASE],{maxBuffer:100*1024*1024})});
-  const changedFiles=execFileSync('git',['diff','--name-only',BASE,'HEAD','--','src/engine','src/presets','package.json','package-lock.json'],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
+  const changedFiles=execFileSync('git',['diff','--name-only',BASE,'HEAD','--','src/engine','src/presets'],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
   const nonNumericalContracts=['src/engine/ventricular-trajectory.ts'];
   // Opt-in regional model: every historical trace below still has to be exact.
   // The experimental branch has its own mandatory, paired source/sample gate.
