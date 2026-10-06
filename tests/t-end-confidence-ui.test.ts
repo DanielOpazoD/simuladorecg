@@ -13,6 +13,12 @@ describe('T-end agreement is visible but never promoted to QT',()=>{
   const confidence=classifyTEndReviewCandidate(suggestions[i]!);const html=beatDetail(s,m,c,i);
   expect(html).toContain(`data-t-end-agreement="${confidence.stratum}"`);
   expect(html).toContain('seleccionada retrospectivamente');expect(html).toContain('No modifica QT/QTc');
+  expect(html).toMatch(/<details class="detail-evidence"><summary>Fundamento de la propuesta<\/summary>/);
+  const closedText = html.replace(/<details[\s\S]*?<\/details>/g, '');
+  expect(closedText).toContain('revisión manual');
+  expect(closedText).toContain('no un límite validado de');
+  expect(closedText).toContain('No modifica QT/QTc');
+  expect(closedText).toContain('no es probabilidad clínica');
   expect(m.qt).toBeNull();expect(m.evidence.qt.status).toBe('unavailable');
  });
 });

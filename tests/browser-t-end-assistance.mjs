@@ -16,6 +16,16 @@ try{
   await preset('tachy');const detail=page.locator('#beat-detail');
   await detail.locator('[data-t-end-assistance]').waitFor();await detail.scrollIntoViewIfNeeded();
   assert.match(await detail.innerText(),/revisión manual/);assert.doesNotMatch(await detail.innerText(),/QT \d+ ms/);
+  const evidence=detail.locator('.detail-evidence');
+  assert.equal(await evidence.evaluate(e=>e.open),false);
+  const collapsedHeight=(await detail.boundingBox()).height;
+  await evidence.locator('summary').focus();await page.keyboard.press('Enter');
+  assert.equal(await evidence.evaluate(e=>e.open),true);
+  assert.match(await evidence.innerText(),/dispersión .* ms/);
+  assert.ok((await detail.boundingBox()).height>collapsedHeight);
+  await page.keyboard.press('Space');assert.equal(await evidence.evaluate(e=>e.open),false);
+  assert.match(await detail.innerText(),/No modifica QT\/QTc/);
+  assert.match(await detail.innerText(),/no es probabilidad clínica/);
   const time=await detail.locator('[data-t-end-candidate]').getAttribute('data-t-end-candidate');
   await page.locator('#detail-lead').selectOption('V5');
   assert.equal(await detail.locator('[data-t-end-candidate]').getAttribute('data-t-end-candidate'),time);
