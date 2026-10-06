@@ -86,7 +86,8 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
       v = frontal(
         a.kind === "retrograde" ? -100 : a.kind === "ectopic" ? 20 : c.pAxis,
         c.pAmp,
-        -0.018,
+        // The entire ectopic/retrograde vector shares the P amplitude control.
+        -0.018 * (c.pAmp / 0.15),
       );
     add(a.time, len, (u) =>
       a.kind === "sinus" ? atrialVector(c, u) : scale(v, bump(u)),
