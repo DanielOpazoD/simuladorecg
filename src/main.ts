@@ -51,7 +51,8 @@ import { controls, leadOptions, amplitudeControlState } from "./ui/controls";
 import { caseContext, caseReading, normalizeImportedCase } from "./presets/case-context";
 import {
   decodeCase,
-  savedCases,
+  savedCaseState,
+  savedCaseAt,
 } from "./ui/persistence";
 
 const $ = <T extends Element = HTMLElement>(selector: string) =>
@@ -607,10 +608,13 @@ function showAbout() {
     aboutDialogHtml(PRESETS),
   );
 }
+let savedCaseSnapshot: ECGCase[] = [];
 function exportDialog() {
+  const stored = savedCaseState();
+  savedCaseSnapshot = stored.cases;
   openDialog(
     "Exportar y guardar",
-    exportDialogHtml(c, session.canExport, savedCases()),
+    exportDialogHtml(c, session.canExport, savedCaseSnapshot, stored.warning),
   );
 }
 function renderQuiz() {
@@ -674,7 +678,9 @@ document.addEventListener("click", async (e) => {
     return;
   }
   if (saved) {
-    c = savedCases()[Number(saved.dataset.saved)];
+    const selected = savedCaseAt(savedCaseSnapshot, Number(saved.dataset.saved));
+    if (!selected) { toast("El caso seleccionado no está disponible; vuelve a abrir la lista."); return; }
+    c = selected;
     explorationOrigin=null; explorationOriginTrace=null;
     closeDialog();
     quiz = null;

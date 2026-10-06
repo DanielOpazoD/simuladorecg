@@ -1,4 +1,4 @@
-import type { ECGCase } from "../engine/types";
+import { cloneCase, type ECGCase } from "../engine/types";
 import { normalizeImportedCase } from "../presets/case-context";
 export function encodeCase(c: ECGCase) {
   const bytes = new TextEncoder().encode(
@@ -28,22 +28,47 @@ export function download(blob: Blob, name: string) {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-export function savedCases(): ECGCase[] {
+export interface SavedCaseState {
+  cases: ECGCase[];
+  writable: boolean;
+  warning: string | null;
+}
+/** Reading damaged storage must never turn the next save into a destructive reset. */
+export function savedCaseState(): SavedCaseState {
   try {
-    return JSON.parse(localStorage.getItem("ecglab-cases") || "[]")
-      .map(normalizeImportedCase)
-      .slice(0, 30);
+    const raw = localStorage.getItem("ecglab-cases");
+    if (raw === null) return { cases: [], writable: true, warning: null };
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) throw new Error("Invalid case collection");
+    const cases: ECGCase[] = [];
+    let invalid = 0;
+    for (const item of parsed.slice(0, 30)) {
+      try { cases.push(normalizeImportedCase(item)); } catch { invalid++; }
+    }
+    const writable = invalid === 0 && parsed.length <= 30;
+    return { cases, writable, warning: writable ? null :
+      "Hay casos guardados que no pueden recuperarse o se supera el límite de 30. Los datos originales no se han modificado; el guardado queda protegido. Puedes exportar el caso actual como JSON." };
   } catch {
-    return [];
+    return { cases: [], writable: false, warning:
+      "No se pudo leer la colección guardada. No se sobrescribirá; exporta el caso actual como JSON." };
   }
 }
+export function savedCases(): ECGCase[] { return savedCaseState().cases; }
+/** Resolve the exact list shown in the dialog, even if another tab changes storage. */
+export function savedCaseAt(snapshot: readonly ECGCase[], index: number): ECGCase | null {
+  return Number.isSafeInteger(index) && index >= 0 && index < snapshot.length
+    ? cloneCase(snapshot[index]) : null;
+}
 export function saveCase(c: ECGCase) {
-  const normalized = normalizeImportedCase(c),
-    all = savedCases(),
-    same = all.findIndex((x) => x.name === normalized.name);
+  const normalized = normalizeImportedCase(c), state = savedCaseState();
+  if (!state.writable) throw new Error(state.warning!);
+  const all = state.cases, same = all.findIndex(x => x.name === normalized.name);
   if (same >= 0) all[same] = normalized;
-  else all.unshift(normalized);
-  localStorage.setItem("ecglab-cases", JSON.stringify(all.slice(0, 30)));
+  else {
+    if (all.length >= 30) throw new Error("Límite de 30 casos: exporta como JSON antes de añadir otro.");
+    all.unshift(normalized);
+  }
+  localStorage.setItem("ecglab-cases", JSON.stringify(all));
 }
 /** Embed actual physical PNG density (pHYs), independent of browser's default 96 dpi metadata. */
 export async function pngWithDpi(blob: Blob, dpi = 300): Promise<Blob> {
