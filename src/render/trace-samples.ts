@@ -17,7 +17,12 @@ export function traceSampleIndices(
       if(samples[j]<samples[min])min=j;
       if(samples[j]>samples[max])max=j;
     }
-    const ordered=[...new Set([i,min,max,end])].sort((a,b)=>a-b);
-    for(const index of ordered)visit(index);
+    // Emit the same sorted unique indices without allocating a Set, arrays or
+    // a comparator per pixel bucket on every animation frame.
+    visit(i);
+    const first=Math.min(min,max), last=Math.max(min,max);
+    if(first>i && first<end)visit(first);
+    if(last>first && last<end)visit(last);
+    if(end>i)visit(end);
   }
 }
