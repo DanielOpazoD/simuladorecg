@@ -2,7 +2,7 @@ import {predictTorsadesFrame} from './lib/torsades-frame-prediction.mjs';
 import {assertReviewedAcquisitionScope} from './lib/acquisition-scope-contract.mjs';
 import {assertReviewedEventCalendar} from './lib/event-calendar-revision.mjs';
 import {predictQTInitialization,assertReviewedQTInitialization} from './lib/qt-initialization-revision.mjs';
-import {assertReviewedSampleEntry,assertReviewedImpulseConfidence} from './lib/sample-entry-contract.mjs';
+import {assertReviewedSampleEntry,assertReviewedAlternatingConfidence,assertReviewedImpulseConfidence} from './lib/sample-entry-contract.mjs';
 /** Frozen-source comparison. --coherence applies only the independently declared A02/A03 delta. */
 import {build} from 'esbuild';
 import {execFileSync} from 'node:child_process';
@@ -33,6 +33,8 @@ try {
   }
   assertReviewedImpulseConfidence(await readFile('src/engine/analysis/impulse-confidence.ts'));
   nonNumericalContracts.push('src/engine/analysis/impulse-confidence.ts');
+  assertReviewedAlternatingConfidence(await readFile('src/engine/analysis/alternating-confidence.ts'));
+  nonNumericalContracts.push('src/engine/analysis/alternating-confidence.ts');
   // Reviewed calendar integrity: all valid historical samples still compared below.
   for(const file of ['src/engine/rhythm.ts','src/engine/event-calendar.ts','src/engine/flutter-conduction.ts','src/engine/vvi-demand.ts']) {
     assertReviewedEventCalendar(file,await readFile(file));

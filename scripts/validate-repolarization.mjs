@@ -1,4 +1,4 @@
-import {assertReviewedImpulseConfidence} from './lib/sample-entry-contract.mjs';
+import {assertReviewedAlternatingConfidence,assertReviewedImpulseConfidence} from './lib/sample-entry-contract.mjs';
 import {predictQTInitialization,assertReviewedQTInitialization} from './lib/qt-initialization-revision.mjs';
 /** v1.3 versus working tree, on matched synthetic samples. Not clinical validation. */
 import { build } from 'esbuild';
@@ -48,9 +48,12 @@ try {
  const {morphologyMetrics} = await import(pathToFileURL(outfile).href);
  const analysisFiles=async dir=>(await readdir(path.join(dir,'src/engine/analysis'))).filter(p=>p.endsWith('.ts')).sort();
  const currentAnalysis=await analysisFiles(root),baselineAnalysis=await analysisFiles(baseDir);
- assert.deepEqual(currentAnalysis,[...baselineAnalysis,'impulse-confidence.ts'].sort(),'Detector file set changed');
+ assert.deepEqual(currentAnalysis,[...baselineAnalysis,'impulse-confidence.ts','alternating-confidence.ts'].sort(),'Detector file set changed');
  const confidenceBytes=await readFile(path.join(root,'src/engine/analysis/impulse-confidence.ts'));
  assertReviewedImpulseConfidence(confidenceBytes);
+ const alternationBytes=await readFile(path.join(root,'src/engine/analysis/alternating-confidence.ts'));
+ assertReviewedAlternatingConfidence(alternationBytes);
+ const alternatingConfidence={role:'review-only-post-analysis',sha256:createHash('sha256').update(alternationBytes).digest('hex')};
  const impulseConfidence={role:'post-analysis-confidence-only',sha256:createHash('sha256').update(confidenceBytes).digest('hex')};
  // model-audit runs AFTER independent analysis. Its maintenance must not be
  // mistaken for a numerical detector change; still report its exact identity.
@@ -129,6 +132,6 @@ try {
  }
  const output=options['--output'] || path.join(root,'.sites-runtime','repolarization-comparison.json');
  await mkdir(path.dirname(output),{recursive:true});
- await writeFile(output,JSON.stringify({schema:1,referencePreparation,base:BASE,runtime:process.version,measurementScope:'Whole signal in T window; ST can contribute. Not isolated cellular T, HATW score, or diagnostic accuracy.',windowSource:'generator events; not independent delineation',externalValidation:false,detector,tPeakEvidenceOnly:true,modelAudit,impulseConfidence,defaultPresets:defaults,scenarios:rows},null,2));
+ await writeFile(output,JSON.stringify({schema:1,referencePreparation,base:BASE,runtime:process.version,measurementScope:'Whole signal in T window; ST can contribute. Not isolated cellular T, HATW score, or diagnostic accuracy.',windowSource:'generator events; not independent delineation',externalValidation:false,detector,tPeakEvidenceOnly:true,modelAudit,impulseConfidence,alternatingConfidence,defaultPresets:defaults,scenarios:rows},null,2));
  console.log(JSON.stringify({referencePreparation,output,scenarios:rows.length,unchangedDefaults:defaults.filter(x=>x.maxDifferenceMv===0).length,detectorFrozen:detector.every(x=>x.unchanged)}));
 } finally { await rm(temp,{recursive:true,force:true}); }

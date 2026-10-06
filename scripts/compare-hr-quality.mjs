@@ -1,4 +1,4 @@
-import {assertReviewedImpulseConfidence,assertReviewedSampleEntry} from './lib/sample-entry-contract.mjs';
+import {assertReviewedAlternatingConfidence,assertReviewedImpulseConfidence,assertReviewedSampleEntry} from './lib/sample-entry-contract.mjs';
 /** Paired quality assessment. Evaluator has references; analyzeSamples does not. */
 import { build } from 'esbuild';
 import { readFile, writeFile, mkdir, mkdtemp, rm } from 'node:fs/promises';
@@ -29,7 +29,8 @@ try {
   assert.deepEqual(A.HR_QUALITY_POLICY, policy.qualityPolicy, 'Policy changed after replication protocol');
   assertReviewedSampleEntry(await readFile('src/engine/sample-analysis.ts'));
   for (const file of Object.keys(next.metafile.inputs).filter(f => !f.endsWith('/sample-analysis.ts') && !f.endsWith('/measurement-support.ts'))) {
-    if(file==='src/engine/analysis/impulse-confidence.ts') assertReviewedImpulseConfidence(await readFile(file));
+    if(file==='src/engine/analysis/alternating-confidence.ts') assertReviewedAlternatingConfidence(await readFile(file));
+    else if(file==='src/engine/analysis/impulse-confidence.ts') assertReviewedImpulseConfidence(await readFile(file));
     else if(file==='src/engine/measure.ts') assertReviewedMeasure(await readFile(path.join(base,file)),await readFile(file));
     else assert.equal(hash(await readFile(file)),hash(await readFile(path.join(base,file))),`Unreviewed primitive change: ${file}`);
   }
