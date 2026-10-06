@@ -88,10 +88,11 @@ for(const engine of engines){
    assert.equal(await page.locator('#diagnosis-navigation').isVisible(),false,'Edited case must not retain an unverified diagnosis tab');
    assert.equal(await page.locator('#case-title').textContent(),'Exploración personalizada');
    assert.equal(await page.locator('#case-category').textContent(),'EXPLORACIÓN');
-   assert.match(await page.locator('#exploration-context').textContent(),/Basada en:.*Ritmo sinusal/);
+   assert.match(await page.locator('#exploration-context').textContent(),/Origen:.*Ritmo sinusal/);
    assert.match(await page.locator('.exploration-count').textContent(),/1 ajuste/);
    assert.match(await page.locator('#exploration-context').textContent(),/no diagnostica/i);
    const custom=await exported('custom');assert.equal(custom.B.case.presetId,'custom');
+   await page.locator('#exploration-context summary').click();
    await page.locator('[data-action=exploration-changes]').click();
    assert.deepEqual(await page.locator('#dialog-content tbody tr td').allTextContents(),
      ['Frecuencia base (lpm)','72Frecuencia base','81Frecuencia base'],

@@ -85,6 +85,20 @@ for(const engine of [chromium,webkit,firefox]) {
         assert.equal(await flutterPattern.inputValue(),'2-3');
         await fits('#control-panel-conduction');
         await page.locator('#case-title').scrollIntoViewIfNeeded();
+        // Native disclosure keeps provenance available without burying the mobile trace.
+        const summary=page.locator('#exploration-context summary');
+        await summary.focus();await page.keyboard.press('Enter');
+        assert.equal(await page.locator('.exploration-disclosure').evaluate(e=>e.open),true);
+        await page.keyboard.press('Space');
+        assert.equal(await page.locator('.exploration-disclosure').evaluate(e=>e.open),false);
+        assert.equal(await page.locator('#exploration-context>p').isVisible(),true);
+        const summaryBox=await summary.boundingBox();
+        assert.ok(summaryBox.height>=44,'Disclosure touch target: '+JSON.stringify(summaryBox));
+        await page.evaluate(()=>window.scrollTo(0,0));
+        const firstViewport=await page.locator('#ecg').evaluate(e=>{
+          const b=e.getBoundingClientRect();return {top:b.top,visible:Math.max(0,Math.min(b.bottom,innerHeight)-Math.max(b.top,0)),height:innerHeight};
+        });
+        if(width===390)assert.ok(firstViewport.visible>=160,'First viewport must include a meaningful ECG segment: '+JSON.stringify(firstViewport));
         await page.screenshot({path:resolve(out,stem+'-flutter-variable.png')});
         await flutterPattern.selectOption('fixed');await ready();
         assert.equal(await page.locator('[data-key="flutterRatio"]').isDisabled(),false);
@@ -187,7 +201,7 @@ for(const engine of [chromium,webkit,firefox]) {
         assert.equal(await page.locator('.workspace').evaluate(e=>e.inert),false);
         assert.deepEqual(requests.filter(r=>!isLocalGet(r,origin)),[],'No data upload or third-party request; local blob downloads are reads');
         assert.deepEqual(errors,[]);assert.deepEqual(warnings,[]);
-        results.push({engine:engine.name(),version:browser.version(),width,build:info,externalFit,comparisonFit,layouts,samplesVerified:120000,keyboard:true,pointer:width===390&&engine.name()!=='firefox'?'emulated-touch':'mouse',stepMs:2,pointerSample:point.sample,manualMs:(point.sample-640)*2,downloads:6,errors,warnings});
+        results.push({engine:engine.name(),version:browser.version(),width,build:info,firstViewport,externalFit,comparisonFit,layouts,samplesVerified:120000,keyboard:true,pointer:width===390&&engine.name()!=='firefox'?'emulated-touch':'mouse',stepMs:2,pointerSample:point.sample,manualMs:(point.sample-640)*2,downloads:6,errors,warnings});
         await writeFile(resolve(out,'accessibility-results.json'),JSON.stringify({results,physicalDevice:false,screenReaderTested:false,zoomNote:'320/720 CSS-pixel reflow; not native browser zoom',wcagCertification:false},null,2));
       } catch(e) {
         await page.screenshot({path:resolve(out,stem+'-failure.png')}).catch(()=>{});

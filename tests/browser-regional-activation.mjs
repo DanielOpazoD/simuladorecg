@@ -39,7 +39,7 @@ for(const [engine,launcher] of Object.entries(engines)){
    assert.match(await page.locator('#regional-activation-status').innerText(),/Regional activo/);
    assert.equal(await page.locator('#regional-activation-controls svg').count(),1);
    assert.match(await page.locator('#exploration-context').innerText(),/1 ajuste/);
-   await page.locator('[data-action="compare-origin"]').click();
+   await page.locator('#exploration-context summary').click();await page.locator('[data-action="compare-origin"]').click();
    const origin=await exported('origin');
    assert.deepEqual(origin.A.leads,original.A.leads,'Regional synthesis must not overwrite the original trace');
    assert.deepEqual(origin.B.leads,regional.B.leads);
