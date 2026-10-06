@@ -137,7 +137,7 @@ dialog.external-lab { border-radius:12px; }
   .trace-tools { justify-content:flex-start; }
 }
 .workspace-label-short { display:none; }
-.exploration-disclosure summary { font-size:.75rem; cursor:pointer; min-height:44px; }
+.exploration-disclosure summary { font-size:.75rem; cursor:pointer; min-height:48px; }
 .exploration-disclosure summary .exploration-count { margin-inline-start:8px; }
 @media(max-width:800px) {
   .topbar { height:auto; min-height:64px; padding:14px 18px; }

@@ -92,7 +92,8 @@ for(const engine of [chromium,webkit,firefox]) {
         await page.keyboard.press('Space');
         assert.equal(await page.locator('.exploration-disclosure').evaluate(e=>e.open),false);
         assert.equal(await page.locator('#exploration-context>p').isVisible(),true);
-        assert.ok((await summary.boundingBox()).height>=44);
+        const summaryBox=await summary.boundingBox();
+        assert.ok(summaryBox.height>=44,'Disclosure touch target: '+JSON.stringify(summaryBox));
         await page.evaluate(()=>window.scrollTo(0,0));
         const firstViewport=await page.locator('#ecg').evaluate(e=>{
           const b=e.getBoundingClientRect();return {top:b.top,visible:Math.max(0,Math.min(b.bottom,innerHeight)-Math.max(b.top,0)),height:innerHeight};
