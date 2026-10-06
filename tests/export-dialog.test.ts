@@ -26,3 +26,7 @@ describe("export dialog content", () => {
     expect(exportDialogHtml(DEFAULT_CASE, true, [])).not.toContain("Mis casos");
   });
 });
+it('shows an escaped storage warning next to the save workflow',()=>{
+  const html=exportDialogHtml(DEFAULT_CASE,true,[],'Error <unsafe>');
+  expect(html).toContain('role="status">Error &lt;unsafe&gt;');expect(html).toContain('Hasta 30 casos');
+});
