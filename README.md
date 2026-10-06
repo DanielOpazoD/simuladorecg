@@ -86,7 +86,7 @@ La [revisión clínica aportada](docs/referencias/Revision_ECG_SCA_Simulador.md)
 
 ## Histórico
 
-[README de v1.3](docs/README-v1.3.md), [verificación v1.3](docs/verificacion.md), [v1.2](docs/verificacion-v1.2.md) y [v1.1](docs/verificacion-v1.1.md) son registros históricos, no nuevas ejecuciones. Sus cifras no describen automáticamente el HEAD actual. La navegación vigente comienza en este README y la matriz de alcance. No se distribuye el ZIP antiguo de código en `public/`.
+[README de v1.3](docs/README-v1.3.md), [verificación v1.3](docs/verificacion.md), [v1.2](docs/verificacion-v1.2.md) y [v1.1](docs/verificacion-v1.1.md) son registros históricos, no nuevas ejecuciones. Sus cifras no describen automáticamente el HEAD actual. La navegación vigente comienza en este README y la matriz de alcance; el [índice de documentación](docs/INDEX.md) clasifica todos los archivos de `docs/`. No se distribuye el ZIP antiguo de código en `public/`.
 
 ## Derechos y contribuciones
 
