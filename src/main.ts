@@ -5,6 +5,8 @@ import { APP_VERSION } from "./ui/version";
 import { ActivationLab } from "./ui/activation-lab";
 import { familyLabel } from "./ui/catalog-presentation";
 import { metricCards, metricsHtml, monitorRate } from "./ui/metric-cards";
+import { openDialog, closeDialog } from "./ui/dialog";
+import { exportDialogHtml } from "./ui/export-dialog";
 import { diagnosisFamilies, diagnosisForPreset } from "./ui/diagnosis-navigation";
 import { createExplorationOrigin, explorationChanges, restoreExplorationOrigin, sameExplorationModel, type ExplorationOrigin } from "./ui/exploration-origin";
 import type { SyntheticComparisonTrace } from "./ui/comparison-model";
@@ -616,14 +618,6 @@ $("#case-search").addEventListener("keydown", (e) => {
   }
 });
 
-function openDialog(title: string, body: string) {
-  $("#dialog-content").innerHTML =
-    `<div class="dialog-head"><h2>${title}</h2><button class="btn icon-button" data-action="close-dialog" aria-label="Cerrar">${icon("close")}</button></div>${body}`;
-  $<HTMLDialogElement>("#dialog").showModal();
-}
-function closeDialog() {
-  $<HTMLDialogElement>("#dialog").close();
-}
 function showMeasurements() {
   if (session.signal && session.measurement)
     openDialog(
@@ -642,16 +636,7 @@ function showAbout() {
 function exportDialog() {
   openDialog(
     "Exportar y guardar",
-    `<p class="dialog-lead">Conserva el trazado o comparte exactamente el mismo caso y semilla.</p><div class="export-options"><button data-action="png" ${session.canExport ? "" : "disabled"}>${icon("download")}<div><strong>PNG de impresión</strong><span>Papel completo · 300 píxeles por pulgada</span></div>${icon("chevron")}</button><button data-action="json">${icon("save")}<div><strong>Exportar caso JSON</strong><span>Parámetros, vista y semilla reproducible</span></div>${icon("chevron")}</button><button data-action="import">${icon("book")}<div><strong>Importar caso JSON</strong><span>Carga un caso exportado desde ECG Lab</span></div>${icon("chevron")}</button><button data-action="share">${icon("share")}<div><strong>Copiar enlace del caso</strong><span>El estado completo viaja en el enlace</span></div>${icon("chevron")}</button></div><div class="save-form"><label class="field"><span>Nombre del caso personal</span><input id="save-name" maxlength="100" value="${esc(c.name)}"/></label>${btn("save", "Guardar en este navegador", "save")}</div>${
-      savedCases().length
-        ? `<h3>Mis casos</h3><div class="saved-list">${savedCases()
-            .map(
-              (x, i) =>
-                `<button data-saved="${i}">${esc(x.name)}${icon("chevron")}</button>`,
-            )
-            .join("")}</div>`
-        : ""
-    }`,
+    exportDialogHtml(c, session.canExport, savedCases()),
   );
 }
 function renderQuiz() {
