@@ -1,3 +1,4 @@
+import {predictQTInitialization,assertReviewedQTInitialization} from './lib/qt-initialization-revision.mjs';
 import {assertReviewedSampleEntry} from './lib/sample-entry-contract.mjs';
 /** Frozen-source comparison. --coherence applies only the independently declared A02/A03 delta. */
 import {build} from 'esbuild';
@@ -15,10 +16,14 @@ assert.ok(output && (process.argv.length===3 || (process.argv.length===4&&cohere
   'Usage: validate-repolarization-scope.mjs OUTPUT [--coherence]');
 const temp=await mkdtemp(path.join(tmpdir(),'repolarization-scope-'));
 try {
+  assertReviewedQTInitialization(await readFile('src/engine/repolarization.ts'));
   const base=path.join(temp,'baseline');await mkdir(base);
   execFileSync('tar',['-xf','-','-C',base],{input:execFileSync('git',['archive',BASE],{maxBuffer:100*1024*1024})});
   const changedFiles=execFileSync('git',['diff','--name-only',BASE,'HEAD','--','src/engine','src/presets'],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
   const nonNumericalContracts=['src/engine/ventricular-trajectory.ts'];
+  // A separate numerical revision, checked against an independent frozen-source
+  // prediction below. This is not an exemption from sample comparison.
+  const qtHistoryRevision = 'src/engine/repolarization.ts';
   if(changedFiles.includes('src/engine/sample-analysis.ts')) {
     assertReviewedSampleEntry(await readFile('src/engine/sample-analysis.ts'));
     nonNumericalContracts.push('src/engine/sample-analysis.ts');
@@ -39,7 +44,7 @@ try {
   // Opt-in regional model: every historical trace below still has to be exact.
   // The experimental branch has its own mandatory, paired source/sample gate.
   const optInRegionalFiles=['src/engine/types.ts','src/engine/regional-activation.ts'];
-  assert.ok(changedFiles.every(f=>nonNumericalContracts.includes(f) || (coherence && optInRegionalFiles.includes(f)) || (coherence && ['src/engine/signal.ts','src/engine/morphology.ts','src/engine/secondary-repolarization.ts'].includes(f))), 'Unexpected generator/analyzer/catalog/dependency change');
+  assert.ok(changedFiles.every(f=>f===qtHistoryRevision || nonNumericalContracts.includes(f) || (coherence && optInRegionalFiles.includes(f)) || (coherence && ['src/engine/signal.ts','src/engine/morphology.ts','src/engine/secondary-repolarization.ts'].includes(f))), 'Unexpected generator/analyzer/catalog/dependency change');
   async function load(dir,name){
     const outfile=path.join(temp,name+'.mjs');
     await build({stdin:{contents:"export {synthesize} from './src/engine/signal'; export {fromPreset,PRESETS} from './src/presets/catalog';",resolveDir:dir},bundle:true,platform:'node',format:'esm',outfile});
@@ -47,10 +52,12 @@ try {
   }
   const before=await load(base,'before'),after=await load(process.cwd(),'after'),rows=[],matrix=[];
   let expected=before;
-  if(coherence){
+  {
     const predicted=path.join(temp,'prediction');await cp(base,predicted,{recursive:true});
     const file=path.join(predicted,'src/engine/signal.ts');
-    await writeFile(file,predictSource(await readFile(file,'utf8')));
+    if(coherence) await writeFile(file,predictSource(await readFile(file,'utf8')));
+    const qtFile=path.join(predicted,qtHistoryRevision);
+    await writeFile(qtFile,predictQTInitialization(await readFile(qtFile,'utf8')));
     expected=await load(predicted,'expected');
   }
   assert.deepEqual(after.PRESETS,before.PRESETS,'Catalog must stay frozen');
@@ -69,7 +76,8 @@ try {
       {
         const c={...before.fromPreset(preset),filter},label=`${preset.id}/${filter}`;
         // Default phenotypes are outside this repair's numerical delta: exact, not tolerance-based.
-        if(coherence)assertTraceContract(before.synthesize(c,10),after.synthesize(c,10),label+'/default-frozen');
+        if(coherence && !(c.rhythm==='sinus' && ['mobitz1','mobitz2','two_one','high'].includes(c.av)))
+          assertTraceContract(before.synthesize(c,10),after.synthesize(c,10),label+'/default-frozen');
         rows.push({preset:preset.id,filter,...check(c,label)});
       }
   assert.equal(rows.length,244);
@@ -86,6 +94,7 @@ try {
         }else matrix.push(check(c,label));
       }
   const report={schemaVersion:2,stage:coherence?'A02-A03-independent-prediction':'A01-characterization-only',baselineCommit:BASE,
+    qtInitializationRevision:'First event retains nominal ventricular RR; adaptation starts at second event. Separate from A02/A03 morphology.',
     candidateCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),changedFiles,
     clinicalValidation:false,scenarios:rows.length,sampleComparisons:rows.reduce((n,r)=>n+r.checked,0),rows,matrix,
     limitations:['The b744caca baseline has absent secondary ST and bypassed T modifiers; it is not clinical truth.',

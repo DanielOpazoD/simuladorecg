@@ -1,3 +1,4 @@
+import {predictQTInitialization,assertReviewedQTInitialization} from './lib/qt-initialization-revision.mjs';
 /** v1.3 versus working tree, on matched synthetic samples. Not clinical validation. */
 import { build } from 'esbuild';
 import {assertReviewedMeasure,assertPeakOnlyChange} from './lib/t-peak-revision.mjs';
@@ -18,6 +19,8 @@ for (let i=0;i<args.length;i+=2) {
 }
 const temp = await mkdtemp(path.join(tmpdir(),'ecg-regional-'));
 try {
+ assertReviewedQTInitialization(await readFile('src/engine/repolarization.ts'));
+ const referencePreparation='Historical morphology with independently predicted QT initialization; default equality is relative to this declared reference revision';
  let baseDir = options['--baseline-dir'];
  if (!baseDir) {
    baseDir = path.join(temp,'base'); await mkdir(baseDir);
@@ -26,7 +29,13 @@ try {
  }
  async function load(dir, name) {
    const outfile = path.join(temp, name+'.mjs');
-   await build({stdin:{contents:`export {synthesize} from './src/engine/signal'; export {measure} from './src/engine/measure'; export {fromPreset,presetById,PRESETS} from './src/presets/catalog'; export {qrsKernels} from './src/engine/morphology'; export {project,axisFromLeads} from './src/engine/leads';`,resolveDir:dir},bundle:true,platform:'node',format:'esm',outfile});
+   await build({stdin:{contents:`export {synthesize} from './src/engine/signal'; export {measure} from './src/engine/measure'; export {fromPreset,presetById,PRESETS} from './src/presets/catalog'; export {qrsKernels} from './src/engine/morphology'; export {project,axisFromLeads} from './src/engine/leads';`,resolveDir:dir},bundle:true,platform:'node',format:'esm',outfile,
+     // Transform only the in-memory historical module; --baseline-dir remains read-only.
+     plugins:dir===root?[]:[{name:'reviewed-qt-initialization',setup(builder){
+       builder.onLoad({filter:/\/repolarization\.ts$/},async args=>({
+         contents:predictQTInitialization(await readFile(args.path,'utf8')),loader:'ts'
+       }));
+     }}]});
    return import(pathToFileURL(outfile).href);
  }
  const axisBaseDir = path.join(temp,'axis-base'); await mkdir(axisBaseDir);
@@ -116,6 +125,6 @@ try {
  }
  const output=options['--output'] || path.join(root,'.sites-runtime','repolarization-comparison.json');
  await mkdir(path.dirname(output),{recursive:true});
- await writeFile(output,JSON.stringify({schema:1,base:BASE,runtime:process.version,measurementScope:'Whole signal in T window; ST can contribute. Not isolated cellular T, HATW score, or diagnostic accuracy.',windowSource:'generator events; not independent delineation',externalValidation:false,detector,tPeakEvidenceOnly:true,modelAudit,defaultPresets:defaults,scenarios:rows},null,2));
- console.log(JSON.stringify({output,scenarios:rows.length,unchangedDefaults:defaults.filter(x=>x.maxDifferenceMv===0).length,detectorFrozen:detector.every(x=>x.unchanged)}));
+ await writeFile(output,JSON.stringify({schema:1,referencePreparation,base:BASE,runtime:process.version,measurementScope:'Whole signal in T window; ST can contribute. Not isolated cellular T, HATW score, or diagnostic accuracy.',windowSource:'generator events; not independent delineation',externalValidation:false,detector,tPeakEvidenceOnly:true,modelAudit,defaultPresets:defaults,scenarios:rows},null,2));
+ console.log(JSON.stringify({referencePreparation,output,scenarios:rows.length,unchangedDefaults:defaults.filter(x=>x.maxDifferenceMv===0).length,detectorFrozen:detector.every(x=>x.unchanged)}));
 } finally { await rm(temp,{recursive:true,force:true}); }
