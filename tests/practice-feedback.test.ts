@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LEADS, type Measurement, type Signal } from "../src/engine/types";
+import { LEADS, type Signal } from "../src/engine/types";
 import { fromPreset, presetById } from "../src/presets/catalog";
 import { synthesize } from "../src/engine/signal";
 import { measure } from "../src/engine/measure";

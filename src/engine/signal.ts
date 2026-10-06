@@ -1,7 +1,6 @@
 import { ventricularSource } from "./ventricular-source";
 import { PRECORDIAL_LEADS } from "./lead-registry";
 import {
-  LEADS,
   constraints,
   type ECGCase,
   type Signal,
@@ -87,7 +86,8 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
       v = frontal(
         a.kind === "retrograde" ? -100 : a.kind === "ectopic" ? 20 : c.pAxis,
         c.pAmp,
-        -0.018,
+        // The entire ectopic/retrograde vector shares the P amplitude control.
+        -0.018 * (c.pAmp / 0.15),
       );
     add(a.time, len, (u) =>
       a.kind === "sinus" ? atrialVector(c, u) : scale(v, bump(u)),
@@ -96,7 +96,6 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
   for (const b of events.beats) {
     const dur = qrsDuration(c, b),
       ks = qrsKernels(c, b),
-      source = ventricularSource(c, b),
       qt = b.qt!,
       tors = c.rhythm === "torsades";
     add(b.time, dur, (u, t) => {

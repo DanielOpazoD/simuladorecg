@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { LEADS, INDEPENDENT, PRECORDIAL_LEADS, LEAD_REGISTRY, orderedLeads, displayPolarity, leadGain } from "../src/engine/lead-registry";
+import { LEADS, INDEPENDENT, PRECORDIAL_LEADS, orderedLeads, displayPolarity, leadGain } from "../src/engine/lead-registry";
 import { project, makeArrays } from "../src/engine/leads";
 import { DEFAULT_CASE, cloneCase, type ECGCase } from "../src/engine/types";
 import { synthesize } from "../src/engine/signal";
-import { paperLayout, renderPaper, renderRhythm, Monitor } from "../src/render/ecg";
+import { paperLayout, renderPaper } from "../src/render/ecg";
 
 // Independent expectations: do not derive the oracle from the registry under test.
 const physical = ["I","II","III","aVR","aVL","aVF","V1","V2","V3","V4","V5","V6"];

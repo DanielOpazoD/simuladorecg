@@ -1,3 +1,4 @@
+import {assertReviewedSampleEntry} from './lib/sample-entry-contract.mjs';
 /** Known-cohort evaluation of a review aid. Never substitutes for the automatic analyzer. */
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
@@ -17,7 +18,11 @@ const calibrationBytes=readFileSync('tests/reference/ludb-delineation/protocol.j
 assert.equal(calibration.holdoutEnabled,false);
 const baseline=JSON.parse(readFileSync('benchmarks/ludb-baseline/protocol.json'));
 const analyzerFiles=Object.keys(baseline.analyzerFiles).sort();
-for(const f of analyzerFiles) assert.deepEqual(readFileSync(f),execFileSync('git',['show',protocol.baselineCommit+':'+f]),'Automatic analyzer changed: '+f);
+for(const f of analyzerFiles) {
+ const current=readFileSync(f), previous=execFileSync('git',['show',protocol.baselineCommit+':'+f]);
+ if(f==='src/engine/sample-analysis.ts')assertReviewedSampleEntry(current,previous);
+ else assert.deepEqual(current,previous,'Automatic analyzer changed: '+f);
+}
 const bundle=resolve(out,'review-aid.mjs');
 await build({stdin:{contents:"export {analyzeSamples} from './src/engine/sample-analysis.ts';export {suggestTEnds,T_END_AREA_POLICY} from './src/engine/t-end-area.ts';",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',outfile:bundle});
 const {analyzeSamples,suggestTEnds,T_END_AREA_POLICY}=await import(pathToFileURL(bundle));

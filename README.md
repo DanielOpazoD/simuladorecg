@@ -49,13 +49,17 @@ node scripts/validate-repolarization.mjs --output .sites-runtime/repolarization.
 node scripts/validate-analysis.mjs --split=all --output .sites-runtime/analysis-current.json
 
 # Después de npm run build, desde un commit limpio:
-npm install --no-save --package-lock=false playwright@1.63.0
+npm install --no-save --package-lock=false --legacy-peer-deps playwright@1.63.0
 npx playwright install chromium
 npx vite preview --host 127.0.0.1 --port 5173 --strictPort
 # En otra terminal:
 node scripts/verify-production.mjs
 node tests/browser-fidelity.mjs
 ```
+
+Playwright es una dependencia temporal de pruebas, no del producto. Con Vitest 4,
+`--legacy-peer-deps` evita un fallo interno de npm al resolver su peer opcional;
+`--no-save --package-lock=false` conserva los manifiestos y el lockfile.
 
 Las salidas nuevas se guardan en `.sites-runtime/` o la ruta indicada, sin sobrescribir evidencia histórica de `docs/`. El informe de análisis incluye versión real, commit/árbol cuando existen, estado de los archivos evaluados y SHA-256 de sus fuentes. Un archivo fuente sin historial informa procedencia Git desconocida; no inventa un SHA ni un estado limpio.
 
@@ -86,7 +90,7 @@ La [revisión clínica aportada](docs/referencias/Revision_ECG_SCA_Simulador.md)
 
 ## Histórico
 
-[README de v1.3](docs/README-v1.3.md), [verificación v1.3](docs/verificacion.md), [v1.2](docs/verificacion-v1.2.md) y [v1.1](docs/verificacion-v1.1.md) son registros históricos, no nuevas ejecuciones. Sus cifras no describen automáticamente el HEAD actual. La navegación vigente comienza en este README y la matriz de alcance. No se distribuye el ZIP antiguo de código en `public/`.
+[README de v1.3](docs/README-v1.3.md), [verificación v1.3](docs/verificacion.md), [v1.2](docs/verificacion-v1.2.md) y [v1.1](docs/verificacion-v1.1.md) son registros históricos, no nuevas ejecuciones. Sus cifras no describen automáticamente el HEAD actual. La navegación vigente comienza en este README y la matriz de alcance; el [índice de documentación](docs/INDEX.md) clasifica todos los archivos de `docs/`. No se distribuye el ZIP antiguo de código en `public/`.
 
 ## Derechos y contribuciones
 

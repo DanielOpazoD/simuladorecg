@@ -11,11 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with: {fetch-depth: 0, persist-credentials: false}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with: {node-version: '22.16.0', cache: npm}
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with: {python-version: '3.11'}
       - run: npm ci
       - run: npx vitest run tests/t-end-confidence.test.ts tests/t-end-area.test.ts
@@ -34,7 +34,7 @@ jobs:
           git archive HEAD | gzip > "$RUNNER_TEMP/confidence/source.tar.gz"
           git rev-parse HEAD > "$RUNNER_TEMP/confidence/commit.txt"
           cp "$RUNNER_TEMP/pr30/summary.json" "$RUNNER_TEMP/confidence/pr30-summary.json" 2>/dev/null || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: t-end-confidence-${{ github.sha }}

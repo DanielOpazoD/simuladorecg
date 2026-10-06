@@ -1,3 +1,5 @@
+import { monitorClock } from './monitor-clock';
+import { traceSampleIndices } from './trace-samples';
 import { caliperMeasurement } from "./caliper-geometry";
 import { orderedLeads, displayPolarity, leadGain } from "../engine/lead-registry";
 import {
@@ -164,10 +166,7 @@ function trace(
     gain = leadGain(seg.lead, c.view),
     scale = c.view.speed;
   const from = range?.[0] ?? seg.start,
-    to = range?.[1] ?? seg.start + seg.duration,
-    sampleLo = Math.max(0, Math.floor(from * s.fs)),
-    sampleHi = Math.min(a.length - 1, Math.floor(to * s.fs)),
-    step = Math.max(1, Math.floor(s.fs / (scale * pxPerMm)));
+    to = range?.[1] ?? seg.start + seg.duration;
   ctx.beginPath();
   let first = true;
   const point = (i: number) => {
@@ -178,25 +177,7 @@ function trace(
       first = false;
     } else ctx.lineTo(x, y);
   };
-  for (let i = sampleLo; i < sampleHi; i += step) {
-    if (step === 1) {
-      point(i);
-      continue;
-    }
-    let mini = i,
-      maxi = i;
-    for (let j = i + 1; j < Math.min(i + step, sampleHi); j++) {
-      if (a[j] < a[mini]) mini = j;
-      if (a[j] > a[maxi]) maxi = j;
-    }
-    if (mini < maxi) {
-      point(mini);
-      point(maxi);
-    } else {
-      point(maxi);
-      point(mini);
-    }
-  }
+  traceSampleIndices(a, s.fs, from, to, scale * pxPerMm, point);
   ctx.stroke();
 }
 function pulse(
@@ -237,11 +218,12 @@ export function renderPaper(
     for (let i = 0; i < Math.min(s.fs * 10, s.leads[lead].length); i++)
       amplitude = Math.max(amplitude, Math.abs(s.leads[lead][i]) * gain);
   }
+  const ratio = options.ratio ?? Math.min(2, window.devicePixelRatio || 1);
   const layout = paperLayout(c, availableWidth, options.pxPerMm, amplitude),
     ctx = setup(
       canvas,
       layout,
-      options.ratio ?? Math.min(2, window.devicePixelRatio || 1),
+      ratio,
     ),
     palette = palettes[c.view.palette];
   grid(ctx, layout.widthMm, layout.heightMm, palette, c.view.grid);
@@ -274,7 +256,7 @@ export function renderPaper(
       s,
       seg,
       c,
-      layout.pxPerMm * (options.ratio ?? window.devicePixelRatio),
+      layout.pxPerMm * ratio,
     );
     ctx.restore();
     ctx.fillStyle = palette.text;
@@ -465,6 +447,7 @@ export const filterLabel = (c: ECGCase) =>
     aggressive: "2–40 Hz",
   })[c.filter] + (c.notch ? " · notch " + c.notch + " Hz" : "");
 export class Monitor {
+  readonly availableSeconds: number;
   canvas: HTMLCanvasElement;
   bg: HTMLCanvasElement;
   layout: Layout;
@@ -477,9 +460,11 @@ export class Monitor {
     this.canvas = canvas;
     this.c = c;
     this.s = s;
+    this.availableSeconds = Math.min(60, s.duration, s.leads[c.view.lead].length / s.fs);
     this.ratio = Math.min(2, window.devicePixelRatio || 1);
     const ppm = c.view.pxPerMm;
     const widthMm = Math.max(400, width) / ppm;
+    const replay = monitorClock(0, (widthMm - 8) / c.view.speed, this.availableSeconds);
     this.layout = {
       widthMm,
       heightMm: 83,
@@ -488,11 +473,11 @@ export class Monitor {
         {
           x: 4,
           y: 12,
-          width: widthMm - 8,
+          width: replay.duration * c.view.speed,
           height: 60,
           baseline: 47,
           start: 0,
-          duration: (widthMm - 8) / c.view.speed,
+          duration: replay.duration,
           lead: c.view.lead,
           polarity: 1,
         },
@@ -515,18 +500,21 @@ export class Monitor {
     this.bg.height = canvas.height;
     this.bg.getContext("2d")!.drawImage(canvas, 0, 0);
   }
+  sourceTime(seconds: number): number {
+    return monitorClock(seconds, this.layout.segments[0].duration, this.availableSeconds).source;
+  }
   frame(seconds: number) {
     const ctx = this.ctx,
       seg = this.layout.segments[0],
-      span = seg.duration,
-      cycle = Math.floor(seconds / span),
-      phase = seconds % span,
+      {duration:span,cycle,phase,start:signalStart,previousStart} = monitorClock(seconds, seg.duration, this.availableSeconds),
       x = seg.x + phase * this.c.view.speed;
     let delta = this.last < 0 ? span : seconds - this.last;
+    const reset = this.last < 0 || delta < 0 || delta > span;
+    if (delta < 0) delta = span;
     const pmm = this.layout.pxPerMm * this.ratio;
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    if (this.last < 0 || delta > span) {
+    if (reset) {
       ctx.drawImage(this.bg, 0, 0);
     } else {
       const clearWidth = (delta * this.c.view.speed + 2) * pmm;
@@ -560,15 +548,14 @@ export class Monitor {
     ctx.lineWidth = 0.37;
     ctx.lineJoin = "round";
     ctx.lineCap = "round";
-    const start = Math.max(0, phase - Math.max(delta, 0.022) - 0.005),
-      signalStart = (cycle * span) % Math.max(1, 60 - span);
+    const start = Math.max(0, phase - Math.max(delta, 0.022) - 0.005);
     const monitorSeg = { ...seg, start: signalStart };
     ctx.save();
     ctx.beginPath();
     ctx.rect(seg.x, seg.y, seg.width, seg.height);
     ctx.clip();
-    if (this.last < 0 && cycle > 0) {
-      const prevStart = ((cycle - 1) * span) % Math.max(1, 60 - span);
+    if (reset && cycle > 0) {
+      const prevStart = previousStart;
       trace(
         ctx,
         this.s,

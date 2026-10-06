@@ -55,7 +55,8 @@ límites, y añade aceptación por rasgo observable con controles negativos. La
 simple existencia de un hash nuevo no basta. Mantén sincronizados catálogo y
 estado-presets.md/json; actualiza la matriz de fases si cambia el alcance.
 
-No regeneres todos los snapshots para pasar CI. Explica cada diferencia y conserva
+No regeneres todos los snapshots ni las huellas del catálogo
+(`UPDATE_CATALOG_FINGERPRINTS=1 npx vitest run tests/engine.test.ts`) para pasar CI. Explica cada diferencia y conserva
 una comparación emparejada antes/después. Los ocho LUDB actuales son regresión
 conocida, no una reserva nueva. No inspecciones los pacientes STAFF reservados
 como ajuste. Adquirir nuevas referencias es una acción explícita, fuera de la app,

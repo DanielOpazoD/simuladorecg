@@ -9,7 +9,7 @@ export class CaliperEditor {
   private state:State|null=null;
   private end:Endpoint=2;
   private options="";
-  constructor(private root:HTMLElement,private canvas:HTMLCanvasElement,private change:(cal:Caliper)=>void) {
+  constructor(private root:HTMLElement,canvas:HTMLCanvasElement,private change:(cal:Caliper)=>void) {
     root.innerHTML=`<label>Derivación y tramo<select id="caliper-segment"></select></label><label>Extremo<select id="caliper-endpoint"><option value="1">A · inicio</option><option value="2" selected>B · final</option></select></label><label>Tiempo del extremo (ms)<input id="caliper-time" type="number" inputmode="decimal"/></label><label>Amplitud mostrada (mV)<input id="caliper-voltage" type="number" step="0.01" inputmode="decimal"/></label><button type="button" id="caliper-focus">Mover en el trazado</button>`;
     root.addEventListener('change',e=>this.edit(e.target as HTMLInputElement));
     root.querySelector('#caliper-focus')!.addEventListener('click',()=>canvas.focus());

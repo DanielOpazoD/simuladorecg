@@ -1,9 +1,17 @@
+import { applyTheme, currentTheme, readTheme } from "./ui/theme";
+import { aboutDialogHtml } from "./ui/about-dialog";
 import { regionalActivationControls } from "./ui/regional-activation";
 import "./style.css";
 import { APP_VERSION } from "./ui/version";
 import { ActivationLab, type ActivationApplyResult } from "./ui/activation-lab";
 import { familyLabel } from "./ui/catalog-presentation";
-import { diagnosisFamilies, diagnosisForPreset } from "./ui/diagnosis-navigation";
+import { metricCards, metricsHtml, monitorRate } from "./ui/metric-cards";
+import { openDialog, closeDialog } from "./ui/dialog";
+import { exportDialogHtml } from "./ui/export-dialog";
+import { handleExportAction } from "./ui/export-actions";
+import { diagnosisForPreset } from "./ui/diagnosis-navigation";
+import { catalogView, VariantNavigation } from "./ui/catalog-view";
+import { WorkspaceNavigation } from "./ui/workspace-navigation";
 import { createExplorationOrigin, explorationChanges, restoreExplorationOrigin, sameExplorationModel, type ExplorationOrigin } from "./ui/exploration-origin";
 import type { SyntheticComparisonTrace } from "./ui/comparison-model";
 import { ComparisonLab } from "./ui/comparison-lab";
@@ -20,7 +28,9 @@ import { SignalController } from "./ui/signal-controller";
 import { TraceSession } from "./ui/trace-session";
 import { CaliperEditor } from "./ui/caliper-editor";
 import { initialCaliper, placeCaliper, moveCaliper } from "./render/caliper-geometry";
-import { practiceQuestion, practiceFeedback, type PracticeId } from "./ui/practice-feedback";
+import { practiceFeedback, type PracticeId } from "./ui/practice-feedback";
+import { createPractice, answerPractice, type PracticeState } from "./ui/practice-session";
+import { practicePanelHtml } from "./ui/practice-panel";
 import { changeCase, isCaseControlKey, controlValue } from "./ui/case-state";
 import { beatDetail, representativeBeat, nearestBeat } from "./ui/beat-detail";
 import { measurementDialog } from "./ui/measurement-dialog";
@@ -29,14 +39,12 @@ import {
   PRESETS,
   fromPreset,
   presetById,
-  type Preset,
 } from "./presets/catalog";
 import {
   renderPaper,
   renderRhythm,
   drawCaliper,
   Monitor,
-  filterLabel,
   type Layout,
   type Caliper,
 } from "./render/ecg";
@@ -45,11 +53,7 @@ import { controls, leadOptions, amplitudeControlState } from "./ui/controls";
 import { caseContext, caseReading, normalizeImportedCase } from "./presets/case-context";
 import {
   decodeCase,
-  encodeCase,
-  download,
   savedCases,
-  saveCase,
-  pngWithDpi,
 } from "./ui/persistence";
 
 const $ = <T extends Element = HTMLElement>(selector: string) =>
@@ -69,8 +73,7 @@ let timer = 0,
   activePanel = "base",
   search = "",
   group = "",
-  quiz: { preset: Preset; choices: Preset[]; answer: string | null } | null =
-    null;
+  quiz: PracticeState | null = null;
 let explorationOrigin: ExplorationOrigin | null = null;
 let explorationOriginTrace: SyntheticComparisonTrace | null = null;
 let initialError = "";
@@ -79,6 +82,7 @@ try {
 } catch (e) {
   initialError = (e as Error).message;
 }
+applyTheme(readTheme());
 const root = $("#app");
 root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="ECG Lab, inicio">${icon("pulse")}<span>ECG<span class="brand-light">lab</span></span><span class="brand-divider"></span><small>Explora la electrocardiografía</small></a><nav aria-label="Herramientas"><button class="btn mobile-cases" data-action="catalog">${icon("menu")}<span>Casos</span></button>${btn("quiz", "Practicar", "quiz")}${btn("about", "Guía", "book")}${btn("theme", "Tema", "sun", "icon-button")}${btn("export", "Exportar", "download", "primary")}</nav></header>
  <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><div><h2>Biblioteca de patrones</h2><span>${PRESETS.filter((x) => x.strategy !== "pending").length} ejemplos · agrupados por patrón</span></div>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Patrón, sigla o palabra…" aria-label="Buscar caso"/></label><label class="category-select"><span class="sr-only">Categoría</span><select id="category">${options([["", "Todas las familias"], ...Array.from(new Set(PRESETS.map((x) => x.group))).map((x) => [x, familyLabel(x)] as [string, string])], "")}</select></label><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div><div class="sidebar-footer">${icon("pulse")}<div>Señal 100% sintética<small data-product-version="${APP_VERSION}">Modelo educativo · v${APP_VERSION}</small></div></div></aside>
@@ -97,6 +101,7 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  <footer class="workspace-footer"><span>ECG Lab · Laboratorio de electrocardiografía</span><span>Uso educativo. Sin validación clínica.</span></footer></main></div>
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
 
+const variantNavigation = new VariantNavigation($("#diagnosis-navigation"), $("#diagnosis-content"));
 const caliperEditor = new CaliperEditor($("#caliper-editor"), $<HTMLCanvasElement>("#ecg"), next => { caliper = next; draw(); });
 let toastTimer = 0;
 function clearToast() {
@@ -138,49 +143,25 @@ const activation = new ActivationLab(
   }, toast,
 );
 
+const workspaceNavigation = new WorkspaceNavigation($("#catalog"), $<HTMLElement>("#inspector"), {
+  activation: () => activation.open(),
+  compare: () => comparison.focus(),
+  external: () => external.open(),
+  about: showAbout,
+  measurements: showMeasurements,
+  export: exportDialog,
+  "close-dialog": closeDialog,
+});
+
 if (!location.hash) { const p=presetById(c.presetId); if(p) explorationOrigin=createExplorationOrigin(p,c); }
 function currentPreset() {
   return caseContext(c).preset;
 }
 function renderCatalog() {
-  const selectedId = currentPreset()?.id;
-  const families = diagnosisFamilies(PRESETS, search, group, selectedId);
-  const available = families.reduce((sum, family) => sum + family.available, 0);
-  const entries = families.reduce((sum, family) => sum + family.availableEntries, 0);
-  $("#catalog-count").textContent = `${entries} ${entries === 1 ? "patrón" : "patrones"} · ${available} ${available === 1 ? "ejemplo" : "ejemplos"}`;
-  $("[data-action=clear-search]").hidden = !search && !group;
-  $("#case-list").innerHTML = families.map(family =>
-    `<section class="case-group"><h3>${esc(family.label)}<span>${family.entryCount}</span></h3>${family.sections.map(section =>
-      `${section.title ? `<h4 class="case-subgroup">${esc(section.title)}</h4>` : ""}${section.entries.map(entry => {
-        const {diagnosis, target, selected, matches} = entry;
-        const pending = target.strategy === "pending";
-        const multiple = diagnosis.variants.length > 1;
-        const detail = pending ? "Pendiente" : search && matches.length === 1 && multiple
-          ? `Coincide: ${diagnosis.variants.find(v => v.id === target.id)!.label}`
-          : multiple ? `${diagnosis.variants.length} variantes` : "";
-        return `<button type="button" class="case-button ${selected ? "selected" : ""}" data-diagnosis="${esc(diagnosis.id)}" data-preset="${esc(target.id)}" title="${esc(target.name)}" aria-label="${esc(diagnosis.title)}${detail ? ` · ${esc(detail)}` : ""}" ${pending ? "disabled" : ""} ${selected ? 'aria-current="true"' : ""}><span>${esc(diagnosis.title)}${detail ? `<small class="case-variants-count">${esc(detail)}</small>` : ""}</span>${selected ? icon("check") : multiple ? icon("chevron") : ""}</button>`;
-      }).join("")}`
-    ).join("")}</section>`
-  ).join("") || '<div class="catalog-empty"><strong>No encontramos ese patrón</strong><p>Prueba con el nombre completo o una sigla como FA, BRI o WPW.</p></div>';
-}
-let renderedVariants = "";
-function renderVariants(preset: Preset | undefined, concealed: boolean) {
-  const navigation = $("#diagnosis-navigation");
-  const content = $("#diagnosis-content");
-  const diagnosis = preset && !concealed && !c.artifacts.reversed ? diagnosisForPreset(preset) : null;
-  const multi = diagnosis && diagnosis.variants.length > 1;
-  const key = multi ? `${diagnosis.id}/${preset!.id}` : "";
-  navigation.hidden = !multi;
-  if (key !== renderedVariants) {
-    navigation.innerHTML = multi ? `<div class="variant-heading"><span id="variant-label">Variantes del patrón</span><small>Cambiar de variante carga su ejemplo original.</small></div><div class="variant-tabs" role="tablist" aria-labelledby="variant-label" data-activation="manual">${diagnosis.variants.map(v => `<button type="button" role="tab" id="variant-tab-${esc(v.id)}" data-variant="${esc(v.id)}" aria-selected="${v.id === preset!.id}" aria-controls="diagnosis-content" tabindex="${v.id === preset!.id ? 0 : -1}">${esc(v.label)}</button>`).join("")}</div>` : "";
-    renderedVariants = key;
-  }
-  if (multi) {
-    content.setAttribute("role", "tabpanel");
-    content.setAttribute("aria-labelledby", `variant-tab-${preset!.id}`);
-  } else {
-    content.removeAttribute("role"); content.removeAttribute("aria-labelledby");
-  }
+  const view = catalogView(PRESETS, search, group, currentPreset()?.id);
+  $("#catalog-count").textContent = view.count;
+  $("[data-action=clear-search]").hidden = !view.clearFiltersVisible;
+  $("#case-list").innerHTML = view.html;
 }
 function formatExplorationValue(value:unknown){if(typeof value==="boolean")return value?"Sí":"No";return value==null?"—":String(value)}
 function renderExplorationContext(concealed:boolean){const root=$("#exploration-context"),changes=explorationOrigin?explorationChanges(explorationOrigin,c):[],custom=!!explorationOrigin&&changes.length>0&&!concealed;root.hidden=!custom;if(!custom){root.innerHTML="";return}root.innerHTML=`<div class="exploration-provenance"><span>Basada en: <strong>${esc(explorationOrigin!.presetName)}</strong></span><span class="exploration-count">${changes.length} ${changes.length===1?"ajuste":"ajustes"} respecto al ejemplo original</span></div><div class="exploration-actions"><button type="button" class="text-button" data-action="exploration-changes">Ver cambios</button><button type="button" class="text-button" data-action="compare-origin" ${explorationOriginTrace&&session.canExport?"":"disabled"}>Comparar con origen</button><button type="button" class="text-button" data-action="restore-origin">Restaurar origen</button></div><p>«Basada en» indica procedencia de la exploración; no diagnostica el trazado modificado.</p>`}
@@ -196,7 +177,7 @@ function renderInfo() {
   $("#case-title").textContent = concealed ? "Interpreta este ECG" : customExploration ? "Exploración personalizada" : grouped ? diagnosis.title : reading.title;
   $("#case-variant-title").hidden = !!concealed || !grouped || p?.name === diagnosis?.title;
   $("#case-variant-title").textContent = !concealed && grouped ? p!.name : "";
-  renderVariants(p, !!concealed);
+  variantNavigation.update(p, !!concealed, c.artifacts.reversed);
   $("#case-category").textContent = concealed
     ? "PRÁCTICA"
     : customExploration ? "EXPLORACIÓN"
@@ -232,62 +213,10 @@ function renderInfo() {
   if (concealed) activation.invalidate();
   $("#catalog").classList.toggle("quiz-concealed", !!concealed);
 }
-function display(v: number | null | undefined, unit = "") {
-  return v == null || !Number.isFinite(v)
-    ? "—"
-    : Math.round(v) + (unit ? `<small>${unit}</small>` : "");
-}
 function renderMetrics() {
   if (!session.signal || !session.measurement) return;
-  const noOrganized = ["vf", "asystole"].includes(c.rhythm),
-    hasPR =
-      (c.rhythm === "sinus" && c.av !== "complete") ||
-      (c.rhythm === "paced" && c.pacing !== "VVI");
-  const vals: [string, string, string][] = [
-    [
-      "FC ventricular",
-      noOrganized || session.measurement.evidence.hr.status === "unavailable"
-        ? "—"
-        : display(session.measurement.hr, "lpm"),
-      "media · 10 s",
-    ],
-    [
-      "PR",
-      hasPR ? display(session.measurement.pr, "ms") : "—",
-      hasPR ? "estimado" : "sin relación AV estimable",
-    ],
-    [
-      "QRS",
-      noOrganized || session.measurement.evidence.qrs.status === "unavailable"
-        ? "—"
-        : display(session.measurement.qrs, "ms"),
-      "límites medidos",
-    ],
-    [
-      "QTc",
-      noOrganized ||
-      session.measurement.evidence.qt.status === "unavailable" ||
-      ["af", "flutter", "torsades"].includes(c.rhythm)
-        ? "—"
-        : display(session.measurement.qtc.fridericia, "ms"),
-      "Fridericia · estimado",
-    ],
-    [
-      "Eje QRS",
-      noOrganized ? "—" : display(session.measurement.axis, "°"),
-      "área neta · estimado",
-    ],
-  ];
-  $("#metrics").innerHTML = vals
-    .map(
-      ([label, v, sub], i) =>
-        `<button class="metric ${i === 0 ? "main-metric" : ""}" data-action="measurements" title="${esc(session.measurement!.evidence[(["hr", "pr", "qrs", "qt", "axis"] as const)[i]].reason)}"><span>${label}</span><strong>${v}</strong><small><i class="quality-dot ${session.measurement!.evidence[(["hr", "pr", "qrs", "qt", "axis"] as const)[i]].status}"></i>${session.measurement!.evidence[(["hr", "pr", "qrs", "qt", "axis"] as const)[i]].status === "unavailable" ? "No estimable" : session.measurement!.evidence[(["hr", "pr", "qrs", "qt", "axis"] as const)[i]].status === "review" ? "Revisar" : sub}</small></button>`,
-    )
-    .join("");
-  $("#monitor-rate").textContent =
-    noOrganized || session.measurement.evidence.hr.status === "unavailable"
-      ? "—"
-      : String(Math.round(session.measurement.hr ?? 0));
+  $("#metrics").innerHTML = metricsHtml(metricCards(c, session.measurement));
+  $("#monitor-rate").textContent = monitorRate(c, session.measurement);
 }
 function renderDetail() {
   if (session.signal && session.measurement)
@@ -416,6 +345,7 @@ function syncTraceTools() {
   $<HTMLButtonElement>('[data-action="compare"]').disabled = !!quiz && !quiz.answer;
   $<HTMLButtonElement>('[data-action="external"]').disabled = !!quiz && !quiz.answer;
   $<HTMLButtonElement>('[data-action="activation"]').disabled = !ready || (!!quiz && !quiz.answer);
+  $('[data-action="theme"]').setAttribute("aria-pressed", String(currentTheme() === "dark"));
   const caliperButton = $<HTMLButtonElement>('[data-action="caliper"]');
   caliperButton.disabled = monitorMode || !ready;
   caliperButton.classList.toggle("active", measuring);
@@ -510,6 +440,7 @@ function generate() {
   session.expectRequest(controller.request(c));
 }
 function draw() {
+  c.view.palette = currentTheme() === "dark" ? "dark" : "paper";
   syncTraceTools();
   if (!session.signal) return;
   const canvas = $<HTMLCanvasElement>("#ecg"),
@@ -553,10 +484,7 @@ function animate(t: number) {
     if (lastFrame) session.advance(Math.min(0.1, (t - lastFrame) / 1000), c.view.mode);
     monitor.frame(session.elapsed);
     if (audioOn && session.signal) {
-      const seg = monitor.layout.segments[0],
-        span = seg.duration,
-        cycle = Math.floor(session.elapsed / span),
-        source = ((cycle * span) % Math.max(1, 60 - span)) + (session.elapsed % span);
+      const source = monitor.sourceTime(session.elapsed);
       const b = session.signal.events.beats.find(
         (b) => b.time >= source - 0.022 && b.time <= source + 0.008,
       );
@@ -677,14 +605,6 @@ $("#case-search").addEventListener("keydown", (e) => {
   }
 });
 
-function openDialog(title: string, body: string) {
-  $("#dialog-content").innerHTML =
-    `<div class="dialog-head"><h2>${title}</h2><button class="btn icon-button" data-action="close-dialog" aria-label="Cerrar">${icon("close")}</button></div>${body}`;
-  $<HTMLDialogElement>("#dialog").showModal();
-}
-function closeDialog() {
-  $<HTMLDialogElement>("#dialog").close();
-}
 function showMeasurements() {
   if (session.signal && session.measurement)
     openDialog(
@@ -697,22 +617,13 @@ function showMeasurements() {
 function showAbout() {
   openDialog(
     "Modelo, alcance y referencias",
-    `<div class="about-intro"><div>${icon("pulse")}<h3>Un ECG construido desde la señal</h3><p>Activaciones auriculares y ventriculares → kernels vectoriales XYZ → 8 derivaciones independientes → filtros → 12 derivaciones. No utiliza trazados grabados ni imágenes de pacientes.</p></div></div><h3>Alcance de esta versión</h3><ul class="about-list"><li>Todos los patrones son aproximaciones educativas. Las pruebas técnicas no constituyen validación clínica.</li><li>Modelo de dipolo único inspirado en ECGSYN y Clifford. No es un modelo celular, de torso individual ni una implementación literal de ECGSYN.</li><li>V7–V9 y V3R–V4R; marcapasos a demanda; captura/fusión en TV; comienzo corto–largo–corto de torsades; flutter variable: pendientes.</li><li>Medición automática heurística. En casos complejos utiliza calibres y comparación con eventos; PR/QT pueden no ser estimables. Los límites medidos se muestran por latido; una auditoría contra los mismos latidos sintéticos comprueba cada límite y retira resultados discordantes, sin sustituir las medidas por valores del generador.</li><li>Monitor: barrido de un buffer sintético reproducible. Se vuelve a usar el buffer durante sesiones largas; cambios de parámetros reinician la señal.</li><li>Paso alto diagnóstico causal de 0,05 Hz y antialias FIR centrado antes de reducir a 500 Hz. El paso alto de 2 Hz permite explorar distorsión del ST. La interferencia de red se configura aparte del notch.</li></ul><h3>Lectura clínica</h3><p class="dialog-lead">Describe primero el patrón observado. Integra territorio, reciprocidad, proporcionalidad respecto del QRS y contexto; la etiqueta del caso no demuestra una arteria ocluida. Las fases son estados paramétricos y no una cronología de un paciente. <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10691881/" target="_blank" rel="noopener">ACC 2022: patrones isquémicos y contexto.</a></p><h3>Fundamentos de la señal</h3><p class="dialog-lead">QT con memoria exponencial de RR (≈40 s), activación auricular en dos componentes y T asimétrica. Transición de lesión durante el final del QRS para conservar el nivel de ST en J. Son aproximaciones educativas, no un modelo de potenciales celulares.</p><h3>Referencias</h3><ol class="references"><li><a href="https://physionet.org/content/ecgsyn/1.0.0/" target="_blank" rel="noopener">McSharry et al. ECGSYN (2003)</a> · Ritmo, variabilidad y generación sintética.</li><li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2927500/" target="_blank" rel="noopener">Clifford, Nemati y Sameni (2010)</a> · Modelo vectorial de ritmos anormales.</li><li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9106114/" target="_blank" rel="noopener">Vondrak et al. (2022), tabla 2</a> · Matriz inversa de Dower; comprobación algebraica indirecta de los coeficientes.</li><li><a href="https://www.ahajournals.org/doi/10.1161/circulationaha.108.191095" target="_blank" rel="noopener">AHA/ACCF/HRS (2009), parte III</a> · Trastornos de conducción intraventricular.</li><li><a href="https://www.ahajournals.org/doi/10.1161/circulationaha.106.180200" target="_blank" rel="noopener">AHA/ACCF/HRS (2007), parte I</a> · Tecnología y estandarización del ECG.</li><li><a href="https://academic.oup.com/eurheartj/advance-article/doi/10.1093/eurheartj/ehag101/8766309" target="_blank" rel="noopener">Quinta Definición Universal de Infarto (2026)</a> · Tabla 5, criterios electrocardiográficos y limitaciones diagnósticas.</li></ol><p class="control-note"><a href="https://link.springer.com/article/10.1007/s10928-018-9587-8" target="_blank" rel="noopener">Malik et al. (2018): historia de RR y adaptación del QT</a> · <a href="https://link.springer.com/article/10.1186/1471-2261-5-29" target="_blank" rel="noopener">Hunt (2005): métodos y sesgo de medición de QT</a></p><h3>Estado por patrón</h3><div class="status-table"><table><thead><tr><th>Patrón</th><th>Estado / estrategia</th><th>Límite</th></tr></thead><tbody>${PRESETS.map((p) => `<tr><td>${p.name}</td><td>${p.strategy === "pending" ? "Pendiente" : p.strategy === "local" ? "Aproximado · ajuste local" : "Aproximado · vectorial"}</td><td>${p.limitation}</td></tr>`).join("")}</tbody></table></div>`,
+    aboutDialogHtml(PRESETS),
   );
 }
 function exportDialog() {
   openDialog(
     "Exportar y guardar",
-    `<p class="dialog-lead">Conserva el trazado o comparte exactamente el mismo caso y semilla.</p><div class="export-options"><button data-action="png" ${session.canExport ? "" : "disabled"}>${icon("download")}<div><strong>PNG de impresión</strong><span>Papel completo · 300 píxeles por pulgada</span></div>${icon("chevron")}</button><button data-action="json">${icon("save")}<div><strong>Exportar caso JSON</strong><span>Parámetros, vista y semilla reproducible</span></div>${icon("chevron")}</button><button data-action="import">${icon("book")}<div><strong>Importar caso JSON</strong><span>Carga un caso exportado desde ECG Lab</span></div>${icon("chevron")}</button><button data-action="share">${icon("share")}<div><strong>Copiar enlace del caso</strong><span>El estado completo viaja en el enlace</span></div>${icon("chevron")}</button></div><div class="save-form"><label class="field"><span>Nombre del caso personal</span><input id="save-name" maxlength="100" value="${esc(c.name)}"/></label>${btn("save", "Guardar en este navegador", "save")}</div>${
-      savedCases().length
-        ? `<h3>Mis casos</h3><div class="saved-list">${savedCases()
-            .map(
-              (x, i) =>
-                `<button data-saved="${i}">${esc(x.name)}${icon("chevron")}</button>`,
-            )
-            .join("")}</div>`
-        : ""
-    }`,
+    exportDialogHtml(c, session.canExport, savedCases()),
   );
 }
 function renderQuiz() {
@@ -722,14 +633,13 @@ function renderQuiz() {
   panel.hidden = !quiz;
   if (!quiz) return;
   const q = quiz, feedback = q.answer ? practiceFeedback(q.preset.id as PracticeId, c, session.signal, session.measurement) : null;
-  panel.innerHTML = `<div class="quiz-top"><strong>${q.answer ? (q.answer === q.preset.id ? "Coincide con el caso configurado" : "Compara los rasgos del ejercicio") : "¿Qué patrón representa este ejercicio?"}</strong><button data-action="end-quiz">Salir de práctica</button></div><div class="quiz-choices">${q.choices.map((p) => `<button data-answer="${p.id}" ${q.answer || !session.canExport ? "disabled" : ""} class="${q.answer && p.id === q.preset.id ? "correct" : q.answer === p.id ? "incorrect" : ""}">${esc(p.name)}</button>`).join("")}</div>${feedback ? `<div class="practice-feedback" role="status"><section><h3>Observaciones y estimaciones</h3><ul>${feedback.observations.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></section><section><h3>Referencia del ejercicio</h3><p><strong>${esc(q.preset.name)}</strong> · Etiqueta configurada, no diagnóstico automático.</p><p>${q.answer !== q.preset.id ? `Elegiste ${esc(presetById(q.answer!)?.name || "otra alternativa")}. ` : ""}Revisa ${esc(feedback.leads)}. ${esc(feedback.cue)}</p></section></div><div class="practice-limits">${feedback.limitations.map(x=>`<p>${esc(x)}</p>`).join("")}<p>Modelo aproximado. La puntuación compara tu opción con el ejercicio, no mide precisión clínica.</p></div>${btn("quiz", "Siguiente caso", "chevron", "primary")}` : `<p>Responde después de observar el ECG. Las referencias se muestran al contestar.</p>`}`;
+  panel.innerHTML = practicePanelHtml(q, session.canExport, feedback);
 }
 function startQuiz() {
   const rng = new Uint32Array(2);
   crypto.getRandomValues(rng);
-  const question = practiceQuestion(Array.from(rng));
-  quiz = { preset: presetById(question.id)!, choices: question.choices.map(id=>presetById(id)!), answer: null };
-  selectPreset(question.id);
+  quiz = createPractice(Array.from(rng));
+  selectPreset(quiz.preset.id);
   renderQuiz();
   renderInfo();
   $("#quiz-panel").scrollIntoView({ block: "nearest", behavior: "smooth" });
@@ -770,8 +680,7 @@ document.addEventListener("click", async (e) => {
     draw();
     return;
   }
-  if (answer && quiz && !quiz.answer && session.canExport && quiz.choices.some(p=>p.id===answer.dataset.answer)) {
-    quiz.answer = answer.dataset.answer!;
+  if (answer && answerPractice(quiz, answer.dataset.answer, session.canExport)) {
     renderQuiz();
     renderInfo();
     draw();
@@ -800,13 +709,7 @@ document.addEventListener("click", async (e) => {
   if(action==="exploration-changes") showExplorationChanges();
   if(action==="restore-origin"&&explorationOrigin){c=restoreExplorationOrigin(explorationOrigin,c);caliper=null;session.resetTools();annotations=false;renderCatalog();renderControls();renderInfo();generate();toast("Origen restaurado; se conserva la vista actual.")}
   if(action==="compare-origin"&&explorationOriginTrace&&session.signal&&session.measurement&&session.canExport){comparison.compareSynthetic(explorationOriginTrace,captureTrace(c,session.signal,session.measurement));comparison.focus();}
-  if (action === "parameters") {
-    if (quiz && !quiz.answer) return;
-    $("#inspector").scrollIntoView({block:"start"}); $("#inspector").focus({preventScroll:true});
-  }
-  if (action === "activation" && (!quiz || quiz.answer)) activation.open();
-  if (action === "compare" && (!quiz || quiz.answer)) comparison.focus();
-  if (action === "external" && (!quiz || quiz.answer)) external.open();
+  if (workspaceNavigation.handle(action, !!quiz && !quiz.answer)) return;
   if (action === "focus") {
     annotations = true;
     draw();
@@ -856,20 +759,11 @@ document.addEventListener("click", async (e) => {
     toast(audioOn ? "Sonido activado" : "Sonido desactivado");
   }
   if (action === "theme") {
-    document.documentElement.classList.toggle("dark");
-    c.view.palette = document.documentElement.classList.contains("dark")
-      ? "dark"
-      : "paper";
+    applyTheme(currentTheme() === "dark" ? "light" : "dark", true);
     draw();
     renderDetail();
   }
   if(action==="reset"){if(explorationOrigin&&explorationChanges(explorationOrigin,c).length){c=restoreExplorationOrigin(explorationOrigin,c);caliper=null;session.resetTools();annotations=false;renderCatalog();renderControls();renderInfo();generate();toast("Origen restaurado; se conserva la vista actual.")}else{selectPreset(c.presetId==="custom"?"sinus":c.presetId);toast("Parámetros restablecidos")}}
-  if (action === "catalog") $("#catalog").classList.toggle("open");
-  if (action === "close-catalog") $("#catalog").classList.remove("open");
-  if (action === "about") showAbout();
-  if (action === "measurements") showMeasurements();
-  if (action === "export") exportDialog();
-  if (action === "close-dialog") closeDialog();
   if (action === "quiz") startQuiz();
   if (action === "end-quiz") {
     quiz = null;
@@ -877,63 +771,14 @@ document.addEventListener("click", async (e) => {
     renderInfo();
     draw();
   }
-  if (action === "png") {
-    if (!session.signal || !session.canExport) {
-      toast("El PNG estará disponible al generar correctamente la señal.");
-      return;
-    }
-    const canvas = document.createElement("canvas"),
-      exportCase = cloneCase(c);
-    exportCase.view.palette = "paper";
-    renderPaper(canvas, session.signal, exportCase, 1000, {
-      pxPerMm: 300 / 25.4,
-      ratio: 1,
-      hideName: !!quiz && !quiz.answer,
-      displayName: caseReading(c).title,
-    });
-    canvas.toBlob(async (blob) => {
-      if (blob) {
-        download(await pngWithDpi(blob, 300), "ecg-lab-300dpi.png");
-        toast("PNG exportado a 300 dpi");
-      }
-    }, "image/png");
-  }
-  if (action === "json") {
-    download(
-      new Blob([JSON.stringify(c, null, 2)], { type: "application/json" }),
-      "ecg-lab-caso.json",
-    );
-    toast("Caso JSON exportado");
-  }
-  if (action === "import") $<HTMLInputElement>("#file-input").click();
-  if (action === "share") {
-    const url = location.origin + location.pathname + encodeCase(c);
-    try {
-      await navigator.clipboard.writeText(url);
-      toast("Enlace del caso copiado");
-    } catch {
-      openDialog(
-        "Enlace del caso",
-        `<p>Copia este enlace:</p><textarea readonly rows="5">${esc(url)}</textarea>`,
-      );
-    }
-  }
-  if (action === "save") {
-    const name = $<HTMLInputElement>("#save-name").value.trim();
-    if (!name) {
-      toast("Escribe un nombre para el caso");
-      return;
-    }
-    const copy = cloneCase(c);
-    copy.name = name;
-    try {
-      saveCase(copy);
-      toast("Caso guardado en este navegador");
-      exportDialog();
-    } catch {
-      toast("No se pudo guardar. Exporta el caso como JSON.");
-    }
-  }
+  await handleExportAction(action, {
+    c,
+    signal: session.signal,
+    canExport: session.canExport,
+    hideName: !!quiz && !quiz.answer,
+    toast,
+    refreshDialog: exportDialog,
+  });
 });
 $<HTMLInputElement>("#file-input").addEventListener("change", async (e) => {
   const el = e.target as HTMLInputElement,

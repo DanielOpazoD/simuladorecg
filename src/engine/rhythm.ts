@@ -3,7 +3,11 @@ import { random, normal } from "./random";
 export function generateEvents(c: ECGCase, duration: number): EventSeries {
   const r = random(c.seed),
     events: EventSeries = { atria: [], beats: [], spikes: [] };
-  const base = 60 / c.hr;
+  // Flutter has an independent atrial clock. Its first RR also seeds QT history;
+  // using the inactive base-rate control here changes T without changing rhythm.
+  const base = c.rhythm === "flutter"
+    ? (60 / c.atrialRate) * c.flutterRatio
+    : 60 / c.hr;
   let prev = -10;
   const beat = (time: number, kind: Beat["kind"] = "normal", pr?: number) => {
     if (time < duration) {
