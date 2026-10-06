@@ -7,6 +7,21 @@ on:
 permissions:
   contents: read
 jobs:
+  portability:
+    # The maintainer develops on macOS arm64; unit contracts must pass there too.
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+          cache: npm
+      - run: npm ci
+      - name: Unit contracts and production build on macOS
+        run: npm run check
   amplitude-regression:
     runs-on: ubuntu-latest
     timeout-minutes: 15

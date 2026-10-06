@@ -15,7 +15,7 @@ import { secondaryRepolarization } from "../src/engine/secondary-repolarization"
 import { PRESETS, fromPreset, presetById } from "../src/presets/catalog";
 import { calibrationGeometry, paperLayout } from "../src/render/ecg";
 import { encodeCase, decodeCase } from "../src/ui/persistence";
-import { createHash } from "node:crypto";
+import { expectCatalogFingerprint } from "./support/catalog-fingerprint";
 const testCase = (patch: Partial<ECGCase> = {}) =>
   Object.assign(cloneCase(DEFAULT_CASE), patch);
 const load = (id: string) => fromPreset(presetById(id)!);
@@ -169,12 +169,7 @@ describe("Determinismo y catálogo", () => {
       const hasCoupledSecondary = a.events.beats.some((beat) =>
         secondaryRepolarization(fromPreset(p), beat, qrsKernels(fromPreset(p), beat)).mode !== "none"
       );
-      if (!hasCoupledSecondary) {
-        const digest = createHash("sha256")
-          .update(Buffer.from(a.leads.II.buffer))
-          .digest("hex");
-        expect(digest).toMatchSnapshot();
-      }
+      if (!hasCoupledSecondary) expectCatalogFingerprint(p.id, a.leads.II);
     },
   );
 });
