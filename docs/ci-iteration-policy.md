@@ -30,3 +30,20 @@ matching nonfinite samples fail. There is no numerical tolerance.
 This bounds diagnostic output and avoids expensive diff formatting on regressions.
 It is not a claim of a measured CI-duration reduction. Other waveform-region
 contracts retain their existing explicit tolerances and are not replaced.
+
+## Immutable historical workflow excluded from this optimization
+
+The first CI attempt also changed concurrency in `ludb-frozen-baseline.yml`.
+That triggered its original PR-specific contract, which requires the entire
+current product to equal commit 519267d3 and the candidate analyzer to retain
+those historical bytes. Current main intentionally evolved since that audit,
+so the workflow failed before acquiring or evaluating any record. This is not
+a new waveform regression and is not evidence that the current analyzer equals
+that old version.
+
+The optimization of that historical workflow has been reverted byte-for-byte;
+its gates and trigger paths are unchanged. It is explicitly excluded from the
+new concurrency contract. A separate redesign is needed to distinguish frozen
+baseline reproduction from evaluation of a changed current analyzer. This PR
+does not remove its assertions, rewrite its baseline, or claim it now passes.
+Ten other PR workflows receive the concurrency policy described above.

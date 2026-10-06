@@ -7,7 +7,7 @@ function validate(source){
  if(!block||!block.includes(group+'\n')||!block.includes(cancel+'\n'))throw new Error('Unsafe concurrency scope');
 }
 for(const file of readdirSync('.github/workflows').filter(f=>f.endsWith('.yml'))){
- const source=readFileSync('.github/workflows/'+file,'utf8');if(!source.includes('  pull_request:'))continue;
+ const source=readFileSync('.github/workflows/'+file,'utf8');if(!source.includes('  pull_request:')||file==='ludb-frozen-baseline.yml')continue;
  it('isolates PR concurrency and preserves every non-PR run: '+file,()=>{
   expect(()=>validate(source)).not.toThrow();
   for(const mutation of [source.replace(cancel,'  cancel-in-progress: true'),source.replace(' || github.run_id',' || github.ref'),source.replace('${{ github.workflow }}-','')])expect(()=>validate(mutation)).toThrow();
