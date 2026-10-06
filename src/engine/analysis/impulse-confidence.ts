@@ -21,7 +21,7 @@ export function briefImpulseFraction(s:Pick<Signal,'fs'|'leads'>,peaks:readonly 
   if(!trace||!slopes.length)continue;
   // Start on the strongest diagonal so an anti-parallel field cannot cancel the seed.
   const diagonal=covariance.map((row,i)=>row[i]),seed=diagonal.indexOf(Math.max(...diagonal));
-  let q=diagonal.map((_,i)=>i===seed?1:0);
+  let q:number[]=diagonal.map((_,i)=>i===seed?1:0);
   for(let k=0;k<25;k++){
    const v=covariance.map(row=>row.reduce((sum,x,i)=>sum+x*q[i],0)),norm=Math.hypot(...v);
    q=v.map(x=>x/(norm||1));

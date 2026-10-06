@@ -22,5 +22,10 @@ export function assertReviewedSampleEntry(source, previous) {
 
 export function assertReviewedImpulseConfidence(source) {
   assert.equal(createHash('sha256').update(source).digest('hex'),
-    '2c0eefc00b94313452e025b4ce35ea139fa872366397438b56919a8aef7caf82', 'Unreviewed impulse-confidence change');
+    '01aba2e47a670e23c18e6bddc712158031d313114b3b7c266d7b01177cb41b55', 'Unreviewed impulse-confidence change');
+}
+
+export function assertReviewedSampleDependencies(actual,historical,candidate) {
+  const expected=candidate?[...historical,'src/engine/analysis/impulse-confidence.ts']:historical;
+  assert.deepEqual([...actual].sort(),[...expected].sort(),'Unexpected analyzer dependency');
 }
