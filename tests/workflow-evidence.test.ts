@@ -1,0 +1,36 @@
+import { readFileSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
+const workflow=readFileSync(new URL('../.github/workflows/fidelity.yml',import.meta.url),'utf8');
+const verify=workflow.split('  verify:')[1].split('  accessibility:')[0];
+const accessibility=workflow.split('  accessibility:')[1];
+describe('CI evidence reuse without coverage removal',()=>{
+  it.each([
+    ['activation','ECG_ACTIVATION_ENGINES'],
+    ['diagnosis-navigation','ECG_GROUP_ENGINES'],
+    ['regional-activation','ECG_REGIONAL_ENGINES'],
+  ])('runs %s exactly once, across all three engines', (script,env)=>{
+    const command=`node tests/browser-${script}.mjs`;
+    expect(workflow.split(command)).toHaveLength(2);
+    expect(accessibility).toContain(`${env}=all ${command}`);
+    expect(verify).not.toContain(command);
+  });
+  it('transfers only the exact dist while retaining the complete evidence archive',()=>{
+    expect(verify).toContain('name: ecg-browser-build-${{ github.sha }}');
+    expect(verify).toContain('path: dist/');
+    expect(accessibility).toContain('name: ecg-browser-build-${{ github.sha }}');
+    expect(accessibility).toContain('path: dist');
+    expect(accessibility).not.toContain('npm run build');
+    expect(accessibility).toContain('ECG_EXPECT_COMMIT: ${{ github.sha }}');
+    expect(accessibility).toContain('node scripts/verify-production.mjs');
+    expect(verify).toContain('name: ecg-evidence-${{ github.sha }}');
+    expect(verify).toContain('git archive HEAD');
+    expect(verify).toContain('cp -r dist');
+  });
+  it('retains each numerical gate and the dependent three-engine job',()=>{
+    for(const command of ['npm test','validate-regional-activation.mjs','validate-repolarization-scope.mjs','validate-repolarization.mjs','validate-posterior-amplitude.mjs']) expect(verify).toContain(command);
+    expect(accessibility).toContain('needs: verify');
+    expect(accessibility).toContain('chromium webkit firefox');
+    expect(accessibility).toContain('node tests/browser-accessibility.mjs');
+    expect(accessibility).not.toContain('continue-on-error');
+  });
+});
