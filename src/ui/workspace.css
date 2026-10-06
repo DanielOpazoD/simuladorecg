@@ -136,6 +136,9 @@ dialog.external-lab { border-radius:12px; }
   .metric { padding-inline:14px; }
   .trace-tools { justify-content:flex-start; }
 }
+.workspace-label-short { display:none; }
+.exploration-disclosure summary { font-size:.75rem; cursor:pointer; min-height:44px; }
+.exploration-disclosure summary .exploration-count { margin-inline-start:8px; }
 @media(max-width:800px) {
   .topbar { height:auto; min-height:64px; padding:14px 18px; }
   .app-layout { display:block; }
@@ -155,6 +158,9 @@ dialog.external-lab { border-radius:12px; }
   .workspace-footer { flex-direction:column; gap:5px; }
 }
 @media(max-width:600px) {
+  .topbar { padding-block:10px; }
+  .exploration-context { padding:6px 10px; }
+  .exploration-context>p { font-size:.75rem!important; margin-top:0!important; }
   .topbar .brand { flex:1 1 auto; }
   .topbar nav { gap:4px; justify-content:space-between; }
   .topbar nav > .btn { width:auto; padding:9px 10px; }
@@ -162,16 +168,18 @@ dialog.external-lab { border-radius:12px; }
   .topbar nav > .btn[data-action=quiz] svg, .topbar nav > .btn[data-action=about] svg, .topbar nav > .btn[data-action=export] svg { display:none; }
   .topbar nav > .btn[data-action=about] { width:auto; }
   .topbar nav > .btn[data-action=about] span { display:inline; }
-  .workspace-nav { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); margin-bottom:18px; padding-bottom:14px; }
+  .workspace-nav { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); margin-bottom:12px; padding-bottom:10px; }
   /* The page heading already names the active space; keep it for assistive tech only. */
   .workspace-current { position:absolute; width:1px; height:1px; min-height:0; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
-  .workspace-nav > .btn { white-space:normal; text-align:center; }
+  .workspace-nav > .btn { flex-direction:column; justify-content:center; gap:3px; min-height:48px; padding:4px; font-size:.75rem; white-space:normal; text-align:center; }
+  .workspace-nav .workspace-label-long { display:none; }
+  .workspace-nav .workspace-label-short { display:inline; }
   .case-heading { display:block; position:relative; }
   .case-category { padding-right:54px; }
   .case-state { position:absolute; top:0; right:0; padding:0; }
-  .case-heading h1 { padding-right:0; font-size:27px; }
+  .case-heading h1 { padding-right:0; font-size:1.5rem; }
   .metrics { grid-template-columns:repeat(6,minmax(0,1fr)); border:1px solid var(--line); gap:1px; background:var(--line); }
-  .metric, .metric:first-child { grid-column:span 2; padding:12px; }
+  .metric, .metric:first-child { grid-column:span 2; min-height:82px; padding:10px; }
   .metric:nth-child(n+4) { grid-column:span 3; }
   .metric strong { font-size:25px; }
   .metric > small { font-size:12px; }

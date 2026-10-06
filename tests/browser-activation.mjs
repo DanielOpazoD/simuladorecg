@@ -126,7 +126,7 @@ for (const [engine, launcher] of Object.entries(engines)) {
         const applied = await exportCase('applied.json');
         assert.equal(applied.conduction, 'rbbb'); assert.equal(applied.qrs, 150); assert.equal(applied.axis, 35);
         assert.equal(applied.rhythm, original.rhythm); assert.equal(applied.seed, original.seed);
-        assert.match(await page.locator('#exploration-context').innerText(), /Basada en/);
+        assert.match(await page.locator('#exploration-context').innerText(), /Origen:/);
         checks.push('A remains available while the real worker validates B; success commits once, without a second synthesis, preserving origin');
         await open();
         const qrs = page.locator('#activation-qrs'), model = page.locator('#activation-model');

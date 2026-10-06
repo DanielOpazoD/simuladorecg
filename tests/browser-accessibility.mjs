@@ -85,6 +85,19 @@ for(const engine of [chromium,webkit,firefox]) {
         assert.equal(await flutterPattern.inputValue(),'2-3');
         await fits('#control-panel-conduction');
         await page.locator('#case-title').scrollIntoViewIfNeeded();
+        // Native disclosure keeps provenance available without burying the mobile trace.
+        const summary=page.locator('#exploration-context summary');
+        await summary.focus();await page.keyboard.press('Enter');
+        assert.equal(await page.locator('.exploration-disclosure').evaluate(e=>e.open),true);
+        await page.keyboard.press('Space');
+        assert.equal(await page.locator('.exploration-disclosure').evaluate(e=>e.open),false);
+        assert.equal(await page.locator('#exploration-context>p').isVisible(),true);
+        assert.ok((await summary.boundingBox()).height>=44);
+        await page.evaluate(()=>window.scrollTo(0,0));
+        const firstViewport=await page.locator('#ecg').evaluate(e=>{
+          const b=e.getBoundingClientRect();return {top:b.top,visible:Math.max(0,Math.min(b.bottom,innerHeight)-Math.max(b.top,0)),height:innerHeight};
+        });
+        if(width===390)assert.ok(firstViewport.visible>=160,'First viewport must include a meaningful ECG segment: '+JSON.stringify(firstViewport));
         await page.screenshot({path:resolve(out,stem+'-flutter-variable.png')});
         await flutterPattern.selectOption('fixed');await ready();
         assert.equal(await page.locator('[data-key="flutterRatio"]').isDisabled(),false);

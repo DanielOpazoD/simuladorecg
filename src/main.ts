@@ -1,3 +1,4 @@
+import { workspaceButton } from "./ui/workspace-button";
 import { applyTheme, currentTheme, readTheme } from "./ui/theme";
 import { aboutDialogHtml } from "./ui/about-dialog";
 import { regionalActivationControls } from "./ui/regional-activation";
@@ -12,7 +13,7 @@ import { handleExportAction } from "./ui/export-actions";
 import { diagnosisForPreset } from "./ui/diagnosis-navigation";
 import { catalogView, VariantNavigation } from "./ui/catalog-view";
 import { WorkspaceNavigation } from "./ui/workspace-navigation";
-import { createExplorationOrigin, explorationChanges, restoreExplorationOrigin, sameExplorationModel, type ExplorationOrigin } from "./ui/exploration-origin";
+import { createExplorationOrigin, explorationContextHtml, explorationChanges, restoreExplorationOrigin, sameExplorationModel, type ExplorationOrigin } from "./ui/exploration-origin";
 import type { SyntheticComparisonTrace } from "./ui/comparison-model";
 import { ComparisonLab } from "./ui/comparison-lab";
 import { captureTrace } from "./ui/comparison-model";
@@ -87,7 +88,7 @@ applyTheme(readTheme());
 const root = $("#app");
 root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="ECG Lab, inicio">${icon("pulse")}<span>ECG<span class="brand-light">lab</span></span><span class="brand-divider"></span><small>Explora la electrocardiografía</small></a><nav aria-label="Herramientas"><button class="btn mobile-cases" data-action="catalog">${icon("menu")}<span>Casos</span></button>${btn("quiz", "Practicar", "quiz")}${btn("about", "Guía", "book")}${btn("theme", "Tema", "sun", "icon-button")}${btn("export", "Exportar", "download", "primary")}</nav></header>
  <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><div><h2>Biblioteca de patrones</h2><span>${PRESETS.filter((x) => x.strategy !== "pending").length} ejemplos · agrupados por patrón</span></div>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Patrón, sigla o palabra…" aria-label="Buscar caso"/></label><label class="category-select"><span class="sr-only">Categoría</span><select id="category">${options([["", "Todas las familias"], ...Array.from(new Set(PRESETS.map((x) => x.group))).map((x) => [x, familyLabel(x)] as [string, string])], "")}</select></label><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div><div class="sidebar-footer">${icon("pulse")}<div>Señal 100% sintética<small data-product-version="${APP_VERSION}">Modelo educativo · v${APP_VERSION}</small></div></div></aside>
- <main class="workspace"><nav class="workspace-nav" aria-label="Espacios de trabajo"><span class="workspace-current" aria-current="page">${icon("pulse")}Simulador</span>${btn("external", "Abrir señal", "book")}${btn("compare", "Comparar A/B", "strip")}${btn("activation", "Activación QRS", "pulse")}<button type="button" class="btn workspace-adjust" data-action="parameters">${icon("settings")}<span>Ajustar el caso</span></button></nav><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><p id="case-subtitle">Activación auricular sinusal seguida de conducción AV 1:1.</p><div id="exploration-context" class="exploration-context" hidden></div></div><div class="case-state"><span class="status-label">Ejemplo sintético</span>${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
+ <main class="workspace"><nav class="workspace-nav" aria-label="Espacios de trabajo"><span class="workspace-current" aria-current="page">${icon("pulse")}Simulador</span>${workspaceButton("external", "Abrir señal", "Abrir", "book")}${workspaceButton("compare", "Comparar A/B", "Comparar", "strip")}${workspaceButton("activation", "Activación QRS", "Activación", "pulse")}${workspaceButton("parameters", "Ajustar el caso", "Ajustar", "settings", "workspace-adjust")}</nav><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><p id="case-subtitle">Activación auricular sinusal seguida de conducción AV 1:1.</p><div id="exploration-context" class="exploration-context" hidden></div></div><div class="case-state"><span class="status-label">Ejemplo sintético</span>${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
  <section id="diagnosis-navigation" class="diagnosis-navigation" aria-label="Variantes del patrón" hidden></section>
  <div id="diagnosis-content">
  <section id="metrics" class="metrics" aria-label="Medidas del ECG"><div class="loading-metrics">Generando señal…</div></section>
@@ -165,7 +166,14 @@ function renderCatalog() {
   $("#case-list").innerHTML = view.html;
 }
 function formatExplorationValue(value:unknown){if(typeof value==="boolean")return value?"Sí":"No";return value==null?"—":String(value)}
-function renderExplorationContext(concealed:boolean){const root=$("#exploration-context"),changes=explorationOrigin?explorationChanges(explorationOrigin,c):[],custom=!!explorationOrigin&&changes.length>0&&!concealed;root.hidden=!custom;if(!custom){root.innerHTML="";return}root.innerHTML=`<div class="exploration-provenance"><span>Basada en: <strong>${esc(explorationOrigin!.presetName)}</strong></span><span class="exploration-count">${changes.length} ${changes.length===1?"ajuste":"ajustes"} respecto al ejemplo original</span></div><div class="exploration-actions"><button type="button" class="text-button" data-action="exploration-changes">Ver cambios</button><button type="button" class="text-button" data-action="compare-origin" ${explorationOriginTrace&&session.canExport?"":"disabled"}>Comparar con origen</button><button type="button" class="text-button" data-action="restore-origin">Restaurar origen</button></div><p>«Basada en» indica procedencia de la exploración; no diagnostica el trazado modificado.</p>`}
+function renderExplorationContext(concealed:boolean) {
+  const root=$("#exploration-context"), changes=explorationOrigin?explorationChanges(explorationOrigin,c):[];
+  const custom=!!explorationOrigin && changes.length>0 && !concealed;
+  const open=root.querySelector("details")?.open ?? false;
+  root.hidden=!custom;
+  root.innerHTML=custom ? explorationContextHtml(explorationOrigin!,changes,!!explorationOriginTrace&&session.canExport,open) : "";
+}
+
 function showExplorationChanges(){if(!explorationOrigin)return;const changes=explorationChanges(explorationOrigin,c);openDialog("Cambios respecto al origen",`<p class="dialog-lead">Origen: <strong>${esc(explorationOrigin.presetName)}</strong>. Se muestran diferencias reales del modelo; la vista no cuenta como ajuste.</p><div class="measurement-table-wrap"><table><thead><tr><th>Parámetro</th><th>Origen</th><th>Actual</th></tr></thead><tbody>${changes.map(x=>`<tr><td>${esc(x.label)}</td><td>${esc(formatExplorationValue(x.before))}${x.beforeLabel?`<br><small>${esc(x.beforeLabel)}</small>`:""}</td><td>${esc(formatExplorationValue(x.after))}${x.afterLabel?`<br><small>${esc(x.afterLabel)}</small>`:""}</td></tr>`).join("")}</tbody></table></div><p class="control-note">Una acción puede cambiar varios parámetros coordinados; el recuento describe diferencias del estado resultante, no el número de clics.</p>`)}
 function renderInfo() {
   const context = caseContext(c),
@@ -185,7 +193,7 @@ function renderInfo() {
     : p ? familyLabel(p.group) : "Caso personalizado";
   $("#case-subtitle").textContent = concealed
     ? "Identifica el patrón. Puedes cambiar la vista y utilizar los calibres."
-    : customExploration ? "Observa cómo los ajustes modifican el ejemplo de origen sin convertir su nombre en un diagnóstico del estado actual." : reading.subtitle;
+    : customExploration ? "Interpreta la señal actual; el origen solo indica procedencia." : reading.subtitle;
   renderExplorationContext(!!concealed);
   $("#finding-title").textContent = concealed
     ? "Análisis sistemático"
