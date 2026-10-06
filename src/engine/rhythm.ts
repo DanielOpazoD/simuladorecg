@@ -1,6 +1,13 @@
 import type { ECGCase, EventSeries, Beat } from "./types";
+import { assertEventCalendar } from "./event-calendar";
 import { random, normal } from "./random";
 export function generateEvents(c: ECGCase, duration: number): EventSeries {
+  if (!Number.isFinite(duration) || duration <= 0) throw new Error("Duración de calendario inválida.");
+  const events = buildEvents(c, duration);
+  assertEventCalendar(events, duration);
+  return events;
+}
+function buildEvents(c: ECGCase, duration: number): EventSeries {
   const r = random(c.seed),
     events: EventSeries = { atria: [], beats: [], spikes: [] };
   // Flutter has an independent atrial clock. Its first RR also seeds QT history;
@@ -20,7 +27,8 @@ export function generateEvents(c: ECGCase, duration: number): EventSeries {
     conducted = true,
     pr?: number,
     kind: "sinus" | "ectopic" | "retrograde" = "sinus",
-  ) => events.atria.push({ time, conducted, pr, kind });
+  ) => { if (time < duration) events.atria.push({ time, conducted, pr, kind }); };
+  const spike = (time: number) => { if (time < duration) events.spikes.push(time); };
   if (c.rhythm === "vf" || c.rhythm === "asystole") return events;
   if (c.rhythm === "af") {
     let t = 0.35;
@@ -64,16 +72,16 @@ export function generateEvents(c: ECGCase, duration: number): EventSeries {
   if (c.rhythm === "paced") {
     for (let t = 0.45; t < duration; t += base) {
       if (c.pacing === "AAI") {
-        events.spikes.push(t);
+        spike(t);
         p(t + 0.007, true, c.pr / 1000);
         beat(t + 0.007 + c.pr / 1000, "normal", c.pr / 1000);
       } else if (c.pacing === "VVI") {
-        events.spikes.push(t);
+        spike(t);
         beat(t + 0.005, "paced");
       } else {
-        events.spikes.push(t);
+        spike(t);
         p(t + 0.007, true, c.pr / 1000);
-        events.spikes.push(t + 0.007 + c.pr / 1000 - 0.005);
+        spike(t + 0.007 + c.pr / 1000 - 0.005);
         beat(t + 0.007 + c.pr / 1000, "paced", c.pr / 1000);
       }
     }
