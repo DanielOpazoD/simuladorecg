@@ -48,7 +48,7 @@ export function saveCase(c: ECGCase) {
 /** Embed actual physical PNG density (pHYs), independent of browser's default 96 dpi metadata. */
 export async function pngWithDpi(blob: Blob, dpi = 300): Promise<Blob> {
   const ppm = Math.round(dpi / 0.0254);
-  if (!Number.isFinite(dpi) || dpi <= 0 || ppm < 1 || ppm > 0xffffffff)
+  if (!Number.isFinite(dpi) || dpi <= 0 || ppm < 1 || ppm > 0x7fffffff)
     throw new Error("Densidad PNG no representable en píxeles por metro");
   const data = new Uint8Array(await blob.arrayBuffer());
   const signature = [137, 80, 78, 71, 13, 10, 26, 10];

@@ -9,11 +9,15 @@ function chunks(data:Uint8Array) {
   return out;
 }
 describe('physical PNG density is explicit, bounded and non-destructive',()=>{
-  it.each([NaN,Infinity,-1,0,1e20,0.001])('rejects unrepresentable density %s',async dpi=>{
+  it.each([NaN,Infinity,-1,0,1e20,0.001,0x80000000 * .0254])('rejects unrepresentable density %s',async dpi=>{
     await expect(pngWithDpi(blob(),dpi)).rejects.toThrow(/densidad/i);
   });
   it.each([4,8,20,original.length-1])('rejects truncated PNG at %s bytes',async n=>{
     await expect(pngWithDpi(blob(original.slice(0,n)))).rejects.toThrow(/PNG/);
+  });
+  it('accepts the largest PNG four-byte integer, not the larger uint32 range',async()=>{
+    const c=chunks(new Uint8Array(await (await pngWithDpi(blob(),0x7fffffff*.0254)).arrayBuffer()));
+    expect(new DataView(c[1].data.buffer,c[1].data.byteOffset).getUint32(0)).toBe(0x7fffffff);
   });
   it('requires all eight signature bytes',async()=>{
     const bad=original.slice();bad[7]=0;
