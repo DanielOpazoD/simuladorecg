@@ -270,8 +270,8 @@ describe('WPW lab represents the entire existing vector QRS, without retuning it
   });
   it('matches the actual 500 Hz isolated ECG for an explicitly aligned onset after the existing acquisition FIR', () => {
     // PR 90 ms places the native onset on the sampling lattice. The legacy
-    // floor(start*fs) delta extrapolation at other phases is intentionally NOT
-    // represented by this pre-acquisition loop; documented separately.
+    // compact-support regression now separately covers fractional onsets and
+    // excludes historical pre-onset extrapolation before the acquisition FIR.
     const c: ECGCase = { ...load('wpw'), pr: 90, hr: 60, variability: 0, filter: 'off', pAmp: 0, tAmp: 0, st: 0 };
     const signal = synthesize(c, 10), b = signal.events.beats.find(x => x.time > 2)!;
     const t = sampleActivation(c, b);

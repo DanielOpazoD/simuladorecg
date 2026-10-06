@@ -79,6 +79,8 @@ jobs:
         run: node scripts/validate-regional-activation.mjs "${{ runner.temp }}/regional-activation-results.json"
       - name: Paired representative AF clock and worker confidence
         run: node scripts/validate-af-clock.mjs "${{ runner.temp }}/af-clock-results.json"
+      - name: Paired native WPW support and worker confidence
+        run: node scripts/validate-wpw-support.mjs "${{ runner.temp }}/wpw-support-results.json"
       - name: Total VVI noncapture sample-only uncertainty
         run: node scripts/validate-vvi-noncapture.mjs "${{ runner.temp }}/vvi-noncapture-results.json"
       - name: Types and production build

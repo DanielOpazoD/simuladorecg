@@ -1,3 +1,4 @@
+import {predictWpwSupport} from './lib/wpw-support-prediction.mjs';
 import {predictAfClock,assertFrozenAfSampler} from './lib/af-clock-prediction.mjs';
 import {predictTorsadesFrame} from './lib/torsades-frame-prediction.mjs';
 import {assertTraceContract} from '../tests/support/repolarization-contract.mjs';
@@ -27,10 +28,10 @@ try {
   const qtFile=path.join(base,'src/engine/repolarization.ts');
   await writeFile(qtFile,predictQTInitialization(await readFile(qtFile,'utf8')));
   const signalFile=path.join(base,'src/engine/signal.ts');
-  await writeFile(signalFile,predictTorsadesFrame(await readFile(signalFile,'utf8')));
+  await writeFile(signalFile,predictWpwSupport(predictTorsadesFrame(await readFile(signalFile,'utf8'))));
   const rhythmFile=path.join(base,'src/engine/rhythm.ts');
   await writeFile(rhythmFile,predictAfClock(await readFile(rhythmFile,'utf8')));
-  const referencePreparation='PR55 with independent QT initialization plus torsades-frame and representative AF-clock predictions; unrelated defaults remain exact';
+  const referencePreparation='PR55 with independent QT initialization plus torsades-frame, compact WPW support and representative AF-clock predictions; unrelated defaults remain exact';
   const before=await load(base,'before'),after=await load(process.cwd(),'after'),defaults=[];
   assert.deepEqual(before.PRESETS,after.PRESETS,'No new or relabelled presets');
   for(const p of before.PRESETS.filter(p=>p.strategy!=='pending'))for(const filter of ['off','diagnostic','monitor','aggressive']){
@@ -38,7 +39,7 @@ try {
     const a=before.synthesize(c,10),b=after.synthesize(c,10);
     if(c.rhythm==='torsades') assertTraceContract(a,b,`${p.id}/${filter}: independently predicted T frame`,1e-12);
     else assertExactSignal(a,b,`${p.id}/${filter}: legacy samples, events, truth and warnings must remain exact`);
-    defaults.push({preset:p.id,filter,exact:c.rhythm!=='torsades'&&c.rhythm!=='af',predictedAfClock:c.rhythm==='af',predictedTorsadesFrame:c.rhythm==='torsades'});
+    defaults.push({preset:p.id,filter,exact:c.conduction!=='wpw'&&c.rhythm!=='torsades'&&c.rhythm!=='af',predictedWpwSupport:c.conduction==='wpw',predictedAfClock:c.rhythm==='af',predictedTorsadesFrame:c.rhythm==='torsades'});
   }
   assert.equal(defaults.length,244);
   const regional=assertRegionalSampleContract(after);

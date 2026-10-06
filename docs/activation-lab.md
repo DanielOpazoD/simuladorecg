@@ -98,10 +98,10 @@ explícitamente en JSON. El nuevo metadato `timing.deltaDurationMs` es aditivo.
 
 La comparación con el ECG a 500 Hz usa un evento alineado a la rejilla nativa
 (PR 90 ms, HR 60, filtro off y P/T/ST apagados). No equivale a una extracción
-universal: el `floor(start*fs)` histórico puede evaluar la delta antes de su
-inicio en otras fases, incluso por redondeo flotante (observado con PR 100 ms).
-Ese artefacto de adquisición preexistente no se reproduce en el bucle ideal ni se
-corrige en este PR; se conserva para separar una futura intervención de señal.
+universal. El defecto histórico de extrapolación antes del inicio por
+`floor(start*fs)` se corrige ahora mediante soporte compacto en `wpwDeltaVector`.
+No se redondean los eventos; el FIR simétrico puede distribuir muestras alrededor
+del inicio. Véase [contrato y regresión independiente](wpw-delta-support.md).
 
 No se representa una vía accesoria anatómica ni una activación causal nueva. El
 aviso WPW de repolarización incompleta se reutiliza sin modificarlo: la delta no

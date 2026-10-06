@@ -44,11 +44,12 @@ export function bump(u: number) {
 export function qrsAmplitudeScale(c: Pick<ECGCase, "qrsAmp" | "electrolyte">): number {
   return c.qrsAmp * (c.electrolyte === "lowvoltage" ? 0.38 : 1);
 }
-/** Existing illustrative delta pulse. Support/beat eligibility are owned by the caller.
+/** Illustrative delta pulse with explicit compact support; beat eligibility is owned by the caller.
  * Keep arithmetic order identical to the synthesizer; this is not an accessory-pathway model.
  */
 export const WPW_DELTA_SECONDS = 0.045;
 export function wpwDeltaVector(c: ECGCase, phase: number): Vec {
+  if (phase <= 0 || phase >= 1) return [0, 0, 0];
   const v = frontal(c.axis, 0.25, 0.03),
     gain = qrsAmplitudeScale(c) * Math.sin(Math.PI * phase);
   return [v[0] * gain, v[1] * gain, v[2] * gain];
