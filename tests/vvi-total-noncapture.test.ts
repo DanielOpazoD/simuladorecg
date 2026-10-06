@@ -31,3 +31,10 @@ it('restoring capture regenerates the exact same trace',()=>{
  synthesize(loss(),10);const b=synthesize(c,10);
  expect(b).toEqual(a);expect(b.events.beats.length).toBeGreaterThan(5);
 });
+
+import {repolarizationLimitations} from '../src/presets/teaching-limits';
+import {caseContext} from '../src/presets/case-context';
+it('does not describe secondary ventricular repolarization when no ventricular activation exists',()=>{
+ expect(repolarizationLimitations(loss())).toEqual([]);
+ expect(caseContext(loss()).warnings.join(' ')).not.toContain('relación ST/QRS');
+});

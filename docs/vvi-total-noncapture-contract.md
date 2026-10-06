@@ -32,3 +32,5 @@ asserts the implemented idealized scope and retained limitations. No physiologic
 gate or sample baseline was relaxed. Browser coverage also freezes the monitor,
 checks the unavailable rate, downloads real JSON/PNG, and checks that exports do
 not mutate the observed samples. PNG appearance requires artifact inspection.
+
+Final UI audit caught an unrelated secondary ST/QRS warning in the no-ventricular-activation state. A new regression reproduces it before the scoped fix; the warning remains for captured VVI and is omitted only when there is no ventricular activation.

@@ -36,6 +36,7 @@ for(const engine of [chromium,webkit,firefox]){
    const loss=await observed();assert.equal(loss.beats,0);assert.ok(loss.spikes>=3);assert.equal(loss.status,'unavailable');
    assert.equal(await page.locator('[data-key=qrs]').isDisabled(),true);assert.equal(await page.locator('[data-key=hr]').isDisabled(),false);
    assert.match(await page.locator('#warnings').innerText(),/sin activación ventricular/);
+   assert.doesNotMatch(await page.locator('#warnings').innerText(),/relación ST\/QRS/);
    await page.locator('#ecg').screenshot({path:resolve(out,tag+'-trace.png')});
    await page.locator('[data-mode=monitor]').click();assert.equal(await page.locator('#monitor-rate').innerText(),'—');
    await page.getByRole('button',{name:'Congelar',exact:true}).click();
