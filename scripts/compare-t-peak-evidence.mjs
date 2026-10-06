@@ -1,4 +1,4 @@
-import {assertReviewedSampleEntry} from './lib/sample-entry-contract.mjs';
+import {assertReviewedSampleEntry,assertReviewedImpulseConfidence,assertReviewedSampleDependencies} from './lib/sample-entry-contract.mjs';
 /** Paired evidence-only revision: fixed, already observed LUDB cohorts; no holdout. */
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
@@ -32,11 +32,12 @@ for(const file of analyzedFiles){
 const evaluationFiles=['scripts/lib/ludb-frozen-baseline.mjs','scripts/lib/external-delineation-evaluation.mjs',
  'scripts/lib/external-qrs-evaluation.mjs','tests/reference/ludb/load-ludb.mjs','benchmarks/ludb-baseline/protocol.json'];
 for(const f of evaluationFiles)assert.deepEqual(readFileSync(f),execFileSync('git',['show','2f8247a859badf3f66c307258904ac7c099c38fb:'+f]));
+assertReviewedImpulseConfidence(readFileSync('src/engine/analysis/impulse-confidence.ts'));
 const analyzers=[];
 for(const [i,root] of [base,candidate].entries()){
  const bundle=resolve(out,'analyzer-'+i+'.mjs');
  const r=await build({absWorkingDir:root,entryPoints:[p.analysisEntry],bundle:true,platform:'node',format:'esm',metafile:true,outfile:bundle});
- assert.deepEqual(Object.keys(r.metafile.inputs).sort(),analyzedFiles,'Unexpected analyzer dependency');
+ assertReviewedSampleDependencies(Object.keys(r.metafile.inputs),analyzedFiles,i===1);
  analyzers.push((await import(pathToFileURL(bundle))).analyzeSamples);
 }
 const sampleHash=s=>hash(Buffer.concat(Object.keys(s.leads).sort().map(k=>Buffer.from(s.leads[k].buffer,s.leads[k].byteOffset,s.leads[k].byteLength))));
