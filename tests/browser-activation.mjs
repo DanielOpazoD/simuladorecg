@@ -193,6 +193,7 @@ for (const [engine, launcher] of Object.entries(engines)) {
         assert.equal(await page.locator('#activation-qrs').isEnabled(), true);
         assert.match(await page.locator('#activation-error').innerText(), /fuera de alcance/);
         assert.equal(await inViewport('#activation-error'), true);
+        assert.equal(await page.locator('#activation-error').evaluate(e => document.activeElement === e), true);
         assert.equal(await page.locator('#signal-loading').isVisible(), false);
         assert.equal(await page.locator('#ecg').evaluate(c => c.toDataURL()), preservedCanvas);
         assert.equal(await page.locator('#metrics').innerText(), preservedMetrics);
@@ -204,6 +205,7 @@ for (const [engine, launcher] of Object.entries(engines)) {
         await page.locator('[data-activation="apply"]').click();
         await page.waitForFunction(() => document.querySelector('#activation-error').textContent.includes('único reintento'));
         assert.equal(await inViewport('#activation-error'), true);
+        assert.equal(await page.locator('#activation-error').evaluate(e => document.activeElement === e), true);
         assert.equal(await page.locator('#ecg').evaluate(c => c.toDataURL()), preservedCanvas);
         assert.equal(await page.locator('#metrics').innerText(), preservedMetrics);
         await page.locator('[data-activation="apply"]').click(); await applicationReady();

@@ -89,7 +89,7 @@ export class ActivationLab {
       <div class="activation-controls" ${limitation ? 'hidden' : ''}><label>QRS solicitado B (ms)<input id="activation-qrs" type="number" min="60" max="240" step="any" value="${c.qrs}" required aria-describedby="activation-edit-note activation-error"/></label><label>Modelo de activación B<select id="activation-model">${options([['template', 'Plantilla histórica'], ['regional-rbbb-v1', 'BRD regional · experimental']], c.activationModel ?? 'template')}</select></label></div>
       <p id="activation-edit-note" class="activation-note" ${limitation ? 'hidden' : ''}>Solo cambia B; A permanece capturado. Cambiar conducción/fuente restablece los parámetros de B. El modelo regional se aplica únicamente dentro de su dominio y a latidos conducidos. La etiqueta de conducción identifica la configuración elegida, no un diagnóstico del QRS ajustado.</p>
       <button type="button" class="btn" data-activation="reset" ${limitation ? 'hidden' : ''}>Restablecer B = A</button>
-      <p id="activation-error" role="status" ${limitation ? '' : 'hidden'}>${esc(limitation ?? '')}</p>
+      <p id="activation-error" role="status" tabindex="-1" ${limitation ? '' : 'hidden'}>${esc(limitation ?? '')}</p>
       <div id="activation-experiment" ${limitation ? 'hidden' : ''}><div class="activation-legend"><span><i class="activation-a"></i>A · caso capturado (discontinuo)</span><span><i class="activation-b"></i>B · alternativa (continuo)</span></div>
       <div id="activation-summary" class="activation-summary"></div><p id="activation-changes" class="activation-note"></p>
       <div class="activation-playback"><button type="button" class="btn" data-activation="play">Reproducir lento</button><label>Recorrer QRS (ms)<input id="activation-time" type="range" min="0" max="240" step="1" value="0"/></label><output id="activation-clock">0 ms</output><label>Lectura instantánea<select id="activation-lead">${options([...LEADS], this.lead)}</select></label><output id="activation-instant"></output></div>
@@ -184,18 +184,24 @@ export class ActivationLab {
       } else if (result.status === 'rejected') {
         const error = this.get('#activation-error'); error.hidden = false;
         error.textContent = `B no se aplicó. ${result.message} A y el trazado anterior se conservan. Revisa B o restablece B = A.`;
-        error.scrollIntoView({ block: 'center' });
       }
     } catch {
       if (this.applying === attempt && this.dialog.open) {
         const error = this.get('#activation-error'); error.hidden = false;
         error.textContent = 'No se pudo completar la aplicación. Revisa el estado del simulador antes de volver a intentarlo.';
-        error.scrollIntoView({ block: 'center' });
       }
     } finally {
       if (this.applying === attempt) {
         this.applying = null; workbench.removeAttribute('aria-busy');
         workbench.disabled = false; status.hidden = true; applyButton.textContent = 'Aplicar B al caso';
+        // Restore the final layout before revealing the result. In WebKit an
+        // already-focused Close button can otherwise pull a synchronous failure
+        // back to the top after scrollIntoView, leaving the message clipped.
+        const error = this.dialog.querySelector<HTMLElement>('#activation-error');
+        if (this.dialog.open && error && !error.hidden) {
+          error.focus({ preventScroll: true });
+          error.scrollIntoView({ block: 'center', behavior: 'instant' });
+        }
       }
     }
   }
