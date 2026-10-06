@@ -1,4 +1,4 @@
-import {QRS_T_REVISION,assertReviewedQrsTFile,assertQrsTRefinement} from './lib/qrs-t-revision.mjs';
+import {QRS_T_REVISION,assertReviewedQrsTFile,assertQrsTRefinement,preQrsTNumericsPlugin} from './lib/qrs-t-revision.mjs';
 import {predictWpwSupport} from './lib/wpw-support-prediction.mjs';
 import {predictAfClock,assertFrozenAfSampler} from './lib/af-clock-prediction.mjs';
 import {assertReviewedAlternatingConfidence,assertReviewedImpulseConfidence} from './lib/sample-entry-contract.mjs';
@@ -53,12 +53,7 @@ try {
  // numerical sources. The actual revised analyzer is evaluated separately below.
  const legacyOut=path.join(temp,'pre-qrs-t-measure.mjs');
  await build({stdin:{contents:"export {measure} from './src/engine/measure';",resolveDir:root},bundle:true,platform:'node',format:'esm',outfile:legacyOut,
-  plugins:[{name:'exact-pre-qrs-t-numerics',setup(builder){builder.onLoad({filter:/\/(measure|ventricular-candidates)\.ts$/},args=>{
-   const file=path.relative(root,args.path),entry=QRS_T_REVISION.files[file];assert.ok(entry);
-   const bytes=execFileSync('git',['show',QRS_T_REVISION.baselineCommit+':'+file]);
-   assert.equal(createHash('sha256').update(bytes).digest('hex'),entry.before);
-   return {contents:bytes.toString(),loader:'ts'};
-  });}}]});
+  plugins:[preQrsTNumericsPlugin(root)]});
  const {measure:preQrsTMeasure}=await import(pathToFileURL(legacyOut).href);
  const assertNumericalRevision=(samples,current)=>{
   const prior=preQrsTMeasure(samples);

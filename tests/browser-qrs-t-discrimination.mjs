@@ -32,7 +32,8 @@ for(const engine of [chromium,webkit,firefox]){
     await page.waitForFunction(id=>window.__qrsObserved?.id!==id&&!!window.__qrsObserved?.measurement,prior);await ready();
     const measured=await page.evaluate(()=>{const m=window.__qrsObserved.measurement;return {hr:m.hr,status:m.evidence.hr.status,peaks:m.detectedPeaks};});
     assert.ok(Math.abs(measured.hr-hr)<1);assert.equal(measured.status,'usable');
-    await page.waitForFunction(hr=>document.querySelector('#metrics .main-metric strong')?.textContent?.trim()===String(hr),hr);
+    await page.waitForFunction(hr=>document.querySelector('#metrics .main-metric strong')?.firstChild?.textContent?.trim()===String(hr),hr);
+    assert.equal(await page.locator('#metrics .main-metric strong small').innerText(),'lpm');
     await page.locator('#ecg').screenshot({path:resolve(out,tag+`-${hr}-trace.png`)});
     await page.locator('#metrics .main-metric').click();
     await page.screenshot({path:resolve(out,tag+`-${hr}-measurements.png`)});

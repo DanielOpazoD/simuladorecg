@@ -1,6 +1,6 @@
 import {it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
-import {QRS_T_REVISION,assertReviewedQrsTFile,assertQrsTRefinement} from '../scripts/lib/qrs-t-revision.mjs';
+import {QRS_T_REVISION,assertReviewedQrsTFile,assertQrsTRefinement,summarizeRateRevision} from '../scripts/lib/qrs-t-revision.mjs';
 it('pins the numerical change separately without replacing historical manifests',()=>{
  for(const file of Object.keys(QRS_T_REVISION.files)){
   expect(()=>assertReviewedQrsTFile(file,readFileSync(file))).not.toThrow();
@@ -16,3 +16,11 @@ it('rejects fabricated candidates',()=>expect(()=>assertQrsTRefinement(before,{.
 it('rejects changed boundaries',()=>expect(()=>assertQrsTRefinement(before,{...after,beats:[{...after.beats[0],offset:1.09}]})).toThrow());
 it('rejects guessed rate halving',()=>expect(()=>assertQrsTRefinement(before,{...after,hr:60})).toThrow());
 it('rejects RR retained from a removed T candidate',()=>expect(()=>assertQrsTRefinement(before,{...after,beats:[beat]})).toThrow());
+
+it('does not charge corrected rates with the old numerical error',()=>{
+ const rows=[{before:'usable',after:'usable',beforeBeyondReview:true,beyondReview:false,hr:60},
+  {before:'review',after:'usable',beforeBeyondReview:false,beyondReview:true,hr:120},
+  {before:'usable',after:'review',beforeBeyondReview:false,beyondReview:false,hr:60}];
+ expect(summarizeRateRevision(rows)).toMatchObject({scenarios:3,usableBeyondBefore:1,usableBeyondAfter:1,accurateNewReviews:1,beforeUsable:2,afterUsable:2});
+ expect(summarizeRateRevision(rows.slice(0,1))).toMatchObject({usableBeyondBefore:1,usableBeyondAfter:0});
+});

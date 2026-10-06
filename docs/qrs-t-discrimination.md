@@ -70,7 +70,11 @@ Current exposed development evidence:
   bytes, frozen baseline or source-model output was relaxed or changed.
 - Transfer and noise cases have now been inspected and are development evidence,
   not a fresh holdout. The reserved T-end holdout remains untouched.
-- Annotated LUDB calibration comparison and production-browser checks are pending.
+- The already exposed 40-record LUDB calibration cohort has identical P/QRS/T
+  detection, boundary errors, interval coverage and statuses before/after. This is
+  non-regression on those records, not evidence of improved patient discrimination.
+  Reader cross-check: 2,400,000 physical samples and 36,504 annotation events agree
+  with WFDB 4.3.1. Production-browser checks remain pending.
 
 ## Numerical identity and historical checks
 
@@ -81,3 +85,14 @@ check requires every refined candidate to belong to the original sample list,
 retained morphology boundaries to stay exact, and HR/RR to follow retained times.
 The paired native matrix and annotated records evaluate accuracy beyond this
 structural contract. A source hash is never treated as physiological validation.
+
+The historical HR-quality workflow initially stopped at its correct numerical
+freeze, before evaluating the revised detector. Its quality-only assertions now
+still execute against the exact pre-revision files; a separately reported actual
+candidate comparison uses each version's own numerical HR error and forbids new
+falsely usable estimates. The old protocol and thresholds remain unchanged.
+On the original source-model cohorts: development 920 cases, false usable
+135→58; fixed temporal replication 920 cases, 159→88. Each cohort has zero new
+falsely usable rates. Respectively 19 previously accurate usable rates receive a
+review warning; this coverage tradeoff is explicitly reported. These are the
+same noise recordings at fixed temporal windows, not independent patients.

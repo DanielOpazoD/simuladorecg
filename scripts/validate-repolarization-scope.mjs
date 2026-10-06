@@ -1,3 +1,4 @@
+import {QRS_T_REVISION,assertReviewedQrsTFile} from './lib/qrs-t-revision.mjs';
 import {predictWpwSupport} from './lib/wpw-support-prediction.mjs';
 import {assertNoncaptureTeachingScope} from './lib/noncapture-teaching-contract.mjs';
 import {predictAfClock,assertFrozenAfSampler} from './lib/af-clock-prediction.mjs';
@@ -42,6 +43,7 @@ try {
   reviewedSourceContracts.push('src/engine/analysis/impulse-confidence.ts');
   assertReviewedAlternatingConfidence(await readFile('src/engine/analysis/alternating-confidence.ts'));
   reviewedSourceContracts.push('src/engine/analysis/alternating-confidence.ts');
+  for(const file of Object.keys(QRS_T_REVISION.files)){assertReviewedQrsTFile(file,await readFile(file));reviewedSourceContracts.push(file);}
   // Reviewed calendar integrity: all valid historical samples still compared below.
   for(const file of ['src/engine/rhythm.ts','src/engine/event-calendar.ts','src/engine/flutter-conduction.ts','src/engine/vvi-demand.ts']) {
     assertReviewedEventCalendar(file,await readFile(file));

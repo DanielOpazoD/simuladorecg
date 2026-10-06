@@ -1,3 +1,4 @@
+import {QRS_T_REVISION,assertReviewedQrsTFile,assertQrsTRefinement,preQrsTNumericsPlugin} from './lib/qrs-t-revision.mjs';
 import {assertReviewedSampleEntry,assertReviewedAlternatingConfidence,assertReviewedImpulseConfidence,assertReviewedSampleDependencies} from './lib/sample-entry-contract.mjs';
 /** Paired evidence-only revision: fixed, already observed LUDB cohorts; no holdout. */
 import assert from 'node:assert/strict';
@@ -25,6 +26,7 @@ for(const file of analyzedFiles){
  const a=readFileSync(resolve(base,file)),b=readFileSync(file);
  assert.equal(hash(a),p.analyzerFiles[file],file+' baseline changed');
  if(file==='src/engine/measure.ts')assertReviewedMeasure(a,b);
+ else if(QRS_T_REVISION.files[file]){assert.equal(hash(a),QRS_T_REVISION.files[file].before);assertReviewedQrsTFile(file,b);}
  else if(file==='src/engine/sample-analysis.ts')assertReviewedSampleEntry(b,a);
  else assert.deepEqual(b,a,file+' changed');
 }
@@ -37,10 +39,14 @@ assertReviewedAlternatingConfidence(readFileSync('src/engine/analysis/alternatin
 const analyzers=[];
 for(const [i,root] of [base,candidate].entries()){
  const bundle=resolve(out,'analyzer-'+i+'.mjs');
- const r=await build({absWorkingDir:root,entryPoints:[p.analysisEntry],bundle:true,platform:'node',format:'esm',metafile:true,outfile:bundle});
+ const r=await build({absWorkingDir:root,entryPoints:[p.analysisEntry],bundle:true,platform:'node',format:'esm',metafile:true,outfile:bundle,plugins:i===1?[preQrsTNumericsPlugin(candidate)]:[]});
  assertReviewedSampleDependencies(Object.keys(r.metafile.inputs),analyzedFiles,i===1);
  analyzers.push((await import(pathToFileURL(bundle))).analyzeSamples);
 }
+const actualBundle=resolve(out,'actual-revised-analyzer.mjs');
+await build({entryPoints:[p.analysisEntry],bundle:true,platform:'node',format:'esm',outfile:actualBundle});
+const actualAnalyzer=(await import(pathToFileURL(actualBundle))).analyzeSamples;
+const revisedCohorts={};
 const sampleHash=s=>hash(Buffer.concat(Object.keys(s.leads).sort().map(k=>Buffer.from(s.leads[k].buffer,s.leads[k].byteOffset,s.leads[k].byteLength))));
 const cohorts={};
 for(const [name,fixture,ids,split,protocolHash] of [
@@ -52,7 +58,7 @@ for(const [name,fixture,ids,split,protocolHash] of [
  assert.ok(manifest.records.every(r=>r.split===split));
  assert.ok(ids.every(id=>!reserved.holdout.records.includes(id)));
  if(name==='calibration40')assert.equal(manifest.reservedHoldoutDownloaded,false);
- let added=0;const arms=[[],[]];
+ let added=0;const arms=[[],[]],revised=[];
  for(const id of ids){
   const {signal,metadata}=loadLudb(fixture,split,id),samples=sampleHash(signal);
   const references=Object.fromEntries(['P','QRS','T'].map(w=>[w,fourLeadWaveReference(metadata,w)]));
@@ -63,8 +69,17 @@ for(const [name,fixture,ids,split,protocolHash] of [
    arms[i].push({id,physicalSamplesSha256:samples,measurement:m,...assessRecord(signal,references,()=>m,p)});
   }
   added+=assertPeakOnlyChange(measurements[0],measurements[1]);
+  const actual=actualAnalyzer({fs:signal.fs,leads:signal.leads});
+  assertQrsTRefinement(measurements[1],actual);
+  const evaluated=assessRecord(signal,references,()=>actual,p);
+  revised.push({id,physicalSamplesSha256:samples,measurement:actual,...evaluated});
  }
  const summaries=arms.map(poolRecords);
+ const revisedSummary=poolRecords(revised);
+ assert.ok(revisedSummary.waves.QRS.fn<=summaries[1].waves.QRS.fn,'New missed annotated QRS');
+ assert.ok(revisedSummary.waves.QRS.fp<=summaries[1].waves.QRS.fp,'New false annotated QRS');
+ revisedCohorts[name]={before:summaries[1],after:revisedSummary};
+ writeFileSync(resolve(out,name+'-numerical-revision.json'),JSON.stringify({records:revised,summary:revisedSummary},null,2)+'\n');
  // Paired peak assignment may affect wave denominators; numeric outputs themselves must remain exact.
  assert.deepEqual(summaries[0].intervals,summaries[1].intervals,'Interval results changed');
  for(const w of ['P','QRS'])assert.deepEqual(summaries[0].waves[w],summaries[1].waves[w]);
@@ -79,12 +94,14 @@ const {synthesize,fromPreset,PRESETS}=await import(pathToFileURL(presetBundle));
 let scenarios=0,presetAdded=0;
 for(const preset of PRESETS.filter(p=>p.strategy!=='pending'))for(const filter of ['off','diagnostic','monitor','aggressive']){
  const c=fromPreset(preset);c.filter=filter;const signal=synthesize(c,10),before=sampleHash(signal);
- presetAdded+=assertPeakOnlyChange(...analyzers.map(f=>f({fs:signal.fs,leads:signal.leads})));
+ const historical=analyzers.map(f=>f({fs:signal.fs,leads:signal.leads}));
+ presetAdded+=assertPeakOnlyChange(...historical);
+ assertQrsTRefinement(historical[1],actualAnalyzer({fs:signal.fs,leads:signal.leads}));
  assert.equal(sampleHash(signal),before);scenarios++;
 }
 const report={schemaVersion:1,baselineCommit:T_PEAK_REVISION.baselineCommit,candidateCommit:git(candidate,'rev-parse','HEAD'),
- amendment:T_PEAK_REVISION,analyzerFiles:Object.fromEntries(analyzedFiles.map(f=>[f,hash(readFileSync(f))])),
+ historicalEvidenceOnlyAmendment:T_PEAK_REVISION,numericalRevision:QRS_T_REVISION,revisedCohorts,analyzerFiles:Object.fromEntries(analyzedFiles.map(f=>[f,hash(readFileSync(f))])),
  evaluationFiles:Object.fromEntries(evaluationFiles.map(f=>[f,hash(readFileSync(f))])),cohorts,
  presets:{count:PRESETS.filter(p=>p.strategy!=='pending').length,scenarios,addedTPeakCandidates:presetAdded,sameNumericMeasurementsAndQuality:true},
- holdoutEvaluated:false,clinicalValidation:false,scope:'Evidence-only; additional peaks are candidates, not accepted T endpoints or QT. False positives and tail errors remain visible. Both cohorts are already observed development/regression data.'};
+ holdoutEvaluated:false,clinicalValidation:false,scope:'Historical evidence-only assertions use exact pre-QRS/T primitives; revisedCohorts describe the actual current analyzer. Additional peaks are candidates, not accepted T endpoints or QT. False positives and tail errors remain visible. Both cohorts are already observed development/regression data.'};
 writeFileSync(resolve(out,'comparison.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));

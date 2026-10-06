@@ -1,3 +1,4 @@
+import {QRS_T_REVISION,assertReviewedQrsTFile} from './lib/qrs-t-revision.mjs';
 import {assertReviewedSampleEntry} from './lib/sample-entry-contract.mjs';
 /** Known-cohort evaluation of a review aid. Never substitutes for the automatic analyzer. */
 import assert from 'node:assert/strict';
@@ -21,6 +22,7 @@ const analyzerFiles=Object.keys(baseline.analyzerFiles).sort();
 for(const f of analyzerFiles) {
  const current=readFileSync(f), previous=execFileSync('git',['show',protocol.baselineCommit+':'+f]);
  if(f==='src/engine/sample-analysis.ts')assertReviewedSampleEntry(current,previous);
+ else if(QRS_T_REVISION.files[f]){assert.equal(hash(previous),QRS_T_REVISION.files[f].before);assertReviewedQrsTFile(f,current);}
  else assert.deepEqual(current,previous,'Automatic analyzer changed: '+f);
 }
 const bundle=resolve(out,'review-aid.mjs');
@@ -76,6 +78,6 @@ for(const [name,root,ids,split,protocolHash] of [
 const result={schemaVersion:1,productCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),
  baselineCommit:protocol.baselineCommit,protocolSha256:hash(protocolBytes),policy:T_END_AREA_POLICY,
  algorithmSha256:hash(readFileSync('src/engine/t-end-area.ts')),cohorts:all,
- automaticQtChanged:false,holdoutEvaluated:false,clinicalValidation:false,
+ numericalRevision:QRS_T_REVISION,automaticQtChangedByReviewAid:false,holdoutEvaluated:false,clinicalValidation:false,
  limitations:protocol.limitations};
 writeFileSync(resolve(out,'summary.json'),JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result));
