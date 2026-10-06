@@ -1,6 +1,6 @@
 /** Fixed stress protocol; evaluation sees references, analyzer receives fs/leads only. */
 import {build} from 'esbuild';
-import {readFile,writeFile,mkdtemp,rm} from 'node:fs/promises';
+import {readFile,writeFile,mkdtemp,mkdir,rm} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
@@ -27,6 +27,7 @@ const provenance=JSON.parse(await readFile(path.join(noiseDir,'noise-provenance.
 assert.equal(provenance.protocolSha256,hash(protocolBytes),'Prepared data belongs to a different protocol');
 const expected=p.records.flatMap(r=>p.segmentStartsSeconds.map(t=>`${r}:${t}`));
 assert.deepEqual(source.segments.map(s=>`${s.record}:${s.startSeconds}`),expected,'No omissions/replacement of snippets');
+await mkdir(output,{recursive:true});
 const temp=await mkdtemp(path.join(tmpdir(),'noise-stress-'));
 const write=(name,obj)=>writeFile(path.join(output,name),JSON.stringify(obj,null,2)+'\n');
 try{

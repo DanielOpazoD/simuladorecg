@@ -1,10 +1,10 @@
 name: Calibrated ECG noise stress
 on:
   pull_request:
-    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/noise-stress/**', 'scripts/*noise*', 'scripts/lib/noise*', 'tests/*noise*', 'tests/support/morphology-metrics.ts', 'package*.json', '.github/workflows/noise-stress.yml']
+    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/noise-stress/**', 'scripts/*noise*', 'scripts/lib/noise*', 'tests/*noise*', 'tests/support/morphology-metrics.ts', 'package*.json', 'scripts/nstdb-source-cache.py', 'tests/test_nstdb_source_cache.py', 'tests/nstdb-cache-workflow.test.mjs', '.github/workflows/noise-stress.yml']
   push:
     branches: ['main']
-    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/noise-stress/**', 'scripts/*noise*', 'scripts/lib/noise*', 'tests/*noise*', 'tests/support/morphology-metrics.ts', 'package*.json', '.github/workflows/noise-stress.yml']
+    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/noise-stress/**', 'scripts/*noise*', 'scripts/lib/noise*', 'tests/*noise*', 'tests/support/morphology-metrics.ts', 'package*.json', 'scripts/nstdb-source-cache.py', 'tests/test_nstdb_source_cache.py', 'tests/nstdb-cache-workflow.test.mjs', '.github/workflows/noise-stress.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -34,8 +34,26 @@ jobs:
           (cd "$RUNNER_TEMP/noise-acquisition" && python -m unittest discover -s tests -p test_noise_stress.py -v)
           npx vitest run tests/noise-stress.test.ts
           node --test tests/noise-regression.node.mjs
+      - name: Test source-cache integrity
+        run: python -m unittest discover -s tests -p test_nstdb_source_cache.py -v
+      - uses: actions/cache/restore@v6.1.0
+        id: nstdb-cache
+        continue-on-error: true
+        with:
+          path: ${{ runner.temp }}/nstdb-source
+          key: nstdb-1.0.0-raw-b76bd98c5111439fcfff2f410afd70d64e79f072049c45b5a9916a3044fdb84f-v1
+      - name: Authenticate cache before staging raw input
+        run: python scripts/nstdb-source-cache.py restore --cache "$RUNNER_TEMP/nstdb-source" --raw "$RUNNER_TEMP/noise-stress/raw"
       - name: Acquire exposed NSTDB windows with the frozen reader
         run: python "$RUNNER_TEMP/noise-acquisition/scripts/prepare-noise-stress.py" --output "$RUNNER_TEMP/noise-stress"
+      - name: Authenticate acquired bytes before reuse
+        run: python scripts/nstdb-source-cache.py save --cache "$RUNNER_TEMP/nstdb-source" --raw "$RUNNER_TEMP/noise-stress/raw"
+      - uses: actions/cache/save@v6.1.0
+        if: steps.nstdb-cache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        with:
+          path: ${{ runner.temp }}/nstdb-source
+          key: nstdb-1.0.0-raw-b76bd98c5111439fcfff2f410afd70d64e79f072049c45b5a9916a3044fdb84f-v1
       - name: Paired current-worker evaluation, same evaluator and noise bytes
         run: |
           mkdir -p "$RUNNER_TEMP/noise-stress/before" "$RUNNER_TEMP/noise-stress/after"
