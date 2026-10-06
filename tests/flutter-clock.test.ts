@@ -1,3 +1,4 @@
+import {assertExactSamples} from './support/exact-samples';
 import { describe, it, expect } from 'vitest';
 import { DEFAULT_CASE, cloneCase } from '../src/engine/types';
 import { generateEvents } from '../src/engine/rhythm';
@@ -17,7 +18,7 @@ describe('Flutter uses its atrial/conduction clock for the entire QT history', (
   it('inactive base-rate control cannot change any acquired lead or event', () => {
     const a=synthesize(flutter(40),10), b=synthesize(flutter(200),10);
     expect(b.events).toEqual(a.events);
-    expect(b.leads).toEqual(a.leads);
+    for(const lead of Object.keys(a.leads) as (keyof typeof a.leads)[])assertExactSamples(b.leads[lead],a.leads[lead],lead);
   });
   it('the active atrial rate changes ventricular timing', () => {
     const a=flutter(72), b={...a,atrialRate:240};
