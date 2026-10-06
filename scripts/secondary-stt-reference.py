@@ -31,6 +31,12 @@ def stats(values):
     return {'total': len(values), 'n': len(a), 'missing': len(values)-len(a),
             'q25': q(.25), 'median': q(.5), 'q75': q(.75)}
 
+def integer(value):
+    n = float(value)
+    if isinstance(value, bool) or not math.isfinite(n) or n != int(n) or n < 1:
+        raise ValueError('Invalid positive integer identity')
+    return int(n)
+
 def selected_metadata(selection, metadata_bytes):
     if digest(metadata_bytes) != selection['metadataSha256']:
         raise ValueError('Metadata identity differs from the frozen selection')
@@ -38,7 +44,9 @@ def selected_metadata(selection, metadata_bytes):
     by_id = {}
     reserved_patients = set()
     for row in all_rows:
-        eid, patient, fold = int(row['ecg_id']), int(float(row['patient_id'])), int(row['strat_fold'])
+        eid, patient, fold = integer(row['ecg_id']), integer(row['patient_id']), integer(row['strat_fold'])
+        if fold > 10:
+            raise ValueError('Invalid fold')
         if eid in by_id:
             raise ValueError('Duplicate metadata ECG')
         by_id[eid] = (patient, fold, row)

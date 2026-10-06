@@ -45,7 +45,7 @@ not treated as an ST effect.
 
 ## Reproduction
 
-The PTB-XL morphology workflow runs eight adversarial/CLI tests, then builds
+The PTB-XL morphology workflow runs nine adversarial/CLI tests, then builds
 `secondary-stt-reference.json` from the exact acquired sources and the current
 synthetic morphology report. The report records every input hash and its own
 script hash. CI preserves it with the existing licensed reference artifact.

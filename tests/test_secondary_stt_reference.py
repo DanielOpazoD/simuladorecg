@@ -49,6 +49,10 @@ class ReferenceTests(unittest.TestCase):
                 a[1] += b'3,10,9,"{\'NORM\':100}"\n'
                 a[0]['metadataSha256'] = m.digest(a[1])
             with self.assertRaises(ValueError): m.report(*a)
+    def test_fractional_and_nonfinite_identifiers_are_not_truncated(self):
+        for value in ['1.5', 'NaN', 'Infinity', '0', '-1', True]:
+            with self.assertRaises(ValueError): m.integer(value)
+        self.assertEqual(m.integer('10.0'), 10)
     def test_features_cannot_select_a_different_cohort(self):
         a = list(fixture()); a[2]['groups'].pop('2')
         with self.assertRaises(ValueError): m.report(*a)
