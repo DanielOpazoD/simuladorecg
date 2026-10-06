@@ -23,3 +23,10 @@ Pruebas de corrupción en las doce derivaciones, canal ausente, longitud distint
 registro vacío y frecuencias inválidas; pruebas de no mutación a 100/250/500/1000 Hz.
 La batería preexistente compara resultados numéricos en todos los presets activos.
 Una entrada finita no demuestra exactitud del detector ni valida una patología.
+
+## Compatibilidad con la comparación congelada
+La CI inicial rechazó el nuevo archivo de entrada porque la comparación histórica
+de repolarización admite únicamente cambios revisados. Se añadió comprobación
+SHA-256 exacta de esta revisión, con mutaciones negativas de guardia, política de
+FC y tratamiento de NaN. No se admitió una excepción libre por nombre de archivo.
+Las 244 comparaciones emparejadas de muestras permanecen obligatorias y exactas.
