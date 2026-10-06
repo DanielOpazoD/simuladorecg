@@ -1,3 +1,4 @@
+import { flutterMeanRatio } from "./flutter-conduction";
 import type { Beat, ECGCase } from "./types";
 import { qrsDuration } from "./morphology";
 
@@ -13,7 +14,7 @@ export function adaptRR(previous: number, rr: number, elapsed: number): number {
   );
 }
 export function nominalVentricularRR(c: ECGCase): number {
-  if (c.rhythm === "flutter") return (60 / c.atrialRate) * c.flutterRatio;
+  if (c.rhythm === "flutter") return (60 / c.atrialRate) * flutterMeanRatio(c);
   const ratio =
     c.rhythm === "sinus"
       ? ({ mobitz1: 4 / 3, mobitz2: 4 / 3, two_one: 2, high: 3 }[

@@ -74,6 +74,24 @@ for(const engine of [chromium,webkit,firefox]) {
           assert.equal(await page.locator('#catalog').evaluate(e=>e.inert),true);
         }
         await page.locator('#case-title').scrollIntoViewIfNeeded();await page.screenshot({path:resolve(out,stem+'-main.png')});
+        // The new sequence is a native selector; preserve focus through rerender.
+        await key('[data-panel=conduction]');
+        await page.locator('[data-key="rhythm"]').selectOption('flutter');await ready();
+        await key('[data-panel=conduction]');
+        const flutterPattern=page.locator('[data-key="flutterPattern"]');
+        await flutterPattern.focus();await flutterPattern.selectOption('2-3');await ready();
+        await active('[data-key="flutterPattern"]');
+        assert.equal(await page.locator('[data-key="flutterRatio"]').isDisabled(),true);
+        assert.equal(await flutterPattern.inputValue(),'2-3');
+        await fits('#control-panel-conduction');
+        await page.locator('#case-title').scrollIntoViewIfNeeded();
+        await page.screenshot({path:resolve(out,stem+'-flutter-variable.png')});
+        await flutterPattern.selectOption('fixed');await ready();
+        assert.equal(await page.locator('[data-key="flutterRatio"]').isDisabled(),false);
+        await key('[data-panel=base]');
+        if(width===390) await key('[data-action=catalog]');
+        await key('[data-preset=sinus]');await ready();
+
         await key('.topbar [data-action=about]');await page.getByRole('dialog',{name:'Modelo, alcance y referencias'}).waitFor();
         await page.keyboard.press('Escape');await page.locator('#dialog').waitFor({state:'hidden'});await active('.topbar [data-action=about]');
         page.on('request',r=>requests.push({method:r.method(),url:r.url()}));

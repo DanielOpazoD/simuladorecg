@@ -78,6 +78,8 @@ export interface ECGCase {
   ectopy: "none" | "pac" | "pvc" | "bigeminy" | "trigeminy" | "couplet";
   coupling: number;
   flutterRatio: number;
+  /** Missing schema-v1 field keeps the historical fixed ratio. */
+  flutterPattern?: "fixed" | "2-3" | "3-4";
   escape: "junctional" | "ventricular";
   pacing: "AAI" | "VVI" | "DDD";
   st: number;
@@ -238,6 +240,7 @@ export const DEFAULT_CASE: ECGCase = {
   ectopy: "none",
   coupling: 0.58,
   flutterRatio: 2,
+  flutterPattern: "fixed",
   escape: "junctional",
   pacing: "DDD",
   st: 2,
@@ -289,6 +292,7 @@ export function normalizeCase(input: unknown): ECGCase {
     ],
     ventricularSource: ["auto", ...VENTRICULAR_SOURCE_IDS],
     activationModel: ["template", "regional-rbbb-v1"],
+    flutterPattern: ["fixed", "2-3", "3-4"],
     av: [
       "normal",
       "first",
