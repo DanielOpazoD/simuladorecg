@@ -11,6 +11,7 @@ import { exportDialogHtml } from "./ui/export-dialog";
 import { handleExportAction } from "./ui/export-actions";
 import { diagnosisForPreset } from "./ui/diagnosis-navigation";
 import { catalogView, VariantNavigation } from "./ui/catalog-view";
+import { WorkspaceNavigation } from "./ui/workspace-navigation";
 import { createExplorationOrigin, explorationChanges, restoreExplorationOrigin, sameExplorationModel, type ExplorationOrigin } from "./ui/exploration-origin";
 import type { SyntheticComparisonTrace } from "./ui/comparison-model";
 import { ComparisonLab } from "./ui/comparison-lab";
@@ -135,6 +136,16 @@ const activation = new ActivationLab(
     return true;
   }, toast,
 );
+
+const workspaceNavigation = new WorkspaceNavigation($("#catalog"), $<HTMLElement>("#inspector"), {
+  activation: () => activation.open(),
+  compare: () => comparison.focus(),
+  external: () => external.open(),
+  about: showAbout,
+  measurements: showMeasurements,
+  export: exportDialog,
+  "close-dialog": closeDialog,
+});
 
 if (!location.hash) { const p=presetById(c.presetId); if(p) explorationOrigin=createExplorationOrigin(p,c); }
 function currentPreset() {
@@ -690,13 +701,7 @@ document.addEventListener("click", async (e) => {
   if(action==="exploration-changes") showExplorationChanges();
   if(action==="restore-origin"&&explorationOrigin){c=restoreExplorationOrigin(explorationOrigin,c);caliper=null;session.resetTools();annotations=false;renderCatalog();renderControls();renderInfo();generate();toast("Origen restaurado; se conserva la vista actual.")}
   if(action==="compare-origin"&&explorationOriginTrace&&session.signal&&session.measurement&&session.canExport){comparison.compareSynthetic(explorationOriginTrace,captureTrace(c,session.signal,session.measurement));comparison.focus();}
-  if (action === "parameters") {
-    if (quiz && !quiz.answer) return;
-    $("#inspector").scrollIntoView({block:"start"}); $("#inspector").focus({preventScroll:true});
-  }
-  if (action === "activation" && (!quiz || quiz.answer)) activation.open();
-  if (action === "compare" && (!quiz || quiz.answer)) comparison.focus();
-  if (action === "external" && (!quiz || quiz.answer)) external.open();
+  if (workspaceNavigation.handle(action, !!quiz && !quiz.answer)) return;
   if (action === "focus") {
     annotations = true;
     draw();
@@ -751,12 +756,6 @@ document.addEventListener("click", async (e) => {
     renderDetail();
   }
   if(action==="reset"){if(explorationOrigin&&explorationChanges(explorationOrigin,c).length){c=restoreExplorationOrigin(explorationOrigin,c);caliper=null;session.resetTools();annotations=false;renderCatalog();renderControls();renderInfo();generate();toast("Origen restaurado; se conserva la vista actual.")}else{selectPreset(c.presetId==="custom"?"sinus":c.presetId);toast("Parámetros restablecidos")}}
-  if (action === "catalog") $("#catalog").classList.toggle("open");
-  if (action === "close-catalog") $("#catalog").classList.remove("open");
-  if (action === "about") showAbout();
-  if (action === "measurements") showMeasurements();
-  if (action === "export") exportDialog();
-  if (action === "close-dialog") closeDialog();
   if (action === "quiz") startQuiz();
   if (action === "end-quiz") {
     quiz = null;
