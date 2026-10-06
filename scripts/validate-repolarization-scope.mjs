@@ -1,3 +1,4 @@
+import {assertNoncaptureTeachingScope} from './lib/noncapture-teaching-contract.mjs';
 import {predictAfClock,assertFrozenAfSampler} from './lib/af-clock-prediction.mjs';
 import {predictTorsadesFrame} from './lib/torsades-frame-prediction.mjs';
 import {assertReviewedAcquisitionScope} from './lib/acquisition-scope-contract.mjs';
@@ -26,6 +27,9 @@ try {
   execFileSync('tar',['-xf','-','-C',base],{input:execFileSync('git',['archive',BASE],{maxBuffer:100*1024*1024})});
   const changedFiles=execFileSync('git',['diff','--name-only',BASE,'HEAD','--','src/engine','src/presets'],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
   const reviewedSourceContracts=['src/engine/ventricular-trajectory.ts','src/engine/af-rr.ts'];
+  const teachingFile='src/presets/teaching-limits.ts';
+  assertNoncaptureTeachingScope(await readFile(teachingFile,'utf8'),await readFile(path.join(base,teachingFile),'utf8'));
+  reviewedSourceContracts.push(teachingFile);
   // A separate numerical revision, checked against an independent frozen-source
   // prediction below. This is not an exemption from sample comparison.
   const qtHistoryRevision = 'src/engine/repolarization.ts';

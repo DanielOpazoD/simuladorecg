@@ -1,9 +1,11 @@
 import type { EventSeries, ECGCase } from './types';
 export function isVviDemand(c: Pick<ECGCase,'rhythm'|'pacing'|'pacingBehavior'>): boolean {
-  return c.rhythm==='paced' && c.pacing==='VVI' && c.pacingBehavior==='demand';
+  return c.rhythm==='paced' && c.pacing==='VVI' && (c.pacingBehavior==='demand'||c.pacingBehavior==='demand-no-capture');
 }
 export function vviSettings(c: ECGCase): VviDemandSettings {
-  return {lowerRate:c.hr,intrinsicRate:c.intrinsicRate??0,capture:true};
+  const intrinsicRate=c.intrinsicRate??0,capture=c.pacingBehavior!=='demand-no-capture';
+  if(!capture&&intrinsicRate!==0)throw new Error('Pérdida de captura con escape intrínseco fuera de alcance; no se elimina el escape solicitado.');
+  return {lowerRate:c.hr,intrinsicRate,capture};
 }
 export interface VviDemandSettings { lowerRate: number; intrinsicRate: number; capture: boolean; }
 export function vviReferenceRate(s: VviDemandSettings): number {
@@ -36,4 +38,13 @@ export function vviDemandEvents(s: VviDemandSettings, duration: number): EventSe
     }
   }
   return events;
+}
+
+export function isVviNoncapture(c: Pick<ECGCase,'rhythm'|'pacing'|'pacingBehavior'>): boolean {
+  return isVviDemand(c) && c.pacingBehavior === 'demand-no-capture';
+}
+export function vviScopeDescription(c: ECGCase): string {
+  return isVviNoncapture(c)
+    ? 'VVI experimental sin captura total y sin escape: persisten los estímulos, sin activación ventricular. Requiere actividad intrínseca 0. No representa fallo intermitente, umbrales del dispositivo, fusión ni captura mecánica.'
+    : 'VVI a demanda idealizado: sensado perfecto, captura garantizada y escape ventricular reiniciable; sin fallos de captura, blanking, histéresis, fusión ni calibración de dispositivo.';
 }

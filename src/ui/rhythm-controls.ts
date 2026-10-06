@@ -1,4 +1,4 @@
-import { isVviDemand } from "../engine/vvi-demand";
+import { isVviDemand, isVviNoncapture } from "../engine/vvi-demand";
 import type { ECGCase } from '../engine/types';
 
 /** Control applicability follows the implemented event scheduler, not a claim
@@ -7,7 +7,7 @@ import type { ECGCase } from '../engine/types';
 export function rhythmControlState(c: ECGCase) {
   const sinus = c.rhythm === 'sinus';
   const atrialIndependent = c.rhythm === 'flutter' || c.rhythm === 'vt' || (sinus && c.av === 'complete');
-  const noOrganizedBeats = c.rhythm === 'vf' || c.rhythm === 'asystole';
+  const noOrganizedBeats = c.rhythm === 'vf' || c.rhythm === 'asystole' || isVviNoncapture(c);
   const pPresent = sinus || c.rhythm === 'junctional' || c.rhythm === 'vt'
     || (c.rhythm === 'paced' && c.pacing !== 'VVI');
   const sourceDriven = ['vt', 'torsades', 'idioventricular'].includes(c.rhythm)
@@ -20,8 +20,8 @@ export function rhythmControlState(c: ECGCase) {
     noOrganizedBeats,
     pAmplitudeDisabled: !pPresent,
     pAxisDisabled: !pPresent || c.rhythm === 'junctional',
-    baseRateDisabled: c.rhythm === 'flutter' || noOrganizedBeats,
-    baseRateLabel: sinus && c.av === 'complete' ? 'Frecuencia de escape'
+    baseRateDisabled: c.rhythm === 'flutter' || (noOrganizedBeats && !isVviNoncapture(c)),
+    baseRateLabel: isVviNoncapture(c) ? 'Frecuencia de estímulos VVI' : sinus && c.av === 'complete' ? 'Frecuencia de escape'
       : sinus && !['normal','first'].includes(c.av) ? 'Frecuencia auricular'
       : isVviDemand(c) ? 'Frecuencia mínima VVI' : c.rhythm === 'paced' ? 'Frecuencia de estimulación' : 'Frecuencia base',
     atrialRateDisabled: !atrialIndependent,

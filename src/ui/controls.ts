@@ -1,4 +1,4 @@
-import { isVviDemand } from "../engine/vvi-demand";
+import { isVviDemand, isVviNoncapture, vviScopeDescription } from "../engine/vvi-demand";
 import { rhythmControlState } from './rhythm-controls';
 import { regionalActivationState } from "../engine/regional-activation";
 import { regionalActivationControls } from "./regional-activation";
@@ -7,7 +7,7 @@ import { lesionControlEffect } from "../engine/morphology";
 import { range, select, toggle } from "./helpers";
 /** Applicability of the existing amplitude controls, separate from clinical severity. */
 export function amplitudeControlState(c: ECGCase) {
-  const organized = c.rhythm !== "vf" && c.rhythm !== "asystole",
+  const organized = c.rhythm !== "vf" && c.rhythm !== "asystole" && !isVviNoncapture(c),
     effect = lesionControlEffect(c),
     mutedT = effect === "t" && c.tAmp === 0;
   const note = !organized
@@ -141,10 +141,10 @@ export function controls(c: ECGCase) {
    c.pacing,
    c.rhythm !== "paced",
  )}
- ${contextualSelect("pacingBehavior", "Comportamiento VVI", [["fixed","Captura fija histórica"],["demand","Demanda · sensado ideal"]], c.pacingBehavior ?? "fixed", c.rhythm !== "paced" || c.pacing !== "VVI")}
+ ${contextualSelect("pacingBehavior", "Comportamiento VVI", [["fixed","Captura fija histórica"],["demand","Demanda · sensado ideal"],["demand-no-capture","Sin captura ni escape · experimental"]], c.pacingBehavior ?? "fixed", c.rhythm !== "paced" || c.pacing !== "VVI")}
  ${contextualRange("intrinsicRate", "Actividad ventricular intrínseca", 0, 150, 1, c.intrinsicRate ?? 0, "lpm · 0 ausente", !isVviDemand(c))}
  ${contextualRange("coupling", "Acoplamiento de ectopia", 0.3, 0.85, 0.01, c.coupling, "× RR", rhythm.couplingDisabled)}
- </div>${inactiveConduction.length ? `<details class="inactive-controls" data-control-details="conduction"><summary>Controles sin efecto en este ritmo (${inactiveConduction.length})</summary><p class="control-note">Se conservan los valores para otros ritmos. Esta lista describe los límites del modelo, no combinaciones clínicamente imposibles.</p><div class="field-grid">${inactiveConduction.join("")}</div></details>` : ""}<p class="control-note">Las secuencias variables del flutter son ejemplos con retraso AV constante; no simulan Wenckebach multinivel ni respuesta a fármacos. Las combinaciones no implementadas se desactivan. FA + BAV completo es posible clínicamente, pero queda fuera del modelo actual. ${isVviDemand(c) ? "VVI a demanda: sensado ideal, captura garantizada y escape ventricular reiniciable. No representa fallos de captura, blanking, histéresis ni fusión." : "La estimulación fija representa captura periódica. El modo de demanda optativo solo está disponible en VVI."}</p><section id="regional-activation-controls" aria-label="Activación regional experimental">${regionalActivationControls(c)}</section></div>
+ </div>${inactiveConduction.length ? `<details class="inactive-controls" data-control-details="conduction"><summary>Controles sin efecto en este ritmo (${inactiveConduction.length})</summary><p class="control-note">Se conservan los valores para otros ritmos. Esta lista describe los límites del modelo, no combinaciones clínicamente imposibles.</p><div class="field-grid">${inactiveConduction.join("")}</div></details>` : ""}<p class="control-note">Las secuencias variables del flutter son ejemplos con retraso AV constante; no simulan Wenckebach multinivel ni respuesta a fármacos. Las combinaciones no implementadas se desactivan. FA + BAV completo es posible clínicamente, pero queda fuera del modelo actual. ${isVviDemand(c) ? vviScopeDescription(c) : "La estimulación fija representa captura periódica. El modo de demanda optativo solo está disponible en VVI."}</p><section id="regional-activation-controls" aria-label="Activación regional experimental">${regionalActivationControls(c)}</section></div>
  <div class="control-panel" data-control-panel="st" hidden><div class="field-grid">
  ${select(
    "ischemia",
@@ -199,7 +199,7 @@ export function controls(c: ECGCase) {
    ],
    c.overload,
  )}
- ${range("st", "Intensidad de lesión", 0, 8, 0.25, c.st, "escala del patrón", amplitude.stDisabled)}${range("transition", "Rotación precordial", -1, 1, 0.1, c.transition, "")}
+ ${range("st", "Intensidad de lesión", 0, 8, 0.25, c.st, "escala del patrón", amplitude.stDisabled)}${range("transition", "Rotación precordial", -1, 1, 0.1, c.transition, "", rhythm.noOrganizedBeats)}
  ${range("pAxis", "Eje de P", -180, 180, 5, c.pAxis, "°", rhythm.pAxisDisabled)}${range("tAxis", "Eje de T", -180, 180, 5, c.tAxis, "°", rhythm.noOrganizedBeats)}${range("pAmp", "Amplitud de P", 0, 0.5, 0.01, c.pAmp, "mV ref.", rhythm.pAmplitudeDisabled)}${range("qrsAmp", "Amplitud QRS", 0.1, 3, 0.1, c.qrsAmp, "×", rhythm.noOrganizedBeats)}${range("tAmp", "Amplitud de T", 0, 1, 0.01, c.tAmp, "mV ref.", amplitude.tDisabled)}
  ${toggle("septalQ", "Componente septal", c.septalQ)}</div><p class="control-note" id="amplitude-note">${amplitude.note}</p><p class="control-note">Amplitud de P ajusta las ondas P programadas, no las ondas de FA/flutter. En ritmo de la unión la dirección retrógrada es fija. Los controles atenuados conservan su valor.</p><p class="control-note">Amplitud de T escala toda la T, incluidas las correcciones locales; 0 la anula. No modifica QRS, el ST primario ni U. Los voltajes de referencia no son amplitudes de una derivación concreta.</p><p class="control-note" id="secondary-repolarization-note">T secundaria: la dirección sigue la activación QRS, no el control Eje de T; la sobrecarga actúa a través del QRS. El ST secundario no está representado. No interpretes su ausencia como normalidad ni uses este modelo para criterios ST/QRS. El ST de lesión primaria es un componente distinto.</p></div>
  <div class="control-panel" data-control-panel="signal" hidden><div class="field-grid">
