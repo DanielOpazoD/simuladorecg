@@ -12,7 +12,9 @@ describe("about dialog content", () => {
       "sin sustituir las medidas por valores del generador.",
       "la etiqueta del caso no demuestra una arteria ocluida.",
       "Las fases son estados paramétricos y no una cronología de un paciente.",
-      "V7–V9 y V3R–V4R; marcapasos a demanda;",
+      "V7–V9 y V3R–V4R; captura/fusión en TV;",
+      "VVI a demanda y secuencias programadas de flutter son modelos idealizados.",
+      "La pérdida total de captura VVI solo se representa sin escape intrínseco;",
     ])
       expect(html).toContain(text);
   });

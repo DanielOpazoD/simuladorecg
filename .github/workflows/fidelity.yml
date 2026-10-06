@@ -79,6 +79,8 @@ jobs:
         run: node scripts/validate-regional-activation.mjs "${{ runner.temp }}/regional-activation-results.json"
       - name: Paired representative AF clock and worker confidence
         run: node scripts/validate-af-clock.mjs "${{ runner.temp }}/af-clock-results.json"
+      - name: Total VVI noncapture sample-only uncertainty
+        run: node scripts/validate-vvi-noncapture.mjs "${{ runner.temp }}/vvi-noncapture-results.json"
       - name: Types and production build
         run: npm run build
       - name: Independent QRS/ST/T prediction against frozen source
@@ -175,6 +177,7 @@ jobs:
           node scripts/verify-production.mjs
           ECG_ACTIVATION_ENGINES=all node tests/browser-activation.mjs
           node tests/browser-accessibility.mjs
+          node tests/browser-vvi-noncapture.mjs
           ECG_GROUP_ENGINES=all node tests/browser-diagnosis-navigation.mjs
           ECG_REGIONAL_ENGINES=all node tests/browser-regional-activation.mjs
       - uses: actions/upload-artifact@v6
