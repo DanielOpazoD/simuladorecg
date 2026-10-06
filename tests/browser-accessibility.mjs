@@ -75,7 +75,7 @@ for(const engine of [chromium,webkit,firefox]) {
         }
         await page.locator('#case-title').scrollIntoViewIfNeeded();await page.screenshot({path:resolve(out,stem+'-main.png')});
         // The new sequence is a native selector; preserve focus through rerender.
-        await key('[data-panel=base]');
+        await key('[data-panel=conduction]');
         await page.locator('[data-key="rhythm"]').selectOption('flutter');await ready();
         await key('[data-panel=conduction]');
         const flutterPattern=page.locator('[data-key="flutterPattern"]');
