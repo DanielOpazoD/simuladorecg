@@ -34,3 +34,7 @@ checks the unavailable rate, downloads real JSON/PNG, and checks that exports do
 not mutate the observed samples. PNG appearance requires artifact inspection.
 
 Final UI audit caught an unrelated secondary ST/QRS warning in the no-ventricular-activation state. A new regression reproduces it before the scoped fix; the warning remains for captured VVI and is omitted only when there is no ventricular activation.
+The strict frozen-source gate initially rejected that newly changed teaching file.
+It now admits only removal of the exact added import/guard when reconstructing
+the frozen original. Other prose or condition changes still fail; all244 historical
+sample scenarios and54 coherence cases remain mandatory. No broad file exemption.
