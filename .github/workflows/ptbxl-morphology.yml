@@ -8,6 +8,10 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  # Replace stale PR work only. Every push/manual run retains its own evidence.
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   benchmark:
     runs-on: ubuntu-latest

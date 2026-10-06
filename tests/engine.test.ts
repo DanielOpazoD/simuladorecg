@@ -1,3 +1,4 @@
+import {assertExactSamples} from './support/exact-samples';
 import { describe, it, expect } from "vitest";
 import {
   DEFAULT_CASE,
@@ -131,7 +132,7 @@ describe("Determinismo y catálogo", () => {
     const a = synthesize(c, 10),
       b = synthesize(c, 10);
     expect(a.events).toEqual(b.events);
-    for (const l of LEADS) expect(a.leads[l]).toEqual(b.leads[l]);
+    for (const l of LEADS) assertExactSamples(a.leads[l],b.leads[l],l);
     c.seed++;
     expect(synthesize(c, 10).leads.II).not.toEqual(a.leads.II);
   });
@@ -139,7 +140,7 @@ describe("Determinismo y catálogo", () => {
     const c = load("af");
     const a = synthesize(c, 10),
       b = synthesize(c, 20);
-    expect(a.leads.II).toEqual(b.leads.II.slice(0, 5000));
+    assertExactSamples(a.leads.II,b.leads.II.slice(0,5000),'II prefix');
   });
   it("vista y ruido no cambian calendario de activaciones", () => {
     const c = load("pvc"),
@@ -165,7 +166,7 @@ describe("Determinismo y catálogo", () => {
         );
       const b = synthesize(fromPreset(p), 10);
       expect(b.events).toEqual(a.events);
-      for (const l of LEADS) expect(b.leads[l]).toEqual(a.leads[l]);
+      for (const l of LEADS) assertExactSamples(b.leads[l],a.leads[l],l);
       const hasCoupledSecondary = a.events.beats.some((beat) =>
         secondaryRepolarization(fromPreset(p), beat, qrsKernels(fromPreset(p), beat)).mode !== "none"
       );

@@ -9,8 +9,9 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: hr-quality-${{ github.ref }}
-  cancel-in-progress: true
+  # Replace stale PR work only. Every push/manual run retains its own evidence.
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   quality:
     runs-on: ubuntu-latest
