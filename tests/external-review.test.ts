@@ -2,7 +2,7 @@ import { describe, it } from 'vitest';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { LEADS, type Lead, type Measurement } from '../src/engine/types';
+import { LEADS, type Lead } from '../src/engine/types';
 import { analyzeSamples } from '../src/engine/sample-analysis';
 import { externalWindow, exportECGCsv, parseECGCsv, type ExternalECG } from '../src/io/external-ecg';
 import { assessExternalWindow, evaluateExternalWindow, assertExternalSamples } from '../src/io/external-assessment';

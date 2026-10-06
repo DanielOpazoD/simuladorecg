@@ -34,7 +34,6 @@ import {
   renderRhythm,
   drawCaliper,
   Monitor,
-  filterLabel,
   type Layout,
   type Caliper,
 } from "./render/ecg";

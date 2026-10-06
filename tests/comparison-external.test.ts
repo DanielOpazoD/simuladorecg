@@ -2,7 +2,7 @@ import {describe,it} from 'vitest';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {captureExternalTrace,captureTrace,comparisonExport,comparisonWindow,DEFAULT_COMPARISON_VIEW,
-  hasGeneratorBeats,leadDifferences,traceMetricDifferences,traceStart,traceName,type ComparisonTrace} from '../src/ui/comparison-model';
+  hasGeneratorBeats,leadDifferences,traceMetricDifferences,traceStart,traceName} from '../src/ui/comparison-model';
 import {LEADS,DEFAULT_CASE,type Signal} from '../src/engine/types';
 import {analyzeSamples} from '../src/engine/sample-analysis';
 import {assessExternalWindow} from '../src/io/external-assessment';
