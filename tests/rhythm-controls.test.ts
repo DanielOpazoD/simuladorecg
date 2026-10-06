@@ -27,3 +27,58 @@ describe('Control applicability follows the implemented rhythm clock',()=>{
     expect(c).toEqual(copy);
   });
 });
+
+describe('Ventricular source control applicability',()=>{
+  it.each(['af','flutter','vt','paced'] as const)('stale complete AV does not enable escape in %s',rhythm=>{
+    expect(state({rhythm,av:'complete'}).escapeDisabled).toBe(true);
+  });
+  it('keeps escape active only for complete sinus AV block',()=>{
+    expect(state({rhythm:'sinus',av:'complete'}).escapeDisabled).toBe(false);
+    expect(state({rhythm:'sinus',av:'normal'}).escapeDisabled).toBe(true);
+  });
+  it.each([
+    {rhythm:'vt'},{rhythm:'torsades'},{rhythm:'idioventricular'},
+    {rhythm:'paced',pacing:'VVI'},{rhythm:'paced',pacing:'DDD'},
+    {rhythm:'sinus',av:'complete',escape:'ventricular'},
+  ] as Partial<ECGCase>[])('source-driven complexes disable overridden QRS controls: %j',patch=>{
+    expect(state(patch)).toMatchObject({conductionDisabled:true,qrsAxisDisabled:true});
+  });
+  it.each([
+    {rhythm:'sinus',ectopy:'pvc'}, {rhythm:'sinus',av:'complete',escape:'junctional'},
+    {rhythm:'paced',pacing:'AAI'}, {rhythm:'af'}, {rhythm:'junctional'},
+  ] as Partial<ECGCase>[])('retains controls that act on conducted beats: %j',patch=>{
+    expect(state(patch)).toMatchObject({conductionDisabled:false,qrsAxisDisabled:false});
+  });
+});
+
+// A disabled UI field must actually be inert in the sampled model, not merely
+// absent from a visually plausible label. These are counterfactual controls.
+import { synthesize } from '../src/engine/signal';
+import { LEADS } from '../src/engine/types';
+describe('Control applicability agrees with sampled effects',()=>{
+  it.each([
+    {rhythm:'vt'},{rhythm:'torsades'},{rhythm:'idioventricular'},
+    {rhythm:'paced',pacing:'VVI'},{rhythm:'paced',pacing:'DDD'},
+    {rhythm:'sinus',av:'complete',escape:'ventricular'},
+  ] as Partial<ECGCase>[])('overridden axis and conduction leave samples stable: %j',patch=>{
+    const c={...cloneCase(DEFAULT_CASE),...patch}, a=synthesize(c,3);
+    for(const change of [{axis:-123},{conduction:'rbbb' as const}]){
+      const b=synthesize({...c,...change},3);
+      for(const lead of LEADS) expect(b.leads[lead]).toEqual(a.leads[lead]);
+    }
+  });
+});
+
+describe('Native contextual conduction disclosure',()=>{
+  it('groups inactive fields once, preserves their values, and leaves rhythm selectable',()=>{
+    const c={...cloneCase(DEFAULT_CASE),rhythm:'af' as const,av:'complete' as const};
+    const html=controls(c),start=html.indexOf('<details class="inactive-controls"'),end=html.indexOf('</details>',start);
+    expect(start).toBeGreaterThan(0);
+    expect(html.slice(start,end)).toContain('data-key="escape" disabled');
+    expect(html.slice(start,end)).toContain('data-key="av" disabled');
+    expect(html.slice(start,end)).not.toContain('data-key="rhythm"');
+    expect(html.match(/data-key="escape"/g)).toHaveLength(1);
+    expect(html.slice(start,end)).toContain('value="complete" selected');
+    expect(html.slice(start,html.indexOf('>',start))).not.toContain(' open');
+  });
+});

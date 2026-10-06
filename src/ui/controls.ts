@@ -25,14 +25,25 @@ export function amplitudeControlState(c: ECGCase) {
 }
 export function controls(c: ECGCase) {
   const amplitude = amplitudeControlState(c), rhythm = rhythmControlState(c);
+  const inactiveConduction: string[] = [];
+  const contextualSelect = (...args: Parameters<typeof select>) => {
+    const html = select(...args);
+    if (args[4]) { inactiveConduction.push(html); return ""; }
+    return html;
+  };
+  const contextualRange = (...args: Parameters<typeof range>) => {
+    const html = range(...args);
+    if (args[7]) { inactiveConduction.push(html); return ""; }
+    return html;
+  };
   return `<div class="inspector-title"><h2>Ajustar el caso</h2><span>Valores programados del modelo, no mediciones del trazado.</span></div>
  <div class="control-tabs" role="tablist" aria-label="Parámetros"><button role="tab" aria-selected="true" data-panel="base">Intervalos</button><button role="tab" aria-selected="false" data-panel="conduction">Conducción</button><button role="tab" aria-selected="false" data-panel="st">ST y ondas</button><button role="tab" aria-selected="false" data-panel="signal">Señal y papel</button></div>
  <div class="control-panel" data-control-panel="base"><div class="range-grid">
  ${range("hr", rhythm.baseRateLabel, 20, 250, 1, c.hr, "lpm", rhythm.baseRateDisabled)}
- ${range("pr", "Intervalo PR", 80, 400, 5, c.pr, "ms", rhythm.prDisabled)}${range("qrs", "Duración QRS", regionalActivationState(c).active ? 100 : 60, 240, 5, c.qrs, "ms", rhythm.noOrganizedBeats)}${range("qtc", "QTc · Fridericia", 260, 650, 5, c.qtc, "ms", rhythm.noOrganizedBeats)}${range("axis", "Eje QRS solicitado", -180, 180, 5, c.axis, "°", rhythm.noOrganizedBeats)}${range("variability", "Variabilidad sinusal RR", 0, 0.3, 0.01, c.variability, "", rhythm.variabilityDisabled)}
+ ${range("pr", "Intervalo PR", 80, 400, 5, c.pr, "ms", rhythm.prDisabled)}${range("qrs", "Duración QRS", regionalActivationState(c).active ? 100 : 60, 240, 5, c.qrs, "ms", rhythm.noOrganizedBeats)}${range("qtc", "QTc · Fridericia", 260, 650, 5, c.qtc, "ms", rhythm.noOrganizedBeats)}${range("axis", "Eje QRS solicitado", -180, 180, 5, c.axis, "°", rhythm.qrsAxisDisabled)}${range("variability", "Variabilidad sinusal RR", 0, 0.3, 0.01, c.variability, "", rhythm.variabilityDisabled)}
  </div><div class="inline-fields">${range("respiratoryRate", "Frecuencia respiratoria", 6, 40, 1, c.respiratoryRate, "rpm")}${range("atrialRate", "FC auricular independiente", 40, 350, 5, c.atrialRate, "lpm", rhythm.atrialRateDisabled)}</div><p class="control-note">Los controles atenuados no actúan en el ritmo seleccionado; conservan su valor para otros ritmos. FC auricular independiente: flutter, BAV completo y TV. El QT se adapta a la historia de RR con memoria exponencial de ≈40 s; no responde de golpe a un RR aislado.</p></div>
  <div class="control-panel" data-control-panel="conduction" hidden><div class="field-grid">
- ${select(
+ ${contextualSelect(
    "rhythm",
    "Ritmo",
    [
@@ -49,7 +60,7 @@ export function controls(c: ECGCase) {
    ],
    c.rhythm,
  )}
- ${select(
+ ${contextualSelect(
    "av",
    "Conducción AV",
    [
@@ -64,7 +75,7 @@ export function controls(c: ECGCase) {
    c.av,
    c.rhythm !== "sinus",
  )}
- ${select(
+ ${contextualSelect(
    "conduction",
    "Conducción intraventricular",
    [
@@ -79,9 +90,9 @@ export function controls(c: ECGCase) {
      ["wpw", "Preexcitación"],
    ],
    c.conduction,
-   ["vt", "torsades", "idioventricular", "vf", "asystole"].includes(c.rhythm),
+   rhythm.conductionDisabled,
  )}
- ${select(
+ ${contextualSelect(
    "ectopy",
    "Ectopia",
    [
@@ -95,7 +106,7 @@ export function controls(c: ECGCase) {
    c.ectopy,
    c.rhythm !== "sinus" || c.av !== "normal",
  )}
- ${select(
+ ${contextualSelect(
    "escape",
    "Escape en BAV completo",
    [
@@ -103,12 +114,12 @@ export function controls(c: ECGCase) {
      ["ventricular", "Ventricular"],
    ],
    c.escape,
-   c.av !== "complete",
+   rhythm.escapeDisabled,
  )}
- ${select("flutterPattern", "Secuencia docente del flutter",
+ ${contextualSelect("flutterPattern", "Secuencia docente del flutter",
    [["fixed", "Relación fija"], ["2-3", "Alterna 2:1 / 3:1"], ["3-4", "Alterna 3:1 / 4:1"]],
    c.flutterPattern ?? "fixed", c.rhythm !== "flutter")}
- ${select(
+ ${contextualSelect(
    "flutterRatio",
    "Conducción del flutter",
    [
@@ -119,7 +130,7 @@ export function controls(c: ECGCase) {
    c.flutterRatio,
    c.rhythm !== "flutter" || (c.flutterPattern ?? "fixed") !== "fixed",
  )}
- ${select(
+ ${contextualSelect(
    "pacing",
    "Modo de estimulación",
    [
@@ -130,10 +141,10 @@ export function controls(c: ECGCase) {
    c.pacing,
    c.rhythm !== "paced",
  )}
- ${select("pacingBehavior", "Comportamiento VVI", [["fixed","Captura fija histórica"],["demand","Demanda · sensado ideal"]], c.pacingBehavior ?? "fixed", c.rhythm !== "paced" || c.pacing !== "VVI")}
- ${range("intrinsicRate", "Actividad ventricular intrínseca", 0, 150, 1, c.intrinsicRate ?? 0, "lpm · 0 ausente", !isVviDemand(c))}
- ${range("coupling", "Acoplamiento de ectopia", 0.3, 0.85, 0.01, c.coupling, "× RR", rhythm.couplingDisabled)}
- </div><p class="control-note">Las secuencias variables del flutter son ejemplos con retraso AV constante; no simulan Wenckebach multinivel ni respuesta a fármacos. Las combinaciones no implementadas se desactivan. FA + BAV completo es posible clínicamente, pero queda fuera del modelo actual. ${isVviDemand(c) ? "VVI a demanda: sensado ideal, captura garantizada y escape ventricular reiniciable. No representa fallos de captura, blanking, histéresis ni fusión." : "La estimulación fija representa captura periódica. El modo de demanda optativo solo está disponible en VVI."}</p><section id="regional-activation-controls" aria-label="Activación regional experimental">${regionalActivationControls(c)}</section></div>
+ ${contextualSelect("pacingBehavior", "Comportamiento VVI", [["fixed","Captura fija histórica"],["demand","Demanda · sensado ideal"]], c.pacingBehavior ?? "fixed", c.rhythm !== "paced" || c.pacing !== "VVI")}
+ ${contextualRange("intrinsicRate", "Actividad ventricular intrínseca", 0, 150, 1, c.intrinsicRate ?? 0, "lpm · 0 ausente", !isVviDemand(c))}
+ ${contextualRange("coupling", "Acoplamiento de ectopia", 0.3, 0.85, 0.01, c.coupling, "× RR", rhythm.couplingDisabled)}
+ </div>${inactiveConduction.length ? `<details class="inactive-controls" data-control-details="conduction"><summary>Controles sin efecto en este ritmo (${inactiveConduction.length})</summary><p class="control-note">Se conservan los valores para otros ritmos. Esta lista describe los límites del modelo, no combinaciones clínicamente imposibles.</p><div class="field-grid">${inactiveConduction.join("")}</div></details>` : ""}<p class="control-note">Las secuencias variables del flutter son ejemplos con retraso AV constante; no simulan Wenckebach multinivel ni respuesta a fármacos. Las combinaciones no implementadas se desactivan. FA + BAV completo es posible clínicamente, pero queda fuera del modelo actual. ${isVviDemand(c) ? "VVI a demanda: sensado ideal, captura garantizada y escape ventricular reiniciable. No representa fallos de captura, blanking, histéresis ni fusión." : "La estimulación fija representa captura periódica. El modo de demanda optativo solo está disponible en VVI."}</p><section id="regional-activation-controls" aria-label="Activación regional experimental">${regionalActivationControls(c)}</section></div>
  <div class="control-panel" data-control-panel="st" hidden><div class="field-grid">
  ${select(
    "ischemia",

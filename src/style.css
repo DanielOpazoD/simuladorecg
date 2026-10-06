@@ -1901,3 +1901,20 @@ textarea {
 .detail-evidence summary { cursor: pointer; color: var(--accent); padding: 6px 0; }
 .detail-evidence summary:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 .detail-evidence p { margin: 6px 0 0; }
+
+.inactive-controls {
+  margin-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.inactive-controls > summary {
+  min-height: 48px;
+  padding: 14px 0;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--muted);
+}
+.inactive-controls > summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.inactive-controls .control-note { margin: 0 0 16px; }
