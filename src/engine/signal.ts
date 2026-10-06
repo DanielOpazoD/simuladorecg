@@ -1,7 +1,6 @@
 import { ventricularSource } from "./ventricular-source";
 import { PRECORDIAL_LEADS } from "./lead-registry";
 import {
-  LEADS,
   constraints,
   type ECGCase,
   type Signal,
@@ -96,7 +95,6 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
   for (const b of events.beats) {
     const dur = qrsDuration(c, b),
       ks = qrsKernels(c, b),
-      source = ventricularSource(c, b),
       qt = b.qt!,
       tors = c.rhythm === "torsades";
     add(b.time, dur, (u, t) => {
