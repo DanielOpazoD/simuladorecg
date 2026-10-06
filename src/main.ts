@@ -5,7 +5,7 @@ import "./style.css";
 import { APP_VERSION } from "./ui/version";
 import { ActivationLab, type ActivationApplyResult } from "./ui/activation-lab";
 import { familyLabel } from "./ui/catalog-presentation";
-import { metricCards, metricsHtml, monitorRate } from "./ui/metric-cards";
+import { metricCards, metricsHtml, monitorRate, monitorRateNote } from "./ui/metric-cards";
 import { openDialog, closeDialog } from "./ui/dialog";
 import { exportDialogHtml } from "./ui/export-dialog";
 import { handleExportAction } from "./ui/export-actions";
@@ -92,7 +92,7 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  <div id="diagnosis-content">
  <section id="metrics" class="metrics" aria-label="Medidas del ECG"><div class="loading-metrics">Generando señal…</div></section>
  <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><div class="trace-tools">${btn("caliper", "Calibres", "ruler")}${btn("annotations", "Ondas", "eye")}${btn("focus", "Ampliar", "search")}${btn("pause", "Congelar", "pause")}</div></div>
- <div id="quiz-panel" hidden></div><div id="caliper-editor" class="caliper-editor" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small>lpm</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
+ <div id="quiz-panel" hidden></div><div id="caliper-editor" class="caliper-editor" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small id="monitor-rate-note">No estimable</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
  <div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div>
  <div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><div class="scale-toolbar" id="scale-toolbar"></div><div class="trace-caption"><span id="trace-caption">10 s · Columnas secuenciales</span><span id="signal-state">Señal sintética · 500 muestras/s</span></div><details class="keyboard-help"><summary>Teclado y calibres</summary><p id="trace-keyboard-help">Con foco en el trazado: M/P/R cambia vista, V/G cambia escala, C activa calibres y espacio congela el monitor. Calibres: flechas mueven el extremo seleccionado una muestra horizontal o 0,01 mV vertical; Mayús mueve diez pasos. También puedes usar los campos de tiempo y amplitud. Tab sale del trazado.</p></details></section>
  <section id="beat-detail" class="beat-detail" aria-label="Ampliación del latido"><div class="detail-empty">Preparando análisis…</div></section>
@@ -218,6 +218,7 @@ function renderMetrics() {
   if (!session.signal || !session.measurement) return;
   $("#metrics").innerHTML = metricsHtml(metricCards(c, session.measurement));
   $("#monitor-rate").textContent = monitorRate(c, session.measurement);
+  $("#monitor-rate-note").textContent = monitorRateNote(c, session.measurement);
 }
 function renderDetail() {
   if (session.signal && session.measurement)
@@ -420,6 +421,7 @@ function showUnavailableSignal(message: string, unavailable = false) {
   $("#signal-state").textContent = "Generando…";
   $("#metrics").innerHTML = '<div class="loading-metrics">Generando señal…</div>';
   $("#monitor-rate").textContent = "—";
+  $("#monitor-rate-note").textContent = "No estimable";
   $("#measurement-readout").hidden = true;
   $("#beat-detail").innerHTML = '<div class="detail-empty">El análisis estará disponible cuando termine de generarse la señal.</div>';
   $("#warnings").innerHTML = "";

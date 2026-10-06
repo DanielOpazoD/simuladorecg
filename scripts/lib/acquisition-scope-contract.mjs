@@ -1,0 +1,8 @@
+import {createHash} from 'node:crypto';
+import assert from 'node:assert/strict';
+// Review of known-acquisition presentation scope only; the detector stays frozen.
+const REVIEWED = {"src/engine/worker.ts": "b220d12b0d842dc8c87d215e51bde79b7371b12d81edf668ce3ad8a78d0fc91c", "src/engine/acquisition-measurement.ts": "20592d19d4502956849f14276a4b62e9137e0d58f7e6c49915b0733fb9628faa"};
+export function assertReviewedAcquisitionScope(file, source) {
+  assert.ok(Object.hasOwn(REVIEWED,file),'Unknown acquisition scope source');
+  assert.equal(createHash('sha256').update(source).digest('hex'),REVIEWED[file],'Unreviewed acquisition scope change: '+file);
+}

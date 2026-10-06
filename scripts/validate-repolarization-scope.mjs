@@ -1,3 +1,4 @@
+import {assertReviewedAcquisitionScope} from './lib/acquisition-scope-contract.mjs';
 import {assertReviewedEventCalendar} from './lib/event-calendar-revision.mjs';
 import {predictQTInitialization,assertReviewedQTInitialization} from './lib/qt-initialization-revision.mjs';
 import {assertReviewedSampleEntry} from './lib/sample-entry-contract.mjs';
@@ -32,6 +33,12 @@ try {
   // Reviewed calendar integrity: all valid historical samples still compared below.
   for(const file of ['src/engine/rhythm.ts','src/engine/event-calendar.ts','src/engine/flutter-conduction.ts']) {
     assertReviewedEventCalendar(file,await readFile(file));
+    nonNumericalContracts.push(file);
+  }
+
+  // Known acquisition provenance changes reported reliability, never sample analysis.
+  for(const file of ['src/engine/worker.ts','src/engine/acquisition-measurement.ts']) {
+    assertReviewedAcquisitionScope(file,await readFile(file));
     nonNumericalContracts.push(file);
   }
 
