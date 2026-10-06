@@ -94,6 +94,7 @@ try {
         }else matrix.push(check(c,label));
       }
   const report={schemaVersion:2,stage:coherence?'A02-A03-independent-prediction':'A01-characterization-only',baselineCommit:BASE,
+    qtInitializationRevision:'First event retains nominal ventricular RR; adaptation starts at second event. Separate from A02/A03 morphology.',
     candidateCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),changedFiles,
     clinicalValidation:false,scenarios:rows.length,sampleComparisons:rows.reduce((n,r)=>n+r.checked,0),rows,matrix,
     limitations:['The b744caca baseline has absent secondary ST and bypassed T modifiers; it is not clinical truth.',
