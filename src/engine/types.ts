@@ -1,3 +1,4 @@
+import { isVviDemand } from "./vvi-demand";
 import { regionalActivationState, REGIONAL_ACTIVATION_LIMIT } from "./regional-activation";
 import { VENTRICULAR_SOURCE_IDS, type VentricularSourceId } from "./ventricular-source";
 import { LEADS, type Lead } from "./lead-registry";
@@ -82,6 +83,8 @@ export interface ECGCase {
   flutterPattern?: "fixed" | "2-3" | "3-4";
   escape: "junctional" | "ventricular";
   pacing: "AAI" | "VVI" | "DDD";
+  pacingBehavior?: "fixed" | "demand";
+  intrinsicRate?: number;
   st: number;
   phase: "acute" | "hyperacute" | "evolving" | "chronic";
   stShape: "plateau" | "concave" | "convex";
@@ -243,6 +246,8 @@ export const DEFAULT_CASE: ECGCase = {
   flutterPattern: "fixed",
   escape: "junctional",
   pacing: "DDD",
+  pacingBehavior: "fixed",
+  intrinsicRate: 0,
   st: 2,
   phase: "acute",
   stShape: "plateau",
@@ -274,6 +279,7 @@ export function normalizeCase(input: unknown): ECGCase {
   if (!input || typeof input !== "object" || Array.isArray(input))
     throw new Error("El archivo no contiene un caso ECG.");
   const s = input as Record<string, unknown>;
+  if (s.pacingCapture !== undefined) throw new Error("La pérdida de captura no está disponible en este modelo VVI; no se ignora el ajuste importado.");
   if (s.version !== 1)
     throw new Error("Versión de caso no compatible (se requiere versión 1).");
   const c = cloneCase(DEFAULT_CASE);
@@ -333,6 +339,7 @@ export function normalizeCase(input: unknown): ECGCase {
     ectopy: ["none", "pac", "pvc", "bigeminy", "trigeminy", "couplet"],
     escape: ["junctional", "ventricular"],
     pacing: ["AAI", "VVI", "DDD"],
+    pacingBehavior: ["fixed", "demand"],
     phase: ["acute", "hyperacute", "evolving", "chronic"],
     stShape: ["plateau", "concave", "convex"],
     electrolyte: [
@@ -354,6 +361,7 @@ export function normalizeCase(input: unknown): ECGCase {
   }
   const ranges: Record<string, [number, number]> = {
     hr: [20, 250],
+    intrinsicRate: [0, 150],
     atrialRate: [40, 350],
     seed: [1, 2147483647],
     variability: [0, 0.3],
@@ -428,6 +436,7 @@ export function normalizeCase(input: unknown): ECGCase {
 }
 export function constraints(c: ECGCase): string[] {
   const out: string[] = [];
+  if (isVviDemand(c)) out.push("VVI a demanda idealizado: sensado perfecto, captura garantizada y escape ventricular reiniciable; sin fallos de captura, blanking, histéresis, fusión ni calibración de dispositivo.");
   const regional = regionalActivationState(c);
   if (regional.requested) out.push(regional.active ? REGIONAL_ACTIVATION_LIMIT :
     `Activación regional solicitada pero no aplicada: ${regional.reason} Se usa la plantilla histórica.`);

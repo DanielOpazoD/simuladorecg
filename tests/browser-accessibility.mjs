@@ -107,6 +107,24 @@ for(const engine of [chromium,webkit,firefox]) {
         await page.locator('[data-key="filter"]').selectOption('diagnostic');await ready();
         assert.notEqual(await page.locator('#monitor-rate').innerText(),'—');
         await key('[data-mode=paper]');await key('[data-panel=base]');
+        // Demand VVI: an intrinsic source faster than the lower rate inhibits pacing.
+        await key('[data-panel=conduction]');
+        await page.locator('[data-key="rhythm"]').selectOption('paced');await ready();
+        await page.locator('[data-key="pacing"]').selectOption('VVI');await ready();
+        await page.locator('[data-key="pacingBehavior"]').selectOption('demand');await ready();
+        const intrinsic=page.locator('[data-key="intrinsicRate"]');
+        assert.equal(await intrinsic.isDisabled(),false);
+        await intrinsic.focus();
+        await intrinsic.evaluate(el=>{el.value='90';el.dispatchEvent(new Event('input',{bubbles:true}));});await ready();
+        await active('[data-key="intrinsicRate"]');
+        assert.match(await page.locator('#metrics .metric').first().innerText(),/90/);
+        await page.locator('[data-key="pacingBehavior"]').scrollIntoViewIfNeeded();
+        await page.screenshot({path:resolve(out,stem+'-vvi-demand-controls.png')});
+        await page.locator('#ecg').screenshot({path:resolve(out,stem+'-vvi-demand-trace.png')});
+        await page.locator('[data-key="pacingBehavior"]').selectOption('fixed');await ready();
+        assert.equal(await page.locator('[data-key="intrinsicRate"]').isDisabled(),true);
+        if(width===390) await key('[data-action=catalog]');
+        await key('[data-preset=sinus]');await ready();
         await key('.topbar [data-action=about]');await page.getByRole('dialog',{name:'Modelo, alcance y referencias'}).waitFor();
         await page.keyboard.press('Escape');await page.locator('#dialog').waitFor({state:'hidden'});await active('.topbar [data-action=about]');
         page.on('request',r=>requests.push({method:r.method(),url:r.url()}));

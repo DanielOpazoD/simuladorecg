@@ -1,3 +1,4 @@
+import { isVviDemand, vviSettings, vviReferenceRate } from "./vvi-demand";
 import { flutterMeanRatio } from "./flutter-conduction";
 import type { Beat, ECGCase } from "./types";
 import { qrsDuration } from "./morphology";
@@ -14,6 +15,7 @@ export function adaptRR(previous: number, rr: number, elapsed: number): number {
   );
 }
 export function nominalVentricularRR(c: ECGCase): number {
+  if (isVviDemand(c)) return 60 / vviReferenceRate(vviSettings(c));
   if (c.rhythm === "flutter") return (60 / c.atrialRate) * flutterMeanRatio(c);
   const ratio =
     c.rhythm === "sinus"

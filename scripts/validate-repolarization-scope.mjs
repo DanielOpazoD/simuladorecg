@@ -31,7 +31,7 @@ try {
     nonNumericalContracts.push('src/engine/sample-analysis.ts');
   }
   // Reviewed calendar integrity: all valid historical samples still compared below.
-  for(const file of ['src/engine/rhythm.ts','src/engine/event-calendar.ts','src/engine/flutter-conduction.ts']) {
+  for(const file of ['src/engine/rhythm.ts','src/engine/event-calendar.ts','src/engine/flutter-conduction.ts','src/engine/vvi-demand.ts']) {
     assertReviewedEventCalendar(file,await readFile(file));
     nonNumericalContracts.push(file);
   }
