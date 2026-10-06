@@ -42,3 +42,19 @@ review. A browser regression imports an independent smooth impulse train without
 case labels, verifies the retained raw positive-rate candidate, and requires a
 dash plus No estimable in the actual table. This is confidence withdrawal, not
 proof of pacing origin or recovery of true hidden ventricular events.
+
+An additional independent0.3mV smooth impulse train plus5microvolt multichannel
+sinusoidal noise revealed a remaining false usable rate. The candidate now has
+a separate review-only tier (residual<0.005) for possible impulsive activity;
+stronger near-rank-one evidence (<0.001) still withdraws availability. Both require
+the same brief95% energy span and candidate agreement. Existing unavailable or
+review evidence is never promoted. The new noisy counterexample first failed,
+then passed; all independent non-regression checks must be repeated before merge.
+This does not establish sensitivity/specificity for clinical pacemakers.
+
+The first browser fixture was rejected before analysis, correctly: exact Gaussian
+underflow created long zero plateaus and I/V5 were identical. Replaced the fixture
+with distinct lead weights and a tiny smooth baseline, then added a unit assertion
+that the unchanged external integrity gate accepts it before checking confidence.
+The browser now asserts exploratory admission before waiting for measurement rows,
+so an unrelated input rejection cannot masquerade as this confidence regression.

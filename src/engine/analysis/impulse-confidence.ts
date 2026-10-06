@@ -1,14 +1,14 @@
 import type {Measurement, Signal} from '../types';
 const NAMES=['I','II','V1','V5'] as const;
-export const IMPULSE_CONFIDENCE_POLICY=Object.freeze({minimumCandidates:3,maximumResidual:.001,maximumEnergySpanSeconds:.024,minimumFraction:.8});
+export const IMPULSE_CONFIDENCE_POLICY=Object.freeze({minimumCandidates:3,maximumResidual:.001,reviewResidual:.005,maximumEnergySpanSeconds:.024,minimumFraction:.8});
 /** Conservative ambiguity screen, not pacing diagnosis or a reconstructed QRS.
  * Engineering limits: near rank-one spatial slope + <=24ms central95% derivative-energy span.
  * It only withdraws confidence when >=80% of at least three candidates agree.
  */
-export function briefImpulseFraction(s:Pick<Signal,'fs'|'leads'>,peaks:readonly number[]):number {
- if(peaks.length<IMPULSE_CONFIDENCE_POLICY.minimumCandidates)return 0;
+export function briefImpulseFractions(s:Pick<Signal,'fs'|'leads'>,peaks:readonly number[]):{strong:number;possible:number} {
+ if(peaks.length<IMPULSE_CONFIDENCE_POLICY.minimumCandidates)return {strong:0,possible:0};
  const fs=s.fs,n=s.leads.I.length,radius=Math.round(.08*fs);
- let suspect=0;
+ let suspect=0,possible=0;
  for(const peak of peaks){
   const center=Math.round(peak*fs),lo=Math.max(1,center-radius),hi=Math.min(n,center+radius);
   const covariance=Array.from({length:4},()=>[0,0,0,0]),slopes:number[]=[];
@@ -36,15 +36,22 @@ export function briefImpulseFraction(s:Pick<Signal,'fs'|'leads'>,peaks:readonly 
    if(cumulative>=total*.975){last=i;break;}
   }
   // The full event energy, not one steep QRS limb, must be temporally concentrated.
-  if(residual<IMPULSE_CONFIDENCE_POLICY.maximumResidual&&(last-first)/fs<=IMPULSE_CONFIDENCE_POLICY.maximumEnergySpanSeconds+1e-12)suspect++;
+  if((last-first)/fs<=IMPULSE_CONFIDENCE_POLICY.maximumEnergySpanSeconds+1e-12){
+   if(residual<IMPULSE_CONFIDENCE_POLICY.maximumResidual)suspect++;
+   if(residual<IMPULSE_CONFIDENCE_POLICY.reviewResidual)possible++;
+  }
  }
- return suspect/peaks.length;
+ return {strong:suspect/peaks.length,possible:possible/peaks.length};
 }
 export function withholdImpulseDominatedMeasurements(s:Pick<Signal,'fs'|'leads'>,m:Measurement):Measurement {
- if(m.evidence.hr.status==='unavailable'||briefImpulseFraction(s,m.detectedPeaks)<IMPULSE_CONFIDENCE_POLICY.minimumFraction)return m;
- const reason='Candidatos dominados por impulsos breves de dirección casi constante: pueden ser estímulos filtrados sin QRS. No se confirma una frecuencia ventricular; revisa el trazado.';
+ if(m.evidence.hr.status==='unavailable')return m;
+ const fractions=briefImpulseFractions(s,m.detectedPeaks);
+ if(fractions.possible<IMPULSE_CONFIDENCE_POLICY.minimumFraction)return m;
+ const unavailable=fractions.strong>=IMPULSE_CONFIDENCE_POLICY.minimumFraction;
+ const reason=unavailable?'Candidatos dominados por impulsos breves de dirección casi constante: pueden ser estímulos filtrados sin QRS. No se confirma una frecuencia ventricular; revisa el trazado.':'Posible actividad impulsiva breve con ruido: verifica que los candidatos correspondan a QRS antes de interpretar las medidas.';
  const evidence={...m.evidence};
  for(const key of Object.keys(evidence) as (keyof typeof evidence)[])
-  if(evidence[key].status!=='unavailable')evidence[key]={...evidence[key],status:'unavailable',reason};
+  if(evidence[key].status==='usable'||(unavailable&&evidence[key].status==='review'))
+   evidence[key]={...evidence[key],status:unavailable?'unavailable':'review',reason};
  return {...m,evidence,quality:reason+' '+m.quality};
 }

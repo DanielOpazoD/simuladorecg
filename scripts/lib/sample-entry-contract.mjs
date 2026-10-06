@@ -22,7 +22,7 @@ export function assertReviewedSampleEntry(source, previous) {
 
 export function assertReviewedImpulseConfidence(source) {
   assert.equal(createHash('sha256').update(source).digest('hex'),
-    '01aba2e47a670e23c18e6bddc712158031d313114b3b7c266d7b01177cb41b55', 'Unreviewed impulse-confidence change');
+    '20a40b8da435c503ea4044919022e5015cae53b818ab283feb158bfeb83055ef', 'Unreviewed impulse-confidence change');
 }
 
 export function assertReviewedSampleDependencies(actual,historical,candidate) {

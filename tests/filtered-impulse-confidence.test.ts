@@ -36,3 +36,19 @@ it('external estimate presentation withholds values without deleting raw candida
  const m=analyzeSamples(isolatedPulses(500,'monitor')),raw=m.hr;
  expect(availableMetricValue(m,'hr')).toBeNull();expect(m.hr).toBe(raw);expect(raw).not.toBeNull();
 });
+
+it('does not label a weak noisy impulse train as a usable ventricular rate',()=>{
+ const fs=500,weights={I:1,II:1.3,III:.3,aVR:-1.15,aVL:.35,aVF:.8,V1:-.8,V2:-.4,V3:.2,V4:.6,V5:1,V6:.9};
+ const leads=Object.fromEntries(Object.entries(weights).map(([l,w],j)=>[l,Float64Array.from({length:5000},(_,i)=>w*.3*Math.exp(-.5*(((i/fs+.5)%1-.5)/.006)**2)+.005*Math.sin(2*Math.PI*(19+j)*i/fs+j))])) as Signal['leads'];
+ for(let i=0;i<5000;i++){const a=leads.I[i],b=leads.II[i];leads.III[i]=b-a;leads.aVR[i]=-(a+b)/2;leads.aVL[i]=a-b/2;leads.aVF[i]=b-a/2;}
+ expect(analyzeSamples({fs,leads}).evidence.hr.status).not.toBe('usable');
+});
+
+it('the browser impulse fixture passes the unchanged external integrity gate before analysis',async()=>{
+ const {assessExternalWindow}=await import('../src/io/external-assessment');
+ const fs=500,weights={I:1,II:1.3,III:.3,aVR:-1.15,aVL:.35,aVF:.8,V1:-.8,V2:-.4,V3:.2,V4:.6,V5:1.1,V6:.9};
+ const x=Float64Array.from({length:5000},(_,i)=>{const t=i/fs;return Math.exp(-.5*(((t+.5)%1-.5)/.006)**2)+1e-6*Math.sin(2*Math.PI*.7*t);});
+ const s={fs,leads:Object.fromEntries(Object.entries(weights).map(([l,w])=>[l,Float64Array.from(x,v=>v*w)])) as Signal['leads']};
+ expect(assessExternalWindow(s).analysisAllowed).toBe(true);
+ const m=analyzeSamples(s);expect(m.hr).not.toBeNull();expect(m.evidence.hr.status).toBe('unavailable');
+});

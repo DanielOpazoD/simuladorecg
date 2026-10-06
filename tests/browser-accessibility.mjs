@@ -199,12 +199,14 @@ for(const engine of [chromium,webkit,firefox]) {
         // Repeated open/close cannot leave modal background inert or retain the cleared editor.
         for(let n=0;n<2;n++){await key('[data-action=external]');await page.keyboard.press('Escape');await page.locator('#external-lab').waitFor({state:'hidden'});await active('[data-action=external]');}
         // Independent smooth impulse train: no case metadata or generator truth enters analysis.
-        const weights=[1,1.3,.3,-1.15,.35,.8,-.8,-.4,.2,.6,1,.9];
+        const weights=[1,1.3,.3,-1.15,.35,.8,-.8,-.4,.2,.6,1.1,.9];
         const impulseCsv=Buffer.from(['# ECG-LAB CSV 1; fs=500; units=mV','time_s,'+names.join(','),
-          ...Array.from({length:5000},(_,i)=>{const t=i/500,v=Math.exp(-.5*(((t+.5)%1-.5)/.006)**2);return[t,...weights.map(w=>w*v)].join(',');})].join('\n'));
+          ...Array.from({length:5000},(_,i)=>{const t=i/500,v=Math.exp(-.5*(((t+.5)%1-.5)/.006)**2)+1e-6*Math.sin(2*Math.PI*.7*t);return[t,...weights.map(w=>w*v)].join(',');})].join('\n'));
         await key('[data-action=external]');
         await page.locator('#external-files').setInputFiles({name:'isolated-impulses.csv',mimeType:'text/csv',buffer:impulseCsv});
-        await key('[data-external=load]');await page.locator('#external-metrics').waitFor();
+        await key('[data-external=load]');await page.locator('#external-aptitude').waitFor();
+        assert.equal(await page.locator('#external-aptitude').getAttribute('data-status'),'exploratory');
+        await page.locator('#external-metrics').waitFor();
         const pulseReport=JSON.parse((await file('[data-external=json]','impulse-analysis.json')).toString());
         assert.equal(pulseReport.measurement.evidence.hr.status,'unavailable');
         assert.ok(pulseReport.measurement.hr>0,'Raw candidate is retained, not replaced with a fictitious zero');
