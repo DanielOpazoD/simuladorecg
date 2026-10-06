@@ -1,3 +1,4 @@
+import { LEADS } from './lead-registry';
 import { attachMeasurementSupport } from './measurement-support';
 import type { Measurement, Signal } from './types';
 import { measure } from './measure';
@@ -50,6 +51,7 @@ export function heartRateDetectionQuality(input: Samples, peaksSeconds: readonly
  * Never correct a rate, remove candidate peaks, promote a status or use truth.
  */
 export function analyzeSamples(input: Samples): Measurement {
+  assertSampleInput(input);
   const measurement = measure(input);
   const quality = measurement.detectedPeaks.length >= 3 ? heartRateDetectionQuality(input, measurement.detectedPeaks) : null;
   const next:Measurement = measurement.hr !== null && measurement.evidence.hr.status === 'usable' && quality?.requiresReview ?
@@ -57,4 +59,26 @@ export function analyzeSamples(input: Samples): Measurement {
       hr: { ...measurement.evidence.hr, status: 'review',
         reason: 'Frecuencia sensible al umbral de detección y actividad de fondo elevada: pueden existir detecciones extra u omitidas. Verifica con calibres.' } } } : measurement;
   return attachMeasurementSupport(next, quality);
+}
+
+/** Engineering acquisition domain shared with the external-record reader.
+ * Validity of storage/time coordinates is not clinical signal quality. Never
+ * repair missing channels, replace nonfinite samples or resample implicitly.
+ */
+export function assertSampleInput(input: Pick<Signal, 'fs' | 'leads'>): void {
+  if (!Number.isSafeInteger(input.fs) || input.fs < 100 || input.fs > 1000)
+    throw new RangeError('Frecuencia de muestreo admitida: entero entre 100 y 1000 Hz.');
+  let length: number | undefined;
+  for (const lead of LEADS) {
+    const samples: unknown = input.leads?.[lead];
+    if (!((samples instanceof Float64Array || samples instanceof Float32Array)))
+      throw new TypeError(`Derivación ${lead}: se requiere un vector de muestras Float32Array o Float64Array.`);
+    if (!samples.length) throw new RangeError(`Derivación ${lead}: no contiene muestras.`);
+    if (length !== undefined && samples.length !== length)
+      throw new RangeError(`Derivación ${lead}: longitud distinta; los canales deben compartir el mismo eje temporal.`);
+    length = samples.length;
+    for (let index = 0; index < samples.length; index++)
+      if (!Number.isFinite(samples[index]))
+        throw new RangeError(`Derivación ${lead}: muestra no finita en el índice ${index}.`);
+  }
 }
