@@ -24,8 +24,10 @@ export function nominalVentricularRR(c: ECGCase): number {
 }
 export function assignRepolarization(c: ECGCase, beats: Beat[]): void {
   let history = nominalVentricularRR(c);
-  for (const beat of beats) {
-    history = adaptRR(history, Math.max(0.22, beat.rr), beat.rr);
+  for (const [index, beat] of beats.entries()) {
+    // No predecessor was observed for the first event. Start at the declared
+    // steady-state ventricular rate; adapt only to subsequent actual intervals.
+    if (index > 0) history = adaptRR(history, Math.max(0.22, beat.rr), beat.rr);
     beat.adaptedRR = history;
     beat.qrs = qrsDuration(c, beat);
     beat.qt = Math.max(

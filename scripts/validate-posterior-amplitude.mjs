@@ -1,9 +1,10 @@
+import {predictQTInitialization,assertReviewedQTInitialization} from './lib/qt-initialization-revision.mjs';
 /** Paired generator regression; independent of the sample analyzer and external ECG labels. */
 import { build } from 'esbuild';
 import { assertRvAmplitudeChange, assertFinalQrsAxisChange, assertExactSignal, compareSignalContract } from './lib/fidelity-contracts.mjs';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -14,9 +15,14 @@ const baseline = '91519b2ea3b052f5cd22db6802f674bab6981b96';
 const axisBaseline = '5bafc2031e73048ff2f5d5e99f0b039d4ef1acca';
 const temp = await mkdtemp(path.join(tmpdir(), 'posterior-gain-'));
 try {
+  assertReviewedQTInitialization(await readFile('src/engine/repolarization.ts'));
   const baseDir = path.join(temp, 'baseline'); await mkdir(baseDir);
   execFileSync('tar', ['-xf', '-', '-C', baseDir], {input: execFileSync('git', ['archive', baseline], {maxBuffer: 100 * 1024 * 1024})});
   async function load(dir, name) {
+    if(dir !== process.cwd()) {
+      const file=path.join(dir,'src/engine/repolarization.ts');
+      await writeFile(file,predictQTInitialization(await readFile(file,'utf8')));
+    }
     const outfile = path.join(temp, name + '.mjs');
     await build({stdin: {contents: "export {synthesize} from './src/engine/signal'; export {PRESETS,fromPreset,presetById} from './src/presets/catalog'; export {qrsKernels} from './src/engine/morphology'; export {DOWER} from './src/engine/leads';", resolveDir: dir}, bundle: true, platform: 'node', format: 'esm', outfile});
     return import(pathToFileURL(outfile));
