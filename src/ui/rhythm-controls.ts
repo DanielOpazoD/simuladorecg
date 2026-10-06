@@ -1,3 +1,4 @@
+import { isVviDemand } from "../engine/vvi-demand";
 import type { ECGCase } from '../engine/types';
 
 /** Control applicability follows the implemented event scheduler, not a claim
@@ -16,7 +17,7 @@ export function rhythmControlState(c: ECGCase) {
     baseRateDisabled: c.rhythm === 'flutter' || noOrganizedBeats,
     baseRateLabel: sinus && c.av === 'complete' ? 'Frecuencia de escape'
       : sinus && !['normal','first'].includes(c.av) ? 'Frecuencia auricular'
-      : c.rhythm === 'paced' ? 'Frecuencia de estimulación' : 'Frecuencia base',
+      : isVviDemand(c) ? 'Frecuencia mínima VVI' : c.rhythm === 'paced' ? 'Frecuencia de estimulación' : 'Frecuencia base',
     atrialRateDisabled: !atrialIndependent,
     variabilityDisabled: !sinus || c.av === 'complete',
     couplingDisabled: !sinus || c.av !== 'normal' || c.ectopy === 'none',
