@@ -33,10 +33,14 @@ jobs:
         run: |
           (cd "$RUNNER_TEMP/ptbxl-acquisition" && python -m unittest discover -s tests -p test_ptbxl_reference.py -v)
           npx vitest run tests/ptbxl-morphology.test.mjs tests/generator-ptbxl-gap.test.mjs
+      - name: Original calibrated waveform contracts
+        run: python -m unittest discover -s tests -p test_ptbxl_original_reference.py -v
       - name: Secondary ST-T reference contracts
         run: python -m unittest discover -s tests -p test_secondary_stt_reference.py -v
       - name: Select patients before feature acquisition and verify sources
         run: python "$RUNNER_TEMP/ptbxl-acquisition/scripts/ptbxl-benchmark.py" --output "$RUNNER_TEMP/ptbxl-reference"
+      - name: Verify original physical calibration without reinterpreting vendor medians
+        run: python scripts/ptbxl-original-reference.py --reference "$RUNNER_TEMP/ptbxl-reference" --output "$RUNNER_TEMP/ptbxl-reference/original-waveforms"
       - name: Describe median beats and unchanged generated samples separately
         run: node scripts/benchmark-ptbxl-samples.mjs "$RUNNER_TEMP/ptbxl-reference"
       - name: Describe generator gaps using the exact reference from this job
