@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with: {fetch-depth: 0, persist-credentials: false}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with: {node-version: '22.16.0', cache: npm}
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with: {python-version: '3.11'}
       - run: npm ci
       - name: Evaluation adversarial contracts
@@ -54,7 +54,7 @@ jobs:
           git archive HEAD | gzip > "$RUNNER_TEMP/ludb-original/source.tar.gz"
           cp benchmarks/ludb-baseline/protocol.json "$RUNNER_TEMP/ludb-original/evaluation-protocol.json"
           rm -rf "$RUNNER_TEMP/ludb-original/raw"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: ludb-original-baseline-${{ github.sha }}

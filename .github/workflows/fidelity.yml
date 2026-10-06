@@ -15,11 +15,11 @@ jobs:
       matrix:
         scope: [posterior, wpw, rv_acute, rv_chronic]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '22.16.0'
           cache: npm
@@ -33,7 +33,7 @@ jobs:
           git archive HEAD | gzip > "$RUNNER_TEMP/amplitude-evidence/source.tar.gz"
           git rev-parse HEAD > "$RUNNER_TEMP/amplitude-evidence/source-commit.txt"
           cp "$RUNNER_TEMP/amplitude-${{ matrix.scope }}.json" "$RUNNER_TEMP/amplitude-evidence/" 2>/dev/null || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: qrs-amplitude-${{ matrix.scope }}-${{ github.sha }}
@@ -43,11 +43,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '22.16.0'
           cache: npm
@@ -108,7 +108,7 @@ jobs:
           cp "$RUNNER_TEMP/noise-regression.tap" "$RUNNER_TEMP/ecg-evidence/" 2>/dev/null || true
           cp "$RUNNER_TEMP/vite.log" "$RUNNER_TEMP/ecg-evidence/" 2>/dev/null || true
           test ! -d dist || cp -r dist "$RUNNER_TEMP/ecg-evidence/dist"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: ecg-evidence-${{ github.sha }}
@@ -119,15 +119,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '22.16.0'
           cache: npm
       - run: npm ci
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: ecg-evidence-${{ github.sha }}
           path: ${{ runner.temp }}/verified-build
@@ -152,7 +152,7 @@ jobs:
           node tests/browser-accessibility.mjs
           ECG_GROUP_ENGINES=all node tests/browser-diagnosis-navigation.mjs
           ECG_REGIONAL_ENGINES=all node tests/browser-regional-activation.mjs
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: ecg-accessibility-${{ github.sha }}
