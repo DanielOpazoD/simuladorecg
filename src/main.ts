@@ -471,10 +471,7 @@ function animate(t: number) {
     if (lastFrame) session.advance(Math.min(0.1, (t - lastFrame) / 1000), c.view.mode);
     monitor.frame(session.elapsed);
     if (audioOn && session.signal) {
-      const seg = monitor.layout.segments[0],
-        span = seg.duration,
-        cycle = Math.floor(session.elapsed / span),
-        source = ((cycle * span) % Math.max(1, 60 - span)) + (session.elapsed % span);
+      const source = monitor.sourceTime(session.elapsed);
       const b = session.signal.events.beats.find(
         (b) => b.time >= source - 0.022 && b.time <= source + 0.008,
       );
