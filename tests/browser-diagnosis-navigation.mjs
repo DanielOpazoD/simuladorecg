@@ -93,7 +93,9 @@ for(const engine of engines){
    assert.match(await page.locator('#exploration-context').textContent(),/no diagnostica/i);
    const custom=await exported('custom');assert.equal(custom.B.case.presetId,'custom');
    await page.locator('[data-action=exploration-changes]').click();
-   assert.match(await page.locator('#dialog-content').textContent(),/Frecuencia ventricular/);
+   assert.deepEqual(await page.locator('#dialog-content tbody tr td').allTextContents(),
+     ['Frecuencia base (lpm)','72Frecuencia base','81Frecuencia base'],
+     'History must show the actual programmed values and the meaning in each state');
    await page.locator('[data-action=close-dialog]').click();
    await page.locator('[data-action=compare-origin]').click();
    const originComparison=await exported('origin-comparison');
