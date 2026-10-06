@@ -1,3 +1,4 @@
+import { flutterRatios, flutterMeanRatio } from "./flutter-conduction";
 import type { ECGCase, EventSeries, Beat } from "./types";
 import { assertEventCalendar } from "./event-calendar";
 import { random, normal } from "./random";
@@ -16,7 +17,7 @@ function buildEvents(c: ECGCase, duration: number): EventSeries {
   // Flutter has an independent atrial clock. Its first RR also seeds QT history;
   // using the inactive base-rate control here changes T without changing rhythm.
   const base = c.rhythm === "flutter"
-    ? (60 / c.atrialRate) * c.flutterRatio
+    ? (60 / c.atrialRate) * flutterMeanRatio(c)
     : 60 / c.hr;
   let prev = -10;
   const beat = (time: number, kind: Beat["kind"] = "normal", pr?: number) => {
@@ -50,9 +51,9 @@ function buildEvents(c: ECGCase, duration: number): EventSeries {
     return events;
   }
   if (c.rhythm === "flutter") {
-    const ar = c.atrialRate,
-      rr = (60 / ar) * c.flutterRatio;
-    for (let t = 0.4; t < duration; t += rr) beat(t);
+    const ar = c.atrialRate, ratios = flutterRatios(c);
+    let index = 0;
+    for (let t = 0.4; t < duration; t += (60 / ar) * ratios[index++ % ratios.length]) beat(t);
     return events;
   }
   if (

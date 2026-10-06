@@ -104,6 +104,9 @@ export function controls(c: ECGCase) {
    c.escape,
    c.av !== "complete",
  )}
+ ${select("flutterPattern", "Secuencia docente del flutter",
+   [["fixed", "Relación fija"], ["2-3", "Alterna 2:1 / 3:1"], ["3-4", "Alterna 3:1 / 4:1"]],
+   c.flutterPattern ?? "fixed", c.rhythm !== "flutter")}
  ${select(
    "flutterRatio",
    "Conducción del flutter",
@@ -113,7 +116,7 @@ export function controls(c: ECGCase) {
      [4, "4:1"],
    ],
    c.flutterRatio,
-   c.rhythm !== "flutter",
+   c.rhythm !== "flutter" || (c.flutterPattern ?? "fixed") !== "fixed",
  )}
  ${select(
    "pacing",
@@ -127,7 +130,7 @@ export function controls(c: ECGCase) {
    c.rhythm !== "paced",
  )}
  ${range("coupling", "Acoplamiento de ectopia", 0.3, 0.85, 0.01, c.coupling, "× RR", rhythm.couplingDisabled)}
- </div><p class="control-note">Las combinaciones no implementadas se desactivan. FA + BAV completo es posible clínicamente, pero queda fuera del modelo actual. La estimulación representa captura fija; no simula demanda.</p><section id="regional-activation-controls" aria-label="Activación regional experimental">${regionalActivationControls(c)}</section></div>
+ </div><p class="control-note">Las secuencias variables del flutter son ejemplos con retraso AV constante; no simulan Wenckebach multinivel ni respuesta a fármacos. Las combinaciones no implementadas se desactivan. FA + BAV completo es posible clínicamente, pero queda fuera del modelo actual. La estimulación representa captura fija; no simula demanda.</p><section id="regional-activation-controls" aria-label="Activación regional experimental">${regionalActivationControls(c)}</section></div>
  <div class="control-panel" data-control-panel="st" hidden><div class="field-grid">
  ${select(
    "ischemia",

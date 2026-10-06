@@ -30,7 +30,7 @@ try {
     nonNumericalContracts.push('src/engine/sample-analysis.ts');
   }
   // Reviewed calendar integrity: all valid historical samples still compared below.
-  for(const file of ['src/engine/rhythm.ts','src/engine/event-calendar.ts']) {
+  for(const file of ['src/engine/rhythm.ts','src/engine/event-calendar.ts','src/engine/flutter-conduction.ts']) {
     assertReviewedEventCalendar(file,await readFile(file));
     nonNumericalContracts.push(file);
   }
@@ -88,7 +88,7 @@ try {
         }else matrix.push(check(c,label));
       }
   const report={schemaVersion:2,stage:coherence?'A02-A03-independent-prediction':'A01-characterization-only',baselineCommit:BASE,
-    eventCalendarRevision:'Strict bounded events and causal RR/PR assertions; historical sample comparison remains exact.',
+    eventCalendarRevision:'Strict bounded events and causal RR/PR assertions; optional programmed flutter sequences. Historical default samples remain exact.',
     qtInitializationRevision:'First event retains nominal ventricular RR; adaptation starts at second event. Separate from A02/A03 morphology.',
     candidateCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),changedFiles,
     clinicalValidation:false,scenarios:rows.length,sampleComparisons:rows.reduce((n,r)=>n+r.checked,0),rows,matrix,
