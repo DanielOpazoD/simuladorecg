@@ -8,6 +8,7 @@ import { familyLabel } from "./ui/catalog-presentation";
 import { metricCards, metricsHtml, monitorRate } from "./ui/metric-cards";
 import { openDialog, closeDialog } from "./ui/dialog";
 import { exportDialogHtml } from "./ui/export-dialog";
+import { handleExportAction } from "./ui/export-actions";
 import { diagnosisFamilies, diagnosisForPreset } from "./ui/diagnosis-navigation";
 import { createExplorationOrigin, explorationChanges, restoreExplorationOrigin, sameExplorationModel, type ExplorationOrigin } from "./ui/exploration-origin";
 import type { SyntheticComparisonTrace } from "./ui/comparison-model";
@@ -47,11 +48,7 @@ import { controls, leadOptions, amplitudeControlState } from "./ui/controls";
 import { caseContext, caseReading, normalizeImportedCase } from "./presets/case-context";
 import {
   decodeCase,
-  encodeCase,
-  download,
   savedCases,
-  saveCase,
-  pngWithDpi,
 } from "./ui/persistence";
 
 const $ = <T extends Element = HTMLElement>(selector: string) =>
@@ -799,63 +796,14 @@ document.addEventListener("click", async (e) => {
     renderInfo();
     draw();
   }
-  if (action === "png") {
-    if (!session.signal || !session.canExport) {
-      toast("El PNG estará disponible al generar correctamente la señal.");
-      return;
-    }
-    const canvas = document.createElement("canvas"),
-      exportCase = cloneCase(c);
-    exportCase.view.palette = "paper";
-    renderPaper(canvas, session.signal, exportCase, 1000, {
-      pxPerMm: 300 / 25.4,
-      ratio: 1,
-      hideName: !!quiz && !quiz.answer,
-      displayName: caseReading(c).title,
-    });
-    canvas.toBlob(async (blob) => {
-      if (blob) {
-        download(await pngWithDpi(blob, 300), "ecg-lab-300dpi.png");
-        toast("PNG exportado a 300 dpi");
-      }
-    }, "image/png");
-  }
-  if (action === "json") {
-    download(
-      new Blob([JSON.stringify(c, null, 2)], { type: "application/json" }),
-      "ecg-lab-caso.json",
-    );
-    toast("Caso JSON exportado");
-  }
-  if (action === "import") $<HTMLInputElement>("#file-input").click();
-  if (action === "share") {
-    const url = location.origin + location.pathname + encodeCase(c);
-    try {
-      await navigator.clipboard.writeText(url);
-      toast("Enlace del caso copiado");
-    } catch {
-      openDialog(
-        "Enlace del caso",
-        `<p>Copia este enlace:</p><textarea readonly rows="5">${esc(url)}</textarea>`,
-      );
-    }
-  }
-  if (action === "save") {
-    const name = $<HTMLInputElement>("#save-name").value.trim();
-    if (!name) {
-      toast("Escribe un nombre para el caso");
-      return;
-    }
-    const copy = cloneCase(c);
-    copy.name = name;
-    try {
-      saveCase(copy);
-      toast("Caso guardado en este navegador");
-      exportDialog();
-    } catch {
-      toast("No se pudo guardar. Exporta el caso como JSON.");
-    }
-  }
+  await handleExportAction(action, {
+    c,
+    signal: session.signal,
+    canExport: session.canExport,
+    hideName: !!quiz && !quiz.answer,
+    toast,
+    refreshDialog: exportDialog,
+  });
 });
 $<HTMLInputElement>("#file-input").addEventListener("change", async (e) => {
   const el = e.target as HTMLInputElement,
