@@ -45,3 +45,17 @@ it('cards hide retained numerical values and monitor text retains uncertainty',a
  expect(monitorRate(c,withheld)).toBe('—');expect(monitorRateNote(c,withheld)).toBe('No estimable');
  expect(monitorRateNote(c,applyAcquisitionScope(m,'monitor'))).toContain('revisar');
 });
+
+it('the complete worker-to-audit-to-card path cannot revive unavailable acquisition measurements',async()=>{
+ const {auditMeasurement}=await import('../src/engine/analysis/model-audit');
+ const {metricCards}=await import('../src/ui/metric-cards');
+ for(const filter of ['monitor','aggressive'] as const){
+  const c={...cloneCase(DEFAULT_CASE),filter},signal=synthesize(c,10);
+  const scoped=applyAcquisitionScope(analyzeSamples(signal),filter);
+  const audited=auditMeasurement(signal,scoped);
+  for(const key of Object.keys(scoped.evidence) as (keyof typeof scoped.evidence)[]){
+   if(scoped.evidence[key].status==='unavailable')expect(audited.evidence[key].status,key).toBe('unavailable');
+  }
+  if(filter==='aggressive')expect(metricCards(c,audited).every(card=>card.value==='—')).toBe(true);
+ }
+});

@@ -51,7 +51,7 @@ export function auditMeasurement(
         key,
         `Candidato ${Math.round(value)}: discrepa ${Math.round(error)} ${key === "hr" ? "lpm" : "ms"} de la referencia sintética. Medida retirada; utiliza calibres.`,
       );
-    else if (error > review) {
+    else if (error > review && m.evidence[key].status !== "unavailable") {
       m.evidence[key].status = "review";
       m.evidence[key].reason =
         `Diferencia de ${Math.round(error)} ${key === "hr" ? "lpm" : "ms"} frente a los mismos latidos del generador. Revisa los límites.`;
@@ -70,7 +70,7 @@ export function auditMeasurement(
         key,
         `Al menos un límite del latido discrepa ${Math.round(maximum)} ms de su referencia sintética. Medida retirada; los candidatos crudos se conservan para revisión.`,
       );
-    else if (maximum > soft) {
+    else if (maximum > soft && m.evidence[key].status !== "unavailable") {
       m.evidence[key].status = "review";
       m.evidence[key].reason =
         `Un límite difiere hasta ${Math.round(maximum)} ms de su referencia sintética. Revisa ese trazado.`;

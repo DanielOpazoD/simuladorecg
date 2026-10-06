@@ -37,7 +37,7 @@ try {
   }
 
   // Known acquisition provenance changes reported reliability, never sample analysis.
-  for(const file of ['src/engine/worker.ts','src/engine/acquisition-measurement.ts']) {
+  for(const file of ['src/engine/worker.ts','src/engine/acquisition-measurement.ts','src/engine/analysis/model-audit.ts']) {
     assertReviewedAcquisitionScope(file,await readFile(file));
     nonNumericalContracts.push(file);
   }
