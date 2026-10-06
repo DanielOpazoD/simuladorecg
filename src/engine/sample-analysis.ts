@@ -58,7 +58,7 @@ export function analyzeSamples(input: Samples): Measurement {
     { ...measurement, evidence: { ...measurement.evidence,
       hr: { ...measurement.evidence.hr, status: 'review',
         reason: 'Frecuencia sensible al umbral de detección y actividad de fondo elevada: pueden existir detecciones extra u omitidas. Verifica con calibres.' } } } : measurement;
-  return attachMeasurementSupport(next, quality);
+  return retireUnsupportedFrontalAxis(input, attachMeasurementSupport(next, quality));
 }
 
 /** Engineering acquisition domain shared with the external-record reader.
@@ -81,4 +81,22 @@ export function assertSampleInput(input: Pick<Signal, 'fs' | 'leads'>): void {
       if (!Number.isFinite(samples[index]))
         throw new RangeError(`Derivación ${lead}: muestra no finita en el índice ${index}.`);
   }
+}
+
+/** A constant pair I/II contains no frontal direction information. atan2(0,0)
+ * returning zero is a programming convention, not a measured axis of zero degrees.
+ * Exact constancy only: this is not a clinical low-voltage/noise threshold.
+ */
+function retireUnsupportedFrontalAxis(input: Samples, m: Measurement): Measurement {
+  const n = Math.min(input.leads.I.length, Math.round(10 * input.fs));
+  const flat = (lead: 'I' | 'II') => {
+    const a=input.leads[lead];
+    for(let i=1;i<n;i++)if(a[i]!==a[0])return false;
+    return true;
+  };
+  if (!flat('I') || !flat('II') || (m.axis===null && m.pAxis===null && m.tAxis===null)) return m;
+  return {...m, axis:null, pAxis:null, tAxis:null,
+    rejected:m.axis===null?m.rejected:{...m.rejected,axis:m.axis},
+    evidence:{...m.evidence,axis:{...m.evidence.axis,status:'unavailable',count:0,spread:null,
+      reason:'I y II no contienen variación en la ventana analizada: no se puede estimar una dirección frontal. No equivale a un eje de 0°.'}}};
 }
