@@ -4,6 +4,7 @@ import "./style.css";
 import { APP_VERSION } from "./ui/version";
 import { ActivationLab } from "./ui/activation-lab";
 import { familyLabel } from "./ui/catalog-presentation";
+import { metricCards, metricsHtml, monitorRate } from "./ui/metric-cards";
 import { diagnosisFamilies, diagnosisForPreset } from "./ui/diagnosis-navigation";
 import { createExplorationOrigin, explorationChanges, restoreExplorationOrigin, sameExplorationModel, type ExplorationOrigin } from "./ui/exploration-origin";
 import type { SyntheticComparisonTrace } from "./ui/comparison-model";
@@ -227,62 +228,10 @@ function renderInfo() {
   if (concealed) activation.invalidate();
   $("#catalog").classList.toggle("quiz-concealed", !!concealed);
 }
-function display(v: number | null | undefined, unit = "") {
-  return v == null || !Number.isFinite(v)
-    ? "—"
-    : Math.round(v) + (unit ? `<small>${unit}</small>` : "");
-}
 function renderMetrics() {
   if (!session.signal || !session.measurement) return;
-  const noOrganized = ["vf", "asystole"].includes(c.rhythm),
-    hasPR =
-      (c.rhythm === "sinus" && c.av !== "complete") ||
-      (c.rhythm === "paced" && c.pacing !== "VVI");
-  const vals: [string, string, string][] = [
-    [
-      "FC ventricular",
-      noOrganized || session.measurement.evidence.hr.status === "unavailable"
-        ? "—"
-        : display(session.measurement.hr, "lpm"),
-      "media · 10 s",
-    ],
-    [
-      "PR",
-      hasPR ? display(session.measurement.pr, "ms") : "—",
-      hasPR ? "estimado" : "sin relación AV estimable",
-    ],
-    [
-      "QRS",
-      noOrganized || session.measurement.evidence.qrs.status === "unavailable"
-        ? "—"
-        : display(session.measurement.qrs, "ms"),
-      "límites medidos",
-    ],
-    [
-      "QTc",
-      noOrganized ||
-      session.measurement.evidence.qt.status === "unavailable" ||
-      ["af", "flutter", "torsades"].includes(c.rhythm)
-        ? "—"
-        : display(session.measurement.qtc.fridericia, "ms"),
-      "Fridericia · estimado",
-    ],
-    [
-      "Eje QRS",
-      noOrganized ? "—" : display(session.measurement.axis, "°"),
-      "área neta · estimado",
-    ],
-  ];
-  $("#metrics").innerHTML = vals
-    .map(
-      ([label, v, sub], i) =>
-        `<button class="metric ${i === 0 ? "main-metric" : ""}" data-action="measurements" title="${esc(session.measurement!.evidence[(["hr", "pr", "qrs", "qt", "axis"] as const)[i]].reason)}"><span>${label}</span><strong>${v}</strong><small><i class="quality-dot ${session.measurement!.evidence[(["hr", "pr", "qrs", "qt", "axis"] as const)[i]].status}"></i>${session.measurement!.evidence[(["hr", "pr", "qrs", "qt", "axis"] as const)[i]].status === "unavailable" ? "No estimable" : session.measurement!.evidence[(["hr", "pr", "qrs", "qt", "axis"] as const)[i]].status === "review" ? "Revisar" : sub}</small></button>`,
-    )
-    .join("");
-  $("#monitor-rate").textContent =
-    noOrganized || session.measurement.evidence.hr.status === "unavailable"
-      ? "—"
-      : String(Math.round(session.measurement.hr ?? 0));
+  $("#metrics").innerHTML = metricsHtml(metricCards(c, session.measurement));
+  $("#monitor-rate").textContent = monitorRate(c, session.measurement);
 }
 function renderDetail() {
   if (session.signal && session.measurement)
