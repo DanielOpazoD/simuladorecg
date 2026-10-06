@@ -21,7 +21,7 @@ export interface CatalogFingerprint {
   samples: number[];
 }
 
-const FILE = new URL("../reference/catalog-fingerprints.json", import.meta.url);
+const FILE = new URL("../__snapshots__/catalog-fingerprints.json", import.meta.url);
 const STRIDE = 100;
 const SAMPLE_TOL_MV = 1e-5;
 const AGGREGATE_REL_TOL = 1e-6;
