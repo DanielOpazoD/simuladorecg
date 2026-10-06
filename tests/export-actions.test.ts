@@ -152,6 +152,34 @@ describe("export action dispatch", () => {
     context.canExport = true;
     await handleExportAction("png", context);
     expect(download).not.toHaveBeenCalled();
-    expect(context.toast).not.toHaveBeenCalled();
+    expect(context.toast).toHaveBeenCalledWith(expect.stringMatching(/No se pudo exportar/));
   });
+});
+
+it('waits for PNG encoding and reports a failed encoder visibly', async () => {
+  context.signal=synthesize(context.c,10);context.canExport=true;
+  let callback: BlobCallback | undefined;
+  canvas.toBlob.mockImplementation((cb:BlobCallback)=>{callback=cb;});
+  let finished=false;
+  const promise=handleExportAction('png',context).then(()=>{finished=true;});
+  await Promise.resolve();
+  expect(finished).toBe(false);
+  callback!(null);await promise;
+  expect(download).not.toHaveBeenCalled();
+  expect(context.toast).toHaveBeenCalledWith(expect.stringMatching(/No se pudo/));
+});
+
+it('contains DPI metadata failure without an unhandled rejection or success toast', async () => {
+  context.signal=synthesize(context.c,10);context.canExport=true;
+  vi.mocked(pngWithDpi).mockRejectedValueOnce(new Error('metadata failed'));
+  await expect(handleExportAction('png',context)).resolves.toBe(true);
+  expect(download).not.toHaveBeenCalled();
+  expect(context.toast).toHaveBeenCalledWith(expect.stringMatching(/No se pudo exportar/));
+});
+it('contains canvas rendering failure without claiming export', async () => {
+  context.signal=synthesize(context.c,10);context.canExport=true;
+  vi.mocked(renderPaper).mockImplementationOnce(()=>{throw new Error('canvas unavailable');});
+  await expect(handleExportAction('png',context)).resolves.toBe(true);
+  expect(download).not.toHaveBeenCalled();
+  expect(context.toast).toHaveBeenCalledWith(expect.stringMatching(/No se pudo exportar/));
 });

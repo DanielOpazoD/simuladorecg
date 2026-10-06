@@ -24,21 +24,20 @@ export async function handleExportAction(
         toast("El PNG estará disponible al generar correctamente la señal.");
         return true;
       }
-      const canvas = document.createElement("canvas"),
-        exportCase = cloneCase(c);
-      exportCase.view.palette = "paper";
-      renderPaper(canvas, signal, exportCase, 1000, {
-        pxPerMm: 300 / 25.4,
-        ratio: 1,
-        hideName,
-        displayName: caseReading(c).title,
-      });
-      canvas.toBlob(async (blob) => {
-        if (blob) {
-          download(await pngWithDpi(blob, 300), "ecg-lab-300dpi.png");
-          toast("PNG exportado a 300 dpi");
-        }
-      }, "image/png");
+      try {
+        const canvas = document.createElement("canvas"), exportCase = cloneCase(c);
+        exportCase.view.palette = "paper";
+        renderPaper(canvas, signal, exportCase, 1000, {
+          pxPerMm: 300 / 25.4, ratio: 1, hideName, displayName: caseReading(c).title,
+        });
+        const blob = await new Promise<Blob>((resolve, reject) => {
+          canvas.toBlob(value => value ? resolve(value) : reject(new Error("PNG encoder returned no image")), "image/png");
+        });
+        download(await pngWithDpi(blob, 300), "ecg-lab-300dpi.png");
+        toast("PNG exportado a 300 dpi");
+      } catch {
+        toast("No se pudo exportar el PNG. Inténtalo de nuevo o conserva el caso como JSON.");
+      }
       return true;
     }
     case "json":
