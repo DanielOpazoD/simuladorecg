@@ -181,7 +181,7 @@ export function tVector(c: ECGCase, b: Beat, kernels?: readonly Kernel[]): Vec {
   const tScale = c.tAmp / T_REFERENCE_AMPLITUDE,
     phaseBlend = Math.min(1, Math.max(0, c.st / 2)),
     coupled = secondaryRepolarization(c, b, kernels ?? qrsKernels(c, b)).t;
-  // Preserve the previous torsades example; rotation coherence is a separate PR.
+  // T remains in the source frame here; synthesis projects it with the torsades QRS frame.
   if (c.rhythm === "torsades" && coupled)
     return coupled.map(x => x * tScale) as Vec;
   const potassium = c.electrolyte === "hyperkalemia" || c.electrolyte === "hypokalemia",

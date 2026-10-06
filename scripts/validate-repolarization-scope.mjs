@@ -1,3 +1,4 @@
+import {predictTorsadesFrame} from './lib/torsades-frame-prediction.mjs';
 import {assertReviewedAcquisitionScope} from './lib/acquisition-scope-contract.mjs';
 import {assertReviewedEventCalendar} from './lib/event-calendar-revision.mjs';
 import {predictQTInitialization,assertReviewedQTInitialization} from './lib/qt-initialization-revision.mjs';
@@ -47,7 +48,7 @@ try {
   // Opt-in regional model: every historical trace below still has to be exact.
   // The experimental branch has its own mandatory, paired source/sample gate.
   const optInRegionalFiles=['src/engine/types.ts','src/engine/regional-activation.ts'];
-  assert.ok(changedFiles.every(f=>f===qtHistoryRevision || nonNumericalContracts.includes(f) || (coherence && optInRegionalFiles.includes(f)) || (coherence && ['src/engine/signal.ts','src/engine/morphology.ts','src/engine/secondary-repolarization.ts'].includes(f))), 'Unexpected generator/analyzer/catalog/dependency change');
+  assert.ok(changedFiles.every(f=>f===qtHistoryRevision || nonNumericalContracts.includes(f) || (coherence && optInRegionalFiles.includes(f)) || (coherence && ['src/engine/signal.ts','src/engine/morphology.ts','src/engine/secondary-repolarization.ts','src/engine/torsades-frame.ts'].includes(f))), 'Unexpected generator/analyzer/catalog/dependency change');
   async function load(dir,name){
     const outfile=path.join(temp,name+'.mjs');
     await build({stdin:{contents:"export {synthesize} from './src/engine/signal'; export {fromPreset,PRESETS} from './src/presets/catalog';",resolveDir:dir},bundle:true,platform:'node',format:'esm',outfile});
@@ -58,7 +59,7 @@ try {
   {
     const predicted=path.join(temp,'prediction');await cp(base,predicted,{recursive:true});
     const file=path.join(predicted,'src/engine/signal.ts');
-    if(coherence) await writeFile(file,predictSource(await readFile(file,'utf8')));
+    if(coherence) await writeFile(file,predictTorsadesFrame(predictSource(await readFile(file,'utf8'))));
     const qtFile=path.join(predicted,qtHistoryRevision);
     await writeFile(qtFile,predictQTInitialization(await readFile(qtFile,'utf8')));
     expected=await load(predicted,'expected');
@@ -79,8 +80,12 @@ try {
       {
         const c={...before.fromPreset(preset),filter},label=`${preset.id}/${filter}`;
         // Default phenotypes are outside this repair's numerical delta: exact, not tolerance-based.
-        if(coherence && !(c.rhythm==='sinus' && ['mobitz1','mobitz2','two_one','high'].includes(c.av)))
+        if(coherence && c.rhythm!=='torsades' && !(c.rhythm==='sinus' && ['mobitz1','mobitz2','two_one','high'].includes(c.av)))
           assertTraceContract(before.synthesize(c,10),after.synthesize(c,10),label+'/default-frozen');
+        if(coherence && c.rhythm==='torsades') {
+          // The complete QRS/acquisition chain must remain bit-identical when T is removed.
+          assertTraceContract(before.synthesize({...c,tAmp:0},10),after.synthesize({...c,tAmp:0},10),label+'/qrs-frozen');
+        }
         rows.push({preset:preset.id,filter,...check(c,label)});
       }
   assert.equal(rows.length,244);
@@ -98,6 +103,7 @@ try {
       }
   const report={schemaVersion:2,stage:coherence?'A02-A03-independent-prediction':'A01-characterization-only',baselineCommit:BASE,
     eventCalendarRevision:'Strict bounded events and causal RR/PR assertions; optional programmed flutter sequences. Historical default samples remain exact.',
+    torsadesFrameRevision:'Secondary T shares the historical time-varying QRS frame. Non-torsades defaults and QRS-only traces remain exact.',
     qtInitializationRevision:'First event retains nominal ventricular RR; adaptation starts at second event. Separate from A02/A03 morphology.',
     candidateCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),changedFiles,
     clinicalValidation:false,scenarios:rows.length,sampleComparisons:rows.reduce((n,r)=>n+r.checked,0),rows,matrix,
