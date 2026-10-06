@@ -15,9 +15,9 @@ describe('Frozen comparison admits only the reviewed acquisition guard', () => {
   });
 });
 
-it('verifies exact numerical-core preservation against the historical entry', async () => {
-  const { execFileSync } = await import('node:child_process');
-  const before = execFileSync('git', ['show', '8dd8af7efa3104ee7d14007a5f26acbdc83110b3:src/engine/sample-analysis.ts']);
+it('verifies exact numerical-core preservation against the historical entry without Git history', () => {
+  // Exact source from 8dd8af7; committed fixture also runs in shallow clones/ZIPs.
+  const before = readFileSync('tests/fixtures/sample-analysis-before-guard.txt');
   expect(() => assertReviewedSampleEntry(source,before)).not.toThrow();
   expect(() => assertReviewedSampleEntry(source,before.toString().replace('candidateFraction: 0.6','candidateFraction: 0.2'))).toThrow(/Numerical/);
 });
