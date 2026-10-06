@@ -1,4 +1,4 @@
-import {assertReviewedSampleEntry,assertReviewedImpulseConfidence,assertReviewedSampleDependencies} from './lib/sample-entry-contract.mjs';
+import {assertReviewedSampleEntry,assertReviewedAlternatingConfidence,assertReviewedImpulseConfidence,assertReviewedSampleDependencies} from './lib/sample-entry-contract.mjs';
 /** Paired evidence-only revision: fixed, already observed LUDB cohorts; no holdout. */
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
@@ -33,6 +33,7 @@ const evaluationFiles=['scripts/lib/ludb-frozen-baseline.mjs','scripts/lib/exter
  'scripts/lib/external-qrs-evaluation.mjs','tests/reference/ludb/load-ludb.mjs','benchmarks/ludb-baseline/protocol.json'];
 for(const f of evaluationFiles)assert.deepEqual(readFileSync(f),execFileSync('git',['show','2f8247a859badf3f66c307258904ac7c099c38fb:'+f]));
 assertReviewedImpulseConfidence(readFileSync('src/engine/analysis/impulse-confidence.ts'));
+assertReviewedAlternatingConfidence(readFileSync('src/engine/analysis/alternating-confidence.ts'));
 const analyzers=[];
 for(const [i,root] of [base,candidate].entries()){
  const bundle=resolve(out,'analyzer-'+i+'.mjs');

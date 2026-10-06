@@ -229,10 +229,24 @@ for(const engine of [chromium,webkit,firefox]) {
         await page.locator('#external-metrics').scrollIntoViewIfNeeded();
         await page.screenshot({path:resolve(out,stem+'-impulse-confidence.png')});
         await page.keyboard.press('Escape');await page.locator('#external-lab').waitFor({state:'hidden'});
+        const alternatingCsv=Buffer.from(['# ECG-LAB CSV 1; fs=500; units=mV','time_s,'+names.join(','),
+          ...Array.from({length:5000},(_,i)=>{const t=i/500;let v=0;for(let b=.5;b<10;b+=.84)v+=Math.exp(-.5*((t-b)/.014)**2)-.9*Math.exp(-.5*((t-b-.22)/.016)**2);return[t,...weights.map(w=>w*v)].join(',');})].join('\n'));
+        await key('[data-action=external]');
+        await page.locator('#external-files').setInputFiles({name:'opposite-short-long.csv',mimeType:'text/csv',buffer:alternatingCsv});
+        await key('[data-external=load]');await page.locator('#external-aptitude').waitFor();
+        assert.equal(await page.locator('#external-aptitude').getAttribute('data-status'),'exploratory');
+        await page.locator('#external-metrics').waitFor();
+        const alternatingReport=JSON.parse((await file('[data-external=json]','alternating-analysis.json')).toString());
+        assert.equal(alternatingReport.measurement.evidence.hr.status,'review');
+        assert.ok(alternatingReport.measurement.hr>130,'No fictitious automatic halving');
+        assert.match(await page.locator('#external-metrics tbody tr').first().innerText(),/doble conteo QRS\/T/);
+        await page.locator('#external-metrics').scrollIntoViewIfNeeded();
+        await page.screenshot({path:resolve(out,stem+'-alternating-confidence.png')});
+        await page.keyboard.press('Escape');await page.locator('#external-lab').waitFor({state:'hidden'});
         assert.equal(await page.locator('.workspace').evaluate(e=>e.inert),false);
         assert.deepEqual(requests.filter(r=>!isLocalGet(r,origin)),[],'No data upload or third-party request; local blob downloads are reads');
         assert.deepEqual(errors,[]);assert.deepEqual(warnings,[]);
-        results.push({engine:engine.name(),version:browser.version(),width,build:info,firstViewport,externalFit,comparisonFit,layouts,samplesVerified:120000,keyboard:true,pointer:width===390&&engine.name()!=='firefox'?'emulated-touch':'mouse',stepMs:2,pointerSample:point.sample,manualMs:(point.sample-640)*2,downloads:7,errors,warnings});
+        results.push({engine:engine.name(),version:browser.version(),width,build:info,firstViewport,externalFit,comparisonFit,layouts,samplesVerified:120000,keyboard:true,pointer:width===390&&engine.name()!=='firefox'?'emulated-touch':'mouse',stepMs:2,pointerSample:point.sample,manualMs:(point.sample-640)*2,downloads:8,errors,warnings});
         await writeFile(resolve(out,'accessibility-results.json'),JSON.stringify({results,physicalDevice:false,screenReaderTested:false,zoomNote:'320/720 CSS-pixel reflow; not native browser zoom',wcagCertification:false},null,2));
       } catch(e) {
         await page.screenshot({path:resolve(out,stem+'-failure.png')}).catch(()=>{});

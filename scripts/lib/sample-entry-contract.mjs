@@ -7,10 +7,12 @@ import { createHash } from 'node:crypto';
  */
 export function assertReviewedSampleEntry(source, previous) {
   assert.equal(createHash('sha256').update(source).digest('hex'),
-    '0a074cafb92dc11ea5830830d50f46ea85aeb3ab83e7dfd5d13a272e039ab7c1',
+    'fbffdab87df041f5b8d0d89cf37533e085bb21d7e4a2f4bce3a6d1310b332501',
     'Unreviewed sample-entry change: acquisition guard or analysis policy differs');
   if (previous !== undefined) {
     const core = source.toString().split('\n/** Engineering acquisition domain')[0]
+      .replace("import {reviewAlternatingCandidates} from './analysis/alternating-confidence';\n", '')
+      .replace('reviewAlternatingCandidates(input, withholdImpulseDominatedMeasurements(input, retireUnsupportedFrontalAxis(input, attachMeasurementSupport(next, quality))))', 'withholdImpulseDominatedMeasurements(input, retireUnsupportedFrontalAxis(input, attachMeasurementSupport(next, quality)))')
       .replace("import {withholdImpulseDominatedMeasurements} from './analysis/impulse-confidence';\n", '')
       .replace('withholdImpulseDominatedMeasurements(input, retireUnsupportedFrontalAxis(input, attachMeasurementSupport(next, quality)))', 'retireUnsupportedFrontalAxis(input, attachMeasurementSupport(next, quality))')
       .replace("import { LEADS } from './lead-registry';\n", '')
@@ -26,6 +28,11 @@ export function assertReviewedImpulseConfidence(source) {
 }
 
 export function assertReviewedSampleDependencies(actual,historical,candidate) {
-  const expected=candidate?[...historical,'src/engine/analysis/impulse-confidence.ts']:historical;
+  const expected=candidate?[...historical,'src/engine/analysis/impulse-confidence.ts','src/engine/analysis/alternating-confidence.ts']:historical;
   assert.deepEqual([...actual].sort(),[...expected].sort(),'Unexpected analyzer dependency');
+}
+
+export function assertReviewedAlternatingConfidence(source) {
+  assert.equal(createHash('sha256').update(source).digest('hex'),
+    '5e28c22f46023905c977d2ce3f6b6a0f22bc4253b65d91e5e2303ba0b2697fbc', 'Unreviewed alternating-confidence change');
 }
