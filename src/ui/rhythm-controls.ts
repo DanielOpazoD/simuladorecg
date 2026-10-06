@@ -7,7 +7,12 @@ export function rhythmControlState(c: ECGCase) {
   const sinus = c.rhythm === 'sinus';
   const atrialIndependent = c.rhythm === 'flutter' || c.rhythm === 'vt' || (sinus && c.av === 'complete');
   const noOrganizedBeats = c.rhythm === 'vf' || c.rhythm === 'asystole';
+  const pPresent = sinus || c.rhythm === 'junctional' || c.rhythm === 'vt'
+    || (c.rhythm === 'paced' && c.pacing !== 'VVI');
   return {
+    noOrganizedBeats,
+    pAmplitudeDisabled: !pPresent,
+    pAxisDisabled: !pPresent || c.rhythm === 'junctional',
     baseRateDisabled: c.rhythm === 'flutter' || noOrganizedBeats,
     baseRateLabel: sinus && c.av === 'complete' ? 'Frecuencia de escape'
       : sinus && !['normal','first'].includes(c.av) ? 'Frecuencia auricular'
