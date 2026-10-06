@@ -9,7 +9,8 @@ import { metricCards, metricsHtml, monitorRate } from "./ui/metric-cards";
 import { openDialog, closeDialog } from "./ui/dialog";
 import { exportDialogHtml } from "./ui/export-dialog";
 import { handleExportAction } from "./ui/export-actions";
-import { diagnosisFamilies, diagnosisForPreset } from "./ui/diagnosis-navigation";
+import { diagnosisForPreset } from "./ui/diagnosis-navigation";
+import { catalogView, VariantNavigation } from "./ui/catalog-view";
 import { createExplorationOrigin, explorationChanges, restoreExplorationOrigin, sameExplorationModel, type ExplorationOrigin } from "./ui/exploration-origin";
 import type { SyntheticComparisonTrace } from "./ui/comparison-model";
 import { ComparisonLab } from "./ui/comparison-lab";
@@ -35,7 +36,6 @@ import {
   PRESETS,
   fromPreset,
   presetById,
-  type Preset,
 } from "./presets/catalog";
 import {
   renderPaper,
@@ -98,6 +98,7 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  <footer class="workspace-footer"><span>ECG Lab · Laboratorio de electrocardiografía</span><span>Uso educativo. Sin validación clínica.</span></footer></main></div>
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
 
+const variantNavigation = new VariantNavigation($("#diagnosis-navigation"), $("#diagnosis-content"));
 const caliperEditor = new CaliperEditor($("#caliper-editor"), $<HTMLCanvasElement>("#ecg"), next => { caliper = next; draw(); });
 let toastTimer = 0;
 function clearToast() {
@@ -140,44 +141,10 @@ function currentPreset() {
   return caseContext(c).preset;
 }
 function renderCatalog() {
-  const selectedId = currentPreset()?.id;
-  const families = diagnosisFamilies(PRESETS, search, group, selectedId);
-  const available = families.reduce((sum, family) => sum + family.available, 0);
-  const entries = families.reduce((sum, family) => sum + family.availableEntries, 0);
-  $("#catalog-count").textContent = `${entries} ${entries === 1 ? "patrón" : "patrones"} · ${available} ${available === 1 ? "ejemplo" : "ejemplos"}`;
-  $("[data-action=clear-search]").hidden = !search && !group;
-  $("#case-list").innerHTML = families.map(family =>
-    `<section class="case-group"><h3>${esc(family.label)}<span>${family.entryCount}</span></h3>${family.sections.map(section =>
-      `${section.title ? `<h4 class="case-subgroup">${esc(section.title)}</h4>` : ""}${section.entries.map(entry => {
-        const {diagnosis, target, selected, matches} = entry;
-        const pending = target.strategy === "pending";
-        const multiple = diagnosis.variants.length > 1;
-        const detail = pending ? "Pendiente" : search && matches.length === 1 && multiple
-          ? `Coincide: ${diagnosis.variants.find(v => v.id === target.id)!.label}`
-          : multiple ? `${diagnosis.variants.length} variantes` : "";
-        return `<button type="button" class="case-button ${selected ? "selected" : ""}" data-diagnosis="${esc(diagnosis.id)}" data-preset="${esc(target.id)}" title="${esc(target.name)}" aria-label="${esc(diagnosis.title)}${detail ? ` · ${esc(detail)}` : ""}" ${pending ? "disabled" : ""} ${selected ? 'aria-current="true"' : ""}><span>${esc(diagnosis.title)}${detail ? `<small class="case-variants-count">${esc(detail)}</small>` : ""}</span>${selected ? icon("check") : multiple ? icon("chevron") : ""}</button>`;
-      }).join("")}`
-    ).join("")}</section>`
-  ).join("") || '<div class="catalog-empty"><strong>No encontramos ese patrón</strong><p>Prueba con el nombre completo o una sigla como FA, BRI o WPW.</p></div>';
-}
-let renderedVariants = "";
-function renderVariants(preset: Preset | undefined, concealed: boolean) {
-  const navigation = $("#diagnosis-navigation");
-  const content = $("#diagnosis-content");
-  const diagnosis = preset && !concealed && !c.artifacts.reversed ? diagnosisForPreset(preset) : null;
-  const multi = diagnosis && diagnosis.variants.length > 1;
-  const key = multi ? `${diagnosis.id}/${preset!.id}` : "";
-  navigation.hidden = !multi;
-  if (key !== renderedVariants) {
-    navigation.innerHTML = multi ? `<div class="variant-heading"><span id="variant-label">Variantes del patrón</span><small>Cambiar de variante carga su ejemplo original.</small></div><div class="variant-tabs" role="tablist" aria-labelledby="variant-label" data-activation="manual">${diagnosis.variants.map(v => `<button type="button" role="tab" id="variant-tab-${esc(v.id)}" data-variant="${esc(v.id)}" aria-selected="${v.id === preset!.id}" aria-controls="diagnosis-content" tabindex="${v.id === preset!.id ? 0 : -1}">${esc(v.label)}</button>`).join("")}</div>` : "";
-    renderedVariants = key;
-  }
-  if (multi) {
-    content.setAttribute("role", "tabpanel");
-    content.setAttribute("aria-labelledby", `variant-tab-${preset!.id}`);
-  } else {
-    content.removeAttribute("role"); content.removeAttribute("aria-labelledby");
-  }
+  const view = catalogView(PRESETS, search, group, currentPreset()?.id);
+  $("#catalog-count").textContent = view.count;
+  $("[data-action=clear-search]").hidden = !view.clearFiltersVisible;
+  $("#case-list").innerHTML = view.html;
 }
 function formatExplorationValue(value:unknown){if(typeof value==="boolean")return value?"Sí":"No";return value==null?"—":String(value)}
 function renderExplorationContext(concealed:boolean){const root=$("#exploration-context"),changes=explorationOrigin?explorationChanges(explorationOrigin,c):[],custom=!!explorationOrigin&&changes.length>0&&!concealed;root.hidden=!custom;if(!custom){root.innerHTML="";return}root.innerHTML=`<div class="exploration-provenance"><span>Basada en: <strong>${esc(explorationOrigin!.presetName)}</strong></span><span class="exploration-count">${changes.length} ${changes.length===1?"ajuste":"ajustes"} respecto al ejemplo original</span></div><div class="exploration-actions"><button type="button" class="text-button" data-action="exploration-changes">Ver cambios</button><button type="button" class="text-button" data-action="compare-origin" ${explorationOriginTrace&&session.canExport?"":"disabled"}>Comparar con origen</button><button type="button" class="text-button" data-action="restore-origin">Restaurar origen</button></div><p>«Basada en» indica procedencia de la exploración; no diagnostica el trazado modificado.</p>`}
@@ -193,7 +160,7 @@ function renderInfo() {
   $("#case-title").textContent = concealed ? "Interpreta este ECG" : customExploration ? "Exploración personalizada" : grouped ? diagnosis.title : reading.title;
   $("#case-variant-title").hidden = !!concealed || !grouped || p?.name === diagnosis?.title;
   $("#case-variant-title").textContent = !concealed && grouped ? p!.name : "";
-  renderVariants(p, !!concealed);
+  variantNavigation.update(p, !!concealed, c.artifacts.reversed);
   $("#case-category").textContent = concealed
     ? "PRÁCTICA"
     : customExploration ? "EXPLORACIÓN"
