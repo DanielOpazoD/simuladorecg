@@ -384,12 +384,20 @@ export function normalizeCase(input: unknown): ECGCase {
   for (const k of ["presetId", "name"] as const)
     if (typeof s[k] === "string") c[k] = s[k].slice(0, 100);
   if (typeof s.septalQ === "boolean") c.septalQ = s.septalQ;
-  if (s.artifacts && typeof s.artifacts === "object") {
+  if (s.artifacts !== undefined) {
+    if (!s.artifacts || typeof s.artifacts !== "object" || Array.isArray(s.artifacts))
+      throw new Error("Configuración de artefactos no válida");
     const a = s.artifacts as Record<string, unknown>;
-    for (const k of ["baseline", "muscle", "mains", "loose"] as const)
-      if (typeof a[k] === "number" && Number.isFinite(a[k]))
-        c.artifacts[k] = Math.max(0, Math.min(1, a[k] as number));
-    if (typeof a.reversed === "boolean") c.artifacts.reversed = a.reversed;
+    for (const k of ["baseline", "muscle", "mains", "loose"] as const) {
+      if (a[k] === undefined) continue;
+      if (typeof a[k] !== "number" || !Number.isFinite(a[k]))
+        throw new Error("Amplitud de artefacto no válida: " + k);
+      c.artifacts[k] = Math.max(0, Math.min(1, a[k] as number));
+    }
+    if (a.reversed !== undefined) {
+      if (typeof a.reversed !== "boolean") throw new Error("Inversión de artefacto no válida");
+      c.artifacts.reversed = a.reversed;
+    }
   }
   if (s.view && typeof s.view === "object") {
     const v = s.view as Record<string, unknown>;
