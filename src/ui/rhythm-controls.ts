@@ -10,7 +10,13 @@ export function rhythmControlState(c: ECGCase) {
   const noOrganizedBeats = c.rhythm === 'vf' || c.rhythm === 'asystole';
   const pPresent = sinus || c.rhythm === 'junctional' || c.rhythm === 'vt'
     || (c.rhythm === 'paced' && c.pacing !== 'VVI');
+  const sourceDriven = ['vt', 'torsades', 'idioventricular'].includes(c.rhythm)
+    || (c.rhythm === 'paced' && c.pacing !== 'AAI')
+    || (sinus && c.av === 'complete' && c.escape === 'ventricular');
   return {
+    escapeDisabled: !(sinus && c.av === 'complete'),
+    conductionDisabled: noOrganizedBeats || sourceDriven,
+    qrsAxisDisabled: noOrganizedBeats || sourceDriven,
     noOrganizedBeats,
     pAmplitudeDisabled: !pPresent,
     pAxisDisabled: !pPresent || c.rhythm === 'junctional',
