@@ -1,3 +1,4 @@
+import { applyTheme, currentTheme, readTheme } from "./ui/theme";
 import { regionalActivationControls } from "./ui/regional-activation";
 import "./style.css";
 import { APP_VERSION } from "./ui/version";
@@ -77,6 +78,7 @@ try {
 } catch (e) {
   initialError = (e as Error).message;
 }
+applyTheme(readTheme());
 const root = $("#app");
 root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="ECG Lab, inicio">${icon("pulse")}<span>ECG<span class="brand-light">lab</span></span><span class="brand-divider"></span><small>Explora la electrocardiografía</small></a><nav aria-label="Herramientas"><button class="btn mobile-cases" data-action="catalog">${icon("menu")}<span>Casos</span></button>${btn("quiz", "Practicar", "quiz")}${btn("about", "Guía", "book")}${btn("theme", "Tema", "sun", "icon-button")}${btn("export", "Exportar", "download", "primary")}</nav></header>
  <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><div><h2>Biblioteca de patrones</h2><span>${PRESETS.filter((x) => x.strategy !== "pending").length} ejemplos · agrupados por patrón</span></div>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Patrón, sigla o palabra…" aria-label="Buscar caso"/></label><label class="category-select"><span class="sr-only">Categoría</span><select id="category">${options([["", "Todas las familias"], ...Array.from(new Set(PRESETS.map((x) => x.group))).map((x) => [x, familyLabel(x)] as [string, string])], "")}</select></label><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div><div class="sidebar-footer">${icon("pulse")}<div>Señal 100% sintética<small data-product-version="${APP_VERSION}">Modelo educativo · v${APP_VERSION}</small></div></div></aside>
@@ -410,6 +412,7 @@ function syncTraceTools() {
   $<HTMLButtonElement>('[data-action="compare"]').disabled = !!quiz && !quiz.answer;
   $<HTMLButtonElement>('[data-action="external"]').disabled = !!quiz && !quiz.answer;
   $<HTMLButtonElement>('[data-action="activation"]').disabled = !ready || (!!quiz && !quiz.answer);
+  $('[data-action="theme"]').setAttribute("aria-pressed", String(currentTheme() === "dark"));
   const caliperButton = $<HTMLButtonElement>('[data-action="caliper"]');
   caliperButton.disabled = monitorMode || !ready;
   caliperButton.classList.toggle("active", measuring);
@@ -497,6 +500,7 @@ function generate() {
   session.expectRequest(controller.request(c));
 }
 function draw() {
+  c.view.palette = currentTheme() === "dark" ? "dark" : "paper";
   syncTraceTools();
   if (!session.signal) return;
   const canvas = $<HTMLCanvasElement>("#ecg"),
@@ -843,10 +847,7 @@ document.addEventListener("click", async (e) => {
     toast(audioOn ? "Sonido activado" : "Sonido desactivado");
   }
   if (action === "theme") {
-    document.documentElement.classList.toggle("dark");
-    c.view.palette = document.documentElement.classList.contains("dark")
-      ? "dark"
-      : "paper";
+    applyTheme(currentTheme() === "dark" ? "light" : "dark", true);
     draw();
     renderDetail();
   }
