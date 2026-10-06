@@ -1,0 +1,44 @@
+name: AF timing reference
+on:
+  pull_request:
+    paths: ['scripts/*af-rhythm*', 'tests/test_af_rhythm_reference.py', 'benchmarks/af-rhythm/**', '.github/workflows/af-rhythm-reference.yml']
+  push:
+    branches: [main]
+    paths: ['scripts/*af-rhythm*', 'tests/test_af_rhythm_reference.py', 'benchmarks/af-rhythm/**', '.github/workflows/af-rhythm-reference.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  af-reference:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v5
+        with: {node-version: '22.16.0', cache: npm}
+      - uses: actions/setup-python@v6
+        with: {python-version: '3.11'}
+      - run: npm ci
+      - run: python -m pip install wfdb==4.3.1
+      - run: python -m unittest discover -s tests -p test_af_rhythm_reference.py -v
+      - name: Acquire every corrected-annotation record and verify release hashes
+        run: python scripts/af-rhythm-reference.py "$RUNNER_TEMP/af-reference"
+      - name: Compare timing without fitting or promoting a clinical threshold
+        run: node scripts/compare-af-rhythm.mjs "$RUNNER_TEMP/af-reference/af-rhythm-reference.json" "$RUNNER_TEMP/af-reference/comparison.json"
+      - name: Record exact source and runtime
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/af-reference"
+          git rev-parse HEAD > "$RUNNER_TEMP/af-reference/commit.txt"
+          python -m pip freeze > "$RUNNER_TEMP/af-reference/runtime.txt"
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: af-timing-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/af-reference/af-rhythm-reference.json
+            ${{ runner.temp }}/af-reference/comparison.json
+            ${{ runner.temp }}/af-reference/commit.txt
+            ${{ runner.temp }}/af-reference/runtime.txt
+          retention-days: 30

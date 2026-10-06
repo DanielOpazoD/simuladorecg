@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "dataset": "https://physionet.org/content/afdb/1.0.0/",
+  "selection": "Every record with manually corrected qrsc annotations in the release manifest; fixed before analysis, no fit/evaluation split because no parameters are fitted",
+  "records": ["05091", "07859"],
+  "rhythm": "(AFIB",
+  "annotation": "qrsc",
+  "windowSeconds": 60,
+  "minimumIntervals": 20,
+  "policy": "Non-overlapping 60-second windows aligned to each AF episode onset, fully contained in manually labelled AF. Do not cross rhythm transitions or fill missing intervals. Include every positive finite RR; no physiologic outlier trimming.",
+  "limitations": ["Only two records have manually corrected beats: not a population calibration.", "Corrected beats do not distinguish ectopy; RR is not necessarily NN.", "No signal morphology or f-wave amplitude validation from beat annotations.", "Short AF episodes are reported but excluded from full-window summaries."]
+}
