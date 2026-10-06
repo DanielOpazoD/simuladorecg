@@ -1,3 +1,4 @@
+import { qtModelLimits } from './qt-model-limits';
 import { measurementSupportHtml } from './measurement-support';
 import type { Signal, Measurement, ECGCase, MetricKey } from "../engine/types";
 import { referenceForMeasurement } from "../engine/reference";
@@ -27,6 +28,7 @@ export function measurementDialog(
  <p class="control-note">La señal mostrada y exportada conserva las muestras originales. Los impulsos breves se neutralizan solo en una copia para el análisis. *La referencia contiene tiempos de activación y soporte del generador; no es una anotación clínica. Su eje es el solicitado antes de superponer lesión/sobrecarga. «Reproducible» describe consistencia interna, no exactitud clínica ni una probabilidad de acierto.</p>
  <div class="evidence-notes">${rows.map(([key, label]) => `<p><strong>${label}.</strong> ${esc(m.evidence[key].reason)}</p>`).join("")}</div>
  ${measurementSupportHtml(m)}
+ ${qtModelLimits(c,s).map(reason=>`<p class="warning" data-qt-model-limit>${esc(reason)}</p>`).join('')}
  <h3>Corrección del QT</h3><div class="qt-grid">${Object.entries(m.qtc)
    .map(
      ([key, v]) =>
