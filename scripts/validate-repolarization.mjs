@@ -1,3 +1,4 @@
+import {predictWpwSupport} from './lib/wpw-support-prediction.mjs';
 import {predictAfClock,assertFrozenAfSampler} from './lib/af-clock-prediction.mjs';
 import {assertReviewedAlternatingConfidence,assertReviewedImpulseConfidence} from './lib/sample-entry-contract.mjs';
 import {predictQTInitialization,assertReviewedQTInitialization} from './lib/qt-initialization-revision.mjs';
@@ -23,7 +24,7 @@ const temp = await mkdtemp(path.join(tmpdir(),'ecg-regional-'));
 try {
  assertReviewedQTInitialization(await readFile('src/engine/repolarization.ts'));
  assertFrozenAfSampler(await readFile('src/engine/af-rr.ts'));
- const referencePreparation='Historical morphology with independently predicted QT initialization and representative AF clock; default equality is relative to this declared reference revision';
+ const referencePreparation='Historical morphology with independently predicted QT initialization, compact WPW support and representative AF clock; default equality is relative to this declared reference revision';
  let baseDir = options['--baseline-dir'];
  if (!baseDir) {
    baseDir = path.join(temp,'base'); await mkdir(baseDir);
@@ -38,6 +39,7 @@ try {
        builder.onLoad({filter:/\/repolarization\.ts$/},async args=>({
          contents:predictQTInitialization(await readFile(args.path,'utf8')),loader:'ts'
        }));
+       builder.onLoad({filter:/\/signal\.ts$/},async args=>({contents:predictWpwSupport(await readFile(args.path,'utf8')),loader:'ts'}));
        builder.onLoad({filter:/\/rhythm\.ts$/},async args=>({contents:predictAfClock(await readFile(args.path,'utf8')),loader:'ts'}));
      }}]});
    return import(pathToFileURL(outfile).href);

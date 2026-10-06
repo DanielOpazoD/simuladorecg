@@ -1,3 +1,4 @@
+import {predictWpwSupport} from './lib/wpw-support-prediction.mjs';
 import {predictAfClock,assertFrozenAfSampler} from './lib/af-clock-prediction.mjs';
 import {predictQTInitialization,assertReviewedQTInitialization} from './lib/qt-initialization-revision.mjs';
 /** Paired generator regression; independent of the sample analyzer and external ECG labels. */
@@ -22,6 +23,8 @@ try {
   execFileSync('tar', ['-xf', '-', '-C', baseDir], {input: execFileSync('git', ['archive', baseline], {maxBuffer: 100 * 1024 * 1024})});
   async function load(dir, name) {
     if(dir !== process.cwd()) {
+      const signalFile=path.join(dir,'src/engine/signal.ts');
+      await writeFile(signalFile,predictWpwSupport(await readFile(signalFile,'utf8')));
       const file=path.join(dir,'src/engine/repolarization.ts');
       await writeFile(file,predictQTInitialization(await readFile(file,'utf8')));
       const rhythmFile=path.join(dir,'src/engine/rhythm.ts');
@@ -229,7 +232,7 @@ try {
   };
   assert.deepEqual([defaults.length, rows.length, lowVoltageScenarios.length, wpwLowVoltageScenarios.length, rvScenarios.length],
     expectedCounts[scope], 'Incomplete scope: do not silently omit validation');
-  const referencePreparation = 'Historical morphology with the independently predicted QT initialization and representative AF clock revisions; exact/default counts compare these QT-normalized references, not raw historical QT';
+  const referencePreparation = 'Historical morphology with the independently predicted QT initialization, compact WPW support and representative AF clock revisions; exact/default counts compare these explicitly transformed references, not raw historical QT';
   const report = {scope, baseline, axisBaseline, referencePreparation, commit: execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim(),
     defaults, gainScenarios: rows, lowVoltageBaseline, lowVoltageScenarios, wpwLowVoltageBaseline, wpwLowVoltageScenarios, rvBaseline, rvScenarios, nativeActivationTimingsUnchanged: true, clinicalValidation: false};
   const output = process.argv[2]; assert.ok(output, 'Provide result JSON path');

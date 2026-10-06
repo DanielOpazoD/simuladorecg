@@ -1,3 +1,4 @@
+import {wpwNativeLeadII} from './support/wpw-native-pulse';
 import {afInterval} from '../src/engine/af-rr';
 import {random} from '../src/engine/random';
 import {assertExactSamples} from './support/exact-samples';
@@ -180,6 +181,11 @@ describe("Determinismo y catálogo", () => {
         for(let t=.35;t<14;t+=afInterval(r,60/c.hr))if(t>=4)times.push(t-4);
         expect(a.events.beats.map(b=>b.time)).toEqual(times);
         expect(a.events.atria).toHaveLength(0);expect(a.events.spikes).toHaveLength(0);
+      } else if (fromPreset(p).conduction === 'wpw') {
+        // Retain the original fingerprint: restore only the independently predicted
+        // pre-onset sine leakage removed by the compact-support repair.
+        const leak=wpwNativeLeadII(fromPreset(p),10,true);
+        expectCatalogFingerprint(p.id,Float64Array.from(a.leads.II,(value,i)=>value+leak[i]));
       } else if (!hasCoupledSecondary) expectCatalogFingerprint(p.id, a.leads.II);
     },
   );
