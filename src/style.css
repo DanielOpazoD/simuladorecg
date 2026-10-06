@@ -1895,3 +1895,9 @@ textarea {
 .exploration-actions{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:5px}.exploration-actions .text-button{padding:5px 0}
 .exploration-context>p{font-size:10px!important;line-height:1.5!important;margin-top:3px!important;color:var(--muted)!important}
 @media(max-width:600px){.exploration-context{padding:10px}.exploration-provenance{align-items:flex-start;flex-direction:column;gap:5px}.exploration-actions{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px}.exploration-actions .text-button{min-height:44px}.exploration-actions .text-button:last-child{grid-column:1/-1}}
+
+/* Keep uncertainty in view; only supporting numbers are progressively disclosed. */
+.detail-note > p { margin: 0 0 6px; }
+.detail-evidence summary { cursor: pointer; color: var(--accent); padding: 6px 0; }
+.detail-evidence summary:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+.detail-evidence p { margin: 6px 0 0; }
