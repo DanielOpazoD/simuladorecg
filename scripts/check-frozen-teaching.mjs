@@ -1,0 +1,8 @@
+import {readFileSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
+import assert from 'node:assert/strict';
+import {assertNoncaptureTeachingScope} from './lib/noncapture-teaching-contract.mjs';
+const base=process.argv[2];assert.match(base??'',/^[0-9a-f]{40}$/,'Exact frozen commit required');
+const file='src/presets/teaching-limits.ts';
+assertNoncaptureTeachingScope(readFileSync(file,'utf8'),execFileSync('git',['show',`${base}:${file}`],{encoding:'utf8'}));
+console.log('Frozen teaching text and conditions preserved except the reviewed no-activation guard');

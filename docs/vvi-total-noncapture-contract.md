@@ -38,3 +38,7 @@ The strict frozen-source gate initially rejected that newly changed teaching fil
 It now admits only removal of the exact added import/guard when reconstructing
 the frozen original. Other prose or condition changes still fail; all244 historical
 sample scenarios and54 coherence cases remain mandatory. No broad file exemption.
+CI also correctly rejected the same scoped teaching change in its independent
+T-peak catalog freeze. That workflow now invokes the exact reconstruction check
+against its own original commit; the remaining preset/reference paths still use
+git diff --exit-code. No numerical T-peak baseline or acceptance rule changes.
