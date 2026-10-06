@@ -1,3 +1,4 @@
+import {withholdImpulseDominatedMeasurements} from './analysis/impulse-confidence';
 import { LEADS } from './lead-registry';
 import { attachMeasurementSupport } from './measurement-support';
 import type { Measurement, Signal } from './types';
@@ -58,7 +59,7 @@ export function analyzeSamples(input: Samples): Measurement {
     { ...measurement, evidence: { ...measurement.evidence,
       hr: { ...measurement.evidence.hr, status: 'review',
         reason: 'Frecuencia sensible al umbral de detección y actividad de fondo elevada: pueden existir detecciones extra u omitidas. Verifica con calibres.' } } } : measurement;
-  return retireUnsupportedFrontalAxis(input, attachMeasurementSupport(next, quality));
+  return withholdImpulseDominatedMeasurements(input, retireUnsupportedFrontalAxis(input, attachMeasurementSupport(next, quality)));
 }
 
 /** Engineering acquisition domain shared with the external-record reader.

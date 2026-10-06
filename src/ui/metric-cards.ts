@@ -72,3 +72,8 @@ export const monitorRate = (c: ECGCase, m: Measurement) =>
 export const monitorRateNote = (c: ECGCase, m: Measurement): string =>
   unorganized(c) || m.evidence.hr.status === "unavailable" || m.hr === null || !Number.isFinite(m.hr)
     ? "No estimable" : m.evidence.hr.status === "review" ? "lpm · revisar" : "lpm · estimados";
+
+/** Keep raw candidates in data, but do not present unavailable values as estimates. */
+export function availableMetricValue(m:Measurement,key:MetricKey):number|null {
+  return m.evidence[key].status==='unavailable'?null:m[key];
+}
