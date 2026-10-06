@@ -1,3 +1,4 @@
+import {predictAfClock,assertFrozenAfSampler} from './lib/af-clock-prediction.mjs';
 import {predictQTInitialization,assertReviewedQTInitialization} from './lib/qt-initialization-revision.mjs';
 /** Paired generator regression; independent of the sample analyzer and external ECG labels. */
 import { build } from 'esbuild';
@@ -16,12 +17,15 @@ const axisBaseline = '5bafc2031e73048ff2f5d5e99f0b039d4ef1acca';
 const temp = await mkdtemp(path.join(tmpdir(), 'posterior-gain-'));
 try {
   assertReviewedQTInitialization(await readFile('src/engine/repolarization.ts'));
+  assertFrozenAfSampler(await readFile('src/engine/af-rr.ts'));
   const baseDir = path.join(temp, 'baseline'); await mkdir(baseDir);
   execFileSync('tar', ['-xf', '-', '-C', baseDir], {input: execFileSync('git', ['archive', baseline], {maxBuffer: 100 * 1024 * 1024})});
   async function load(dir, name) {
     if(dir !== process.cwd()) {
       const file=path.join(dir,'src/engine/repolarization.ts');
       await writeFile(file,predictQTInitialization(await readFile(file,'utf8')));
+      const rhythmFile=path.join(dir,'src/engine/rhythm.ts');
+      await writeFile(rhythmFile,predictAfClock(await readFile(rhythmFile,'utf8')));
     }
     const outfile = path.join(temp, name + '.mjs');
     await build({stdin: {contents: "export {synthesize} from './src/engine/signal'; export {PRESETS,fromPreset,presetById} from './src/presets/catalog'; export {qrsKernels} from './src/engine/morphology'; export {DOWER} from './src/engine/leads';", resolveDir: dir}, bundle: true, platform: 'node', format: 'esm', outfile});
@@ -225,7 +229,7 @@ try {
   };
   assert.deepEqual([defaults.length, rows.length, lowVoltageScenarios.length, wpwLowVoltageScenarios.length, rvScenarios.length],
     expectedCounts[scope], 'Incomplete scope: do not silently omit validation');
-  const referencePreparation = 'Historical morphology with the independently predicted QT initialization revision; exact/default counts compare these QT-normalized references, not raw historical QT';
+  const referencePreparation = 'Historical morphology with the independently predicted QT initialization and representative AF clock revisions; exact/default counts compare these QT-normalized references, not raw historical QT';
   const report = {scope, baseline, axisBaseline, referencePreparation, commit: execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim(),
     defaults, gainScenarios: rows, lowVoltageBaseline, lowVoltageScenarios, wpwLowVoltageBaseline, wpwLowVoltageScenarios, rvBaseline, rvScenarios, nativeActivationTimingsUnchanged: true, clinicalValidation: false};
   const output = process.argv[2]; assert.ok(output, 'Provide result JSON path');

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "dataset": "https://physionet.org/content/ltafdb/1.0.0/",
+  "recordsManifestSha256": "55008932b1e44d4faccec2b75db73ee90707742d9e3a4d238c789c838fd8d7a2",
+  "selection": "Hash order of all release record names before viewing annotations; first16 development,next8 reserved evaluation; remaining untouched",
+  "seed": "ecg-af-development-v1",
+  "developmentRecords": [
+    "101",
+    "15",
+    "68",
+    "07",
+    "16",
+    "121",
+    "23",
+    "56",
+    "70",
+    "60",
+    "45",
+    "69",
+    "117",
+    "20",
+    "49",
+    "30"
+  ],
+  "evaluationRecords": [
+    "203",
+    "62",
+    "112",
+    "26",
+    "00",
+    "12",
+    "17",
+    "208"
+  ],
+  "annotation": "atr",
+  "downloadPolicy": "Only development headers and manually reviewed atr annotations initially; no evaluation annotations or waveforms",
+  "windowSeconds": 60,
+  "minimumIntervals": 20,
+  "aggregation": "Record-level summaries; windows are repeated observations, not independent patients",
+  "limitations": [
+    "Record separation does not prove subject independence without a subject mapping.",
+    "Reference annotations are manually reviewed, not an assertion of perfect beat or rhythm labels.",
+    "RR includes all accepted beat types; ectopic NN-only analyses must be separately reported."
+  ],
+  "frozenCandidate": {
+    "sourceSha256": "13d8f1257cbfe7a3526dfb2cfc51bf4f942ae4b506485ecec797b0dc04d3b307",
+    "localCommit": "62a4f3b",
+    "cv": 0.22,
+    "family": "gamma renewal",
+    "clinicalValidation": false
+  },
+  "evaluationBeforeUnsealing": {
+    "minimumEligibleRecords": 5,
+    "primary": "Strictly reduce unweighted record-level absolute CV mismatch versus old clipped sampler",
+    "secondary": "Normalized 5th/95th RR quantile absolute errors; report separately and flag any per-record worsening >0.02",
+    "temporal": "Report lag-one mismatch separately; neither sampler claims AV-node memory",
+    "simulation": "100 deterministic seeds per record at the record median reference rate;60-second windows; Monte Carlo replicates are not patients",
+    "noRetuning": "Do not tune this candidate to the reserved results or change acceptance after seeing them"
+  },
+  "windowConfoundersBeforeEvaluation": {
+    "primary": "Full AF windows without paced(/,f), unknown(Q) or noise(|,~) annotations. Exclude the whole window, never bridge removed beats.",
+    "secondary": "Also report all-AF-window RR summaries and counts of excluded windows. A/V ectopy remains in primary RR and is counted; RR is not NN.",
+    "note": "Criteria fixed before any reserved annotation download; gamma candidate CV remains0.22, not refitted."
+  }
+}

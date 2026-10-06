@@ -1,3 +1,4 @@
+import {predictAfClock,assertFrozenAfSampler} from './lib/af-clock-prediction.mjs';
 import {predictTorsadesFrame} from './lib/torsades-frame-prediction.mjs';
 import {assertReviewedAcquisitionScope} from './lib/acquisition-scope-contract.mjs';
 import {assertReviewedEventCalendar} from './lib/event-calendar-revision.mjs';
@@ -20,37 +21,38 @@ assert.ok(output && (process.argv.length===3 || (process.argv.length===4&&cohere
 const temp=await mkdtemp(path.join(tmpdir(),'repolarization-scope-'));
 try {
   assertReviewedQTInitialization(await readFile('src/engine/repolarization.ts'));
+  assertFrozenAfSampler(await readFile('src/engine/af-rr.ts'));
   const base=path.join(temp,'baseline');await mkdir(base);
   execFileSync('tar',['-xf','-','-C',base],{input:execFileSync('git',['archive',BASE],{maxBuffer:100*1024*1024})});
   const changedFiles=execFileSync('git',['diff','--name-only',BASE,'HEAD','--','src/engine','src/presets'],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
-  const nonNumericalContracts=['src/engine/ventricular-trajectory.ts'];
+  const reviewedSourceContracts=['src/engine/ventricular-trajectory.ts','src/engine/af-rr.ts'];
   // A separate numerical revision, checked against an independent frozen-source
   // prediction below. This is not an exemption from sample comparison.
   const qtHistoryRevision = 'src/engine/repolarization.ts';
   if(changedFiles.includes('src/engine/sample-analysis.ts')) {
     assertReviewedSampleEntry(await readFile('src/engine/sample-analysis.ts'));
-    nonNumericalContracts.push('src/engine/sample-analysis.ts');
+    reviewedSourceContracts.push('src/engine/sample-analysis.ts');
   }
   assertReviewedImpulseConfidence(await readFile('src/engine/analysis/impulse-confidence.ts'));
-  nonNumericalContracts.push('src/engine/analysis/impulse-confidence.ts');
+  reviewedSourceContracts.push('src/engine/analysis/impulse-confidence.ts');
   assertReviewedAlternatingConfidence(await readFile('src/engine/analysis/alternating-confidence.ts'));
-  nonNumericalContracts.push('src/engine/analysis/alternating-confidence.ts');
+  reviewedSourceContracts.push('src/engine/analysis/alternating-confidence.ts');
   // Reviewed calendar integrity: all valid historical samples still compared below.
   for(const file of ['src/engine/rhythm.ts','src/engine/event-calendar.ts','src/engine/flutter-conduction.ts','src/engine/vvi-demand.ts']) {
     assertReviewedEventCalendar(file,await readFile(file));
-    nonNumericalContracts.push(file);
+    reviewedSourceContracts.push(file);
   }
 
   // Known acquisition provenance changes reported reliability, never sample analysis.
   for(const file of ['src/engine/worker.ts','src/engine/acquisition-measurement.ts','src/engine/analysis/model-audit.ts']) {
     assertReviewedAcquisitionScope(file,await readFile(file));
-    nonNumericalContracts.push(file);
+    reviewedSourceContracts.push(file);
   }
 
   // Opt-in regional model: every historical trace below still has to be exact.
   // The experimental branch has its own mandatory, paired source/sample gate.
   const optInRegionalFiles=['src/engine/types.ts','src/engine/regional-activation.ts'];
-  assert.ok(changedFiles.every(f=>f===qtHistoryRevision || nonNumericalContracts.includes(f) || (coherence && optInRegionalFiles.includes(f)) || (coherence && ['src/engine/signal.ts','src/engine/morphology.ts','src/engine/secondary-repolarization.ts','src/engine/torsades-frame.ts'].includes(f))), 'Unexpected generator/analyzer/catalog/dependency change');
+  assert.ok(changedFiles.every(f=>f===qtHistoryRevision || reviewedSourceContracts.includes(f) || (coherence && optInRegionalFiles.includes(f)) || (coherence && ['src/engine/signal.ts','src/engine/morphology.ts','src/engine/secondary-repolarization.ts','src/engine/torsades-frame.ts'].includes(f))), 'Unexpected generator/analyzer/catalog/dependency change');
   async function load(dir,name){
     const outfile=path.join(temp,name+'.mjs');
     await build({stdin:{contents:"export {synthesize} from './src/engine/signal'; export {fromPreset,PRESETS} from './src/presets/catalog';",resolveDir:dir},bundle:true,platform:'node',format:'esm',outfile});
@@ -64,6 +66,8 @@ try {
     if(coherence) await writeFile(file,predictTorsadesFrame(predictSource(await readFile(file,'utf8'))));
     const qtFile=path.join(predicted,qtHistoryRevision);
     await writeFile(qtFile,predictQTInitialization(await readFile(qtFile,'utf8')));
+    const rhythmFile=path.join(predicted,'src/engine/rhythm.ts');
+    await writeFile(rhythmFile,predictAfClock(await readFile(rhythmFile,'utf8')));
     expected=await load(predicted,'expected');
   }
   assert.deepEqual(after.PRESETS,before.PRESETS,'Catalog must stay frozen');
@@ -82,7 +86,7 @@ try {
       {
         const c={...before.fromPreset(preset),filter},label=`${preset.id}/${filter}`;
         // Default phenotypes are outside this repair's numerical delta: exact, not tolerance-based.
-        if(coherence && c.rhythm!=='torsades' && !(c.rhythm==='sinus' && ['mobitz1','mobitz2','two_one','high'].includes(c.av)))
+        if(coherence && c.rhythm!=='torsades' && c.rhythm!=='af' && !(c.rhythm==='sinus' && ['mobitz1','mobitz2','two_one','high'].includes(c.av)))
           assertTraceContract(before.synthesize(c,10),after.synthesize(c,10),label+'/default-frozen');
         if(coherence && c.rhythm==='torsades') {
           // The complete QRS/acquisition chain must remain bit-identical when T is removed.
@@ -106,6 +110,7 @@ try {
   const report={schemaVersion:2,stage:coherence?'A02-A03-independent-prediction':'A01-characterization-only',baselineCommit:BASE,
     eventCalendarRevision:'Strict bounded events and causal RR/PR assertions; optional programmed flutter sequences. Historical default samples remain exact.',
     torsadesFrameRevision:'Secondary T shares the historical time-varying QRS frame. Non-torsades defaults and QRS-only traces remain exact.',
+    afClockRevision:'Representative gamma renewal CV0.22; frozen candidate and independent source prediction, not universal AF physiology.',
     qtInitializationRevision:'First event retains nominal ventricular RR; adaptation starts at second event. Separate from A02/A03 morphology.',
     candidateCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),changedFiles,
     clinicalValidation:false,scenarios:rows.length,sampleComparisons:rows.reduce((n,r)=>n+r.checked,0),rows,matrix,

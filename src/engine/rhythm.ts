@@ -1,3 +1,4 @@
+import {afInterval} from './af-rr';
 import { isVviDemand, vviSettings, vviDemandEvents } from "./vvi-demand";
 import { flutterRatios, flutterMeanRatio } from "./flutter-conduction";
 import type { ECGCase, EventSeries, Beat } from "./types";
@@ -40,15 +41,7 @@ function buildEvents(c: ECGCase, duration: number): EventSeries {
     let t = 0.35;
     while (t < duration) {
       beat(t);
-      t +=
-        base *
-        Math.max(
-          0.38,
-          Math.min(
-            2.15,
-            0.8 + Math.exp(0.42 * normal(r)) * 0.2 + 0.38 * normal(r),
-          ),
-        );
+      t += afInterval(r, base);
     }
     return events;
   }

@@ -212,7 +212,7 @@ function renderInfo() {
   $("#limitation").innerHTML = concealed
     ? "El diagnóstico se mostrará al responder."
     : `<strong>${p?.strategy === "local" ? "Ajuste morfológico local" : "Modelo aproximado"}</strong><p>${esc(p?.limitation || "Sin validación clínica de este caso personalizado.")}</p>`;
-  $("#warnings").innerHTML = (concealed ? [] : [...context.warnings, ...(session.signal?.warnings || [])])
+  $("#warnings").innerHTML = (concealed ? [] : [...context.warnings, ...(session.signal?.warnings || []), ...(c.rhythm === "af" ? ["FA representativa: intervalos RR positivos independientes (distribución gamma, CV 0,22). No simula memoria del nodo AV ni toda la variabilidad entre pacientes; la FC programada es una media de largo plazo."] : [])])
     .map((w) => `<p class="warning">${esc(w)}</p>`)
     .join("");
   $<HTMLButtonElement>('[data-action="export"]').disabled = !!concealed;
