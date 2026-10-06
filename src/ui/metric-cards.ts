@@ -23,7 +23,7 @@ export function metricCards(c: ECGCase, m: Measurement): MetricCard[] {
       (c.rhythm === "sinus" && c.av !== "complete") ||
       (c.rhythm === "paced" && c.pacing !== "VVI");
   const rows: [MetricKey, string, string, string][] = [
-    ["hr", "FC ventricular", none || m.evidence.hr.status === "unavailable" ? "—" : display(m.hr, "lpm"), "media · 10 s"],
+    ["hr", "FC ventricular", none || m.evidence.hr.status === "unavailable" ? "—" : display(m.hr, "lpm"), `media · ${Number((m.window.end - m.window.start).toFixed(3))} s`],
     ["pr", "PR", hasPR ? display(m.pr, "ms") : "—", hasPR ? "estimado" : "sin relación AV estimable"],
     ["qrs", "QRS", none || m.evidence.qrs.status === "unavailable" ? "—" : display(m.qrs, "ms"), "límites medidos"],
     [
@@ -37,11 +37,17 @@ export function metricCards(c: ECGCase, m: Measurement): MetricCard[] {
     ["axis", "Eje QRS", none ? "—" : display(m.axis, "°"), "área neta · estimado"],
   ];
   return rows.map(([key, label, value, sub]) => {
-    const { status, reason } = m.evidence[key];
+    const evidence = m.evidence[key];
+    const hidden = value === "—" || evidence.status === "unavailable";
+    const status: Reliability = hidden ? "unavailable" : evidence.status;
+    const reason = evidence.status === "unavailable" ? evidence.reason : hidden
+      ? key === "pr" && !hasPR ? "Sin relación AV estimable en este contexto."
+        : "Medida no disponible en este contexto; no se sustituye por cero ni por el valor programado."
+      : evidence.reason;
     return {
       key,
       label,
-      value,
+      value: hidden ? "—" : value,
       status,
       reason,
       note: status === "unavailable" ? "No estimable" : status === "review" ? "Revisar" : sub,
@@ -58,6 +64,6 @@ export const metricsHtml = (cards: MetricCard[]) =>
     .join("");
 
 export const monitorRate = (c: ECGCase, m: Measurement) =>
-  unorganized(c) || m.evidence.hr.status === "unavailable"
+  unorganized(c) || m.evidence.hr.status === "unavailable" || m.hr === null || !Number.isFinite(m.hr)
     ? "—"
-    : String(Math.round(m.hr ?? 0));
+    : String(Math.round(m.hr!));
