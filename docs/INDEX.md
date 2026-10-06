@@ -31,6 +31,7 @@ Punto de entrada a `docs/`. La navegación vigente empieza en el [README](../REA
 - [Repolarización regional v1.4](regional-repolarization-v1.4.md) · [protocolo v1.4](repolarization-protocol-v1.4.md)
 
 ## Analizador y medición
+- [Integridad de entrada antes de medir](sample-input-contract.md)
 - [Calidad y procedencia de las medidas](measurement-support-quality.md) · [Medidas retiradas entre etapas](audit-rejection-provenance.md)
 - [FC: incertidumbre de detección](hr-detection-quality.md)
 - [Pico T sin QT fabricado](t-peak-evidence.md)

@@ -1,3 +1,4 @@
+import {assertReviewedSampleEntry} from './lib/sample-entry-contract.mjs';
 /** Frozen-source comparison. --coherence applies only the independently declared A02/A03 delta. */
 import {build} from 'esbuild';
 import {execFileSync} from 'node:child_process';
@@ -18,6 +19,10 @@ try {
   execFileSync('tar',['-xf','-','-C',base],{input:execFileSync('git',['archive',BASE],{maxBuffer:100*1024*1024})});
   const changedFiles=execFileSync('git',['diff','--name-only',BASE,'HEAD','--','src/engine','src/presets'],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
   const nonNumericalContracts=['src/engine/ventricular-trajectory.ts'];
+  if(changedFiles.includes('src/engine/sample-analysis.ts')) {
+    assertReviewedSampleEntry(await readFile('src/engine/sample-analysis.ts'));
+    nonNumericalContracts.push('src/engine/sample-analysis.ts');
+  }
   // Reviewed clock initialization only; every other rhythm byte stays frozen.
   if(changedFiles.includes('src/engine/rhythm.ts')) {
     const original=await readFile(path.join(base,'src/engine/rhythm.ts'),'utf8');

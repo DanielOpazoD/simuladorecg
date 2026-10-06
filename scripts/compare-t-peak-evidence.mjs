@@ -1,3 +1,4 @@
+import {assertReviewedSampleEntry} from './lib/sample-entry-contract.mjs';
 /** Paired evidence-only revision: fixed, already observed LUDB cohorts; no holdout. */
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
@@ -23,7 +24,9 @@ const analyzedFiles=Object.keys(p.analyzerFiles).sort();
 for(const file of analyzedFiles){
  const a=readFileSync(resolve(base,file)),b=readFileSync(file);
  assert.equal(hash(a),p.analyzerFiles[file],file+' baseline changed');
- if(file==='src/engine/measure.ts')assertReviewedMeasure(a,b);else assert.deepEqual(b,a,file+' changed');
+ if(file==='src/engine/measure.ts')assertReviewedMeasure(a,b);
+ else if(file==='src/engine/sample-analysis.ts')assertReviewedSampleEntry(b,a);
+ else assert.deepEqual(b,a,file+' changed');
 }
 // The evaluator is the version integrated with PR28, never an algorithm-specific reference.
 const evaluationFiles=['scripts/lib/ludb-frozen-baseline.mjs','scripts/lib/external-delineation-evaluation.mjs',
