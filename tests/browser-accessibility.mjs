@@ -92,6 +92,21 @@ for(const engine of [chromium,webkit,firefox]) {
         if(width===390) await key('[data-action=catalog]');
         await key('[data-preset=sinus]');await ready();
 
+        // Quality must follow known acquisition filtering, including the large monitor number.
+        await key('[data-panel=signal]');
+        await page.locator('[data-key="filter"]').selectOption('aggressive');await ready();
+        assert.equal(await page.locator('#metrics .quality-dot.usable').count(),0);
+        assert.ok((await page.locator('#metrics .metric strong').allTextContents()).every(t=>t.trim()==='—'));
+        await key('[data-mode=monitor]');
+        assert.equal(await page.locator('#monitor-rate').innerText(),'—');
+        assert.equal(await page.locator('#monitor-rate-note').innerText(),'No estimable');
+        await page.locator('#monitor-rate').scrollIntoViewIfNeeded();
+        await page.screenshot({path:resolve(out,stem+'-filter-scope.png')});
+        await page.locator('[data-key="filter"]').selectOption('monitor');await ready();
+        assert.equal(await page.locator('#monitor-rate-note').innerText(),'lpm · revisar');
+        await page.locator('[data-key="filter"]').selectOption('diagnostic');await ready();
+        assert.notEqual(await page.locator('#monitor-rate').innerText(),'—');
+        await key('[data-mode=paper]');await key('[data-panel=base]');
         await key('.topbar [data-action=about]');await page.getByRole('dialog',{name:'Modelo, alcance y referencias'}).waitFor();
         await page.keyboard.press('Escape');await page.locator('#dialog').waitFor({state:'hidden'});await active('.topbar [data-action=about]');
         page.on('request',r=>requests.push({method:r.method(),url:r.url()}));

@@ -67,3 +67,8 @@ export const monitorRate = (c: ECGCase, m: Measurement) =>
   unorganized(c) || m.evidence.hr.status === "unavailable" || m.hr === null || !Number.isFinite(m.hr)
     ? "—"
     : String(Math.round(m.hr!));
+
+/** Keep the large monitor number accompanied by the same quality as the cards. */
+export const monitorRateNote = (c: ECGCase, m: Measurement): string =>
+  unorganized(c) || m.evidence.hr.status === "unavailable" || m.hr === null || !Number.isFinite(m.hr)
+    ? "No estimable" : m.evidence.hr.status === "review" ? "lpm · revisar" : "lpm · estimados";
