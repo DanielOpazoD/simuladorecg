@@ -4,9 +4,9 @@ const EPSILON = 1e-9;
 /** Internal event integrity, not an ECG interpretation or a refractory-period model. */
 export function assertEventCalendar(events: EventSeries, duration: number): void {
   if (!Number.isFinite(duration) || duration <= 0) throw new Error('Duración de calendario inválida.');
-  for (const times of [events.atria.map(a => a.time), events.beats.map(b => b.time), events.spikes]) {
+  for (const [kind, times] of [events.atria.map(a => a.time), events.beats.map(b => b.time), events.spikes].entries()) {
     for (let i = 0; i < times.length; i++) {
-      if (!Number.isFinite(times[i]) || times[i] < 0 || times[i] >= duration || (i > 0 && times[i] <= times[i - 1]))
+      if (!Number.isFinite(times[i]) || times[i] < 0 || times[i] >= duration || (i > 0 && (kind === 2 ? times[i] < times[i - 1] : times[i] <= times[i - 1])))
         throw new Error('Calendario inválido: eventos fuera de intervalo o de orden.');
     }
   }

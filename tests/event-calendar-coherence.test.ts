@@ -11,6 +11,15 @@ describe('causal event calendar',()=>{
    expect(()=>assertEventCalendar(e,duration)).not.toThrow();
   }
  });
+ it('orders dual-chamber spikes without rejecting a long AV delay that crosses the next atrial cycle',()=>{
+  const c={...sinus(),rhythm:'paced' as const,pacing:'DDD' as const,hr:240,pr:400};
+  const e=generateEvents(c,3);
+  expect(()=>assertEventCalendar(e,3)).not.toThrow();
+  expect(e.spikes).toEqual([...e.spikes].sort((a,b)=>a-b));
+ });
+ it('allows simultaneous atrial and ventricular stimulus timestamps',()=>{
+  expect(()=>assertEventCalendar({atria:[],beats:[],spikes:[.2,.2]},1)).not.toThrow();
+ });
  it('rejects a corrupted preceding RR rather than silently repairing it',()=>{
   const e=generateEvents(sinus(),5);e.beats[1].rr+=.1;
   expect(()=>assertEventCalendar(e,5)).toThrow(/RR/);

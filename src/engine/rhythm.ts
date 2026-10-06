@@ -4,6 +4,9 @@ import { random, normal } from "./random";
 export function generateEvents(c: ECGCase, duration: number): EventSeries {
   if (!Number.isFinite(duration) || duration <= 0) throw new Error("Duración de calendario inválida.");
   const events = buildEvents(c, duration);
+  // Two chamber schedules may interleave when AV delay exceeds the pacing cycle.
+  // Sort stimulus metadata only; no timestamp is shifted or removed.
+  events.spikes.sort((a, b) => a - b);
   assertEventCalendar(events, duration);
   return events;
 }

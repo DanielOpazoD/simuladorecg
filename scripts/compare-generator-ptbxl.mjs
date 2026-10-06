@@ -42,6 +42,38 @@ export function amplitudeAudit(external, features) {
       ? 'consistent-with-tabular' : 'unverified', rescalingApplied: false };
 }
 
+/** Published feature-table values are a separate reference, not repaired waveform samples.
+ * Cohort comes from selection metadata, never availability of decoded median beats.
+ */
+export function tabularQrsReference(features, mapping) {
+  const provider = mapping?.['12sl'];
+  const identity = provider?.conversion === 'identity; published harmonized units'
+    && /^[a-f0-9]{64}$/i.test(provider?.featureDescriptionSha256 ?? '');
+  const selected = Object.entries(features?.groups ?? {});
+  const groups = Object.fromEntries(GROUPS.map(group => {
+    const ids = selected.filter(([, labels]) => Array.isArray(labels) && labels.includes(group)).map(([id]) => id);
+    return [group, Object.fromEntries(LEADS.map(lead => {
+      const column = `QRS_AmpPP_${lead}`;
+      const verified = identity && provider.columnUnits?.[column] === 'mV';
+      const values = ids.map(id => {
+        const value = features.tables?.['12sl']?.[id]?.[column];
+        return verified && finite(value) && value >= 0 ? value : null;
+      });
+      const stats = quartiles(values);
+      return [lead, { ...stats, column, unit: verified ? 'mV' : null,
+        status: !verified ? 'unverified-units' : stats.n ? 'available' : 'missing-reference' }];
+    }))];
+  }));
+  return { provider: '12sl', source: 'published harmonized feature table',
+    dataset: 'https://physionet.org/content/ptb-xl-plus/1.0.1/',
+    featureDescriptionSha256: identity ? provider.featureDescriptionSha256 : null,
+    cohort: 'All selected IDs per diagnostic group; independent of median waveform availability',
+    waveformRescalingApplied: false, groups,
+    limitations: ['Automatic QRS peak-to-peak features, not manually adjudicated clinical normal ranges.',
+      'This table does not certify waveform scaling, J60 or T amplitudes.',
+      'Overlapping diagnostic groups; descriptive reference only, not a calibration target.'] };
+}
+
 export function compareGenerator(external, generated, features) {
   assert.ok(Array.isArray(external?.records) && external.records.length, 'Missing external records');
   assert.ok(Array.isArray(generated?.records), 'Missing generator records');
@@ -94,9 +126,11 @@ export function compareGenerator(external, generated, features) {
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   const [root, out] = process.argv.slice(2);
   assert.ok(root && out, 'Usage: node scripts/compare-generator-ptbxl.mjs PTBXL_OUTPUT OUT');
-  const names = ['median-morphology.json', 'generator-morphology.json', 'selected-features.json'];
+  const names = ['median-morphology.json', 'generator-morphology.json', 'selected-features.json', 'reviewed-feature-mapping.json'];
   const bytes = await Promise.all(names.map(n => readFile(path.join(root, n))));
-  const report = compareGenerator(...bytes.map(b => JSON.parse(b)));
+  const parsed = bytes.map(b => JSON.parse(b));
+  const report = compareGenerator(...parsed.slice(0, 3));
+  report.tabularQrsReference = tabularQrsReference(parsed[2], parsed[3]);
   report.inputsSha256 = Object.fromEntries(names.map((n, i) => [n, createHash('sha256').update(bytes[i]).digest('hex')]));
   await mkdir(out, { recursive: true });
   await writeFile(path.join(out, 'generator-ptbxl-gap.json'), JSON.stringify(report, null, 2) + '\n');

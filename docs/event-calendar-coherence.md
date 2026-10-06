@@ -4,8 +4,12 @@ Antes de producir muestras, el calendario debe tener eventos finitos, ordenados 
 
 Este contrato detecta fallos del programa, no adjudica un ECG clínico. No impone conducción 1:1 a flutter/FA, actividad de escape, disociación AV o actividad auricular retrógrada. No define refractariedad ni permite simular fusiones que el motor excluye.
 
-Defecto: la generación podía devolver P o espigas posteriores al final solicitado, y no existía una comprobación central de coherencia entre RR, PR y tiempos. La corrección acota eventos en su creación y verifica relaciones causales, sin ordenar, desplazar, inventar o eliminar eventos válidos para conseguir una prueba verde. Las muestras y eventos visibles anteriores al límite deben permanecer idénticos.
+Defecto: la generación podía devolver P o espigas posteriores al final solicitado, y no existía una comprobación central de coherencia entre RR, PR y tiempos. La corrección acota eventos en su creación y verifica relaciones causales, sin desplazar, inventar o eliminar eventos válidos para conseguir una prueba verde. Las muestras y eventos visibles anteriores al límite deben permanecer idénticos.
 
 Refutación: cualquier cambio de muestras dentro del dominio previamente admitido o rechazo de un calendario válido. Aceptación: mutaciones deliberadas de RR/PR/orden, ventanas que terminan entre P y QRS, comparación por prefijos y matriz del catálogo. No se modifica ninguna fórmula fisiológica ni se afirma validación clínica.
 
 Comprobación local contra main b4194c8: los 66 presets, 3.960.000 muestras y todos los eventos visibles permanecieron exactamente iguales. Suite completa: 1.470 pruebas aprobadas y build correcto. CI y validación externa son comprobaciones separadas.
+
+CI detectó correctamente que la antigua puerta de repolarización solo reconocía la revisión previa del reloj de flutter. Se incorpora una huella exacta de los dos archivos revisados y se mantiene íntegra la comparación numérica contra la predicción independiente congelada. No se amplían tolerancias ni se omite la matriz histórica. Las mutaciones de esas fuentes siguen rechazándose.
+
+La revisión adversarial añadió dos pruebas rojas: espigas DDD intercaladas cuando el retraso AV cruza el ciclo auricular siguiente y estímulos de dos cámaras simultáneos. Se ordenan exclusivamente los metadatos de espigas, conservando todos sus tiempos y permitiendo coincidencia entre cámaras; no se rechazan esos calendarios por una propiedad del almacenamiento. No se modela competencia/sensado ni se afirma que todo ajuste DDD sea clínicamente viable.
