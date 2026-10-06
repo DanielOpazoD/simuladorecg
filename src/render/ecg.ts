@@ -1,3 +1,4 @@
+import { traceSampleIndices } from './trace-samples';
 import { caliperMeasurement } from "./caliper-geometry";
 import { orderedLeads, displayPolarity, leadGain } from "../engine/lead-registry";
 import {
@@ -164,10 +165,7 @@ function trace(
     gain = leadGain(seg.lead, c.view),
     scale = c.view.speed;
   const from = range?.[0] ?? seg.start,
-    to = range?.[1] ?? seg.start + seg.duration,
-    sampleLo = Math.max(0, Math.floor(from * s.fs)),
-    sampleHi = Math.min(a.length - 1, Math.floor(to * s.fs)),
-    step = Math.max(1, Math.floor(s.fs / (scale * pxPerMm)));
+    to = range?.[1] ?? seg.start + seg.duration;
   ctx.beginPath();
   let first = true;
   const point = (i: number) => {
@@ -178,25 +176,7 @@ function trace(
       first = false;
     } else ctx.lineTo(x, y);
   };
-  for (let i = sampleLo; i < sampleHi; i += step) {
-    if (step === 1) {
-      point(i);
-      continue;
-    }
-    let mini = i,
-      maxi = i;
-    for (let j = i + 1; j < Math.min(i + step, sampleHi); j++) {
-      if (a[j] < a[mini]) mini = j;
-      if (a[j] > a[maxi]) maxi = j;
-    }
-    if (mini < maxi) {
-      point(mini);
-      point(maxi);
-    } else {
-      point(maxi);
-      point(mini);
-    }
-  }
+  traceSampleIndices(a, s.fs, from, to, scale * pxPerMm, point);
   ctx.stroke();
 }
 function pulse(
@@ -237,11 +217,12 @@ export function renderPaper(
     for (let i = 0; i < Math.min(s.fs * 10, s.leads[lead].length); i++)
       amplitude = Math.max(amplitude, Math.abs(s.leads[lead][i]) * gain);
   }
+  const ratio = options.ratio ?? Math.min(2, window.devicePixelRatio || 1);
   const layout = paperLayout(c, availableWidth, options.pxPerMm, amplitude),
     ctx = setup(
       canvas,
       layout,
-      options.ratio ?? Math.min(2, window.devicePixelRatio || 1),
+      ratio,
     ),
     palette = palettes[c.view.palette];
   grid(ctx, layout.widthMm, layout.heightMm, palette, c.view.grid);
@@ -274,7 +255,7 @@ export function renderPaper(
       s,
       seg,
       c,
-      layout.pxPerMm * (options.ratio ?? window.devicePixelRatio),
+      layout.pxPerMm * ratio,
     );
     ctx.restore();
     ctx.fillStyle = palette.text;
