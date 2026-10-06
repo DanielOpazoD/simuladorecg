@@ -27,3 +27,9 @@ Mobitz conserva su variación real de intervalos desde el segundo evento.
   antes de comparar sus cambios de morfología. No se amplían tolerancias
 - Se revisan únicamente las huellas `wenckebach`, `av21`, `highav`; no se
   regenera el catálogo entero ni se exime a estos casos de regresión
+
+El gate regional PR55 también compara con la predicción de inicio declarada.
+Su comparación exacta usa el helper existente de fallo compacto: evita generar
+un diff gigante de 60.000 muestras al detectar una regresión, sin cambiar igualdad
+ni tolerancias. Se reprodujo el rechazo original en `wenckebach/off` antes de
+incorporar la revisión del reloj a esa referencia.
