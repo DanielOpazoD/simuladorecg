@@ -83,7 +83,7 @@ jobs:
         run: node scripts/validate-posterior-amplitude.mjs "${{ runner.temp }}/qrs-default-results.json" --scope defaults
       - name: Install isolated browser test dependency
         run: |
-          npm install --no-save --package-lock=false playwright@1.63.0
+          npm install --no-save --package-lock=false --legacy-peer-deps playwright@1.63.0
           npx playwright install --with-deps chromium
       - name: Production identity, browser flows and PNG pixel metrology
         env:
@@ -150,7 +150,7 @@ jobs:
         run: cp -r "$RUNNER_TEMP/verified-build/dist" dist
       - name: Install only browser test tooling
         run: |
-          npm install --no-save --package-lock=false playwright@1.63.0
+          npm install --no-save --package-lock=false --legacy-peer-deps playwright@1.63.0
           npx playwright install --with-deps chromium webkit firefox
       - name: Keyboard, reflow and critical flows on three browser engines
         env:
