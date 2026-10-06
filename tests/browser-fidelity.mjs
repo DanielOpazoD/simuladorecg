@@ -1,7 +1,7 @@
 import { chooseCatalogPreset } from './support/catalog-navigation.mjs';
 /** Real Chromium checks. Run against the built dist (vite preview): ECG_TEST_URL=http://127.0.0.1:5173.
  * Outputs outside source by default; no patient data, diagnostic labels or network AI.
- * npm install --no-save --package-lock=false playwright@1.63.0
+ * npm install --no-save --package-lock=false --legacy-peer-deps playwright@1.63.0
  */
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
