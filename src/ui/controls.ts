@@ -1,3 +1,4 @@
+import { isVviDemand } from "../engine/vvi-demand";
 import { rhythmControlState } from './rhythm-controls';
 import { regionalActivationState } from "../engine/regional-activation";
 import { regionalActivationControls } from "./regional-activation";
@@ -120,7 +121,7 @@ export function controls(c: ECGCase) {
  )}
  ${select(
    "pacing",
-   "Estimulación capturada",
+   "Modo de estimulación",
    [
      ["AAI", "AAI"],
      ["VVI", "VVI"],
@@ -129,8 +130,10 @@ export function controls(c: ECGCase) {
    c.pacing,
    c.rhythm !== "paced",
  )}
+ ${select("pacingBehavior", "Comportamiento VVI", [["fixed","Captura fija histórica"],["demand","Demanda · sensado ideal"]], c.pacingBehavior ?? "fixed", c.rhythm !== "paced" || c.pacing !== "VVI")}
+ ${range("intrinsicRate", "Actividad ventricular intrínseca", 0, 150, 1, c.intrinsicRate ?? 0, "lpm · 0 ausente", !isVviDemand(c))}
  ${range("coupling", "Acoplamiento de ectopia", 0.3, 0.85, 0.01, c.coupling, "× RR", rhythm.couplingDisabled)}
- </div><p class="control-note">Las secuencias variables del flutter son ejemplos con retraso AV constante; no simulan Wenckebach multinivel ni respuesta a fármacos. Las combinaciones no implementadas se desactivan. FA + BAV completo es posible clínicamente, pero queda fuera del modelo actual. La estimulación representa captura fija; no simula demanda.</p><section id="regional-activation-controls" aria-label="Activación regional experimental">${regionalActivationControls(c)}</section></div>
+ </div><p class="control-note">Las secuencias variables del flutter son ejemplos con retraso AV constante; no simulan Wenckebach multinivel ni respuesta a fármacos. Las combinaciones no implementadas se desactivan. FA + BAV completo es posible clínicamente, pero queda fuera del modelo actual. ${isVviDemand(c) ? "VVI a demanda: sensado ideal, captura garantizada y escape ventricular reiniciable. No representa fallos de captura, blanking, histéresis ni fusión." : "La estimulación fija representa captura periódica. El modo de demanda optativo solo está disponible en VVI."}</p><section id="regional-activation-controls" aria-label="Activación regional experimental">${regionalActivationControls(c)}</section></div>
  <div class="control-panel" data-control-panel="st" hidden><div class="field-grid">
  ${select(
    "ischemia",

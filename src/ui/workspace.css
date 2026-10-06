@@ -159,6 +159,11 @@ dialog.external-lab { border-radius:12px; }
 }
 @media(max-width:600px) {
   .topbar { padding-block:10px; }
+  .workspace { padding-top:12px; }
+  .case-heading { margin-bottom:12px; }
+  /* Custom-case subtitle repeats the provenance warning kept below the disclosure. */
+  .case-heading:has(.exploration-context:not([hidden])) #case-subtitle { display:none; }
+  .case-heading:has(.exploration-context:not([hidden])) .case-category { display:none; }
   .exploration-context { padding:6px 10px; }
   .exploration-context>p { font-size:.75rem!important; margin-top:0!important; }
   .topbar .brand { flex:1 1 auto; }
@@ -178,7 +183,7 @@ dialog.external-lab { border-radius:12px; }
   .case-category { padding-right:54px; }
   .case-state { position:absolute; top:0; right:0; padding:0; }
   .case-heading h1 { padding-right:0; font-size:1.5rem; }
-  .metrics { grid-template-columns:repeat(6,minmax(0,1fr)); border:1px solid var(--line); gap:1px; background:var(--line); }
+  .metrics { grid-template-columns:repeat(6,minmax(0,1fr)); border:1px solid var(--line); gap:1px; background:var(--line); margin-bottom:12px; }
   .metric, .metric:first-child { grid-column:span 2; min-height:82px; padding:10px; }
   .metric:nth-child(n+4) { grid-column:span 3; }
   .metric strong { font-size:25px; }

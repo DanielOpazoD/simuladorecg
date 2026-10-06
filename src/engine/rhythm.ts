@@ -1,3 +1,4 @@
+import { isVviDemand, vviSettings, vviDemandEvents } from "./vvi-demand";
 import { flutterRatios, flutterMeanRatio } from "./flutter-conduction";
 import type { ECGCase, EventSeries, Beat } from "./types";
 import { assertEventCalendar } from "./event-calendar";
@@ -12,6 +13,7 @@ export function generateEvents(c: ECGCase, duration: number): EventSeries {
   return events;
 }
 function buildEvents(c: ECGCase, duration: number): EventSeries {
+  if (isVviDemand(c)) return vviDemandEvents(vviSettings(c), duration);
   const r = random(c.seed),
     events: EventSeries = { atria: [], beats: [], spikes: [] };
   // Flutter has an independent atrial clock. Its first RR also seeds QT history;

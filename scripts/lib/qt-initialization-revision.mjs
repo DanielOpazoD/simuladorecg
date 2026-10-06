@@ -11,6 +11,6 @@ export function predictQTInitialization(source) {
 
 export function assertReviewedQTInitialization(source) {
   assert.equal(createHash('sha256').update(source).digest('hex'),
-    '44f4565512c6483b286e2a17e7e4ea19f099b7bf4805ef7807aef8b15bf1d5d5',
+    '4851f61ec022cd9e2b6310b670a281f368b77203a3739cef21b600f3e554112a',
     'Unreviewed QT initialization or adaptation change');
 }

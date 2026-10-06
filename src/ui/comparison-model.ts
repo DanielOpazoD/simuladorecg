@@ -132,7 +132,7 @@ const LABELS: Record<string, string> = {
   axis: 'Eje QRS configurado (°)', pAxis: 'Eje P (°)', tAxis: 'Eje T (°)', pAmp: 'Amplitud P', qrsAmp: 'Amplitud QRS',
   tAmp: 'Amplitud T', st: 'Intensidad de lesión', phase: 'Fase', filter: 'Filtro', notch: 'Notch (Hz)', seed: 'Semilla',
   transition: 'Transición', septalQ: 'Q septal', ectopy: 'Ectopia', coupling: 'Acoplamiento', variability: 'Variabilidad',
-  respiratoryRate: 'Frecuencia respiratoria', flutterPattern: "Secuencia de conducción flutter", flutterRatio: 'Relación flutter', pacing: 'Estimulación', escape: 'Escape',
+  respiratoryRate: 'Frecuencia respiratoria', flutterPattern: "Secuencia de conducción flutter", flutterRatio: 'Relación flutter', pacingBehavior: "Comportamiento VVI", intrinsicRate: "Actividad ventricular intrínseca", pacing: 'Estimulación', escape: 'Escape',
   stShape: 'Forma ST', mainsFrequency: 'Red (Hz)', 'artifacts.baseline': 'Deriva basal', 'artifacts.muscle': 'Ruido muscular',
   'artifacts.mains': 'Interferencia de red', 'artifacts.loose': 'Electrodo suelto', 'artifacts.reversed': 'Brazos invertidos',
 };
