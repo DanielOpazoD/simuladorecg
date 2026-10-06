@@ -239,8 +239,21 @@ function renderDetail() {
 }
 function renderControls() {
   const previous = activePanel;
-  $("#inspector").innerHTML = controls(c);
+  const inspector = $("#inspector");
+  const focused = inspector.contains(document.activeElement)
+    ? (document.activeElement as HTMLElement).dataset.key : undefined;
+  const openGroups = Array.from(inspector.querySelectorAll<HTMLDetailsElement>("details[data-control-details][open]"))
+    .map(el => el.dataset.controlDetails);
+  inspector.innerHTML = controls(c);
+  for (const group of inspector.querySelectorAll<HTMLDetailsElement>("details[data-control-details]")) {
+    group.open = openGroups.includes(group.dataset.controlDetails);
+  }
   setPanel(previous);
+  if (focused) {
+    const field = Array.from(inspector.querySelectorAll<HTMLInputElement | HTMLSelectElement>("[data-key]"))
+      .find(el => el.dataset.key === focused);
+    if (field && !field.disabled) field.focus({ preventScroll: true });
+  }
   renderScales();
 }
 function syncAmplitudeControls() {

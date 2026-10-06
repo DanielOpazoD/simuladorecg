@@ -83,6 +83,18 @@ for(const engine of [chromium,webkit,firefox]) {
         await active('[data-key="flutterPattern"]');
         assert.equal(await page.locator('[data-key="flutterRatio"]').isDisabled(),true);
         assert.equal(await flutterPattern.inputValue(),'2-3');
+        // Inactive controls remain inspectable through a native disclosure.
+        const inactive=page.locator('[data-control-details="conduction"]');
+        assert.equal(await inactive.evaluate(e=>e.open),false);
+        await key('[data-control-details="conduction"] > summary');
+        assert.equal(await inactive.evaluate(e=>e.open),true);
+        assert.equal(await page.locator('[data-key="flutterRatio"]').isVisible(),true);
+        await flutterPattern.focus();await flutterPattern.selectOption('3-4');await ready();
+        await active('[data-key="flutterPattern"]');
+        assert.equal(await inactive.evaluate(e=>e.open),true,'retain disclosure after field rerender');
+        await key('[data-control-details="conduction"] > summary');
+        assert.equal(await inactive.evaluate(e=>e.open),false);
+        await flutterPattern.selectOption('2-3');await ready();
         await fits('#control-panel-conduction');
         await page.locator('#case-title').scrollIntoViewIfNeeded();
         // Native disclosure keeps provenance available without burying the mobile trace.
@@ -127,6 +139,8 @@ for(const engine of [chromium,webkit,firefox]) {
         await page.locator('[data-key="pacing"]').selectOption('VVI');await ready();
         await page.locator('[data-key="pacingBehavior"]').selectOption('demand');await ready();
         const intrinsic=page.locator('[data-key="intrinsicRate"]');
+        assert.equal(await page.locator('[data-key="conduction"]').isDisabled(),true);
+        assert.equal(await page.locator('[data-key="escape"]').isDisabled(),true);
         assert.equal(await intrinsic.isDisabled(),false);
         await intrinsic.focus();
         await intrinsic.evaluate(el=>{el.value='90';el.dispatchEvent(new Event('input',{bubbles:true}));});await ready();
