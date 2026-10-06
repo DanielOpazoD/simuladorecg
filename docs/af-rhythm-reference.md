@@ -17,3 +17,5 @@ En 07859 el CV RR por ventana tiene mediana 0,121 (percentiles 5–95: 0,101–0
 
 ## Refutación y aceptación
 Siete pruebas independientes verifican límites de episodios, ventana final, intervalos ausentes, orden y estadísticas conocidas. El comparador falla si ningún registro aporta ventanas; reporta los que faltan. CI preserva hashes, versión del decodificador y commit. Reproducción: ejecutar `af-rhythm-reference.py SALIDA`, seguido de `compare-af-rhythm.mjs SALIDA/af-rhythm-reference.json SALIDA/comparison.json`.
+
+CI detectó que el gate de pico T prohibía cualquier nueva carpeta de benchmarks. Se conserva la congelación histórica y se excluye únicamente el nuevo directorio independiente `benchmarks/af-rhythm`, verificado por su propio flujo. Una prueba ejecuta Git en un repositorio efímero y demuestra que modificar protocolos históricos o añadir cualquier otra carpeta sigue fallando. No se modifica el analizador congelado ni sus cohortes.
