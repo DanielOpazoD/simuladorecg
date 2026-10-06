@@ -20,6 +20,30 @@ for (const [engine, launcher] of Object.entries(engines)) {
   try {
     for (const width of [1440, 390]) {
       const page = await browser.newPage({ viewport: { width, height: width === 390 ? 844 : 1000 }, reducedMotion: 'reduce' });
+      // Hold a REAL worker response only to exercise cancellation/commit ordering.
+      // No fabricated signal, no production source import, no shortened watchdog.
+      await page.addInitScript(() => {
+        const NativeWorker = window.Worker;
+        const probe = window.__activationApplyProbe = { posts: 0, holdNext: false, failPosts: 0, held: [],
+          release() { this.held.splice(0).forEach(deliver => deliver()); } };
+        window.Worker = class extends NativeWorker {
+          hold = false;
+          constructor(...args) {
+            super(...args);
+            this.addEventListener('message', event => {
+              if (!this.hold) return;
+              this.hold = false; event.stopImmediatePropagation();
+              probe.held.push(() => this.dispatchEvent(new MessageEvent('message', { data: event.data })));
+            });
+          }
+          postMessage(...args) {
+            probe.posts++;
+            if (probe.failPosts > 0) { probe.failPosts--; throw new DOMException('Injected send failure', 'DataCloneError'); }
+            if (probe.holdNext) { this.hold = true; probe.holdNext = false; }
+            return super.postMessage(...args);
+          }
+        };
+      });
       const errors = [], warnings = [], requests = [], checks = [], tag = `${engine}-${width}`;
       page.on('pageerror', e => errors.push(e.message));
       page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); if (m.type() === 'warning') warnings.push(m.text()); });
@@ -27,6 +51,11 @@ for (const [engine, launcher] of Object.entries(engines)) {
       const ready = () => page.locator('#signal-loading').waitFor({ state: 'hidden' });
       const open = () => page.locator('[data-action="activation"]').click();
       const close = () => page.locator('#activation-dialog [data-activation="close"]').click();
+      const applicationReady = async () => { await page.locator('#activation-dialog').waitFor({ state: 'hidden' }); await ready(); };
+      const inViewport = selector => page.locator(selector).evaluate(e => {
+        const r = e.getBoundingClientRect();
+        return r.top >= 0 && r.bottom <= innerHeight && r.left >= 0 && r.right <= innerWidth;
+      });
       async function download(selector, suffix) {
         const waiting = page.waitForEvent('download'); await page.locator(selector).click();
         const file = path.join(out, `${tag}-${suffix}`); await (await waiting).saveAs(file); return readFile(file, 'utf8');
@@ -76,13 +105,29 @@ for (const [engine, launcher] of Object.entries(engines)) {
         assert.equal(await page.locator('#activation-dialog').evaluate(d => d.open), false);
         assert.equal(await page.locator('[data-action="activation"]').evaluate(b => b === document.activeElement), true);
         assert.deepEqual(await exportCase('unmodified.json'), original);
+        const originalCanvas = await page.locator('#ecg').evaluate(c => c.toDataURL());
+        const originalMetrics = await page.locator('#metrics').innerText();
         await open(); await page.locator('#activation-choice').selectOption('rbbb');
-        await page.locator('[data-activation="apply"]').click(); await ready();
+        const postCount = await page.evaluate(() => { window.__activationApplyProbe.holdNext = true; return window.__activationApplyProbe.posts; });
+        await page.locator('[data-activation="apply"]').click();
+        await page.waitForFunction(() => window.__activationApplyProbe.held.length === 1);
+        assert.equal(await page.locator('.activation-workbench').getAttribute('aria-busy'), 'true');
+        assert.equal(await page.locator('#activation-qrs').isDisabled(), true);
+        assert.equal(await page.locator('[data-activation="json"]').isDisabled(), true);
+        assert.equal(await page.locator('[data-activation="close"]').isEnabled(), true);
+        assert.match(await page.locator('#activation-apply-status').innerText(), /Validando B/);
+        assert.equal(await inViewport('#activation-apply-status'), true);
+        assert.doesNotMatch(await page.locator('#toast').innerText(), /Alternativa.*aplicada/);
+        assert.equal(await page.locator('#ecg').evaluate(c => c.toDataURL()), originalCanvas);
+        assert.equal(await page.locator('#metrics').innerText(), originalMetrics);
+        await page.screenshot({ path: path.join(out, `${tag}-activation-validation-pending.png`) });
+        await page.evaluate(() => window.__activationApplyProbe.release()); await applicationReady();
+        assert.equal(await page.evaluate(() => window.__activationApplyProbe.posts), postCount + 1);
         const applied = await exportCase('applied.json');
         assert.equal(applied.conduction, 'rbbb'); assert.equal(applied.qrs, 150); assert.equal(applied.axis, 35);
         assert.equal(applied.rhythm, original.rhythm); assert.equal(applied.seed, original.seed);
         assert.match(await page.locator('#exploration-context').innerText(), /Basada en/);
-        checks.push('cancel preserves case; explicit apply uses real worker and preserves exploration origin');
+        checks.push('A remains available while the real worker validates B; success commits once, without a second synthesis, preserving origin');
         await open();
         const qrs = page.locator('#activation-qrs'), model = page.locator('#activation-model');
         await model.selectOption('regional-rbbb-v1'); await qrs.fill('190');
@@ -119,7 +164,7 @@ for (const [engine, launcher] of Object.entries(engines)) {
         const reset = JSON.parse(await download('[data-activation="json"]', 'timing-reset.json'));
         assert.deepEqual(reset.a, reset.b);
         await model.selectOption('regional-rbbb-v1'); await qrs.fill('190');
-        await page.locator('[data-activation="apply"]').click(); await ready();
+        await page.locator('[data-activation="apply"]').click(); await applicationReady();
         const regionalApplied = await exportCase('timing-applied.json');
         assert.equal(regionalApplied.qrs, 190); assert.equal(regionalApplied.activationModel, 'regional-rbbb-v1');
         assert.equal(regionalApplied.axis, applied.axis); assert.equal(regionalApplied.seed, applied.seed);
@@ -132,10 +177,59 @@ for (const [engine, launcher] of Object.entries(engines)) {
         assert.equal(fallback.b.timing.applied, 'template'); assert.deepEqual(fallback.b.timing.regions, []);
         await close(); assert.deepEqual(await exportCase('timing-cancelled.json'), regionalApplied);
         checks.push('invalid input removes stale experiment; exact reset; apply through worker; unsupported fallback; cancel preserves case');
+        await chooseCatalogPreset(page, 'sinus'); await ready();
+        const domainCase = { ...await exportCase('validation-base.json'), presetId: 'custom', name: 'Validación completa de alternativa',
+          hr: 60, variability: 0, filter: 'off', ischemia: 'anterior', phase: 'hyperacute', electrolyte: 'hyperkalemia', st: 1 };
+        await page.locator('#file-input').setInputFiles({ name: 'validation-case.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(domainCase)) });
+        await page.waitForFunction(() => document.querySelector('#case-title').textContent === 'Validación completa de alternativa'); await ready();
+        const preserved = await exportCase('validation-original.json');
+        const preservedCanvas = await page.locator('#ecg').evaluate(c => c.toDataURL());
+        const preservedMetrics = await page.locator('#metrics').innerText();
+        await open(); await page.locator('#activation-choice').selectOption('rbbb');
+        assert.equal(await page.locator('[data-activation-lead]').count(), 12);
+        await page.locator('[data-activation="apply"]').click();
+        await page.waitForFunction(() => document.querySelector('#activation-error').textContent.startsWith('B no se aplicó.'));
+        assert.equal(await page.locator('#activation-dialog').evaluate(d => d.open), true);
+        assert.equal(await page.locator('#activation-qrs').isEnabled(), true);
+        assert.match(await page.locator('#activation-error').innerText(), /fuera de alcance/);
+        assert.equal(await inViewport('#activation-error'), true);
+        assert.equal(await page.locator('#activation-error').evaluate(e => document.activeElement === e), true);
+        assert.equal(await page.locator('#signal-loading').isVisible(), false);
+        assert.equal(await page.locator('#ecg').evaluate(c => c.toDataURL()), preservedCanvas);
+        assert.equal(await page.locator('#metrics').innerText(), preservedMetrics);
+        await page.screenshot({ path: path.join(out, `${tag}-activation-validation-rejected.png`) });
+        await close(); assert.deepEqual(await exportCase('validation-rejected.json'), preserved);
+        // Retry exhaustion is also local to B and must not invalidate A.
+        await open(); await page.locator('#activation-qrs').fill('100');
+        await page.evaluate(() => { window.__activationApplyProbe.failPosts = 2; });
+        await page.locator('[data-activation="apply"]').click();
+        await page.waitForFunction(() => document.querySelector('#activation-error').textContent.includes('único reintento'));
+        assert.equal(await inViewport('#activation-error'), true);
+        assert.equal(await page.locator('#activation-error').evaluate(e => document.activeElement === e), true);
+        assert.equal(await page.locator('#ecg').evaluate(c => c.toDataURL()), preservedCanvas);
+        assert.equal(await page.locator('#metrics').innerText(), preservedMetrics);
+        await page.locator('[data-activation="apply"]').click(); await applicationReady();
+        const corrected = await exportCase('validation-corrected.json');
+        assert.equal(corrected.qrs, 100); assert.equal(corrected.conduction, 'normal'); assert.equal(corrected.seed, preserved.seed);
+        checks.push('real whole-ECG domain rejection and bounded transport failure preserve A, canvas, metrics and export; corrected B applies');
+
+        await chooseCatalogPreset(page, 'sinus'); await ready(); await open();
+        await page.locator('#activation-choice').selectOption('rbbb');
+        await page.evaluate(() => { window.__activationApplyProbe.holdNext = true; });
+        await page.locator('[data-activation="apply"]').click();
+        await page.waitForFunction(() => window.__activationApplyProbe.held.length === 1);
+        await page.keyboard.press('Escape');
+        await chooseCatalogPreset(page, 'brady'); await ready();
+        const newer = await exportCase('validation-newer.json');
+        await page.evaluate(() => window.__activationApplyProbe.release());
+        assert.deepEqual(await exportCase('validation-after-cancel.json'), newer);
+        assert.equal(await page.locator('#activation-dialog').evaluate(d => d.open), false);
+        assert.doesNotMatch(await page.locator('#toast').innerText(), /Alternativa.*aplicada/);
+        checks.push('Escape aborts the pending application; delayed real reply cannot replace a newer selected case');
         await chooseCatalogPreset(page, 'pvc'); await ready(); await open();
         assert.match(await page.locator('#activation-beat option:checked').innerText(), /EV/);
         await page.locator('#activation-choice').selectOption('representative_vt');
-        await page.locator('[data-activation="apply"]').click(); await ready();
+        await page.locator('[data-activation="apply"]').click(); await applicationReady();
         assert.equal((await exportCase('source.json')).ventricularSource, 'representative_vt');
         await chooseCatalogPreset(page, 'aai'); await ready(); await open();
         assert.equal(await page.locator('#activation-choice option[value="representative_vt"]').count(), 0);
@@ -179,7 +273,7 @@ for (const [engine, launcher] of Object.entries(engines)) {
         const proposedWpw = JSON.parse(await download('[data-activation="json"]', 'wpw-proposed.json'));
         assert.equal(Object.hasOwn(proposedWpw.b.beat, 'qt'), false);
         assert.equal(proposedWpw.b.beat.time, proposedWpw.a.beat.time);
-        await page.locator('[data-activation="apply"]').click(); await ready();
+        await page.locator('[data-activation="apply"]').click(); await applicationReady();
         const appliedWpw = await exportCase('wpw-applied.json');
         assert.equal(appliedWpw.conduction, 'wpw'); assert.equal(appliedWpw.pr, 100); assert.equal(appliedWpw.qrs, 135);
         await open();

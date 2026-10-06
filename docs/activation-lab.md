@@ -50,6 +50,33 @@ invalidación, reset, aplicación real y cancelación en la misma matriz de moto
 No se crean workflows, dependencias ni capas nuevas. Los resultados concretos
 pertenecen al commit evaluado; esta descripción no equivale a CI aprobado.
 
+## Aplicación transaccional: primero validar, después sustituir
+
+**Aplicar B** ya no cambia el caso ni anuncia éxito antes de recibir el resultado
+completo del motor. `SignalController.evaluate()` utiliza la misma cola y worker,
+pero entrega el resultado al intento del laboratorio, no a la sesión principal.
+A, sus muestras, medidas y herramientas permanecen vigentes durante la espera.
+Una respuesta válida se publica por el mismo camino de generación habitual,
+sin sintetizar por segunda vez. El origen de exploración permanece intacto.
+
+Mientras se valida, el experimento queda bloqueado y un estado visible informa
+qué ocurre; Cerrar y Escape siguen disponibles. Cancelar retira el identificador
+y detiene el worker si estaba calculando esa alternativa. Una selección posterior
+prevalece sobre cualquier respuesta tardía. No se crea un worker paralelo.
+
+Si B queda fuera del dominio del ECG completo o se agota el reintento de
+transporte, el motivo permanece dentro del laboratorio. No se invalida A ni se
+publica la respuesta fallida. Los controles se recuperan para corregir B,
+restablecer o cerrar. La previsualización de QRS no se convierte en una promesa de
+validez de P/ST/T: el motor conserva todos sus límites y mensajes anteriores.
+
+Aceptación: se amplían las pruebas existentes del transporte y el modelo; el
+recorrido de producción retiene una respuesta real del worker para comprobar
+la espera, commit único y cancelación, sin fabricar señales. También reproduce
+un rechazo real de síntesis completa y un fallo de transporte acotado, y exige
+preservación del caso exportado, píxeles del trazado y medidas. Se utiliza la
+matriz de navegadores existente; no se añaden dependencias ni workflows.
+
 ## WPW: incluir la delta del generador, no dibujar solo sus kernels
 
 WPW ya se puede abrir y elegir como alternativa B. Antes se excluía porque su

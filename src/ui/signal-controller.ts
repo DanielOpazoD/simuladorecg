@@ -1,6 +1,12 @@
 import type { ECGCase, Signal, Measurement } from "../engine/types";
 import type { SignalRequest, SignalResponse } from "../engine/protocol";
 
+/** A staged evaluation uses the same bounded worker queue without publishing to the trace. */
+export type SignalEvaluation =
+  | { status: "ready"; signal: Signal; measurement: Measurement; requestId: number }
+  | { status: "error"; message: string }
+  | { status: "cancelled" };
+
 /** One running request and the newest pending snapshot. Infrastructure failures
  * get at most ONE retry per request; physiological-domain errors are not retried.
  * This transport never modifies samples, measurements or model parameters.
@@ -14,6 +20,12 @@ export class SignalController {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private disposed = false;
   private readonly timeoutMs: number;
+  private evaluation: {
+    id: number;
+    signal: AbortSignal;
+    abort: () => void;
+    resolve: (result: SignalEvaluation) => void;
+  } | null = null;
 
   constructor(
     private readonly onResult: (signal: Signal, measurement: Measurement, requestId: number) => void,
@@ -26,14 +38,65 @@ export class SignalController {
   }
 
   request(ecg: ECGCase, duration = 65): number {
-    if (this.disposed) throw new Error("Signal controller disposed");
-    const request = { id: ++this.serial, ecg: structuredClone(ecg), duration };
-    if (this.active) this.pending = request;
-    else this.send(request, 0);
+    this.cancelEvaluation();
+    const request = this.createRequest(ecg, duration);
+    this.enqueue(request);
     return request.id;
   }
 
+  /** A newer request or abort cancels this evaluation; its reply never leaks to onResult/onError. */
+  evaluate(ecg: ECGCase, signal: AbortSignal, duration = 65): Promise<SignalEvaluation> {
+    if (this.disposed) throw new Error("Signal controller disposed");
+    if (signal.aborted) return Promise.resolve({ status: "cancelled" });
+    this.cancelEvaluation();
+    const request = this.createRequest(ecg, duration);
+    return new Promise(resolve => {
+      const abort = () => this.cancelEvaluation();
+      this.evaluation = { id: request.id, signal, abort, resolve };
+      signal.addEventListener("abort", abort, { once: true });
+      this.enqueue(request);
+    });
+  }
+
+  private createRequest(ecg: ECGCase, duration: number): SignalRequest {
+    if (this.disposed) throw new Error("Signal controller disposed");
+    return { id: ++this.serial, ecg: structuredClone(ecg), duration };
+  }
+
+  private enqueue(request: SignalRequest): void {
+    if (this.active) this.pending = request;
+    else this.send(request, 0);
+  }
+
+  private cancelEvaluation(): void {
+    const evaluation = this.evaluation;
+    if (!evaluation) return;
+    this.evaluation = null;
+    evaluation.signal.removeEventListener("abort", evaluation.abort);
+    // Retire the ID even when a synchronous transport failure queued a microtask.
+    if (this.serial === evaluation.id) ++this.serial;
+    if (this.pending?.id === evaluation.id) this.pending = null;
+    if (this.active?.id === evaluation.id) {
+      this.active = null;
+      this.stopWorker();
+    }
+    evaluation.resolve({ status: "cancelled" });
+  }
+
+  private deliver(result: SignalResponse): void {
+    const evaluation = this.evaluation;
+    if (evaluation?.id === result.id) {
+      this.evaluation = null;
+      evaluation.signal.removeEventListener("abort", evaluation.abort);
+      evaluation.resolve("error" in result
+        ? { status: "error", message: result.error }
+        : { status: "ready", signal: result.signal, measurement: result.measurement, requestId: result.id });
+    } else if ("error" in result) this.onError(result.error, result.id);
+    else this.onResult(result.signal, result.measurement, result.id);
+  }
+
   dispose(): void {
+    this.cancelEvaluation();
     this.disposed = true;
     this.pending = null;
     this.active = null;
@@ -75,8 +138,7 @@ export class SignalController {
           }
           const result = event.data;
           if (result.id !== this.serial) return;
-          if ("error" in result) this.onError(result.error, result.id);
-          else this.onResult(result.signal, result.measurement, result.id);
+          this.deliver(result);
         };
         worker.onerror = (event) => {
           event.preventDefault();
@@ -109,7 +171,7 @@ export class SignalController {
     if (retries <= 1) { this.send(request, retries); return; }
     const notify = () => {
       if (!this.disposed && request.id === this.serial && this.active === null)
-        this.onError(`${reason}. Se agotó el único reintento; selecciona de nuevo el caso o recarga la página.`, request.id);
+        this.deliver({ id: request.id, error: `${reason}. Se agotó el único reintento; selecciona de nuevo el caso o recarga la página.` });
     };
     if (synchronous) queueMicrotask(notify);
     else notify();
