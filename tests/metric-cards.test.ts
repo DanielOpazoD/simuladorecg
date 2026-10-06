@@ -29,7 +29,7 @@ describe("metricCards", () => {
 
   it("does not report PR without an estimable AV relation", () => {
     const pr = (patch: Partial<ECGCase>) => metricCards(withCase(patch), measurement())[1];
-    expect(pr({ av: "complete" } as Partial<ECGCase>)).toMatchObject({ value: "—", note: "sin relación AV estimable" });
+    expect(pr({ av: "complete" } as Partial<ECGCase>)).toMatchObject({ value: "—", note: "No estimable", status: "unavailable" });
     expect(pr({ rhythm: "paced", pacing: "VVI" } as Partial<ECGCase>).value).toBe("—");
     expect(pr({ rhythm: "paced", pacing: "DDD" } as Partial<ECGCase>).value).toBe("154<small>ms</small>");
   });
@@ -49,5 +49,23 @@ describe("metricCards", () => {
 
   it("escapes the evidence reason in the button title", () => {
     expect(metricsHtml(metricCards(DEFAULT_CASE, measurement()))).toContain('title="motivo hr &lt;x&gt;"');
+  });
+});
+
+describe('No apparent valid number without supporting evidence', () => {
+  it.each(['hr', 'pr', 'qrs', 'qt', 'axis'] as const)('withholds retained %s when unavailable', key => {
+    expect(metricCards(DEFAULT_CASE, measurement({ [key]: 'unavailable' })).find(c => c.key === key)?.value).toBe('—');
+  });
+  it.each([null, NaN, Infinity])('does not invent a monitor rate for %s', hr => {
+    const m = measurement(); m.hr = hr;
+    expect(monitorRate(DEFAULT_CASE, m)).toBe('—');
+    expect(metricCards(DEFAULT_CASE, m)[0]).toMatchObject({ value: '—', status: 'unavailable', note: 'No estimable' });
+  });
+  it('does not label a suppressed physiological metric reproducible', () => {
+    expect(metricCards(withCase({ av: 'complete' }), measurement())[1]).toMatchObject({ value: '—', status: 'unavailable' });
+  });
+  it('uses the measured time support instead of a hardcoded ten seconds', () => {
+    const m=measurement(); m.window={start:2,end:7.5};
+    expect(metricCards(DEFAULT_CASE,m)[0].note).toBe('media · 5.5 s');
   });
 });
