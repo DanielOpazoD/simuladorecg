@@ -21,3 +21,9 @@ it('verifies exact numerical-core preservation against the historical entry with
   expect(() => assertReviewedSampleEntry(source,before)).not.toThrow();
   expect(() => assertReviewedSampleEntry(source,before.toString().replace('candidateFraction: 0.6','candidateFraction: 0.2'))).toThrow(/Numerical/);
 });
+
+it('rejects bypassing the reviewed zero-information axis screen',()=>{
+  const bypass=source.replace('retireUnsupportedFrontalAxis(input, attachMeasurementSupport(next, quality))','attachMeasurementSupport(next, quality)');
+  expect(bypass).not.toBe(source);
+  expect(()=>assertReviewedSampleEntry(bypass)).toThrow(/Unreviewed/);
+});
