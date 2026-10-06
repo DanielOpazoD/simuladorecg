@@ -1,3 +1,5 @@
+import {afInterval} from '../src/engine/af-rr';
+import {random} from '../src/engine/random';
 import {assertExactSamples} from './support/exact-samples';
 import { describe, it, expect } from "vitest";
 import {
@@ -170,7 +172,15 @@ describe("Determinismo y catálogo", () => {
       const hasCoupledSecondary = a.events.beats.some((beat) =>
         secondaryRepolarization(fromPreset(p), beat, qrsKernels(fromPreset(p), beat)).mode !== "none"
       );
-      if (!hasCoupledSecondary) expectCatalogFingerprint(p.id, a.leads.II);
+      if (fromPreset(p).rhythm === 'af') {
+        // The old clipped-clock fingerprint remains stored as historical evidence.
+        // Full waveform regression is now the mandatory frozen-source AF prediction.
+        // This integration contract checks seeding, one draw per interval and warm-up.
+        const c=fromPreset(p),r=random(c.seed),times:number[]=[];
+        for(let t=.35;t<14;t+=afInterval(r,60/c.hr))if(t>=4)times.push(t-4);
+        expect(a.events.beats.map(b=>b.time)).toEqual(times);
+        expect(a.events.atria).toHaveLength(0);expect(a.events.spikes).toHaveLength(0);
+      } else if (!hasCoupledSecondary) expectCatalogFingerprint(p.id, a.leads.II);
     },
   );
 });

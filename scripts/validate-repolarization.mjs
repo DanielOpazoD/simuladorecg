@@ -1,3 +1,4 @@
+import {predictAfClock,assertFrozenAfSampler} from './lib/af-clock-prediction.mjs';
 import {assertReviewedAlternatingConfidence,assertReviewedImpulseConfidence} from './lib/sample-entry-contract.mjs';
 import {predictQTInitialization,assertReviewedQTInitialization} from './lib/qt-initialization-revision.mjs';
 /** v1.3 versus working tree, on matched synthetic samples. Not clinical validation. */
@@ -21,7 +22,8 @@ for (let i=0;i<args.length;i+=2) {
 const temp = await mkdtemp(path.join(tmpdir(),'ecg-regional-'));
 try {
  assertReviewedQTInitialization(await readFile('src/engine/repolarization.ts'));
- const referencePreparation='Historical morphology with independently predicted QT initialization; default equality is relative to this declared reference revision';
+ assertFrozenAfSampler(await readFile('src/engine/af-rr.ts'));
+ const referencePreparation='Historical morphology with independently predicted QT initialization and representative AF clock; default equality is relative to this declared reference revision';
  let baseDir = options['--baseline-dir'];
  if (!baseDir) {
    baseDir = path.join(temp,'base'); await mkdir(baseDir);
@@ -36,6 +38,7 @@ try {
        builder.onLoad({filter:/\/repolarization\.ts$/},async args=>({
          contents:predictQTInitialization(await readFile(args.path,'utf8')),loader:'ts'
        }));
+       builder.onLoad({filter:/\/rhythm\.ts$/},async args=>({contents:predictAfClock(await readFile(args.path,'utf8')),loader:'ts'}));
      }}]});
    return import(pathToFileURL(outfile).href);
  }

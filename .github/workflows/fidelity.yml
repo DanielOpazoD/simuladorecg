@@ -77,6 +77,8 @@ jobs:
         run: node --test tests/noise-regression.node.mjs tests/t-peak-revision.node.mjs > "${{ runner.temp }}/noise-regression.tap"
       - name: Regional activation and reviewed default prediction
         run: node scripts/validate-regional-activation.mjs "${{ runner.temp }}/regional-activation-results.json"
+      - name: Paired representative AF clock and worker confidence
+        run: node scripts/validate-af-clock.mjs "${{ runner.temp }}/af-clock-results.json"
       - name: Types and production build
         run: npm run build
       - name: Independent QRS/ST/T prediction against frozen source
