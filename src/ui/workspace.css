@@ -162,8 +162,9 @@ dialog.external-lab { border-radius:12px; }
   .topbar nav > .btn[data-action=quiz] svg, .topbar nav > .btn[data-action=about] svg, .topbar nav > .btn[data-action=export] svg { display:none; }
   .topbar nav > .btn[data-action=about] { width:auto; }
   .topbar nav > .btn[data-action=about] span { display:inline; }
-  .workspace-nav { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
-  .workspace-current { justify-content:center; }
+  .workspace-nav { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); margin-bottom:18px; padding-bottom:14px; }
+  /* The page heading already names the active space; keep it for assistive tech only. */
+  .workspace-current { position:absolute; width:1px; height:1px; min-height:0; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
   .workspace-nav > .btn { white-space:normal; text-align:center; }
   .case-heading { display:block; position:relative; }
   .case-category { padding-right:54px; }
