@@ -1,3 +1,4 @@
+import {assertReviewedEventCalendar} from './lib/event-calendar-revision.mjs';
 import {predictQTInitialization,assertReviewedQTInitialization} from './lib/qt-initialization-revision.mjs';
 import {assertReviewedSampleEntry} from './lib/sample-entry-contract.mjs';
 /** Frozen-source comparison. --coherence applies only the independently declared A02/A03 delta. */
@@ -28,17 +29,10 @@ try {
     assertReviewedSampleEntry(await readFile('src/engine/sample-analysis.ts'));
     nonNumericalContracts.push('src/engine/sample-analysis.ts');
   }
-  // Reviewed clock initialization only; every other rhythm byte stays frozen.
-  if(changedFiles.includes('src/engine/rhythm.ts')) {
-    const original=await readFile(path.join(base,'src/engine/rhythm.ts'),'utf8');
-    const replacement=`  // Flutter has an independent atrial clock. Its first RR also seeds QT history;
-  // using the inactive base-rate control here changes T without changing rhythm.
-  const base = c.rhythm === "flutter"
-    ? (60 / c.atrialRate) * c.flutterRatio
-    : 60 / c.hr;`;
-    assert.ok(original.includes('  const base = 60 / c.hr;'));
-    assert.equal(await readFile('src/engine/rhythm.ts','utf8'), original.replace('  const base = 60 / c.hr;',replacement), 'Unreviewed rhythm change');
-    nonNumericalContracts.push('src/engine/rhythm.ts');
+  // Reviewed calendar integrity: all valid historical samples still compared below.
+  for(const file of ['src/engine/rhythm.ts','src/engine/event-calendar.ts']) {
+    assertReviewedEventCalendar(file,await readFile(file));
+    nonNumericalContracts.push(file);
   }
 
   // Opt-in regional model: every historical trace below still has to be exact.
@@ -94,6 +88,7 @@ try {
         }else matrix.push(check(c,label));
       }
   const report={schemaVersion:2,stage:coherence?'A02-A03-independent-prediction':'A01-characterization-only',baselineCommit:BASE,
+    eventCalendarRevision:'Strict bounded events and causal RR/PR assertions; historical sample comparison remains exact.',
     qtInitializationRevision:'First event retains nominal ventricular RR; adaptation starts at second event. Separate from A02/A03 morphology.',
     candidateCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),changedFiles,
     clinicalValidation:false,scenarios:rows.length,sampleComparisons:rows.reduce((n,r)=>n+r.checked,0),rows,matrix,
