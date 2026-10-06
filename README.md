@@ -49,13 +49,17 @@ node scripts/validate-repolarization.mjs --output .sites-runtime/repolarization.
 node scripts/validate-analysis.mjs --split=all --output .sites-runtime/analysis-current.json
 
 # Después de npm run build, desde un commit limpio:
-npm install --no-save --package-lock=false playwright@1.63.0
+npm install --no-save --package-lock=false --legacy-peer-deps playwright@1.63.0
 npx playwright install chromium
 npx vite preview --host 127.0.0.1 --port 5173 --strictPort
 # En otra terminal:
 node scripts/verify-production.mjs
 node tests/browser-fidelity.mjs
 ```
+
+Playwright es una dependencia temporal de pruebas, no del producto. Con Vitest 4,
+`--legacy-peer-deps` evita un fallo interno de npm al resolver su peer opcional;
+`--no-save --package-lock=false` conserva los manifiestos y el lockfile.
 
 Las salidas nuevas se guardan en `.sites-runtime/` o la ruta indicada, sin sobrescribir evidencia histórica de `docs/`. El informe de análisis incluye versión real, commit/árbol cuando existen, estado de los archivos evaluados y SHA-256 de sus fuentes. Un archivo fuente sin historial informa procedencia Git desconocida; no inventa un SHA ni un estado limpio.
 

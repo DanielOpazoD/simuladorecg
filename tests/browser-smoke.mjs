@@ -1,5 +1,5 @@
 // Optional browser smoke checks. Run locally after `npm run dev`.
-// Install the optional runner: npm install --no-save playwright
+// Install the optional runner: npm install --no-save --package-lock=false --legacy-peer-deps playwright@1.63.0
 // Then: npx playwright install chromium && node tests/browser-smoke.mjs
 import { chromium } from "playwright";
 import assert from "node:assert/strict";
