@@ -30,7 +30,7 @@ export const CONDUCTION_EXAMPLES = [
 /** Reject components that cannot be represented by a single static QRS vector loop. */
 export function activationLimitation(c: ECGCase, b?: Beat): string | null {
   if (c.rhythm === 'vf' || c.rhythm === 'asystole' || !b) return 'Sin complejos QRS organizados para explorar.';
-  if (c.rhythm === 'torsades') return 'La TV polimórfica rota durante el tiempo absoluto. Un bucle estático no representa esa señal; no se dibuja una sustitución.';
+  if (c.rhythm === 'torsades') return 'La TV polimórfica usa una proyección variable compartida por QRS y T secundaria; es una aproximación visual, no un mecanismo de reentrada. Un bucle estático no representa esa señal; no se dibuja una sustitución.';
   if (c.ischemia === 'posterior') return 'El QRS posterior incluye una corrección local por derivación sin equivalente XYZ único. No se omite silenciosamente.';
   return null;
 }

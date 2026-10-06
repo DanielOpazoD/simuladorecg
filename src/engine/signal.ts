@@ -1,3 +1,4 @@
+import { torsadesFrame } from './torsades-frame';
 import { ventricularSource } from "./ventricular-source";
 import { PRECORDIAL_LEADS } from "./lead-registry";
 import {
@@ -104,17 +105,7 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
         const g = qrsKernelValue(k, u);
         for (let j = 0; j < 3; j++) v[j] += g * k.v[j];
       }
-      if (tors) {
-        const phase = (2 * Math.PI * t) / ((60 / c.hr) * 12),
-          x = v[0],
-          z = v[2],
-          envelope = 0.55 + (0.65 * (1 + Math.sin(phase))) / 2;
-        v = [
-          (x * Math.cos(phase) - z * Math.sin(phase)) * envelope,
-          v[1] * Math.cos(phase),
-          x * Math.sin(phase) + z * Math.cos(phase),
-        ];
-      }
+      if (tors) v = torsadesFrame(v, t, c.hr);
       return v;
     });
     if (c.conduction === "wpw" && b.kind === "normal")
@@ -136,8 +127,8 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
       if (c.stShape === "convex") shape = 1 + 0.3 * Math.sin(Math.PI * u);
       return scale(lv, Math.max(0, envelope) * shape);
     });
-    add(tStart, tLen, (u) =>
-      scale(tv, tWave(u, c.electrolyte === "hyperkalemia")),
+    add(tStart, tLen, (u, t) =>
+      scale(tors ? torsadesFrame(tv, t, c.hr) : tv, tWave(u, c.electrolyte === "hyperkalemia")),
     );
     if (regionalTerritory(c, b) && (c.phase === "hyperacute" || c.phase === "evolving") && c.st > 0 && c.tAmp > 0) {
       const basal = project(tv);

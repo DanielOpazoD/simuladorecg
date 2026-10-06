@@ -1,3 +1,5 @@
+import {predictTorsadesFrame} from './lib/torsades-frame-prediction.mjs';
+import {assertTraceContract} from '../tests/support/repolarization-contract.mjs';
 import {predictQTInitialization,assertReviewedQTInitialization} from './lib/qt-initialization-revision.mjs';
 /** Frozen PR55 source versus candidate: defaults exact; opt-in samples causal. */
 import {build} from 'esbuild';
@@ -22,19 +24,22 @@ try {
   };
   const qtFile=path.join(base,'src/engine/repolarization.ts');
   await writeFile(qtFile,predictQTInitialization(await readFile(qtFile,'utf8')));
-  const referencePreparation='PR55 with independently predicted QT initialization; exact defaults compare this declared revision, not raw historical QT';
+  const signalFile=path.join(base,'src/engine/signal.ts');
+  await writeFile(signalFile,predictTorsadesFrame(await readFile(signalFile,'utf8')));
+  const referencePreparation='PR55 with independent QT initialization and torsades-frame predictions; unchanged defaults remain exact';
   const before=await load(base,'before'),after=await load(process.cwd(),'after'),defaults=[];
   assert.deepEqual(before.PRESETS,after.PRESETS,'No new or relabelled presets');
   for(const p of before.PRESETS.filter(p=>p.strategy!=='pending'))for(const filter of ['off','diagnostic','monitor','aggressive']){
     const c={...before.fromPreset(p),filter};
     const a=before.synthesize(c,10),b=after.synthesize(c,10);
-    assertExactSignal(a,b,`${p.id}/${filter}: legacy samples, events, truth and warnings must remain exact`);
-    defaults.push({preset:p.id,filter,exact:true});
+    if(c.rhythm==='torsades') assertTraceContract(a,b,`${p.id}/${filter}: independently predicted T frame`,1e-12);
+    else assertExactSignal(a,b,`${p.id}/${filter}: legacy samples, events, truth and warnings must remain exact`);
+    defaults.push({preset:p.id,filter,exact:c.rhythm!=='torsades',predictedTorsadesFrame:c.rhythm==='torsades'});
   }
   assert.equal(defaults.length,244);
   const regional=assertRegionalSampleContract(after);
   const report={schemaVersion:1,referencePreparation,baselineCommit:BASE,candidateCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),
     clinicalValidation:false,defaults,regional,limitations:['Experimental temporal bases, not clinical calibration or anatomical activation mapping.','Default samples remain exact against the QT-initialization prediction; detector unchanged.']};
   await mkdir(path.dirname(path.resolve(output)),{recursive:true});await writeFile(output,JSON.stringify(report,null,2)+'\n');
-  console.log(JSON.stringify({referencePreparation,defaultsExact:defaults.length,...regional}));
+  console.log(JSON.stringify({referencePreparation,defaultsExact:defaults.filter(r=>r.exact).length,predictedTorsades:defaults.filter(r=>r.predictedTorsadesFrame).length,...regional}));
 } finally {await rm(temp,{recursive:true,force:true});}

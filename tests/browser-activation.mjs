@@ -285,7 +285,13 @@ for (const [engine, launcher] of Object.entries(engines)) {
         for (const preset of ['vf', 'posterior', 'torsades']) {
           await chooseCatalogPreset(page, preset); await ready(); await open();
           assert.equal(await page.locator('#activation-error').isVisible(), true);
-          assert.equal(await page.locator('[data-activation-plane]').count(), 0); await close();
+          assert.equal(await page.locator('[data-activation-plane]').count(), 0);
+          if(preset==='torsades') assert.match(await page.locator('#activation-error').innerText(),/aproximación visual, no un mecanismo de reentrada/);
+          await close();
+          if(preset==='torsades') {
+            await page.locator('#ecg').screenshot({path:path.join(out,`${tag}-torsades-frame-trace.png`)});
+            assert.equal(await page.locator('#metrics .metric').filter({hasText:'QT'}).locator('strong').first().innerText(),'—');
+          }
         }
         await page.locator('[data-action="quiz"]').click();
         assert.equal(await page.locator('[data-action="activation"]').isDisabled(), true);
