@@ -25,7 +25,9 @@ import { SignalController } from "./ui/signal-controller";
 import { TraceSession } from "./ui/trace-session";
 import { CaliperEditor } from "./ui/caliper-editor";
 import { initialCaliper, placeCaliper, moveCaliper } from "./render/caliper-geometry";
-import { practiceQuestion, practiceFeedback, type PracticeId } from "./ui/practice-feedback";
+import { practiceFeedback, type PracticeId } from "./ui/practice-feedback";
+import { createPractice, answerPractice, type PracticeState } from "./ui/practice-session";
+import { practicePanelHtml } from "./ui/practice-panel";
 import { changeCase, isCaseControlKey, controlValue } from "./ui/case-state";
 import { beatDetail, representativeBeat, nearestBeat } from "./ui/beat-detail";
 import { measurementDialog } from "./ui/measurement-dialog";
@@ -34,7 +36,6 @@ import {
   PRESETS,
   fromPreset,
   presetById,
-  type Preset,
 } from "./presets/catalog";
 import {
   renderPaper,
@@ -69,8 +70,7 @@ let timer = 0,
   activePanel = "base",
   search = "",
   group = "",
-  quiz: { preset: Preset; choices: Preset[]; answer: string | null } | null =
-    null;
+  quiz: PracticeState | null = null;
 let explorationOrigin: ExplorationOrigin | null = null;
 let explorationOriginTrace: SyntheticComparisonTrace | null = null;
 let initialError = "";
@@ -612,14 +612,13 @@ function renderQuiz() {
   panel.hidden = !quiz;
   if (!quiz) return;
   const q = quiz, feedback = q.answer ? practiceFeedback(q.preset.id as PracticeId, c, session.signal, session.measurement) : null;
-  panel.innerHTML = `<div class="quiz-top"><strong>${q.answer ? (q.answer === q.preset.id ? "Coincide con el caso configurado" : "Compara los rasgos del ejercicio") : "¿Qué patrón representa este ejercicio?"}</strong><button data-action="end-quiz">Salir de práctica</button></div><div class="quiz-choices">${q.choices.map((p) => `<button data-answer="${p.id}" ${q.answer || !session.canExport ? "disabled" : ""} class="${q.answer && p.id === q.preset.id ? "correct" : q.answer === p.id ? "incorrect" : ""}">${esc(p.name)}</button>`).join("")}</div>${feedback ? `<div class="practice-feedback" role="status"><section><h3>Observaciones y estimaciones</h3><ul>${feedback.observations.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></section><section><h3>Referencia del ejercicio</h3><p><strong>${esc(q.preset.name)}</strong> · Etiqueta configurada, no diagnóstico automático.</p><p>${q.answer !== q.preset.id ? `Elegiste ${esc(presetById(q.answer!)?.name || "otra alternativa")}. ` : ""}Revisa ${esc(feedback.leads)}. ${esc(feedback.cue)}</p></section></div><div class="practice-limits">${feedback.limitations.map(x=>`<p>${esc(x)}</p>`).join("")}<p>Modelo aproximado. La puntuación compara tu opción con el ejercicio, no mide precisión clínica.</p></div>${btn("quiz", "Siguiente caso", "chevron", "primary")}` : `<p>Responde después de observar el ECG. Las referencias se muestran al contestar.</p>`}`;
+  panel.innerHTML = practicePanelHtml(q, session.canExport, feedback);
 }
 function startQuiz() {
   const rng = new Uint32Array(2);
   crypto.getRandomValues(rng);
-  const question = practiceQuestion(Array.from(rng));
-  quiz = { preset: presetById(question.id)!, choices: question.choices.map(id=>presetById(id)!), answer: null };
-  selectPreset(question.id);
+  quiz = createPractice(Array.from(rng));
+  selectPreset(quiz.preset.id);
   renderQuiz();
   renderInfo();
   $("#quiz-panel").scrollIntoView({ block: "nearest", behavior: "smooth" });
@@ -660,8 +659,7 @@ document.addEventListener("click", async (e) => {
     draw();
     return;
   }
-  if (answer && quiz && !quiz.answer && session.canExport && quiz.choices.some(p=>p.id===answer.dataset.answer)) {
-    quiz.answer = answer.dataset.answer!;
+  if (answer && answerPractice(quiz, answer.dataset.answer, session.canExport)) {
     renderQuiz();
     renderInfo();
     draw();
