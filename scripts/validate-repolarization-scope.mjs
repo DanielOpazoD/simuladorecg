@@ -18,6 +18,19 @@ try {
   execFileSync('tar',['-xf','-','-C',base],{input:execFileSync('git',['archive',BASE],{maxBuffer:100*1024*1024})});
   const changedFiles=execFileSync('git',['diff','--name-only',BASE,'HEAD','--','src/engine','src/presets'],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
   const nonNumericalContracts=['src/engine/ventricular-trajectory.ts'];
+  // Reviewed clock initialization only; every other rhythm byte stays frozen.
+  if(changedFiles.includes('src/engine/rhythm.ts')) {
+    const original=await readFile(path.join(base,'src/engine/rhythm.ts'),'utf8');
+    const replacement=`  // Flutter has an independent atrial clock. Its first RR also seeds QT history;
+  // using the inactive base-rate control here changes T without changing rhythm.
+  const base = c.rhythm === "flutter"
+    ? (60 / c.atrialRate) * c.flutterRatio
+    : 60 / c.hr;`;
+    assert.ok(original.includes('  const base = 60 / c.hr;'));
+    assert.equal(await readFile('src/engine/rhythm.ts','utf8'), original.replace('  const base = 60 / c.hr;',replacement), 'Unreviewed rhythm change');
+    nonNumericalContracts.push('src/engine/rhythm.ts');
+  }
+
   // Opt-in regional model: every historical trace below still has to be exact.
   // The experimental branch has its own mandatory, paired source/sample gate.
   const optInRegionalFiles=['src/engine/types.ts','src/engine/regional-activation.ts'];
