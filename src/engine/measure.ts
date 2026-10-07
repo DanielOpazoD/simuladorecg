@@ -37,7 +37,10 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     if (i >= win) running -= slope[i - win];
     energy[i] = running / win;
   }
-  const { peaks } = detectVentricularCandidates(input);
+  // Morphology windows remain anchored to the original sample landmarks.
+  // Refining the ventricular train must not silently move existing boundaries.
+  const { peaks: ratePeaks, boundaryCandidates: peaks } = detectVentricularCandidates(input);
+  const retained = new Set(ratePeaks);
   const nil: Measurement = {
     hr: null,
     instantHr: null,
@@ -51,7 +54,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     qtc: { bazett: null, fridericia: null, framingham: null, hodges: null },
     quality: "No se reconocen suficientes complejos para medir.",
     beats: [],
-    detectedPeaks: peaks.map((p) => p / fs),
+    detectedPeaks: ratePeaks.map((p) => p / fs),
     window: { start: 0, end: n / fs },
     evidence: {
       hr: unavailable("No hay un ritmo ventricular delineable."),
@@ -62,13 +65,14 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     },
   };
   if (
-    peaks.length < 3 ||
+    ratePeaks.length < 3 ||
     quantile(Array.from(energy), 0.5) > quantile(Array.from(energy), 0.98) * 0.6
   )
     return nil;
-  const intervals = peaks.slice(1).map((p, i) => (p - peaks[i]) / fs),
+  const intervals = ratePeaks.slice(1).map((p, i) => (p - ratePeaks[i]) / fs),
     rr = median(intervals);
   if (rr < 0.22 || rr > 3) return nil;
+  const historicalWidths: number[] = [];
   const beats: DelineatedBeat[] = [],
     paxes: number[] = [],
     taxes: number[] = [];
@@ -221,6 +225,8 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
       width > Math.min(localRR, (peaks[k + 1] - peak) / fs) * 0.75
     )
       continue;
+    historicalWidths.push(width * 1000);
+    if (!retained.has(peak)) continue;
     let ai = 0,
       aii = 0;
     for (let j = on; j < off; j++) {
@@ -236,7 +242,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
       tPeak: null,
       tEnd: null,
       tTangentEnd: null,
-      rr: localRR,
+      rr: (peak - ratePeaks[ratePeaks.indexOf(peak) - 1]) / fs,
       pr: null,
       qrs: width * 1000,
       qt: null,
@@ -370,8 +376,8 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     }
     beats.push(beat);
   }
-  if (beats.length < 3 || beats.length < (peaks.length - 2) * 0.45) {
-    if (peaks.length >= 4) {
+  if (beats.length < 3 || beats.length < (ratePeaks.length - 2) * 0.45) {
+    if (ratePeaks.length >= 4) {
       const hr = 60 / (intervals.reduce((a, b) => a + b, 0) / intervals.length);
       return {
         ...nil,
@@ -417,7 +423,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
         : null;
   const pr = consistent && !noisy ? pm : null,
     q = qt === null ? null : qt / 1000;
-  const eligible = peaks.length - 2;
+  const eligible = peaks.slice(1,-1).filter(p=>retained.has(p)).length;
   const ev = {
     hr: evidence(
       intervals,
@@ -480,6 +486,19 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     ev.pr.reason =
       "No se separa la T: la onda atribuida a P podría ser repolarización previa.";
   }
+  // Dropping candidate waves can shrink width dispersion without fixing the
+  // underlying boundary estimator. Do not promote QRS precision for that reason.
+  const priorQrsSupport = evidence(historicalWidths, peaks.length - 2, 16, "Límites QRS reproducibles.");
+  if (ev.qrs.status === "usable" && priorQrsSupport.status !== "usable") {
+    ev.qrs.status = "review";
+    ev.qrs.reason = "La selección QRS/T cambió el conjunto de límites; la precisión QRS previa aún requiere revisión.";
+  }
+  // Removing some smooth post-complex candidates is not proof that every
+  // remaining short interval is a ventricular activation. Preserve ambiguity.
+  if (ratePeaks.length < peaks.length && intervals.some(value => value < rr * 0.75)) {
+    ev.hr.status = "review";
+    ev.hr.reason = "Persisten intervalos cortos después de discriminar candidatos QRS/T; verifica el conteo con calibres.";
+  }
   if (noisy) {
     ev.qrs.status = "review";
     ev.qrs.reason = "Ruido elevado: revisa manualmente los límites.";
@@ -508,6 +527,6 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     beats,
     evidence: ev,
     window: { start: 0, end: n / fs },
-    detectedPeaks: peaks.map((p) => p / fs),
+    detectedPeaks: ratePeaks.map((p) => p / fs),
   };
 }

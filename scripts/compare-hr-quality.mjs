@@ -1,3 +1,4 @@
+import {QRS_T_REVISION,assertReviewedQrsTFile,assertQrsTRefinement,summarizeRateRevision,preQrsTNumericsPlugin} from './lib/qrs-t-revision.mjs';
 import {assertReviewedAlternatingConfidence,assertReviewedImpulseConfidence,assertReviewedSampleEntry} from './lib/sample-entry-contract.mjs';
 /** Paired quality assessment. Evaluator has references; analyzeSamples does not. */
 import { build } from 'esbuild';
@@ -25,17 +26,23 @@ try {
   const next = await build({entryPoints:['src/engine/sample-analysis.ts'], bundle:true, platform:'node', format:'esm', metafile:true, outfile:path.join(temp,'after.mjs')});
   assert.ok(!Object.keys(next.metafile.inputs).some(p => /\/(signal|rhythm|reference|model-audit)\.ts$/.test(p)), 'Synthetic reference leaked into sample analysis');
   const B = await import(pathToFileURL(path.join(temp,'before.mjs')));
-  const A = await import(pathToFileURL(path.join(temp,'after.mjs')));
+  const C = await import(pathToFileURL(path.join(temp,'after.mjs')));
+  // Preserve every historical quality-only assertion on exact pre-revision
+  // primitives; evaluate actual revised numerical results separately below.
+  await build({entryPoints:['src/engine/sample-analysis.ts'],bundle:true,platform:'node',format:'esm',outfile:path.join(temp,'pre-revision.mjs'),
+    plugins:[preQrsTNumericsPlugin(process.cwd())]});
+  const A = await import(pathToFileURL(path.join(temp,'pre-revision.mjs')));
   assert.deepEqual(A.HR_QUALITY_POLICY, policy.qualityPolicy, 'Policy changed after replication protocol');
   assertReviewedSampleEntry(await readFile('src/engine/sample-analysis.ts'));
   for (const file of Object.keys(next.metafile.inputs).filter(f => !f.endsWith('/sample-analysis.ts') && !f.endsWith('/measurement-support.ts'))) {
     if(file==='src/engine/analysis/alternating-confidence.ts') assertReviewedAlternatingConfidence(await readFile(file));
     else if(file==='src/engine/analysis/impulse-confidence.ts') assertReviewedImpulseConfidence(await readFile(file));
+    else if(file==='src/engine/analysis/ventricular-candidates.ts') assertReviewedQrsTFile(file,await readFile(file));
     else if(file==='src/engine/measure.ts') assertReviewedMeasure(await readFile(path.join(base,file)),await readFile(file));
     else assert.equal(hash(await readFile(file)),hash(await readFile(path.join(base,file))),`Unreviewed primitive change: ${file}`);
   }
-  const rows=[];let identical=0,addedTPeaks=0;
-  const compare=(samples,reference,context)=>{
+  const rows=[],historicalRows=[];let identical=0,addedTPeaks=0;
+  const compareHistorical=(samples,reference,context)=>{
     const before=B.measure(samples), after=A.analyzeSamples(samples);
     // Candidate-support revision: only absent T peaks may be exposed; all interval candidates stay exact; a summary may be explicitly retired,
     // never replaced by another number. Historical HR screen remains frozen.
@@ -53,10 +60,21 @@ try {
     if(before.evidence.hr.status!=='usable') assert.deepEqual(before.evidence.hr,after.evidence.hr);
     const error=before.hr===null||reference===null?null:before.hr-reference;
     const quality=before.hr===null?null:A.heartRateDetectionQuality(samples,before.detectedPeaks);
-    return {...context,referenceBpm:reference,hr:before.hr,errorBpm:error,
+    return {measurement:after,row:{...context,referenceBpm:reference,hr:before.hr,errorBpm:error,
       beyondReview:error===null?null:Math.abs(error)>policy.heartRateErrorReviewBpm,
       before:before.evidence.hr.status,after:after.evidence.hr.status,quality,
-      intervalChanges:Object.fromEntries(['pr','qrs','qt','axis'].filter(k=>before[k]!==after[k]||before.evidence[k].status!==after.evidence[k].status).map(k=>[k,{before:before[k],after:after[k],statusBefore:before.evidence[k].status,statusAfter:after.evidence[k].status}]))};
+      intervalChanges:Object.fromEntries(['pr','qrs','qt','axis'].filter(k=>before[k]!==after[k]||before.evidence[k].status!==after.evidence[k].status).map(k=>[k,{before:before[k],after:after[k],statusBefore:before.evidence[k].status,statusAfter:after.evidence[k].status}]))}};
+  };
+  const compare=(samples,reference,context)=>{
+    const {row,measurement:prior}=compareHistorical(samples,reference,context);historicalRows.push(row);
+    const next=C.analyzeSamples(samples);assertQrsTRefinement(prior,next);
+    const error=(value)=>value===null||reference===null?null:value-reference;
+    const beforeError=error(prior.hr),afterError=error(next.hr);
+    return {...context,referenceBpm:reference,beforeHr:prior.hr,hr:next.hr,beforeErrorBpm:beforeError,errorBpm:afterError,
+      beforeBeyondReview:beforeError===null?null:Math.abs(beforeError)>policy.heartRateErrorReviewBpm,
+      beyondReview:afterError===null?null:Math.abs(afterError)>policy.heartRateErrorReviewBpm,
+      before:prior.evidence.hr.status,after:next.evidence.hr.status,
+      beforeCandidates:prior.detectedPeaks.length,afterCandidates:next.detectedPeaks.length};
   };
   const cleanDefaults=[];
   for(const preset of B.PRESETS.filter(p=>p.strategy!=='pending')) {
@@ -78,17 +96,13 @@ try {
       }
     }
   }
-  const summarize=arr=>({scenarios:arr.length,beforeUsable:arr.filter(r=>r.before==='usable').length,
-    afterUsable:arr.filter(r=>r.after==='usable').length,
-    usableBeyondBefore:arr.filter(r=>r.before==='usable'&&r.beyondReview).length,
-    usableBeyondAfter:arr.filter(r=>r.after==='usable'&&r.beyondReview).length,
-    newlyReviewed:arr.filter(r=>r.before==='usable'&&r.after==='review').length,
-    accurateNewReviews:arr.filter(r=>r.before==='usable'&&r.after==='review'&&r.beyondReview===false).length,
-    rawBeyond:arr.filter(r=>r.beyondReview).length,unavailable:arr.filter(r=>r.hr===null).length});
+  const summarize=summarizeRateRevision;
   const groups=[];
   for(const noise of ['clean',...p.records]) for(const snrDb of noise==='clean'?[null]:p.snrDb) for(const filter of p.filters)
     groups.push({noise,snrDb,filter,...summarize(rows.filter(r=>r.noise===noise&&r.snrDb===snrDb&&r.filter===filter))});
-  const report={schemaVersion:1,role,clinicalValidation:false,policy,unchangedNonTpeakPrimitiveOutputs:identical,addedTPeakCandidates:addedTPeaks,
+  const newlyFalse=rows.filter(r=>r.after==='usable'&&r.beyondReview&&!(r.before==='usable'&&r.beforeBeyondReview));
+  const report={schemaVersion:2,role,clinicalValidation:false,policy,numericalRevision:QRS_T_REVISION,newlyFalseUsable:newlyFalse,
+    historicalQualityContract:{scope:'Exact pre-QRS/T numerical primitives; all historical equality assertions preserved',unchangedNonTpeakPrimitiveOutputs:identical,addedTPeakCandidates:addedTPeaks,rows:historicalRows},
     overall:summarize(rows),groups,cleanDefaults,rows,limitations:policy.limitations,
     provenance:{commit:execFileSync('git',['rev-parse','HEAD']).toString().trim(),baselineCommit:policy.baselineCommit,
       noiseSha256:hash(await readFile(path.join(noiseDir,'noise-segments.json'))),
@@ -96,5 +110,6 @@ try {
       analyzerReceivesOnlySamples:true,modelAuditUsed:false}};
   await mkdir(path.dirname(path.resolve(output)),{recursive:true});
   await writeFile(output,JSON.stringify(report,null,2)+'\n');
-  console.log(JSON.stringify({role,...report.overall,cleanDefaultChanges:cleanDefaults.filter(r=>r.before!==r.after).map(r=>r.preset)}));
+  console.log(JSON.stringify({role,...report.overall,newlyFalseUsable:newlyFalse.length,cleanDefaultChanges:cleanDefaults.filter(r=>r.before!==r.after).map(r=>r.preset)}));
+  assert.equal(newlyFalse.length,0,'Numerical revision introduced a confidently incorrect rate');
 } finally { await rm(temp,{recursive:true,force:true}); }

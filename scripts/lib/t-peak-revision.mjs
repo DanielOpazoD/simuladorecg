@@ -1,5 +1,6 @@
 /** Reviewed evidence-only amendment. Never imported by the product. */
 import assert from 'node:assert/strict';
+import {QRS_T_REVISION,assertReviewedQrsTFile} from './qrs-t-revision.mjs';
 import {createHash} from 'node:crypto';
 export const T_PEAK_REVISION = Object.freeze({
   baselineCommit:'519267d3b595a27ea8d35a5eae6296c780b58ec4',
@@ -9,7 +10,8 @@ export const T_PEAK_REVISION = Object.freeze({
 const hash=b=>createHash('sha256').update(b).digest('hex');
 export function assertReviewedMeasure(before,after) {
   assert.equal(hash(before),T_PEAK_REVISION.beforeSha256,'Unreviewed primitive baseline');
-  assert.equal(hash(after),T_PEAK_REVISION.afterSha256,'Unreviewed T-peak implementation');
+  if(hash(after)===QRS_T_REVISION.files['src/engine/measure.ts'].after)assertReviewedQrsTFile('src/engine/measure.ts',after);
+  else assert.equal(hash(after),T_PEAK_REVISION.afterSha256,'Unreviewed T-peak implementation');
 }
 /** Only a previously absent T peak can appear. No endpoint, QT, beat or existing peak changes. */
 export function assertPeakOnlyBeats(before,after) {

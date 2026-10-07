@@ -1,3 +1,4 @@
+import {QRS_T_REVISION,assertReviewedQrsTFile,assertQrsTRefinement,preQrsTNumericsPlugin} from './lib/qrs-t-revision.mjs';
 import {predictWpwSupport} from './lib/wpw-support-prediction.mjs';
 import {predictAfClock,assertFrozenAfSampler} from './lib/af-clock-prediction.mjs';
 import {assertReviewedAlternatingConfidence,assertReviewedImpulseConfidence} from './lib/sample-entry-contract.mjs';
@@ -48,6 +49,17 @@ try {
  const axisArchive = execFileSync('git',['archive',AXIS_BASE],{maxBuffer:100*1024*1024});
  execFileSync('tar',['-xf','-','-C',axisBaseDir],{input:axisArchive});
  const [before, axisBase, after] = await Promise.all([load(baseDir,'before'),load(axisBaseDir,'axis-base'),load(root,'after')]);
+ // Keep the old evidence-only T-peak comparison intact using the exact pre-QRS/T
+ // numerical sources. The actual revised analyzer is evaluated separately below.
+ const legacyOut=path.join(temp,'pre-qrs-t-measure.mjs');
+ await build({stdin:{contents:"export {measure} from './src/engine/measure';",resolveDir:root},bundle:true,platform:'node',format:'esm',outfile:legacyOut,
+  plugins:[preQrsTNumericsPlugin(root)]});
+ const {measure:preQrsTMeasure}=await import(pathToFileURL(legacyOut).href);
+ const assertNumericalRevision=(samples,current)=>{
+  const prior=preQrsTMeasure(samples);
+  assertPeakOnlyChange(before.measure(samples),prior);
+  assertQrsTRefinement(prior,current);
+ };
  const outfile = path.join(temp,'metrics.mjs');
  await build({entryPoints:[path.join(root,'tests/support/morphology-metrics.ts')],bundle:true,platform:'node',format:'esm',outfile});
  const {morphologyMetrics} = await import(pathToFileURL(outfile).href);
@@ -75,6 +87,7 @@ try {
    return {path:p,unchanged:a.equals(b),sha256:createHash('sha256').update(b).digest('hex')};
  }));
  for(const f of detector.filter(f=>!f.unchanged)) {
+   if(f.path==='src/engine/analysis/ventricular-candidates.ts'){assertReviewedQrsTFile(f.path,await readFile(path.join(root,f.path)));continue;}
    if(f.path!=='src/engine/measure.ts')throw new Error('Detector freeze violated: '+f.path);
    assertReviewedMeasure(await readFile(path.join(baseDir,f.path)),await readFile(path.join(root,f.path)));
  }
@@ -93,8 +106,8 @@ try {
    for(const lead of Object.keys(b.leads)) leads[lead]={before:morphologyMetrics(a.leads[lead],a.fs,windows),after:morphologyMetrics(b.leads[lead],b.fs,windows)};
    // The product detector sees only samples; model windows are not passed to it.
    const am=after.measure(a),bm=after.measure(b);
-   assertPeakOnlyChange(before.measure(a),am);
-   assertPeakOnlyChange(before.measure(b),bm);
+   assertNumericalRevision(a,am);
+   assertNumericalRevision(b,bm);
    rows.push({id,phase,filter,case:c,windows,...contract,leads,
     detector:{before:{hr:am.hr,qrs:am.qrs,qt:am.qt},after:{hr:bm.hr,qrs:bm.qrs,qt:bm.qt}}});
  }
@@ -109,7 +122,7 @@ try {
  const defaults=[];
  for(const p of after.PRESETS.filter(p=>p.strategy!=='pending')) {
    const c=after.fromPreset(p),a=before.synthesize(c,10),r=axisBase.synthesize(c,10),b=after.synthesize(c,10);
-   assertPeakOnlyChange(before.measure(b),after.measure(b));
+   assertNumericalRevision(b,after.measure(b));
    const intendedSourceChange=changedSources.has(p.id), intendedRvGainChange=p.id==='rv_chronic',
      intendedFinalAxisChange=p.id==='rv_acute'||p.id==='rv_chronic',
      intendedSecondaryChange=b.events.beats.some(beat=>beat.kind!=='normal') ||

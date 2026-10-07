@@ -83,6 +83,8 @@ jobs:
         run: node scripts/validate-wpw-support.mjs "${{ runner.temp }}/wpw-support-results.json"
       - name: Total VVI noncapture sample-only uncertainty
         run: node scripts/validate-vvi-noncapture.mjs "${{ runner.temp }}/vvi-noncapture-results.json"
+      - name: Paired QRS-T discrimination, transfer and ectopy
+        run: node scripts/validate-qrs-t-discrimination.mjs "${{ runner.temp }}/qrs-t-discrimination-results.json"
       - name: Types and production build
         run: npm run build
       - name: Independent QRS/ST/T prediction against frozen source
@@ -180,6 +182,7 @@ jobs:
           ECG_ACTIVATION_ENGINES=all node tests/browser-activation.mjs
           node tests/browser-accessibility.mjs
           node tests/browser-vvi-noncapture.mjs
+          node tests/browser-qrs-t-discrimination.mjs
           ECG_GROUP_ENGINES=all node tests/browser-diagnosis-navigation.mjs
           ECG_REGIONAL_ENGINES=all node tests/browser-regional-activation.mjs
       - uses: actions/upload-artifact@v6

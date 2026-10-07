@@ -157,5 +157,33 @@ export function detectVentricularCandidates(
     peaks = accepted;
   }
   if ((peaks.at(-1) ?? 0) > n - 0.18 * fs) peaks.pop();
-  return { peaks, leads, energy, threshold, high, candidates };
+  const boundaryCandidates = peaks;
+  if(tReject) {
+    // Experimental analysis-only 20 ms moving average. Original samples and
+    // exported candidate positions are never resampled or overwritten.
+    const halfWindow = Math.max(1, Math.round(0.01 * fs));
+    const smoothed = {fs, leads: Object.fromEntries(names.map(name => {
+      const a = s.leads[name], out = new Float64Array(a.length);
+      let sum = 0, left = 0, right = -1;
+      for (let i = 0; i < a.length; i++) {
+        const end = Math.min(a.length - 1, i + halfWindow);
+        while (right < end) sum += a[++right];
+        while (left < Math.max(0, i - halfWindow)) sum -= a[left++];
+        out[i] = sum / (right - left + 1);
+      }
+      return [name, out];
+    }))} as Samples;
+    const refined: number[] = [];
+    for(const i of peaks) {
+      const p=refined.at(-1),d=p===undefined?9:(i-p)/fs;
+      if (p !== undefined && d >= 0.2 && d <= 0.4) {
+        const f = shape(smoothed, i), g = shape(smoothed, p);
+        if (f.rank < 0.003 && g.rank > 0.01 && f.rank < 0.1 * g.rank && f.rough < 0.85 * g.rough)
+          continue;
+      }
+      refined.push(i);
+    }
+    peaks=refined;
+  }
+  return { peaks, boundaryCandidates, leads, energy, threshold, high, candidates };
 }
