@@ -38,7 +38,7 @@ try {
   for (const file of Object.keys(next.metafile.inputs).filter(f => !f.endsWith('/sample-analysis.ts') && !f.endsWith('/measurement-support.ts'))) {
     if(file==='src/engine/analysis/alternating-confidence.ts') assertReviewedAlternatingConfidence(await readFile(file));
     else if(file==='src/engine/analysis/impulse-confidence.ts') assertReviewedImpulseConfidence(await readFile(file));
-    else if(file==='src/engine/analysis/ventricular-candidates.ts') assertReviewedQrsTFile(file,await readFile(file));
+    else if(QRS_T_REVISION.files[file] && file!=='src/engine/measure.ts') assertReviewedQrsTFile(file,await readFile(file));
     else if(file==='src/engine/measure.ts') assertReviewedMeasure(await readFile(path.join(base,file)),await readFile(file));
     else assert.equal(hash(await readFile(file)),hash(await readFile(path.join(base,file))),`Unreviewed primitive change: ${file}`);
   }
