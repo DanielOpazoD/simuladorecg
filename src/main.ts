@@ -50,6 +50,7 @@ import {
   type Caliper,
 } from "./render/ecg";
 import { icon, btn, esc, select, options } from "./ui/helpers";
+import { syncPauseControl } from "./ui/pause-control";
 import { controls, leadOptions, amplitudeControlState } from "./ui/controls";
 import { caseContext, caseReading, normalizeImportedCase } from "./presets/case-context";
 import {
@@ -354,11 +355,7 @@ function syncTraceTools() {
     paper = c.view.mode === "paper",
     measuring = ready && !monitorMode && session.caliperOn;
   const pause = $<HTMLButtonElement>('[data-action="pause"]');
-  pause.disabled = !monitorMode || !ready;
-  pause.setAttribute("aria-label", session.paused ? "Reanudar" : "Congelar");
-  pause.innerHTML =
-    icon(session.paused ? "play" : "pause") +
-    `<span>${session.paused ? "Reanudar" : "Congelar"}</span>`;
+  syncPauseControl(pause, session.paused, monitorMode && ready);
   $("#monitor-state").textContent = !ready ? "SIN SEÑAL" : session.paused ? "CONGELADO" : "REPRODUCCIÓN";
   const waves = $<HTMLButtonElement>('[data-action="annotations"]');
   waves.disabled = !paper || !ready;

@@ -39,6 +39,30 @@ for(const engine of [chromium,webkit,firefox]){
    assert.doesNotMatch(await page.locator('#warnings').innerText(),/relación ST\/QRS/);
    await page.locator('#ecg').screenshot({path:resolve(out,tag+'-trace.png')});
    await page.locator('[data-mode=monitor]').click();assert.equal(await page.locator('#monitor-rate').innerText(),'—');
+   // Hold a real pointer gesture across an actual ResizeObserver redraw.
+   // An unchanged pause label must not replace the child that received mousedown.
+   const pause=page.getByRole('button',{name:'Congelar',exact:true});
+   await pause.scrollIntoViewIfNeeded();
+   const textNode=await pause.locator('span').elementHandle();assert.ok(textNode);
+   const box=await textNode.boundingBox();assert.ok(box);
+   await page.evaluate(()=>{
+    window.__monitorRedrawObserved=false;
+    const observer=new MutationObserver(records=>{
+     if(records.some(r=>r.attributeName==='aria-label')){window.__monitorRedrawObserved=true;observer.disconnect();}
+    });
+    observer.observe(document.querySelector('#ecg'),{attributes:true,attributeFilter:['aria-label']});
+   });
+   await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();
+   await page.setViewportSize({width:width+4,height:width===390?844:1000});
+   // The monitor may retain a minimum backing width at narrow viewports.
+   // Observe the real draw's accessibility update instead of assuming pixel-width change.
+   await page.waitForFunction(()=>window.__monitorRedrawObserved===true);
+   assert.equal(await textNode.evaluate(el=>el.isConnected),true,'Redraw replaced the active pointer target');
+   await page.mouse.up();
+   assert.match(await page.locator('#monitor-state').innerText(),/CONGELADO/);
+   await page.getByRole('button',{name:'Reanudar',exact:true}).click();
+   assert.match(await page.locator('#monitor-state').innerText(),/REPRODUCCIÓN/);
+   await page.setViewportSize({width,height:width===390?844:1000});
    await page.getByRole('button',{name:'Congelar',exact:true}).click();
    assert.match(await page.locator('#monitor-state').innerText(),/CONGELADO/);
    assert.equal(await page.locator('#monitor-rate').innerText(),'—');
@@ -58,7 +82,7 @@ for(const engine of [chromium,webkit,firefox]){
    assert.equal((await observed()).status,'unavailable');await set('hr',rate);await ready();
    await page.locator('[data-panel=conduction]').click();await page.locator('[data-key=pacingBehavior]').selectOption('demand');await ready();
    assert.deepEqual(await observed(),captured,'Restored capture must recover exact samples and event counts');
-   assert.deepEqual(errors,[]);assert.deepEqual(warnings,[]);results.push({engine:engine.name(),width,build,stimuliWithoutVentricularEvents:true,visibleUnavailableRate:true,frozenUnavailableRate:true,jsonAndPngDownloaded:true,unsupportedEscapeRejected:true,exactRecovery:true});
+   assert.deepEqual(errors,[]);assert.deepEqual(warnings,[]);results.push({engine:engine.name(),width,build,stimuliWithoutVentricularEvents:true,visibleUnavailableRate:true,frozenUnavailableRate:true,pointerTargetSurvivesRedraw:true,jsonAndPngDownloaded:true,unsupportedEscapeRejected:true,exactRecovery:true});
   }catch(e){await page.screenshot({path:resolve(out,tag+'-failure.png')}).catch(()=>{});await writeFile(resolve(out,tag+'-failure.json'),JSON.stringify({error:String(e.stack),errors,warnings},null,2));throw e;}
   finally{await page.close();}
  }}finally{await browser.close();}
