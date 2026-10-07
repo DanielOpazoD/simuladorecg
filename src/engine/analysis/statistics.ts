@@ -41,3 +41,22 @@ export const unwrapAngles = (values: readonly number[]) => {
   const center = circularMedian(values);
   return values.map((v) => center + ((v - center + 540) % 360) - 180);
 };
+
+/** An equally populated pair of antipodal directions has no unique summary.
+ * The angular epsilon only absorbs wrap/atan2 roundoff, not clinical dispersion.
+ * Keep ordinary circular medians, including wrap crossings, otherwise unchanged.
+ */
+export function directionSummary(values: readonly number[]): number | null {
+  if (!values.length) return null;
+  if (values.some(value => !Number.isFinite(value))) throw new RangeError('Nonfinite direction');
+  if (values.length % 2 === 0) {
+    let same = 0, opposite = 0;
+    for (const value of values) {
+      const distance = Math.abs(((value - values[0] + 540) % 360) - 180);
+      if (distance <= 1e-10) same++;
+      else if (Math.abs(distance - 180) <= 1e-10) opposite++;
+    }
+    if (same === values.length / 2 && opposite === values.length / 2) return null;
+  }
+  return circularMedian(values);
+}

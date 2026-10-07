@@ -6,7 +6,7 @@ import {
   median,
   mad,
   spread,
-  circularMedian,
+  directionSummary,
   quantile,
   unwrapAngles,
 } from "./analysis/statistics";
@@ -418,6 +418,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     prs = beats.flatMap((b) => (b.pr === null ? [] : [b.pr])),
     qts = beats.flatMap((b) => (b.qt === null ? [] : [b.qt]));
   const axes = beats.flatMap(b => b.axis === null ? [] : [b.axis]);
+  const axis = directionSummary(axes);
   const pm = median(prs),
     consistent =
       prs.length >= Math.max(3, beats.length * 0.65) &&
@@ -477,7 +478,10 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
       "Eje de área neta entre límites QRS.",
     ) : unavailable("Áreas QRS de I y II nulas: no definen dirección frontal. La actividad P/T no aporta un eje QRS ni equivale a 0°.", eligible),
   };
-  if (axes.length > 0 && axes.length < beats.length) {
+  if (axes.length > 0 && axis === null) {
+    ev.axis = {...unavailable("Direcciones QRS opuestas y equilibradas: no existe un eje global único. La actividad eléctrica permanece observable por latido.", eligible), count: axes.length};
+  }
+  if (axis !== null && axes.length > 0 && axes.length < beats.length) {
     ev.axis.status = "review";
     ev.axis.reason = "Algunos QRS carecen de área frontal neta: el resumen usa solo direcciones observables; revisa los complejos individualmente.";
   }
@@ -530,9 +534,9 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     pr,
     qrs,
     qt,
-    axis: axes.length ? circularMedian(axes) : null,
-    pAxis: pr !== null && paxes.length && paxes.every(a => a !== null) ? circularMedian(paxes) : null,
-    tAxis: qt !== null && taxes.length && taxes.every(a => a !== null) ? circularMedian(taxes) : null,
+    axis,
+    pAxis: pr !== null && paxes.length && paxes.every(a => a !== null) ? directionSummary(paxes) : null,
+    tAxis: qt !== null && taxes.length && taxes.every(a => a !== null) ? directionSummary(taxes) : null,
     qtc: {
       bazett: q === null ? null : (q / Math.sqrt(rr)) * 1000,
       fridericia: q === null ? null : (q / Math.cbrt(rr)) * 1000,

@@ -32,6 +32,10 @@ for(let beat=0;beat<10;beat++)for(const [index,value] of [[Math.round((beat+.39)
  for(const lead of frontal)zero.leads[lead][index]=v[lead];
 }
 const zeroCsv=['# ECG-LAB CSV 1; fs=500; units=mV','time_s,'+channels.join(','),...Array.from({length:5000},(_,i)=>[i/500,...channels.map(l=>zero.leads[l][i])].join(','))].join('\n');
+const opposing=fixture();
+for(let i=0;i<5000;i++)if(i/500%1>=.35&&i/500%1<=.46&&Math.floor(i/500)%2===0)
+ for(const lead of channels)opposing.leads[lead][i]*=-1;
+const opposingCsv=['# ECG-LAB CSV 1; fs=500; units=mV','time_s,'+channels.join(','),...Array.from({length:5000},(_,i)=>[i/500,...channels.map(l=>opposing.leads[l][i])].join(','))].join('\n');
 try {
  for(const width of [1440,390]) {
   const page=await browser.newPage({viewport:{width,height:width===390?844:1000},deviceScaleFactor:1});
@@ -65,6 +69,15 @@ try {
   assert.equal(zeroReport.measurement.evidence.axis.status,'unavailable');
   assert.ok(Math.abs(zeroReport.measurement.hr-60)<1e-8);
   await page.locator('#external-metrics').screenshot({path:resolve(out,`external-zero-area-${width}.png`)});
+  await read([{name:'opposing-frontal.csv',mimeType:'text/csv',buffer:Buffer.from(opposingCsv)}]);await ready();
+  const opposingReport=JSON.parse(await readFile(await exported('opposing-axis'),'utf8'));
+  assert.equal(opposingReport.measurement.axis,null);
+  assert.equal(opposingReport.measurement.evidence.axis.status,'unavailable');
+  assert.match(opposingReport.measurement.evidence.axis.reason,/opuestas/);
+  assert.equal(opposingReport.measurement.beats.length,8);
+  assert.ok(opposingReport.measurement.beats.every(b=>b.axis!==null));
+  assert.equal(opposingReport.measurement.hr,60);
+  await page.locator('#external-metrics').screenshot({path:resolve(out,`external-opposing-axis-${width}.png`)});
   await read(wfdb);await ready();
   const report=JSON.parse(await readFile(await exported('wfdb'),'utf8'));
   assert.equal(report.kind,'ecg-external-analysis');assert.equal(report.modelAuditUsed,false);assert.equal(report.clinicalValidation,false);
@@ -118,7 +131,7 @@ try {
   await page.waitForTimeout(900);assert.equal(await page.locator('#external-canvas').count(),0);
   await read(wfdb);await ready();await page.locator('[data-external=clear]').click();assert.equal(await page.locator('#external-canvas').count(),0);
   assert.deepEqual(network.filter(r=>r.method!=='GET'||!r.url.startsWith(new URL(url).origin)),[],'No data upload or external fetch in the import flow');
-  checks.push({width,zeroAreaAxisTransport:true,coordinateRejectionAndRecovery:true,physicalSamples:60000,sampleHash:hash(report.leads),workflow:'WFDB -> marks/scale -> PNG/CSV/JSON -> exact CSV round trip -> corrupt pair rejected -> 20s recording/window -> stale-data guard -> transport failure/recovery -> close isolation -> late result ignored -> clear',networkRequests:network.length});
+  checks.push({width,zeroAreaAxisTransport:true,opposingAxisTransport:true,coordinateRejectionAndRecovery:true,physicalSamples:60000,sampleHash:hash(report.leads),workflow:'WFDB -> marks/scale -> PNG/CSV/JSON -> exact CSV round trip -> corrupt pair rejected -> 20s recording/window -> stale-data guard -> transport failure/recovery -> close isolation -> late result ignored -> clear',networkRequests:network.length});
   await page.close();
  }
  assert.deepEqual(errors,[]);assert.deepEqual(warnings,[]);
