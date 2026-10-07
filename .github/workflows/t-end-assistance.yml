@@ -34,6 +34,8 @@ jobs:
           python scripts/prepare-ludb-delineation.py --output "$RUNNER_TEMP/calibration40" --crosscheck
       - name: Evaluate aid separately, preserving all automatic outputs and matching
         run: node scripts/evaluate-t-end-assistance.mjs --original "$RUNNER_TEMP/original40/fixtures" --calibration "$RUNNER_TEMP/calibration40/fixtures" --output "$RUNNER_TEMP/t-end-assistance"
+      - name: Opposed-cycle confidence preserves all 80 source measurements
+        run: node scripts/validate-opposed-cycle-reference.mjs --original "$RUNNER_TEMP/original40/fixtures" --calibration "$RUNNER_TEMP/calibration40/fixtures" --output "$RUNNER_TEMP/t-end-assistance/opposed-cycle-reference.json"
       - name: Audit original morphology without another source download
         run: node scripts/reference-annotated-morphology.mjs --original "$RUNNER_TEMP/original40/fixtures" --calibration "$RUNNER_TEMP/calibration40/fixtures" --output "$RUNNER_TEMP/t-end-assistance/original-morphology"
       - name: Archive exact source and reports without raw demographic headers

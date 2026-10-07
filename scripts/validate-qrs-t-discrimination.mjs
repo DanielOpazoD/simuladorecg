@@ -1,3 +1,4 @@
+import {OPPOSED_CYCLE_REVISION,assertReviewedOpposedCycle,assertQualityOnlyRevision} from './lib/opposed-cycle-revision.mjs';
 /** Paired sample-only numerical revision: known regressions plus transfer/ectopy.
  * Synthetic event references are confined to this evaluator, never the detector. */
 import {build} from 'esbuild';
@@ -24,7 +25,10 @@ try{
   sourceHashes[label]=Object.fromEntries(await Promise.all(Object.keys(r.metafile.inputs).filter(f=>f!=='<stdin>').map(async f=>[path.relative(root,path.resolve(f)),createHash('sha256').update(await readFile(f)).digest('hex')])));
   return (await import(pathToFileURL(outfile))).analyzeSamples;
  }
- const before=await analyzer(baseline,'before'),after=await analyzer(process.cwd(),'after');
+ const qualityBaseline=path.join(temp,'quality-baseline');await mkdir(qualityBaseline);
+ execFileSync('tar',['-xf','-','-C',qualityBaseline],{input:execFileSync('git',['archive',OPPOSED_CYCLE_REVISION.baselineCommit],{maxBuffer:100*1024*1024})});
+ assertReviewedOpposedCycle(await readFile(OPPOSED_CYCLE_REVISION.file));
+ const before=await analyzer(baseline,'before'),qualityBefore=await analyzer(qualityBaseline,'qualityBefore'),after=await analyzer(process.cwd(),'after');
  const file=path.join(temp,'model.mjs');const modelBuild=await build({stdin:{contents:"export {synthesize} from './src/engine/signal';export {fromPreset,presetById,PRESETS} from './src/presets/catalog';export {ModelScopeError} from './src/engine/constraints';",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',metafile:true,outfile:file});
  const modelSourceHashes=Object.fromEntries(await Promise.all(Object.keys(modelBuild.metafile.inputs).filter(f=>f!=='<stdin>').map(async f=>[f,createHash('sha256').update(await readFile(f)).digest('hex')])));
  const model=await import(pathToFileURL(file)),rows=[];
@@ -37,8 +41,10 @@ try{
   const referenceHR=reference.length>=2?60*(reference.length-1)/(reference.at(-1).time-reference[0].time):null;
   const sampleHash=()=>createHash('sha256').update(Buffer.concat(Object.values(s.leads).map(a=>Buffer.from(a.buffer,a.byteOffset,a.byteLength)))).digest('hex');
   const frozen=sampleHash();
-  const run=fn=>{const m=fn({fs:s.fs,leads:s.leads});const match=matchQrsEvents(reference.map(b=>b.time+b.qrs/2),m.detectedPeaks.filter(t=>t>=.2&&t<9.8),.15);return {hr:m.hr,status:m.evidence.hr.status,tp:match.tp,fp:match.fp,fn:match.fn,candidates:m.detectedPeaks.length,reportedQrs:m.qrs};};
-  rows.push({label,id,changes,referenceHR,before:run(before),after:run(after)});assert.equal(sampleHash(),frozen,'Analyzer mutated the ECG');
+  const run=m=>{const match=matchQrsEvents(reference.map(b=>b.time+b.qrs/2),m.detectedPeaks.filter(t=>t>=.2&&t<9.8),.15);return {hr:m.hr,status:m.evidence.hr.status,tp:match.tp,fp:match.fp,fn:match.fn,candidates:m.detectedPeaks.length,reportedQrs:m.qrs};};
+  const sampleInput={fs:s.fs,leads:s.leads};
+  const prior=qualityBefore(sampleInput),next=after(sampleInput);assertQualityOnlyRevision(prior,next);
+  rows.push({label,id,changes,referenceHR,before:run(before(sampleInput)),qualityBefore:run(prior),after:run(next)});assert.equal(sampleHash(),frozen,'Analyzer mutated the ECG');
  }
  for(const hr of [73,120])for(const pr of [90,100.3,101.7])for(const filter of ['off','diagnostic'])
   evaluate('exposed','wpw',{hr,pr,filter,electrolyte:'lowvoltage',noise:.05,seed:17});
@@ -53,6 +59,9 @@ try{
  const newlyFalse=valid.filter(r=>bad(r.after,r)&&!bad(r.before,r)),lost=valid.filter(r=>r.after.fn>r.before.fn);
  const known=valid.filter(r=>r.label==='exposed'),failedKnown=known.filter(r=>r.after.status!=='usable'||r.after.hr===null||Math.abs(r.after.hr-r.referenceHR)>1||r.after.fp>0);
  const summary={cases:rows.length,accepted:valid.length,unsupported:rows.length-valid.length,exposedCorrect:known.length-failedKnown.length,exposedTotal:known.length,newlyFalseUsable:newlyFalse.length,newMissedQrsCases:lost.length,falseUsableBefore:valid.filter(r=>bad(r.before,r)).length,falseUsableAfter:valid.filter(r=>bad(r.after,r)).length,usableBefore:valid.filter(r=>r.before.status==='usable').length,usableAfter:valid.filter(r=>r.after.status==='usable').length};
- await mkdir(path.dirname(path.resolve(output)),{recursive:true});await writeFile(output,JSON.stringify({baselineCommit,candidateCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),sourceHashes,modelSourceHashes,candidateTreeDirty:execFileSync('git',['status','--porcelain','--untracked-files=no'],{encoding:'utf8'}).trim()!=='',clinicalValidation:false,scope:'Exposed deterministic synthetic evaluation, not independent patient validation. Five bpm is an engineering error screen.',summary,rows,newlyFalse,lost,failedKnown},null,2)+'\n');
- console.log(JSON.stringify(summary));assert.equal(rows.length,1712);assert.equal(known.length,12,'All known examples must actually execute');assert.equal(failedKnown.length,0);assert.equal(newlyFalse.length,0,'New confidently incorrect rate');assert.equal(lost.length,0,'New missed ventricular activations');
+ const qualityRevision={...OPPOSED_CYCLE_REVISION,numericallyIdentical:valid.length,usableBefore:valid.filter(r=>r.qualityBefore.status==='usable').length,usableAfter:summary.usableAfter,
+  falseUsableBefore:valid.filter(r=>bad(r.qualityBefore,r)).length,falseUsableAfter:summary.falseUsableAfter,
+  accurateNewReviews:valid.filter(r=>r.qualityBefore.status==='usable'&&r.after.status==='review'&&!bad(r.qualityBefore,r)).length};
+ await mkdir(path.dirname(path.resolve(output)),{recursive:true});await writeFile(output,JSON.stringify({baselineCommit,candidateCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),sourceHashes,modelSourceHashes,candidateTreeDirty:execFileSync('git',['status','--porcelain','--untracked-files=no'],{encoding:'utf8'}).trim()!=='',qualityRevision,clinicalValidation:false,scope:'Exposed deterministic synthetic evaluation, not independent patient validation. Five bpm is an engineering error screen.',summary,rows,newlyFalse,lost,failedKnown},null,2)+'\n');
+ console.log(JSON.stringify({summary,qualityRevision}));assert.equal(rows.length,1712);assert.equal(known.length,12,'All known examples must actually execute');assert.equal(failedKnown.length,0);assert.equal(newlyFalse.length,0,'New confidently incorrect rate');assert.equal(lost.length,0,'New missed ventricular activations');
 }finally{await rm(temp,{recursive:true,force:true});}

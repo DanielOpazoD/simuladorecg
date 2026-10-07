@@ -1,3 +1,4 @@
+import {OPPOSED_CYCLE_REVISION} from './opposed-cycle-revision.mjs';
 import {relative} from 'node:path';
 import {execFileSync} from 'node:child_process';
 /** Exact numerical revision identity. Historical manifests are never rewritten.
@@ -44,11 +45,12 @@ export const summarizeRateRevision=arr=>({scenarios:arr.length,beforeUsable:arr.
     accurateNewReviews:arr.filter(r=>r.before==='usable'&&r.after==='review'&&r.beyondReview===false).length,
     rawBeyond:arr.filter(r=>r.beyondReview).length,unavailable:arr.filter(r=>r.hr===null).length});
 
-/** Restore only exact numerical predecessor bytes for historical assertions. */
+/** Restore exact numerical and confidence predecessor bytes for historical assertions.
+ * Actual revised quality is evaluated separately on unchanged samples. */
 export function preQrsTNumericsPlugin(root){
  return {name:'exact-pre-qrs-t-numerics',setup(builder){
-  builder.onLoad({filter:/\/(measure|ventricular-candidates)\.ts$/},args=>{
-   const file=relative(root,args.path),entry=QRS_T_REVISION.files[file];assert.ok(entry);
+  builder.onLoad({filter:/\/(measure|ventricular-candidates|alternating-confidence)\.ts$/},args=>{
+   const file=relative(root,args.path),entry=file===OPPOSED_CYCLE_REVISION.file?OPPOSED_CYCLE_REVISION:QRS_T_REVISION.files[file];assert.ok(entry);
    const bytes=execFileSync('git',['show',QRS_T_REVISION.baselineCommit+':'+file]);
    assert.equal(createHash('sha256').update(bytes).digest('hex'),entry.before,'Unreviewed numerical predecessor');
    return {contents:bytes.toString(),loader:'ts'};
