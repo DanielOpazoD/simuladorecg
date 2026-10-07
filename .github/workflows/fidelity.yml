@@ -190,15 +190,17 @@ jobs:
           node tests/browser-external-review.mjs
           node tests/browser-repolarization-coherence.mjs
           node tests/browser-visual-workspace.mjs
+      - name: Stage focused secondary ST visual evidence
+        if: always()
+        run: |
+          mkdir -p .sites-runtime/secondary-st-visual
+          find "$RUNNER_TEMP/ecg-evidence/browser" -maxdepth 1 -type f \( -name 'coherence-view-*.png' -o -name 'coherence-trace-*.png' -o -name 't-axis-controls-*.png' \) -exec cp {} .sites-runtime/secondary-st-visual/ \;
       - name: Archive focused secondary ST visual evidence
         uses: actions/upload-artifact@v6
         if: always()
         with:
           name: secondary-st-visual-${{ github.sha }}
-          path: |
-            ${{ runner.temp }}/ecg-evidence/browser/coherence-view-*.png
-            ${{ runner.temp }}/ecg-evidence/browser/coherence-trace-*.png
-            ${{ runner.temp }}/ecg-evidence/browser/t-axis-controls-*.png
+          path: .sites-runtime/secondary-st-visual/
           if-no-files-found: error
           retention-days: 14
       - name: Archive exact reviewed source and reports
