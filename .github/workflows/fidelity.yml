@@ -119,6 +119,12 @@ jobs:
   verify-core:
     needs: build
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --user 1001
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
@@ -155,10 +161,8 @@ jobs:
         run: node scripts/validate-repolarization.mjs --output "${{ runner.temp }}/repolarization-comparison.json"
       - name: Complete historical and current 61-preset by four-filter comparison
         run: node scripts/validate-posterior-amplitude.mjs "${{ runner.temp }}/qrs-default-results.json" --scope defaults
-      - name: Install isolated browser test dependency
-        run: |
-          npm install --no-save --package-lock=false --legacy-peer-deps playwright@1.63.0
-          npx playwright install --with-deps chromium
+      - name: Verify pinned browser runtime
+        run: node scripts/verify-browser-runtime.mjs
       - name: Production identity, browser flows and PNG pixel metrology
         env:
           ECG_TEST_URL: http://127.0.0.1:5173/
@@ -227,6 +231,12 @@ jobs:
   browser-contracts:
     needs: build
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --user 1001
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -246,10 +256,8 @@ jobs:
         with:
           name: ecg-browser-build-${{ github.sha }}
           path: dist
-      - name: Install only browser test tooling
-        run: |
-          npm install --no-save --package-lock=false --legacy-peer-deps playwright@1.63.0
-          npx playwright install --with-deps chromium webkit firefox
+      - name: Verify pinned browser runtime
+        run: node scripts/verify-browser-runtime.mjs
       - name: Complete assigned flows on all original browser engines
         env:
           ECG_BROWSER_GROUP: ${{ matrix.group }}

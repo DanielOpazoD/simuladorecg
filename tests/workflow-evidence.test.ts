@@ -33,7 +33,8 @@ describe('CI evidence reuse without coverage removal',()=>{
     for(const command of ['npm test','validate-regional-activation.mjs','validate-repolarization-scope.mjs','validate-repolarization.mjs','validate-posterior-amplitude.mjs']) expect(verify).toContain(command);
     expect(accessibility).toContain('needs: build');
     expect(verify).toContain('needs: build');
-    expect(accessibility).toContain('chromium webkit firefox');
+    expect(accessibility).toContain('node scripts/verify-browser-runtime.mjs');
+    expect(readFileSync('scripts/verify-browser-runtime.mjs','utf8')).toContain('[chromium,firefox,webkit]');
     expect(accessibility).toContain('node tests/browser-accessibility.mjs');
     expect(accessibility).not.toContain('continue-on-error');
   });
