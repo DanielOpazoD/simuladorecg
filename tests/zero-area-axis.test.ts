@@ -1,3 +1,8 @@
+import {LEADS} from '../src/engine/types';
+import {evaluateExternalWindow} from '../src/io/external-assessment';
+import {fingerprintECG} from '../src/io/external-review';
+import {validateExternalReply} from '../src/ui/external-protocol';
+import type {ExternalECG} from '../src/io/external-ecg';
 import {describe,it,expect} from 'vitest';
 import {fixture} from './fixtures';
 import {analyzeSamples} from '../src/engine/sample-analysis';
@@ -66,4 +71,19 @@ it.each(['P','T'] as const)('does not invent a %s direction when only precordial
  expect(m.pr).not.toBeNull();expect(m.qt).not.toBeNull();expect(m.axis).not.toBeNull();
  expect(wave==='P'?m.pAxis:m.tAxis).toBeNull();
  expect(wave==='P'?m.tAxis:m.pAxis).not.toBeNull();
+});
+
+it('transports an eligible real analyzer result with missing per-beat axes through the worker boundary',async()=>{
+ const sample=balanced(500,1e-8);
+ const record:ExternalECG={...sample,samples:5000,duration:10,
+  provenance:{format:'csv',origin:'unverified',checksumVerified:false,channels:LEADS.map(lead=>({lead,gain:1,baseline:0,unit:'mV'}))}};
+ const result=evaluateExternalWindow(record,analyzeSamples);
+ expect(result.assessment.analysisAllowed).toBe(true);
+ expect(result.measurement?.beats.some(b=>b.axis===null)).toBe(true);
+ const reply={id:7,kind:'read' as const,startSample:0,record,identity:await fingerprintECG(record),...result};
+ expect(validateExternalReply(reply,7,'read',null,0)).toBe(reply);
+ for(const invalid of [undefined,NaN,Infinity,'0']){
+  const malformed=structuredClone(reply);(malformed.measurement!.beats[0] as unknown as Record<string,unknown>).axis=invalid;
+  expect(()=>validateExternalReply(malformed,7,'read',null,0)).toThrow();
+ }
 });

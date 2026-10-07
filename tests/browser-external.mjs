@@ -1,5 +1,7 @@
 /** Local WFDB/CSV -> original samples -> sample-only analysis; synthetic state remains untouched. */
 import { chromium } from 'playwright';
+import { build } from 'esbuild';
+import { pathToFileURL } from 'node:url';
 import assert from 'node:assert/strict';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
@@ -18,6 +20,18 @@ const hash=o=>createHash('sha256').update(JSON.stringify(o)).digest('hex');
 const wfdb=[{name:'1.hea',mimeType:'text/plain',buffer:Buffer.from(header)},{name:'1.dat',mimeType:'application/octet-stream',buffer:dat}];
 const channels=meta.channels.map(c=>c.lead);
 const longCsv=['# ECG-LAB CSV 1; fs=500; units=mV','time_s,'+channels.join(','),...Array.from({length:10000},(_,i)=>[i/500,...channels.map(l=>leads[l][i%5000])].join(','))].join('\n');
+// Independent analytic samples also exercise nullable per-beat directions across
+// the actual worker/UI boundary, not only the pure analyzer.
+const fixtureBundle=resolve(out,'zero-area-fixture.mjs');
+await build({entryPoints:['tests/fixtures.ts'],bundle:true,platform:'node',format:'esm',outfile:fixtureBundle});
+const {fixture}=await import(pathToFileURL(fixtureBundle));
+const zero=fixture(),frontal=['I','II','III','aVR','aVL','aVF'];
+for(const lead of frontal)zero.leads[lead].fill(0);
+for(let beat=0;beat<10;beat++)for(const [index,value] of [[Math.round((beat+.39)*500),1e-8],[Math.round((beat+.39)*500)+1,-1e-8]]){
+ const I=value,II=value/2,v={I,II,III:II-I,aVR:-(I+II)/2,aVL:I-II/2,aVF:II-I/2};
+ for(const lead of frontal)zero.leads[lead][index]=v[lead];
+}
+const zeroCsv=['# ECG-LAB CSV 1; fs=500; units=mV','time_s,'+channels.join(','),...Array.from({length:5000},(_,i)=>[i/500,...channels.map(l=>zero.leads[l][i])].join(','))].join('\n');
 try {
  for(const width of [1440,390]) {
   const page=await browser.newPage({viewport:{width,height:width===390?844:1000},deviceScaleFactor:1});
@@ -43,6 +57,14 @@ try {
     const wait=page.waitForEvent('download');await page.locator(`[data-external=${action}]`).click();const file=resolve(out,`external-${name}-${width}.${action==='json'?'json':action==='csv'?'csv':'png'}`);await(await wait).saveAs(file);return file;
   };
   const network=[];page.on('request',r=>network.push({method:r.method(),url:r.url()}));
+  await read([{name:'balanced-frontal.csv',mimeType:'text/csv',buffer:Buffer.from(zeroCsv)}]);await ready();
+  const zeroReport=JSON.parse(await readFile(await exported('zero-area'),'utf8'));
+  assert.ok(zeroReport.measurement.beats.length>3);
+  assert.equal(zeroReport.measurement.axis,null);
+  assert.ok(zeroReport.measurement.beats.every(b=>b.axis===null));
+  assert.equal(zeroReport.measurement.evidence.axis.status,'unavailable');
+  assert.ok(Math.abs(zeroReport.measurement.hr-60)<1e-8);
+  await page.locator('#external-metrics').screenshot({path:resolve(out,`external-zero-area-${width}.png`)});
   await read(wfdb);await ready();
   const report=JSON.parse(await readFile(await exported('wfdb'),'utf8'));
   assert.equal(report.kind,'ecg-external-analysis');assert.equal(report.modelAuditUsed,false);assert.equal(report.clinicalValidation,false);
@@ -87,7 +109,7 @@ try {
   await page.waitForTimeout(900);assert.equal(await page.locator('#external-canvas').count(),0);
   await read(wfdb);await ready();await page.locator('[data-external=clear]').click();assert.equal(await page.locator('#external-canvas').count(),0);
   assert.deepEqual(network.filter(r=>r.method!=='GET'||!r.url.startsWith(new URL(url).origin)),[],'No data upload or external fetch in the import flow');
-  checks.push({width,physicalSamples:60000,sampleHash:hash(report.leads),workflow:'WFDB -> marks/scale -> PNG/CSV/JSON -> exact CSV round trip -> corrupt pair rejected -> 20s recording/window -> stale-data guard -> transport failure/recovery -> close isolation -> late result ignored -> clear',networkRequests:network.length});
+  checks.push({width,zeroAreaAxisTransport:true,physicalSamples:60000,sampleHash:hash(report.leads),workflow:'WFDB -> marks/scale -> PNG/CSV/JSON -> exact CSV round trip -> corrupt pair rejected -> 20s recording/window -> stale-data guard -> transport failure/recovery -> close isolation -> late result ignored -> clear',networkRequests:network.length});
   await page.close();
  }
  assert.deepEqual(errors,[]);assert.deepEqual(warnings,[]);

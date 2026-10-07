@@ -62,3 +62,10 @@ revision registry now pins both exact predecessor and candidate bytes of
 `measurement-support.ts`, and historical bundles restore its exact predecessor.
 The same mutation test rejects any unreviewed byte change. No filename-only
 exception, numerical tolerance or historical report was substituted to pass CI.
+
+Review also caught a boundary mismatch before merge: the external-worker response
+validator still required a numeric per-beat axis. It now accepts the explicit
+null while still rejecting missing, string and nonfinite values. A real eligible
+sample/analyzer/reply fixture failed before this boundary fix and now passes.
+The existing desktop/mobile external-import browser flow additionally checks an
+analytic zero-area CSV through the actual worker, numeric export and metric view.

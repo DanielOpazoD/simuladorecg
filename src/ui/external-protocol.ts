@@ -29,9 +29,9 @@ function validateMeasurement(value: unknown): asserts value is Measurement {
   if (!Array.isArray(m.beats) || m.beats.length > 1000 || !Array.isArray(m.detectedPeaks) || m.detectedPeaks.length > 1000 ||
     m.detectedPeaks.some(x => !Number.isFinite(x) || x < 0 || x >= 10)) throw Error('Candidatos no válidos.');
   for (const b of m.beats) {
-    for (const key of ['peak','onset','offset','rr','qrs','axis','noise'] as const)
+    for (const key of ['peak','onset','offset','rr','qrs','noise'] as const)
       if (!Number.isFinite(b[key])) throw Error('Candidato incompleto.');
-    for (const key of ['pOnset','pPeak','tPeak','tEnd','tTangentEnd','pr','qt'] as const)
+    for (const key of ['pOnset','pPeak','tPeak','tEnd','tTangentEnd','pr','qt','axis'] as const)
       if (!finiteOrNull(b[key])) throw Error('Límite no válido.');
   }
   for (const key of ['hr','pr','qrs','qt','axis'] as const) {
