@@ -11,6 +11,8 @@ export const QRS_T_REVISION=Object.freeze({
  evaluationBaselineCommit:'63f32b03921158337052e7068abcb6e72ec72f79',
  iteration:'direction-invariant-covariance-v3',
  files:Object.freeze({
+  // Null-axis support is reviewed with the primitive, not a filename exemption.
+  'src/engine/measurement-support.ts':Object.freeze({before:'1b6df1bf5c5386a9bdd237109b43a49879fd10c93a4b43eceeb7acdddcf7ba33',after:'27168ab1b6fdcfdee8045ff31a3cf12fe4545ec9919b792df1db16651aca8f54'}),
   'src/engine/analysis/impulse-confidence.ts':Object.freeze({before:'20a40b8da435c503ea4044919022e5015cae53b818ab283feb158bfeb83055ef',after:'c6b5c4a06cf5c65bacf325e8c77517613ee4427af2075b10575898e03dcee62d'}),
   // Sample-preserving projection refactor. Historical analyzers restore these
   // exact predecessors too; see docs/frontal-projection-contract.md for paired evidence.
@@ -54,7 +56,7 @@ export const summarizeRateRevision=arr=>({scenarios:arr.length,beforeUsable:arr.
  * Actual revised quality is evaluated separately on unchanged samples. */
 export function preQrsTNumericsPlugin(root){
  return {name:'exact-pre-qrs-t-numerics',setup(builder){
-  builder.onLoad({filter:/\/(measure|ventricular-candidates|alternating-confidence|impulse-confidence|leads|lead-registry)\.ts$/},args=>{
+  builder.onLoad({filter:/\/(measure|measurement-support|ventricular-candidates|alternating-confidence|impulse-confidence|leads|lead-registry)\.ts$/},args=>{
    const file=relative(root,args.path),entry=file===OPPOSED_CYCLE_REVISION.file?OPPOSED_CYCLE_REVISION:QRS_T_REVISION.files[file];assert.ok(entry);
    const bytes=execFileSync('git',['show',QRS_T_REVISION.baselineCommit+':'+file]);
    assert.equal(createHash('sha256').update(bytes).digest('hex'),entry.before,'Unreviewed numerical predecessor');

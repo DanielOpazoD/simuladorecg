@@ -56,3 +56,9 @@ morphology comparisons and 320 quality strata. No acceptance budget was widened.
 These known regressions demonstrate preservation, not independent validation of
 clinical axis accuracy. The new zero-information fixtures exercise the intended
 change that those ordinary cases do not contain.
+
+The first PR CI correctly blocked the unregistered support-file change. The
+revision registry now pins both exact predecessor and candidate bytes of
+`measurement-support.ts`, and historical bundles restore its exact predecessor.
+The same mutation test rejects any unreviewed byte change. No filename-only
+exception, numerical tolerance or historical report was substituted to pass CI.
