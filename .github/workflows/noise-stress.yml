@@ -65,7 +65,7 @@ jobs:
           node scripts/benchmark-noise-stress.mjs "$RUNNER_TEMP/noise-stress/transition-before" --noise-dir "$RUNNER_TEMP/noise-stress" --source-root "$RUNNER_TEMP/noise-transition-before" --analyzer worker
           node scripts/check-secondary-st-transition.mjs "$RUNNER_TEMP/noise-stress/transition-before/noise-results.json" "$RUNNER_TEMP/noise-stress/after/noise-results.json" "$RUNNER_TEMP/noise-stress/secondary-st-transition.json"
       - name: Enforce morphology and retained-quality non-regression
-        run: node scripts/check-noise-regression.mjs "$RUNNER_TEMP/noise-stress/before/noise-results.json" "$RUNNER_TEMP/noise-stress/after/noise-results.json" "$RUNNER_TEMP/noise-stress/acceptance-results.json"
+        run: node scripts/check-noise-regression.mjs "$RUNNER_TEMP/noise-stress/before/noise-results.json" "$RUNNER_TEMP/noise-stress/after/noise-results.json" "$RUNNER_TEMP/noise-stress/acceptance-results.json" --terminal-consensus
       - name: Preserve exact code, limits and runtime
         if: always()
         run: |

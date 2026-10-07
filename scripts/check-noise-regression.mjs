@@ -7,7 +7,8 @@ import path from 'node:path';
 import {reviewMonitorRevision} from './lib/monitor-revision.mjs';
 import {compareReports} from './lib/noise-regression.mjs';
 const [beforeFile,afterFile,output,...extra]=process.argv.slice(2);
-if(!output||extra.length)throw Error('Usage: check-noise-regression.mjs BEFORE AFTER OUTPUT');
+const terminalConsensus=extra.length===1&&extra[0]==='--terminal-consensus';
+if(!output||(extra.length&&!terminalConsensus))throw Error('Usage: check-noise-regression.mjs BEFORE AFTER OUTPUT [--terminal-consensus]');
 const policy=JSON.parse(await readFile('benchmarks/noise-stress/acceptance.json'));
 let migration={allowedCleanSourceChanges:[]};
 try { migration=JSON.parse(await readFile('docs/qrs-coupled-repolarization-contract.json')); } catch {}
@@ -35,6 +36,7 @@ try {
     // gate below remains nonzero; throwing here would erase these diagnostics.
     result={...result,reviewedMonitorRevision:{status:'already-incorporated-in-amended-baseline'}};
   }
+  if(terminalConsensus){
   // This numerical estimator intentionally trades noisy stratum coverage for
   // substantially fewer erroneous outputs. Keep the complete strict failure
   // list; authorize only the prospectively pinned source and its actual report.
@@ -46,11 +48,12 @@ try {
   }
   const transition=reviewTerminalConsensusTransition(result);
   result={...result,strictStatus:result.status,status:'pass',reviewedTerminalTransition:transition};
+  }
   result.policy=policy; result.generatorMigration=migration;
   result.baselineProvenance={historicalBaselineCommit:policy.baselineCommit,effectiveBaselineCommit};
   result.reportSha256={before:createHash('sha256').update(beforeBytes).digest('hex'),after:createHash('sha256').update(afterBytes).digest('hex')};
 } catch(error) {
-  result={status:'error',clinicalValidation:false,error:String(error.stack),policy};
+  result={...result,status:'error',clinicalValidation:false,error:String(error.stack),policy};
 }
 await mkdir(path.dirname(path.resolve(output)),{recursive:true});
 await writeFile(output,JSON.stringify(result,null,2)+'\n');
