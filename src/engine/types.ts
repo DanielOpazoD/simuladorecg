@@ -178,7 +178,8 @@ export interface DelineatedBeat {
   pr: number | null;
   qrs: number;
   qt: number | null;
-  axis: number;
+  /** Null when the delineated frontal QRS has exactly zero signed area. */
+  axis: number | null;
   noise: number;
 }
 export type SampleSupport = {
