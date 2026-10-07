@@ -2,13 +2,14 @@ import {assertReviewedOpposedCycle} from './opposed-cycle-revision.mjs';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 
-/** Reviewed acquisition guard, zero-information axis and impulse-confidence retirement.
+/** Reviewed acquisition guard, wave-specific zero-information axis and impulse-confidence retirement.
+ * The localized QRS retirement evidence is in docs/qrs-axis-observability.md.
  * Numerical detection/delineation and earlier quality policy remain frozen.
  * Future revisions must supply new evidence; a filename-only allowlist is unsafe.
  */
 export function assertReviewedSampleEntry(source, previous) {
   assert.equal(createHash('sha256').update(source).digest('hex'),
-    'fbffdab87df041f5b8d0d89cf37533e085bb21d7e4a2f4bce3a6d1310b332501',
+    'dcd405a514640570768eba5b5790cba1122d9ee1d240290fd89cd2e0c00d1fc3',
     'Unreviewed sample-entry change: acquisition guard or analysis policy differs');
   if (previous !== undefined) {
     const core = source.toString().split('\n/** Engineering acquisition domain')[0]
