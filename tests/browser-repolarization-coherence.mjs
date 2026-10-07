@@ -58,9 +58,9 @@ try{
   const normal=await exported('normal');assert.deepEqual(normal.A.leads,normal.B.leads);
   await importCase({...base,tAmp:0});const zero=await exported('zero');
   const beat=zero.B.events.beats.find(b=>b.time>2),index=Math.round((beat.time+beat.qrs+.060)*zero.B.fs);
-  assert.ok(Math.abs(zero.B.leads.V2[index])<1e-12,'Unsupported ST is absent; not physiological normality');
+  assert.ok(zero.B.leads.V2[index]>.005,'Discordant secondary ST remains represented with T amplitude zero');
   await page.locator('[data-panel="st"]').click();
-  assert.match(await page.locator('#secondary-repolarization-note').innerText(),/ST secundario no está representado/);
+  assert.match(await page.locator('#secondary-repolarization-note').innerText(),/El ST secundario sigue esa misma fuente QRS/);
   await importCase({...base,electrolyte:'hypokalemia'});const hypo=await exported('hypokalemia');
   await page.locator('#compare-start').fill('2');await page.locator('#compare-start').press('Tab');
   await page.locator('#compare-range').selectOption('2');

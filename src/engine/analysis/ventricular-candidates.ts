@@ -121,18 +121,41 @@ function groupContinuousCandidates(s: Samples, peaks: number[]): number[] {
       const edge = Math.round(0.024 * s.fs);
       for (let i = previous + edge; i <= candidate - edge; i++) minimum = Math.min(minimum, magnitude(i));
       if (minimum > maximum * 0.12) {
-        const radius = Math.round(0.04 * s.fs), a: number[] = [], b: number[] = [];
-        for (const lead of names) {
-          const first = Array.from(s.leads[lead].slice(previous - radius, previous + radius + 1));
-          const second = Array.from(s.leads[lead].slice(candidate - radius, candidate + radius + 1));
-          const meanA = first.reduce((sum, value) => sum + value, 0) / first.length;
-          const meanB = second.reduce((sum, value) => sum + value, 0) / second.length;
-          a.push(...first.map(value => value - meanA));
-          b.push(...second.map(value => value - meanB));
+        // Candidate times can sit on opposite slopes of two separate QRS.
+        // The 280 ms grouping ceiling must also hold at their local apices;
+        // otherwise a late first-QRS candidate and early second-QRS candidate
+        // falsely resemble the two slopes of one broad deflection.
+        const apex = (at: number) => {
+          const search = Math.min(Math.round(0.12 * s.fs), Math.floor((candidate - previous) / 2));
+          let best = at, value = -Infinity;
+          for (let j = Math.max(0, at - search); j <= Math.min(n - 1, at + search); j++) {
+            const current = magnitude(j);
+            if (current > value) { value = current; best = j; }
+          }
+          return best;
+        };
+        const radius = Math.round(0.04 * s.fs);
+        const similarity = (firstAt: number, secondAt: number) => {
+          const a: number[] = [], b: number[] = [];
+          for (const lead of names) {
+            const first = Array.from(s.leads[lead].slice(firstAt - radius, firstAt + radius + 1));
+            const second = Array.from(s.leads[lead].slice(secondAt - radius, secondAt + radius + 1));
+            const meanA = first.reduce((sum, value) => sum + value, 0) / first.length;
+            const meanB = second.reduce((sum, value) => sum + value, 0) / second.length;
+            a.push(...first.map(value => value - meanA));
+            b.push(...second.map(value => value - meanB));
+          }
+          const correlation = a.reduce((sum, value, i) => sum + value * b[i], 0) /
+            (Math.hypot(...a) * Math.hypot(...b));
+          return correlation;
+        };
+        const firstApex = apex(previous), secondApex = apex(candidate);
+        // Strong same-shape evidence prevents preserving unrelated artifact lobes.
+        if ((secondApex - firstApex) / s.fs >= 0.28 && similarity(firstApex, secondApex) > 0.9) {
+          keep.push(candidate);
+          continue;
         }
-        const correlation = a.reduce((sum, value, i) => sum + value * b[i], 0) /
-          (Math.hypot(...a) * Math.hypot(...b));
-        if (correlation < -0.5) continue;
+        if (similarity(previous, candidate) < -0.5) continue;
       }
     }
     keep.push(candidate);
@@ -291,3 +314,6 @@ export function detectVentricularCandidates(
   }
   return { peaks, boundaryCandidates, leads, energy, threshold, high, candidates };
 }
+
+// Shared with the confidence screen; exporting this feature changes no detections.
+export { shape as candidateShape };

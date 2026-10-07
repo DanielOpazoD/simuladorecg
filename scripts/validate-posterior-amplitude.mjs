@@ -1,3 +1,4 @@
+import {withoutSecondarySTPlugin} from './lib/secondary-st-counterfactual.mjs';
 import {predictWpwSupport} from './lib/wpw-support-prediction.mjs';
 import {predictAfClock,assertFrozenAfSampler} from './lib/af-clock-prediction.mjs';
 import {predictQTInitialization,assertReviewedQTInitialization} from './lib/qt-initialization-revision.mjs';
@@ -31,7 +32,7 @@ try {
       await writeFile(rhythmFile,predictAfClock(await readFile(rhythmFile,'utf8')));
     }
     const outfile = path.join(temp, name + '.mjs');
-    await build({stdin: {contents: "export {synthesize} from './src/engine/signal'; export {PRESETS,fromPreset,presetById} from './src/presets/catalog'; export {qrsKernels} from './src/engine/morphology'; export {DOWER} from './src/engine/leads';", resolveDir: dir}, bundle: true, platform: 'node', format: 'esm', outfile});
+    await build({stdin: {contents: "export {synthesize} from './src/engine/signal'; export {PRESETS,fromPreset,presetById} from './src/presets/catalog'; export {qrsKernels} from './src/engine/morphology'; export {DOWER} from './src/engine/leads';", resolveDir: dir}, bundle: true, platform: 'node', format: 'esm', outfile,plugins:dir===process.cwd()?[withoutSecondarySTPlugin()]:[]});
     return import(pathToFileURL(outfile));
   }
   const after = await load(process.cwd(), 'after');
@@ -240,8 +241,8 @@ try {
   };
   assert.deepEqual([defaults.length, rows.length, lowVoltageScenarios.length, wpwLowVoltageScenarios.length, rvScenarios.length],
     expectedCounts[scope], 'Incomplete scope: do not silently omit validation');
-  const referencePreparation = 'Historical morphology with the independently predicted QT initialization, compact WPW support and representative AF clock revisions; exact/default counts compare these explicitly transformed references, not raw historical QT';
-  const report = {scope, baseline, axisBaseline, referencePreparation, commit: execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim(),
+  const referencePreparation = 'Historical morphology with the independently predicted QT initialization, compact WPW support and representative AF clock revisions; exact/default counts compare these explicitly transformed references, not raw historical QT; candidate is the no-secondary-ST depolarization counterfactual, with actual ST required in separate source gates';
+  const report = {sourceScope:'Historical QRS amplitude counterfactual without new secondary ST; full ST separately checked',scope, baseline, axisBaseline, referencePreparation, commit: execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim(),
     defaults, gainScenarios: rows, lowVoltageBaseline, lowVoltageScenarios, wpwLowVoltageBaseline, wpwLowVoltageScenarios, rvBaseline, rvScenarios, nativeActivationTimingsUnchanged: true, clinicalValidation: false};
   const output = process.argv[2]; assert.ok(output, 'Provide result JSON path');
   await mkdir(path.dirname(path.resolve(output)), {recursive: true});

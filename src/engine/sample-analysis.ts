@@ -4,7 +4,7 @@ import { LEADS } from './lead-registry';
 import { attachMeasurementSupport } from './measurement-support';
 import type { Measurement, Signal } from './types';
 import { measure } from './measure';
-import { detectVentricularCandidates } from './analysis/ventricular-candidates';
+import { detectVentricularCandidates, candidateShape } from './analysis/ventricular-candidates';
 
 type Samples = Pick<Signal, 'fs' | 'leads'>;
 
@@ -19,6 +19,7 @@ export const HR_QUALITY_POLICY = Object.freeze({
   unmatchedFraction: 0.075,
   minimumUnmatched: 2,
   maximumRateDisagreementBpm: 5,
+  majorCandidateDisagreement: .4,
 });
 
 export function heartRateDetectionQuality(input: Samples, peaksSeconds: readonly number[]) {
@@ -47,10 +48,28 @@ export function heartRateDetectionQuality(input: Samples, peaksSeconds: readonly
   const nominalRate = rate(peaksSeconds), challengedRate = rate(challenged.map(p=>p/input.fs));
   const rateDisagreement = nominalRate !== null && challengedRate !== null &&
     Math.abs(nominalRate - challengedRate) > HR_QUALITY_POLICY.maximumRateDisagreementBpm;
-  const requiresReview = backgroundRatio !== null &&
-    backgroundRatio > HR_QUALITY_POLICY.backgroundRatio &&
-    ((unmatched >= HR_QUALITY_POLICY.minimumUnmatched &&
-    unmatchedFraction >= HR_QUALITY_POLICY.unmatchedFraction) || (unmatched > 0 && rateDisagreement));
+  const countSensitive = unmatched >= HR_QUALITY_POLICY.minimumUnmatched &&
+    unmatchedFraction >= HR_QUALITY_POLICY.unmatchedFraction;
+  const noisy = backgroundRatio !== null && backgroundRatio > HR_QUALITY_POLICY.backgroundRatio;
+  // Near-halving the candidate train is material ambiguity even on a quiet
+  // recording (e.g. broad QRS/T complexes). Background is not a safety veto.
+  const majorDisagreement = unmatched >= HR_QUALITY_POLICY.minimumUnmatched &&
+    unmatchedFraction >= HR_QUALITY_POLICY.majorCandidateDisagreement;
+  const unmatchedNominal = countSensitive && rateDisagreement
+    ? peaksSeconds.filter(t=>!challenged.some(p=>Math.abs(t-p/input.fs)<=HR_QUALITY_POLICY.matchSeconds)) : [];
+  // Rank-one unmatched deflections are compatible with a broad T; this is a
+  // review trigger, never proof of T or permission to remove a real complex.
+  // Reuse the detector's existing strict clean-direction threshold.
+  const singleDirectionAmbiguity = unmatchedNominal.length >= HR_QUALITY_POLICY.minimumUnmatched &&
+    unmatchedNominal.every(t=>candidateShape(input,Math.round(t*input.fs)).rank<.00001);
+  // Sparse extra/missing candidates still make the mean rate ambiguous on a
+  // quiet trace when they fall in the detector's existing post-QRS T window.
+  // A near-halved train needs directional evidence so genuine
+  // clean alternating QRS amplitudes are not flagged solely for that pattern.
+  const sparseDisagreement=countSensitive && rateDisagreement && !majorDisagreement &&
+    unmatchedNominal.every(t=>challenged.some(p=>t>p/input.fs && t-p/input.fs<=.4));
+  const requiresReview = (noisy && (countSensitive || (unmatched > 0 && rateDisagreement))) ||
+    (majorDisagreement && singleDirectionAmbiguity) || sparseDisagreement;
   return { requiresReview, backgroundRatio, unmatchedFraction, unmatched, matched,
     nominalCount: peaksSeconds.length, challengedCount: challenged.length, challengedPeaksSeconds: challenged.map(p=>p/input.fs) };
 }
@@ -67,7 +86,7 @@ export function analyzeSamples(input: Samples): Measurement {
   const next:Measurement = measurement.hr !== null && measurement.evidence.hr.status === 'usable' && quality?.requiresReview ?
     { ...measurement, evidence: { ...measurement.evidence,
       hr: { ...measurement.evidence.hr, status: 'review',
-        reason: 'Frecuencia sensible al umbral de detección y actividad de fondo elevada: pueden existir detecciones extra u omitidas. Verifica con calibres.' } } } : measurement;
+        reason: 'Frecuencia sensible al umbral de detección: pueden existir detecciones extra u omitidas. Verifica con calibres.' } } } : measurement;
   return reviewAlternatingCandidates(input, withholdImpulseDominatedMeasurements(input, retireUnsupportedFrontalAxis(input, attachMeasurementSupport(next, quality))));
 }
 

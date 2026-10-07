@@ -46,7 +46,7 @@ describe('Regional BRD activation, opt-in with a separate early clock',()=>{
       const rv=ks.find(k=>k.regional.region==='rv-delayed');
       rv.v.forEach((v,j)=>assert.ok(Math.abs(s.reference[j]-v*rv.regional.weight)<1e-12));
       first.forEach((v,j)=>assert.ok(Math.abs(v-tVector({...c,qrs},beat)[j])<1e-10));
-      assert.equal(s.st,null);
+      s.reference.forEach((v,j)=>assert.ok(Math.abs(s.st[j]+.2*v)<1e-12));
     }
   });
   it('does not change events, QT adaptation, lesion timing or source templates',()=>{

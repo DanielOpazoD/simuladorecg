@@ -117,11 +117,11 @@ try{
     sourceCommit:execFileSync('git',['rev-parse','HEAD'],{cwd:root}).toString().trim(),
     noiseSha256:hash(await readFile(path.join(noiseDir,'noise-segments.json'))),
     protocol:p,rows,groups,native,
-    interpretation:'Engineering stress outcomes, not clinical validation. Global analyzer status is not per-beat reliability. No tuning after viewing this protocol.',
+    interpretation:'Engineering stress outcomes, not clinical validation. Global analyzer status is not per-beat reliability. Exposed development/regression data. This evaluates the sample-analysis entry before acquisition-scope availability, not the final UI status.',
     analyzerReceivesOnlySamples:true,modelAuditUsed:false});
   await write('evaluation-provenance.json',{commit:execFileSync('git',['rev-parse','HEAD'],{cwd:root}).toString().trim(),analyzerEntry,evaluatedSources,
     preparedNoiseSha256:hash(await readFile(path.join(noiseDir,'noise-segments.json'))),protocolSha256:hash(protocolBytes),
-    clinicalValidation:false,generatorChanged:false,analyzerTuned:false});
-  console.log(JSON.stringify({scenarios:rows.length,nativeComparisons:native.length,groups:groups.length,analyzerTuned:false}));
+    clinicalValidation:false,evaluationAdaptsAlgorithm:false,workingTreeDirty:!!execFileSync('git',['status','--porcelain'],{cwd:root,encoding:'utf8'}).trim()});
+  console.log(JSON.stringify({scenarios:rows.length,nativeComparisons:native.length,groups:groups.length,evaluationAdaptsAlgorithm:false}));
 }catch(e){await write('evaluation-failure.json',{error:String(e.stack)});throw e;}
 finally{await rm(temp,{recursive:true,force:true});}

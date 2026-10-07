@@ -37,7 +37,7 @@ Ningún patrón se presenta como validado clínicamente. La columna «Estrategia
 | BAV completo · escape ventricular | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
 | Bloqueo completo de rama derecha | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
 | Bloqueo incompleto de rama derecha | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
-| Bloqueo completo de rama izquierda | aproximado | vectorial | La T secundaria es aproximada; el ST secundario no está representado. Un ST plano no demuestra repolarización normal. La relación ST/QRS no está calibrada y no permite validar criterios proporcionales de Sgarbossa. |
+| Bloqueo completo de rama izquierda | aproximado | vectorial | ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa. |
 | Hemibloqueo anterior izquierdo | aproximado | vectorial | Reproduce eje; detalle qR/rS de todos los fascículos es aproximado. |
 | Hemibloqueo posterior izquierdo | aproximado | vectorial | Reproduce eje; no demuestra criterios clínicos excluyentes de HBPI. |
 | BRD + hemibloqueo anterior izquierdo | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
@@ -54,14 +54,14 @@ Ningún patrón se presenta como validado clínicamente. La columna «Estrategia
 | Patrón de Wellens · tipo A | aproximado | local | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
 | Patrón de Wellens · tipo B | aproximado | local | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
 | Patrón de de Winter | aproximado | local | No garantiza ST↑ en aVR; patrón parcial señalado como aproximado. |
-| BRI con lesión concordante | aproximado | vectorial | Caso ilustrativo; sin cálculo automático de score. La T secundaria es aproximada; el ST secundario no está representado. Un ST plano no demuestra repolarización normal. La relación ST/QRS no está calibrada y no permite validar criterios proporcionales de Sgarbossa. |
+| BRI con lesión concordante | aproximado | vectorial | Caso ilustrativo; sin cálculo automático de score. ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa. |
 | Patrón de pericarditis | aproximado | local | Dipolo único no garantiza elevación en todas las derivaciones; no diagnostica pericarditis. |
 | Sobrecarga aguda del ventrículo derecho | aproximado | vectorial | No reproduce S1Q3T3 de forma consistente; ECG no confirma ni excluye TEP. |
 | Hipertrofia del ventrículo derecho | aproximado | vectorial | Criterios de voltaje individuales no validados; no modela anatomía real. |
 | Hipertrofia del ventrículo izquierdo | aproximado | vectorial | Los criterios Sokolow-Lyon/Cornell no se calculan automáticamente. |
 | Estimulación auricular AAI | aproximado | vectorial | Estimulación capturada a frecuencia fija; sensado, demanda y fallos pendientes. |
-| Estimulación ventricular VVI | aproximado | vectorial | Por defecto, estimulación fija capturada. VVI ofrece demanda idealizada y una variante sin captura total sin escape; no simula fusión ni fallos intermitentes. La T secundaria es aproximada; el ST secundario no está representado. Un ST plano no demuestra repolarización normal. La relación ST/QRS no está calibrada y no permite validar criterios proporcionales de Sgarbossa. |
-| Estimulación secuencial DDD | aproximado | vectorial | Secuencia fija; no simula demanda, PVARP, seguimiento ni límite superior. La T secundaria es aproximada; el ST secundario no está representado. Un ST plano no demuestra repolarización normal. La relación ST/QRS no está calibrada y no permite validar criterios proporcionales de Sgarbossa. |
+| Estimulación ventricular VVI | aproximado | vectorial | Por defecto, estimulación fija capturada. VVI ofrece demanda idealizada y una variante sin captura total sin escape; no simula fusión ni fallos intermitentes. ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa. |
+| Estimulación secuencial DDD | aproximado | vectorial | Secuencia fija; no simula demanda, PVARP, seguimiento ni límite superior. ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa. |
 | Hiperpotasemia · T prominente | aproximado | vectorial | Sin relación concentración–ECG, ni evolución a onda sinusoidal. |
 | Hipopotasemia · onda U | aproximado | vectorial | El delineador puede confundir T y U; QT automático no fiable. |
 | QT prolongado | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |

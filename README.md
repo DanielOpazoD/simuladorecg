@@ -16,6 +16,15 @@ Ocho presets cambian su QRS y la orientación secundaria; 53 conservan exactamen
 sus muestras. La fuente histórica `rv_apical_pacing` permite reproducir todos los
 presets v1.4. No hay calibración anatómica o clínica de esos perfiles.
 
+## ST secundario acoplado al QRS
+
+El ST secundario se representa en BRI, BRD/BRD incompleto y fuentes ventriculares
+regulares, con dirección derivada de su activación. Es independiente de la lesión
+primaria y del control de amplitud de T. El [contrato y evaluación](docs/secondary-st-resolution.md)
+detalla la predicción, los cambios de medición, el nuevo origen de comparación y
+los resultados adversos conservados. No valida amplitudes clínicas ni Sgarbossa.
+WPW y el ST separable de torsades quedan fuera de esta implementación.
+
 ## Laboratorio de activación QRS
 
 **Activación QRS** abre un [experimento A/B interactivo](docs/activation-lab.md)

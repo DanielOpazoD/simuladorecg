@@ -1,3 +1,4 @@
+import {predictSecondaryST} from './lib/secondary-st-prediction.mjs';
 import {predictLpfbSource} from './lib/lpfb-source-prediction.mjs';
 import {assertTeachingCatalogRevision} from './lib/teaching-scope-revision.mjs';
 import {predictWpwSupport} from './lib/wpw-support-prediction.mjs';
@@ -35,7 +36,8 @@ try {
   await writeFile(rhythmFile,predictAfClock(await readFile(rhythmFile,'utf8')));
   const morphologyFile=path.join(base,'src/engine/morphology.ts');
   await writeFile(morphologyFile,predictLpfbSource(await readFile(morphologyFile,'utf8')));
-  const referencePreparation='PR55 with independent QT initialization plus torsades-frame, compact WPW support and representative AF-clock and LPFB source predictions; unrelated defaults remain exact';
+  await predictSecondaryST(base);
+  const referencePreparation='PR55 with independent QT initialization plus torsades-frame, compact WPW support and representative AF-clock, LPFB and secondary-ST source predictions; unrelated defaults remain exact';
   const before=await load(base,'before'),after=await load(process.cwd(),'after'),defaults=[];
   assertTeachingCatalogRevision(before.PRESETS,after.PRESETS);
   for(const p of before.PRESETS.filter(p=>p.strategy!=='pending'))for(const filter of ['off','diagnostic','monitor','aggressive']){
@@ -48,7 +50,7 @@ try {
   assert.equal(defaults.length,244);
   const regional=assertRegionalSampleContract(after);
   const report={schemaVersion:1,referencePreparation,baselineCommit:BASE,candidateCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),
-    clinicalValidation:false,defaults,regional,limitations:['Experimental temporal bases, not clinical calibration or anatomical activation mapping.','Default samples remain exact against the QT-initialization prediction; detector unchanged.']};
+    clinicalValidation:false,defaults,regional,limitations:['Experimental temporal bases, not clinical calibration or anatomical activation mapping.','Default samples remain exact against the QT-initialization prediction; This source-only comparison does not assess the separately revised detector.']};
   await mkdir(path.dirname(path.resolve(output)),{recursive:true});await writeFile(output,JSON.stringify(report,null,2)+'\n');
   console.log(JSON.stringify({referencePreparation,defaultsExact:defaults.filter(r=>r.exact).length,predictedAfClock:defaults.filter(r=>r.predictedAfClock).length,predictedTorsades:defaults.filter(r=>r.predictedTorsadesFrame).length,...regional}));
 } finally {await rm(temp,{recursive:true,force:true});}

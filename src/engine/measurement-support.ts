@@ -37,7 +37,7 @@ export function attachMeasurementSupport(m: Measurement, challenge: Challenge | 
     result={...result,evidence:{...result.evidence,[key]:{...result.evidence[key],
       status:remove?'unavailable':'review',count:remove?0:result.evidence[key].count,reason:remove?
         'No quedan suficientes latidos con detección estable para sostener este resumen; se retira la cifra. Los límites candidatos se conservan para revisión.':
-        'Parte de los latidos que aportan esta medida cambia con el umbral de detección y el fondo es elevado; revisa los candidatos indicados.'}}};
+        'Parte de los latidos que aportan esta medida cambia con el umbral de detección; revisa los candidatos indicados.'}}};
     if(remove){result={...result,[key]:null,rejected:{...result.rejected,[key]:m[key]!}};
       if(key==='pr')result.pAxis=null;
       if(key==='qt'){result.tAxis=null;result.qtc={bazett:null,fridericia:null,framingham:null,hodges:null};}}
