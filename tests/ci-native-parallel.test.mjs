@@ -2,7 +2,7 @@ import {it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 const source=readFileSync('.github/workflows/fidelity.yml','utf8');
-const mapping={BUILD:'build',CORE:'verify-core',NATIVE:'qrs-discrimination',BROWSER:'accessibility',PORTABILITY:'portability',AMPLITUDE:'amplitude-regression'};
+const mapping={BUILD:'build',CORE:'verify-core',NATIVE:'qrs-discrimination',BROWSER:'accessibility',BROWSER_GROUPS:'browser-contracts',PORTABILITY:'portability',AMPLITUDE:'amplitude-regression'};
 const job=(text,name)=>text.match(new RegExp('(?:^|\\n)  '+name+':\\n([\\s\\S]*?)(?=\\n  [a-z][a-z-]*:\\n|$)'))?.[1]??'';
 function validate(text){
  const native=job(text,'qrs-discrimination'),core=job(text,'verify-core'),gate=job(text,'verify');

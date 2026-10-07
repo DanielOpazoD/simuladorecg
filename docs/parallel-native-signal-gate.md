@@ -17,8 +17,8 @@ The new native job has an 8-minute bound; the status join has a 2-minute bound.
 ## Preserved fail-closed merge context
 
 The existing check name `verify` remains, as an explicit join of every job in this
-fidelity workflow: build, core, native matrix, accessibility, macOS portability
-and all amplitude-regression matrix scopes. `always()` makes the join evaluate
+fidelity workflow: build, core, native matrix, accessibility, all browser-contract groups, macOS
+portability and all amplitude-regression matrix scopes. `always()` makes the join evaluate
 even after an unsuccessful prerequisite, and its actual shell accepts **only**
 `success` for each result. Failed, skipped, cancelled or absent results fail.
 Other repository workflows remain separate required evidence; this join is not a
@@ -27,7 +27,7 @@ substitute for reviewing all exact-head checks. No branch protection is changed.
 [GitHub's documented dependency behavior](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idneeds)
 explains why an ordinary dependent job could be skipped after a failure. The
 explicit join prevents a skipped job from accidentally looking like acceptance.
-Unit tests execute its actual shell across all-success and 24 negative result
+Unit tests execute its actual shell across all-success and 28 negative result
 combinations; structural mutations also check prerequisites, artifact identity
 and preservation of the existing numerical/browser commands.
 

@@ -5,7 +5,7 @@ const browserGates=['fidelity','worker-recovery','t-peak-evidence','t-end-assist
 function check(text){
  const jobs=text.split('jobs:\n')[1];expect(jobs).toBeTruthy();
  const job=name=>jobs.match(new RegExp('(?:^|\\n)  '+name+':\\n([\\s\\S]*?)(?=\\n  [a-z][a-z-]*:\\n|$)'))?.[1]??'';
- const build=job('build'),verify=job('verify-core'),browser=job('accessibility');
+ const build=job('build'),verify=job('verify-core'),browser=job('browser-contracts');
  expect(build).toContain('run: npm run build');expect(build).toContain('actions/upload-artifact@v6');
  expect(build).toContain('if-no-files-found: error');expect(build).toContain('name: ecg-browser-build-${{ github.sha }}');
  expect(build).not.toContain('if: always()');
@@ -25,5 +25,5 @@ function check(text){
 it('shares one exact build while preserving every numerical and browser gate',()=>check(source));
 it('rejects skipping a browser gate',()=>expect(()=>check(source.replace('          node tests/browser-fidelity.mjs\n',''))).toThrow());
 it('rejects substituting an unversioned artifact',()=>expect(()=>check(source.replaceAll('ecg-browser-build-${{ github.sha }}','latest-build'))).toThrow());
-it('rejects restoring sequential validation',()=>expect(()=>check(source.replace('  accessibility:\n    needs: build','  accessibility:\n    needs: verify'))).toThrow());
+it('rejects restoring sequential validation',()=>expect(()=>check(source.replace('  browser-contracts:\n    needs: build','  browser-contracts:\n    needs: verify'))).toThrow());
 it('rejects bypassing actual served-source identity in one environment',()=>expect(()=>check(source.replace('          node scripts/verify-production.mjs\n',''))).toThrow());
