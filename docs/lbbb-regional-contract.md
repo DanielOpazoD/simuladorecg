@@ -83,3 +83,23 @@ three engines and desktop/mobile viewports. These are emulations, not physical
 mobile devices. Experimental opt-in is retained; the historical template stays
 default. A passing engineering gate does not validate clinical amplitudes,
 all LBBB morphologies, ST criteria or patient-specific activation.
+
+
+## Corrected reference units: release blocked again
+
+The earlier worker evaluator divided an event QRS duration by 2000 as though it
+were milliseconds. Synthesized event durations are seconds: the correct midpoint
+is `event.time + event.qrs / 2`. This was an evaluator defect, not a model change.
+The earlier zero-additional-missed-QRS result is invalid and must not be used for
+acceptance. In particular, the claim that the noisy template comparator mostly
+matched non-QRS candidates was incorrect: its corrected count is 19 TP, 0 FN,
+1 FP in that case. The regional counterpart still has 19 TP, 0 FN, 16 FP and
+221.21 bpm marked review after PR120.
+
+Using correct seconds with the unchanged 150 ms matching tolerance and all 256
+cases exposes 15 scenarios with additional missed QRS, including six with usable
+regional HR near the programmed value. No tolerance, waveform or domain has been
+relaxed. This fails the release gate. The PR remains a draft until the detector
+or model interaction is resolved and the full corrected gate passes. New unit
+contracts reject 240 milliseconds supplied as 240 event seconds and require a
+240 ms complex starting at 1 s to have its midpoint at 1.12 s, not 1.00012 s.

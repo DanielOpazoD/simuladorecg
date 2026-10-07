@@ -76,7 +76,7 @@ jobs:
       - name: Unit and signal contracts
         run: npm test -- --reporter=default --reporter=json --outputFile=${{ runner.temp }}/unit-results.json
       - name: Discriminative noise-regression contracts
-        run: node --test tests/noise-regression.node.mjs tests/t-peak-revision.node.mjs > "${{ runner.temp }}/noise-regression.tap"
+        run: node --test tests/noise-regression.node.mjs tests/t-peak-revision.node.mjs tests/qrs-event-reference.node.mjs > "${{ runner.temp }}/noise-regression.tap"
       - name: Regional activation and reviewed default prediction
         run: node scripts/validate-regional-activation.mjs "${{ runner.temp }}/regional-activation-results.json"
       - name: Full exposed regional LBBB worker domain and noisy boundaries

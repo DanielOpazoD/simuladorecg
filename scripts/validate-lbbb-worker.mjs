@@ -1,3 +1,4 @@
+import {qrsMidpointSeconds} from './lib/qrs-event-reference.mjs';
 /** Model reference stays in evaluator; worker receives samples only. */
 import {build} from 'esbuild';import assert from 'node:assert/strict';
 import {matchQrsEvents} from '../tests/reference/ludb/load-ludb.mjs';
@@ -21,7 +22,7 @@ try{
   for(const activationModel of ['template','regional-lbbb-v1']){
    const s=model.synthesize({...c,activationModel},10);
    const m=api.applyAcquisitionScope(api.analyzeSamples({fs:s.fs,leads:s.leads}),filter);
-   const reference=s.events.beats.map(b=>b.time+(b.qrs??qrs)/2000).filter(t=>t>=.2&&t<=9.8);
+   const reference=s.events.beats.map(qrsMidpointSeconds).filter(t=>t>=.2&&t<=9.8);
    const matched=matchQrsEvents(reference,m.detectedPeaks.filter(t=>t>=.2&&t<=9.8),.15);
    assert.ok(reference.length>=3&&Number.isInteger(matched.tp)&&Number.isInteger(matched.fn)&&Number.isInteger(matched.fp));
    assert.equal(matched.tp+matched.fn,reference.length);
