@@ -1,0 +1,89 @@
+{
+  "clinicalValidation": false,
+  "baselineCommit": "08d270f6bde000c5072c064cdd02df97147ccce1",
+  "candidateSourceSha256": "04bda5d6055a539a10d64b88063c9fa22df21122d4575f5acfed189b32d24e23",
+  "reports": {
+    "native": {
+      "sha256": "ef0f0569ec66b4109f01140cdfa164af065b342f77bae133e5c493912181cd6e",
+      "summary": {
+        "cases": 1712,
+        "accepted": 1656,
+        "unsupported": 56,
+        "exposedCorrect": 12,
+        "exposedTotal": 12,
+        "newlyFalseUsable": 0,
+        "newMissedQrsCases": 0,
+        "falseUsableBefore": 86,
+        "falseUsableAfter": 86,
+        "usableBefore": 1375,
+        "usableAfter": 1375
+      }
+    },
+    "annotated": {
+      "sha256": "f49b33ac83ac4ea3cd1544e0219d202ede7a5fa993431e2833300c4f58fc6fb3",
+      "summary": {
+        "records": 80,
+        "numericallyIdentical": 80,
+        "changedRecords": 0,
+        "usableBefore": 75,
+        "usableAfter": 75
+      }
+    },
+    "noise": {
+      "sha256": "48cf0f4c38b4cd783803627e6ef053533c94be3a37875a72f4990b05e3ba3e9d",
+      "summary": {
+        "status": "pass",
+        "scenarios": 920,
+        "checkedMorphology": 73440,
+        "failures": []
+      }
+    },
+    "development": {
+      "sha256": "92c3bb065435fc98c259579b131e5796602aa49680a75737cd111e9f860ef720",
+      "summary": {
+        "scenarios": 920,
+        "beforeUsable": 532,
+        "afterUsable": 455,
+        "usableBeyondBefore": 135,
+        "usableBeyondAfter": 57,
+        "newlyReviewed": 77,
+        "accurateNewReviews": 19,
+        "rawBeyond": 475,
+        "unavailable": 0
+      }
+    },
+    "temporal": {
+      "sha256": "d84e8de8f3c6b5c096800c20b650a7703d24964e60e11ad5e9f0cfca66e2a43a",
+      "summary": {
+        "scenarios": 920,
+        "beforeUsable": 574,
+        "afterUsable": 503,
+        "usableBeyondBefore": 159,
+        "usableBeyondAfter": 86,
+        "newlyReviewed": 71,
+        "accurateNewReviews": 19,
+        "rawBeyond": 457,
+        "unavailable": 2
+      }
+    },
+    "heldModel": {
+      "sha256": "ffc94284e7bb7f0cf9679b698e89cd181cd43a898235d47261bf47b16e83a341",
+      "summary": {
+        "scenarios": 256,
+        "preexistingFalseUsable": 2,
+        "newFalseUsable": 0,
+        "newMissedQrsCases": 0,
+        "usableBefore": 128,
+        "usableAfter": 107
+      }
+    }
+  },
+  "limitations": [
+    "All cohorts are exposed development/regression data",
+    "Analytical fixtures are not patient ECGs",
+    "Held regional model is not published by this change",
+    "Correct rate is not proof of correct QRS event identity",
+    "No absolute LUDB voltage calibration claim",
+    "Browser verification pending until CI artifacts are inspected"
+  ]
+}

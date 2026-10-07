@@ -1,8 +1,8 @@
 import type {Measurement,Signal} from '../types';
-export const ALTERNATING_CANDIDATE_POLICY=Object.freeze({minimumCandidates:6,windowSeconds:.08,alignmentSeconds:.03,
-  adjacentCorrelation:-.5,repeatedCorrelation:.9,intervalRatio:.6,agreement:.8});
+export const ALTERNATING_CANDIDATE_POLICY=Object.freeze({version:'opposed-cycle-v2',minimumCandidates:6,windowSeconds:.08,alignmentSeconds:.03,
+  adjacentCorrelation:-.5,repeatedCorrelation:.9,agreement:.8});
 const leads=['I','II','V1','V5'] as const;
-/** Repetitive opposing short-long candidates are ambiguous (e.g. QRS/T or
+/** Repetitive opposing candidates can be ambiguous even at regular spacing (e.g. QRS/T or
  * distinct ventricular complexes). Never infer which are real or halve HR. */
 export function alternatingCandidateAmbiguity(s:Pick<Signal,'fs'|'leads'>,peaks:readonly number[]):boolean{
  if(peaks.length<ALTERNATING_CANDIDATE_POLICY.minimumCandidates)return false;
@@ -36,13 +36,13 @@ export function alternatingCandidateAmbiguity(s:Pick<Signal,'fs'|'leads'>,peaks:
   const first=peaks[i-1]-peaks[i-2],second=peaks[i]-peaks[i-1];if(first<=0||second<=0)continue;
   eligible++;
   if(dot(a,b)<ALTERNATING_CANDIDATE_POLICY.adjacentCorrelation&&dot(b,c)<ALTERNATING_CANDIDATE_POLICY.adjacentCorrelation&&
-    dot(a,c)>ALTERNATING_CANDIDATE_POLICY.repeatedCorrelation&&Math.min(first,second)/Math.max(first,second)<=ALTERNATING_CANDIDATE_POLICY.intervalRatio)agreeing++;
+    dot(a,c)>ALTERNATING_CANDIDATE_POLICY.repeatedCorrelation)agreeing++;
  }
  return eligible>=ALTERNATING_CANDIDATE_POLICY.minimumCandidates-2&&agreeing/eligible>=ALTERNATING_CANDIDATE_POLICY.agreement;
 }
 export function reviewAlternatingCandidates(s:Pick<Signal,'fs'|'leads'>,m:Measurement):Measurement{
  if(m.evidence.hr.status==='unavailable'||!alternatingCandidateAmbiguity(s,m.detectedPeaks))return m;
- const reason='Candidatos alternantes de dirección opuesta e intervalos corto–largo: puede haber doble conteo QRS/T o complejos distintos. Verifica con calibres; no se corrige automáticamente la frecuencia.';
+ const reason='Candidatos alternantes repetidos de dirección opuesta: puede haber doble conteo QRS/T o complejos distintos. Verifica con calibres; no se corrige automáticamente la frecuencia.';
  const evidence={...m.evidence};
  for(const key of Object.keys(evidence) as (keyof typeof evidence)[])
   if(evidence[key].status==='usable')evidence[key]={...evidence[key],status:'review',reason};

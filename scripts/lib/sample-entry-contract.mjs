@@ -1,3 +1,4 @@
+import {assertReviewedOpposedCycle} from './opposed-cycle-revision.mjs';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 
@@ -33,6 +34,5 @@ export function assertReviewedSampleDependencies(actual,historical,candidate) {
 }
 
 export function assertReviewedAlternatingConfidence(source) {
-  assert.equal(createHash('sha256').update(source).digest('hex'),
-    '5e28c22f46023905c977d2ce3f6b6a0f22bc4253b65d91e5e2303ba0b2697fbc', 'Unreviewed alternating-confidence change');
+  assertReviewedOpposedCycle(source);
 }

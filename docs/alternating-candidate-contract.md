@@ -4,7 +4,7 @@ Defect: stable repeated QRS/T detections can double the ventricular rate while
 remaining insensitive to the existing threshold challenge. An exposed regional
 LBBB prototype at72bpm/QRS240ms produced a falsely usable~144bpm estimate.
 
-Candidate: sample-only, review-only screen for at least six candidates with
+Initial policy (retained here as history): sample-only, review-only screen for at least six candidates with
 repeated opposite waveform directions, highly similar two-apart shapes, and
 short/long interval alternation. Normalize demeaned I/II/V1/V5 windows of±80ms;
 require adjacent correlations<-.5, two-apart>.9, interval ratio<=.6, and>=80%
@@ -38,3 +38,53 @@ retained. The existing known-acquisition layer already marks monitor measures fo
 review and aggressive-filter measures unavailable, without using diagnosis or
 programmed rate. Unknown-filter external signals remain an explicit limitation;
 do not describe this screen as a complete double-count detector.
+
+## Regular opposed cycles: quality-only revision
+
+A later exposed noisy boundary of the held regional LBBB model (120 bpm,
+QRS 240 ms, QTc 520 ms, diagnostic filter, noise 0.05, seed 53) produced
+221.21014964216005 bpm marked usable. Of 33 eligible triples, 29 had the
+registered opposite-adjacent / similar-two-apart pattern. Near-regular spacing
+alone prevented the initial screen from recognizing that ambiguity.
+
+Version `opposed-cycle-v2` removes only the short/long interval-ratio condition.
+The four leads, comparison/alignment windows, minimum count, correlations and
+80% agreement threshold remain unchanged. These are development thresholds,
+not diagnostic criteria. Regular spacing does not establish ventricular identity.
+The held case now retains exactly 221.21014964216005 bpm and 35 candidates,
+but requires review. This fixes unjustified confidence, not event detection.
+
+Analytical tests at 100/250/500/1000 Hz fail with the preceding policy and pass
+with this one; same-direction trains remain negative controls. All numerical
+fields, support coordinates, samples and unavailable estimates must remain exact.
+Existing review estimates cannot be promoted. Opposed true ventricular complexes
+may need review as well; this conservative cost must be measured, not hidden.
+
+### Paired evidence and limitations
+
+- 1,712 fixed native scenarios: 1,656 representable, 56 predeclared exclusions;
+  immediate-predecessor comparison retains all numerical fields and 1,375 usable
+  rates. Both policies still have 86 rates beyond the engineering error screen.
+- 80 already exposed annotated LUDB records: all numerical values and quality
+  states unchanged, 75 usable HR estimates in each policy. Header-declared
+  voltages remain quarantined as absolute calibration targets.
+- Strict frozen noise gate: all 920 scenarios pass, including 73,440 morphology
+  checks. No historical manifest, tolerance or clean source was regenerated.
+- The existing 920-case development and 920-case temporal-replication evaluations
+  remain intact. Their separate frozen legacy path restores exact predecessor
+  confidence bytes; current quality is evaluated separately, never substituted
+  into historical assertions.
+- The held regional model's exposed 256-case sweep now has zero new falsely usable
+  HR cases and zero additional missed QRS relative to its template comparator.
+  Two preexisting falsely usable template cases remain. This model is not shipped
+  by the confidence PR. Agreement of an estimated rate with its reference alone
+  does not prove that detected events are the correct QRS complexes.
+- Actual browser acceptance imports independent analytical CSVs into the real
+  external worker, verifies a visible `Revisar` state at 200 bpm, retains all 31
+  candidates and exact source samples, and checks return to the original trace.
+  Browser completion is a release gate; unit tests do not establish it.
+
+Compact observed evidence: [opposed-cycle evidence](evidence/opposed-cycle-review.json).
+These exposed engineering regressions are not independent clinical validation,
+and this policy is not a complete QRS/T discriminator or an electrical-alternans
+classifier. Same-direction rebounds and inaccurate existing delineations remain.
