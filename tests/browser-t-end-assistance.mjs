@@ -16,12 +16,18 @@ try{
   await preset('tachy');const detail=page.locator('#beat-detail');
   await detail.locator('[data-t-end-assistance]').waitFor();await detail.scrollIntoViewIfNeeded();
   assert.match(await detail.innerText(),/revisión manual/);assert.doesNotMatch(await detail.innerText(),/QT \d+ ms/);
+  const validation=detail.locator('[data-t-end-validation]');
+  assert.match(await validation.innerText(),/Precisión insuficiente/);
+  assert.equal(await validation.isVisible(),true);
   const evidence=detail.locator('.detail-evidence');
   assert.equal(await evidence.evaluate(e=>e.open),false);
   const collapsedHeight=(await detail.boundingBox()).height;
   await evidence.locator('summary').focus();await page.keyboard.press('Enter');
   assert.equal(await evidence.evaluate(e=>e.open),true);
   assert.match(await evidence.innerText(),/dispersión .* ms/);
+  assert.match(await evidence.innerText(),/41 finales T.*32 ms.*56 ms/);
+  assert.match(await evidence.innerText(),/no un margen de error de este latido/);
+  await detail.screenshot({path:resolve(out,'t-end-validation-expanded-'+width+'.png')});
   assert.ok((await detail.boundingBox()).height>collapsedHeight);
   await page.keyboard.press('Space');assert.equal(await evidence.evaluate(e=>e.open),false);
   assert.match(await detail.innerText(),/No modifica QT\/QTc/);
@@ -30,6 +36,7 @@ try{
   await page.locator('#detail-lead').selectOption('V5');
   assert.equal(await detail.locator('[data-t-end-candidate]').getAttribute('data-t-end-candidate'),time);
   assert.match(await detail.innerText(),/no un límite validado de V5/);
+  assert.equal(await detail.locator('[data-t-end-validation]').isVisible(),true);
   await detail.locator('[data-action="next-beat"]').click();
   assert.ok(Number(await detail.locator('[data-t-end-candidate]').getAttribute('data-t-end-candidate'))>Number(time));
   if(width===390){
@@ -45,6 +52,7 @@ try{
   await detail.screenshot({path:resolve(out,'t-end-assistance-'+width+'.png')});
   await preset('asystole');await page.waitForFunction(()=>!document.querySelector('#beat-detail [data-t-end-assistance]'));
   assert.equal(await detail.locator('[data-t-end-candidate]').count(),0);
+  assert.equal(await detail.locator('[data-t-end-validation]').count(),0);
   checks.push({width,flow:'tachy -> review marker without QT -> V5 same endpoint -> next beat -> mobile graph-only scroll -> asystole clears aid'});
   await page.close();
  }
