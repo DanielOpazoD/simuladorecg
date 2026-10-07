@@ -33,7 +33,7 @@ export function secondaryRepolarization(c: ECGCase,b: Beat,ks: readonly Kernel[]
   }
   if(!reference)return{mode,t:null,st:null,reference:null};
   // Secondary ST is explicitly not represented; do not infer normal ST from null.
-  return{mode,t:opposite(reference,T_REFERENCE_AMPLITUDE*.9),st:null,reference};
+  return{mode,t:opposite(reference,T_REFERENCE_AMPLITUDE*.9),st:c.rhythm === "torsades" ? null : reference.map(v=>-.20*v) as Vec,reference};
 }
 /** Frontal-plane dot product, not a 3D angle or a diagnostic criterion.
  * I and II are 60° apart; convert both to orthogonal frontal coordinates.
