@@ -3,7 +3,7 @@ import { rhythmControlState } from './rhythm-controls';
 import { regionalActivationState } from "../engine/regional-activation";
 import { regionalActivationControls } from "./regional-activation";
 import { LEADS, type ECGCase } from "../engine/types";
-import { lesionControlEffect } from "../engine/morphology";
+import { lesionControlEffect, tVector } from "../engine/morphology";
 import { range, select, toggle } from "./helpers";
 /** Applicability of the existing amplitude controls, separate from clinical severity. */
 export function amplitudeControlState(c: ECGCase) {
@@ -23,8 +23,26 @@ export function amplitudeControlState(c: ECGCase) {
           : "Intensidad: escala el componente primario ST–T; 0 lo retira y 2 es el patrón de referencia. No expresa extensión de necrosis ni gravedad clínica.";
   return { tDisabled: !organized, stDisabled: !organized || effect === "none" || mutedT, note };
 }
+/** Applicability of this model's primary-T direction control, not clinical impossibility. */
+export function tAxisControlState(c: ECGCase) {
+  const rhythm = rhythmControlState(c);
+  if (rhythm.noOrganizedBeats) return {disabled: true, reason: "Control inactivo: no hay T organizada."};
+  if (c.tAmp === 0) return {disabled: true, reason: "Control inactivo: T anulada. El eje se conserva."};
+  if (rhythm.qrsAxisDisabled || c.conduction === "lbbb" || c.conduction.includes("rbbb"))
+    return {disabled: true, reason: "Control inactivo. Derivado del QRS; valor conservado para T primaria."};
+  if (c.overload !== "none")
+    return {disabled: true, reason: "Control inactivo: dirección fijada por la sobrecarga."};
+  // Probe the actual primary-vector rule instead of duplicating cancellation
+  // factors for every ischemic/electrolyte combination in the interface.
+  const beat = {time: 0, rr: 1, kind: "normal" as const};
+  const first = tVector({...c, tAxis: 0}, beat), second = tVector({...c, tAxis: 90}, beat);
+  if (first.every((value, i) => value === second[i]))
+    return {disabled: true, reason: "Control inactivo: este patrón no usa el eje solicitado."};
+  return {disabled: false, reason: "Ajusta la T primaria; la T secundaria sigue el QRS."};
+}
+
 export function controls(c: ECGCase) {
-  const amplitude = amplitudeControlState(c), rhythm = rhythmControlState(c);
+  const amplitude = amplitudeControlState(c), rhythm = rhythmControlState(c), tAxis = tAxisControlState(c);
   const inactiveConduction: string[] = [];
   const contextualSelect = (...args: Parameters<typeof select>) => {
     const html = select(...args);
@@ -200,7 +218,7 @@ export function controls(c: ECGCase) {
    c.overload,
  )}
  ${range("st", "Intensidad de lesión", 0, 8, 0.25, c.st, "escala del patrón", amplitude.stDisabled)}${range("transition", "Rotación precordial", -1, 1, 0.1, c.transition, "", rhythm.noOrganizedBeats)}
- ${range("pAxis", "Eje de P", -180, 180, 5, c.pAxis, "°", rhythm.pAxisDisabled)}${range("tAxis", "Eje de T", -180, 180, 5, c.tAxis, "°", rhythm.noOrganizedBeats)}${range("pAmp", "Amplitud de P", 0, 0.5, 0.01, c.pAmp, "mV ref.", rhythm.pAmplitudeDisabled)}${range("qrsAmp", "Amplitud QRS", 0.1, 3, 0.1, c.qrsAmp, "×", rhythm.noOrganizedBeats)}${range("tAmp", "Amplitud de T", 0, 1, 0.01, c.tAmp, "mV ref.", amplitude.tDisabled)}
+ ${range("pAxis", "Eje de P", -180, 180, 5, c.pAxis, "°", rhythm.pAxisDisabled)}<div class="t-axis-control">${range("tAxis", "Eje de T", -180, 180, 5, c.tAxis, "°", tAxis.disabled, "t-axis-note")}<p class="control-note" id="t-axis-note">${tAxis.reason}</p></div>${range("pAmp", "Amplitud de P", 0, 0.5, 0.01, c.pAmp, "mV ref.", rhythm.pAmplitudeDisabled)}${range("qrsAmp", "Amplitud QRS", 0.1, 3, 0.1, c.qrsAmp, "×", rhythm.noOrganizedBeats)}${range("tAmp", "Amplitud de T", 0, 1, 0.01, c.tAmp, "mV ref.", amplitude.tDisabled)}
  ${toggle("septalQ", "Componente septal", c.septalQ)}</div><p class="control-note" id="amplitude-note">${amplitude.note}</p><p class="control-note">Amplitud de P ajusta las ondas P programadas, no las ondas de FA/flutter. En ritmo de la unión la dirección retrógrada es fija. Los controles atenuados conservan su valor.</p><p class="control-note">Amplitud de T escala toda la T, incluidas las correcciones locales; 0 la anula. No modifica QRS, el ST primario ni U. Los voltajes de referencia no son amplitudes de una derivación concreta.</p><p class="control-note" id="secondary-repolarization-note">T secundaria: la dirección sigue la activación QRS, no el control Eje de T; la sobrecarga actúa a través del QRS. El ST secundario no está representado. No interpretes su ausencia como normalidad ni uses este modelo para criterios ST/QRS. El ST de lesión primaria es un componente distinto.</p></div>
  <div class="control-panel" data-control-panel="signal" hidden><div class="field-grid">
  ${select(

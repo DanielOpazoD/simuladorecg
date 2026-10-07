@@ -51,7 +51,7 @@ import {
 } from "./render/ecg";
 import { icon, btn, esc, select, options } from "./ui/helpers";
 import { syncPauseControl } from "./ui/pause-control";
-import { controls, leadOptions, amplitudeControlState } from "./ui/controls";
+import { controls, leadOptions, amplitudeControlState, tAxisControlState } from "./ui/controls";
 import { caseContext, caseReading, normalizeImportedCase } from "./presets/case-context";
 import {
   decodeCase,
@@ -262,6 +262,9 @@ function syncAmplitudeControls() {
   $<HTMLInputElement>('[data-key="st"]').disabled = state.stDisabled;
   $<HTMLInputElement>('[data-key="tAmp"]').disabled = state.tDisabled;
   $("#amplitude-note").textContent = state.note;
+  const direction = tAxisControlState(c);
+  $<HTMLInputElement>('[data-key="tAxis"]').disabled = direction.disabled;
+  $("#t-axis-note").textContent = direction.reason;
   $("#regional-activation-controls").innerHTML = regionalActivationControls(c);
 }
 function setPanel(name: string) {
