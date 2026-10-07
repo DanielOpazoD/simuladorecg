@@ -80,8 +80,15 @@ try{
   assert.equal(await page.locator('#compare-json').count(),0,'No stale export after unsupported input');
   await importCase(base,'recovery');const recovered=await exported('recovered');
   assert.deepEqual(recovered.A.leads,normal.A.leads);assert.deepEqual(recovered.B.leads,normal.A.leads);
+  await importCase({...base,conduction:'wpw',rhythm:'af'},'scope');
+  assert.match(await page.locator('#signal-loading').innerText(),/no representa esa conducción/);
+  assert.match(await page.locator('#signal-loading').innerText(),/no una imposibilidad clínica/);
+  assert.equal(await page.locator('#compare-json').count(),0,'No pre-excited AF tracing is invented');
+  await page.locator('#signal-loading').screenshot({path:resolve(out,`wpw-clock-scope-${width}.png`)});
+  await importCase(base,'recovery');const wpwRecovered=await exported('wpw-clock-recovered');
+  assert.deepEqual(wpwRecovered.B.leads,normal.A.leads);
   assert.equal(await page.locator('vite-error-overlay').count(),0);
-  checks.push({width,checked,maxErrorMv,isolatedST60V2Mv:zero.B.leads.V2[index],scopeRejection:true,exactRecovery:true,tAxisApplicabilityAndRestoration:true});
+  checks.push({width,checked,maxErrorMv,isolatedST60V2Mv:zero.B.leads.V2[index],scopeRejection:true,exactRecovery:true,wpwClockScopeAndRecovery:true,tAxisApplicabilityAndRestoration:true});
   await page.close();
  }
  assert.deepEqual(errors,[]);assert.deepEqual(warnings,[]);
