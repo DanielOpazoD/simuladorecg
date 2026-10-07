@@ -203,7 +203,7 @@ jobs:
   verify:
     # Preserve the existing merge-check name and fail closed on every prerequisite.
     if: ${{ always() }}
-    needs: [build, verify-core, qrs-discrimination, accessibility, portability, amplitude-regression]
+    needs: [build, verify-core, qrs-discrimination, accessibility, browser-contracts, portability, amplitude-regression]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
@@ -213,6 +213,7 @@ jobs:
           RESULT_CORE: ${{ needs['verify-core'].result }}
           RESULT_NATIVE: ${{ needs['qrs-discrimination'].result }}
           RESULT_BROWSER: ${{ needs['accessibility'].result }}
+          RESULT_BROWSER_GROUPS: ${{ needs['browser-contracts'].result }}
           RESULT_PORTABILITY: ${{ needs['portability'].result }}
           RESULT_AMPLITUDE: ${{ needs['amplitude-regression'].result }}
         run: |
@@ -220,12 +221,18 @@ jobs:
           test "$RESULT_CORE" = "success"
           test "$RESULT_NATIVE" = "success"
           test "$RESULT_BROWSER" = "success"
+          test "$RESULT_BROWSER_GROUPS" = "success"
           test "$RESULT_PORTABILITY" = "success"
           test "$RESULT_AMPLITUDE" = "success"
-  accessibility:
+  browser-contracts:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        group: [source, navigation, interaction]
     steps:
       - uses: actions/checkout@v5
         with:
@@ -243,8 +250,9 @@ jobs:
         run: |
           npm install --no-save --package-lock=false --legacy-peer-deps playwright@1.63.0
           npx playwright install --with-deps chromium webkit firefox
-      - name: Keyboard, reflow and critical flows on three browser engines
+      - name: Complete assigned flows on all original browser engines
         env:
+          ECG_BROWSER_GROUP: ${{ matrix.group }}
           ECG_TEST_URL: http://127.0.0.1:5173/
           ECG_EXPECT_COMMIT: ${{ github.sha }}
           ECG_EVIDENCE_DIR: ${{ runner.temp }}/accessibility-evidence
@@ -254,17 +262,40 @@ jobs:
           trap 'kill $PID 2>/dev/null || true' EXIT
           for n in {1..40}; do curl --silent --fail "$ECG_TEST_URL" > /dev/null && break; sleep 1; done
           node scripts/verify-production.mjs
-          ECG_ACTIVATION_ENGINES=all node tests/browser-activation.mjs
-          node tests/browser-accessibility.mjs
-          node tests/browser-vvi-noncapture.mjs
-          node tests/browser-qrs-t-discrimination.mjs
-          node tests/browser-wide-qrs.mjs
-          ECG_GROUP_ENGINES=all node tests/browser-diagnosis-navigation.mjs
-          ECG_REGIONAL_ENGINES=all node tests/browser-regional-activation.mjs
+          case "$ECG_BROWSER_GROUP" in
+            source)
+              ECG_ACTIVATION_ENGINES=all node tests/browser-activation.mjs
+              ECG_REGIONAL_ENGINES=all node tests/browser-regional-activation.mjs
+              ;;
+            navigation)
+              ECG_GROUP_ENGINES=all node tests/browser-diagnosis-navigation.mjs
+              ;;
+            interaction)
+              node tests/browser-accessibility.mjs
+              node tests/browser-vvi-noncapture.mjs
+              node tests/browser-qrs-t-discrimination.mjs
+              node tests/browser-wide-qrs.mjs
+              ;;
+            *) echo "Unknown browser group: $ECG_BROWSER_GROUP" >&2; exit 1 ;;
+          esac
       - uses: actions/upload-artifact@v6
         if: always()
         with:
-          name: ecg-accessibility-${{ github.sha }}
+          name: ecg-accessibility-${{ matrix.group }}-${{ github.sha }}
           path: ${{ runner.temp }}/accessibility-evidence/
           if-no-files-found: error
           retention-days: 14
+  accessibility:
+    # Keep the existing check name; any failed/skipped matrix member blocks it.
+    if: ${{ always() }}
+    needs: [build, browser-contracts]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require all browser groups
+        env:
+          RESULT_BUILD: ${{ needs.build.result }}
+          RESULT_BROWSER_GROUPS: ${{ needs['browser-contracts'].result }}
+        run: |
+          test "$RESULT_BUILD" = "success"
+          test "$RESULT_BROWSER_GROUPS" = "success"
