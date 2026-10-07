@@ -49,7 +49,7 @@ node scripts/validate-repolarization.mjs --output .sites-runtime/repolarization.
 node scripts/validate-analysis.mjs --split=all --output .sites-runtime/analysis-current.json
 
 # Después de npm run build, desde un commit limpio:
-npm install --no-save --package-lock=false --legacy-peer-deps playwright@1.63.0
+npm ci
 npx playwright install chromium
 npx vite preview --host 127.0.0.1 --port 5173 --strictPort
 # En otra terminal:
