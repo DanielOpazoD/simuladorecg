@@ -325,10 +325,11 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
       beat.tPeak = tp / fs;
       beat.tEnd = te / fs;
       beat.qt = ((te - on) / fs) * 1000;
+      // Peak direction must use the same local baseline as the T magnitude.
       taxes.push(
         observedFrontalDirection(
-          s.leads.I[tp] - baseline[0],
-          s.leads.II[tp] - baseline[1],
+          s.leads.I[tp] - baseAt(tp, 0),
+          s.leads.II[tp] - baseAt(tp, 1),
         ),
       );
       // Tangent to the steepest terminal descent, after the last lobe's peak.
