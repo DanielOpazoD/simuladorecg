@@ -21,6 +21,15 @@ for(const engine of [chromium,webkit,firefox]){
    await page.goto(url);await page.locator('#signal-loading').waitFor({state:'hidden'});
    const identity=await(await page.request.get(new URL('build-info.json',url).href)).json();
    assert.equal(identity.dirty,false);if(process.env.ECG_EXPECT_COMMIT)assert.equal(identity.commit,process.env.ECG_EXPECT_COMMIT);
+   // Worker completion precedes the 90 ms ResizeObserver redraw. Capture only
+   // a settled canvas; otherwise modal duration gets blamed for startup paint.
+   await page.evaluate(()=>document.fonts.ready);
+   await page.waitForFunction(()=>{
+    const canvas=document.querySelector('#ecg'),image=canvas.toDataURL(),now=performance.now();
+    const state=window.__wideQrsCanvasSettling;
+    if(!state||state.image!==image){window.__wideQrsCanvasSettling={image,since:now};return false;}
+    return now-state.since>=200;
+   },null,{polling:50,timeout:5000});
    const original=await page.locator('#ecg').evaluate(c=>c.toDataURL());
    await page.locator('[data-action=external]').click();const dialog=page.locator('#external-lab');await dialog.waitFor({state:'visible'});
    await page.locator('#external-files').setInputFiles({name:`analytical-${fixture.name}.csv`,mimeType:'text/csv',buffer:Buffer.from(csv)});
@@ -52,6 +61,7 @@ for(const engine of [chromium,webkit,firefox]){
    assert.equal(report.measurement.detectedPeaks.length,candidates);
    for(const [lead,values] of Object.entries(samples.leads))assert.deepEqual(report.leads[lead],Array.from(values));
    await page.locator('[data-external=close]').click();await dialog.waitFor({state:'hidden'});
+   await page.waitForFunction(image=>document.querySelector('#ecg').toDataURL()===image,original,{timeout:5000});
    assert.equal(await page.locator('#ecg').evaluate(c=>c.toDataURL()),original);
    assert.deepEqual(errors,[]);results.push({engine:engine.name(),width,identity,fixture:fixture.name,hr:report.measurement.hr,candidates,samplesUnchanged:true,modelAuditUsed:false});
   }catch(error){await page.screenshot({path:resolve(out,tag+'-failure.png')}).catch(()=>{});await writeFile(resolve(out,tag+'-failure.json'),JSON.stringify({error:String(error.stack),errors},null,2));throw error;}
