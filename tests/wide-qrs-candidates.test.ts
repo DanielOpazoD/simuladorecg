@@ -55,3 +55,13 @@ it('preserves candidate grouping under lead polarity reversal',()=>{
   expect(detectVentricularCandidates(s).peaks).toEqual(expected);
  }
 });
+
+import {analyzeSamples} from '../src/engine/sample-analysis';
+it('does not authorize new morphology when the original candidate train was too close',()=>{
+ const s=train(500,.24,.833),raw=detectVentricularCandidates(s,{tReject:false});
+ const rr=raw.peaks.slice(1).map((p,i)=>(p-raw.peaks[i])/s.fs).sort((a,b)=>a-b);
+ expect(rr[Math.floor(rr.length/2)]).toBeLessThan(.22);
+ const m=analyzeSamples(s);
+ expect(m.beats).toEqual([]);expect(m.qrs).toBeNull();expect(m.pr).toBeNull();expect(m.qt).toBeNull();
+ expect(m.evidence.hr.status).not.toBe('usable');
+});

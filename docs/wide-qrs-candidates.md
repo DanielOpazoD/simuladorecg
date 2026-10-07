@@ -87,3 +87,12 @@ filters. There are zero new falsely usable rates and zero additional missed-QRS
 cases; falsely usable rates move 90→86 and usable coverage 1379→1375. These
 remaining 86 errors are reported, not accepted as clinical validity. The report
 records candidate-tree cleanliness and hashes of model sources used in synthesis.
+
+The first published CI iteration exposed a temporal-noise LBBB counterexample:
+refining an original train with median RR below 220 ms could bypass the historical
+morphology rejection and create a newly delineated beat. The assertion correctly
+blocked release. The product now preserves that morphology rejection while
+allowing explicitly reviewed rate-only recovery. The assertion was not weakened.
+The analytical browser fixture consequently requires rate status `review`, empty
+beat delineations, and unavailable QRS/QT, rather than claiming usable morphology.
+A regression fails on the first implementation and passes with the safeguard.

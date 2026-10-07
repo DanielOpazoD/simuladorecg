@@ -28,7 +28,7 @@ for(const engine of [chromium,webkit,firefox]){
    const file=resolve(out,tag+'-report.json');await(await pending).saveAs(file);
    const report=JSON.parse(await readFile(file));assert.equal(report.kind,'ecg-external-analysis');
    assert.equal(report.modelAuditUsed,false);assert.equal(report.clinicalValidation,false);
-   assert.equal(report.measurement.evidence.hr.status,'usable');assert.ok(Math.abs(report.measurement.hr-100)<1e-8);
+   assert.equal(report.measurement.evidence.hr.status,'review');assert.deepEqual(report.measurement.beats,[]);assert.equal(report.measurement.qrs,null);assert.equal(report.measurement.qt,null);assert.ok(Math.abs(report.measurement.hr-100)<1e-8);
    assert.equal(report.measurement.detectedPeaks.length,16);
    for(const [lead,values] of Object.entries(samples.leads))assert.deepEqual(report.leads[lead],Array.from(values));
    await page.locator('[data-external=close]').click();await dialog.waitFor({state:'hidden'});
