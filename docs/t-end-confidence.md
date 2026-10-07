@@ -11,3 +11,12 @@ En la exploración combinada retuvo 91/277 (32,9%): MAE 6,95 ms, p95 21 ms, máx
 Esto es descriptivo y probablemente optimista: los umbrales fueron seleccionados sobre los mismos datos y latidos/derivaciones están correlacionados. `high-agreement` no significa seguro, validado ni probabilidad. Todos los candidatos de menor concordancia permanecen visibles y en el informe; no se mejora el MAE ocultándolos.
 
 La próxima compuerta antes de cualquier QT automático es evaluación con un conjunto externo intacto o protocolo prospectivo congelado antes de observar errores.
+
+## Evaluación posterior de la reserva
+
+La primera evaluación prospectiva posterior no cumplió los límites congelados
+de p95 y error máximo, con sólo 11,95% de cobertura de referencias en el estrato
+alto. Ver [resultados completos y límites](t-end-reserved-evaluation.md). Los
+números de desarrollo anteriores siguen siendo retrospectivos; la reserva ahora
+está expuesta y no debe volver a describirse como intacta. No se habilitó QT
+automático ni se reajustaron umbrales para corregir el resultado.

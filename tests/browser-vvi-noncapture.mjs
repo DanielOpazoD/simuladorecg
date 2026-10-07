@@ -45,10 +45,18 @@ for(const engine of [chromium,webkit,firefox]){
    await pause.scrollIntoViewIfNeeded();
    const textNode=await pause.locator('span').elementHandle();assert.ok(textNode);
    const box=await textNode.boundingBox();assert.ok(box);
-   const beforeWidth=await page.locator('#ecg').evaluate(c=>c.width);
+   await page.evaluate(()=>{
+    window.__monitorRedrawObserved=false;
+    const observer=new MutationObserver(records=>{
+     if(records.some(r=>r.attributeName==='aria-label')){window.__monitorRedrawObserved=true;observer.disconnect();}
+    });
+    observer.observe(document.querySelector('#ecg'),{attributes:true,attributeFilter:['aria-label']});
+   });
    await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();
    await page.setViewportSize({width:width+4,height:width===390?844:1000});
-   await page.waitForFunction(w=>document.querySelector('#ecg').width!==w,beforeWidth);
+   // The monitor may retain a minimum backing width at narrow viewports.
+   // Observe the real draw's accessibility update instead of assuming pixel-width change.
+   await page.waitForFunction(()=>window.__monitorRedrawObserved===true);
    assert.equal(await textNode.evaluate(el=>el.isConnected),true,'Redraw replaced the active pointer target');
    await page.mouse.up();
    assert.match(await page.locator('#monitor-state').innerText(),/CONGELADO/);
