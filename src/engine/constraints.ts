@@ -12,15 +12,15 @@ export function tWaveSupport(
   return { start: qt - duration, duration };
 }
 
-export type ModelScopeCode = "qrs-overlap" | "premature-before-t";
+export type ModelScopeCode = "qrs-overlap" | "premature-before-t" | "wpw-antegrade-clock";
 
 /** A limitation of this additive generator, never a clinical ERP estimate. */
 export class ModelScopeError extends Error {
   constructor(
     public readonly code: ModelScopeCode,
-    public readonly previousBeat: number,
+    public readonly previousBeat: number | null,
     public readonly beat: number,
-    public readonly intervalMs: number,
+    public readonly intervalMs: number | null,
     message: string,
   ) {
     super(`Fuera del alcance del modelo: ${message}`);
@@ -46,6 +46,21 @@ export function assertRepresentableEvents(
   c: ECGCase,
   events: EventSeries,
 ): void {
+  if (c.conduction === "wpw") {
+    // The delta template is only meaningful with the antegrade association
+    // represented by this scheduler. A PR number alone is not that association.
+    const unsupported = events.beats.findIndex(b => b.kind === "normal" &&
+      !events.atria.some(a => a.conducted && a.pr !== undefined &&
+        b.pr === a.pr && Math.abs(a.time + a.pr - b.time) <= TIME_EPSILON));
+    if (unsupported >= 0) throw new ModelScopeError(
+      "wpw-antegrade-clock", null, unsupported, null,
+      "la delta WPW requiere una asociación auricular anterógrada explícita. " +
+      "Este calendario no representa esa conducción; no simula FA/flutter preexcitados " +
+      "ni vías atípicas. Selecciona otro patrón de conducción. " +
+      "Es un límite del simulador, no una imposibilidad clínica.",
+    );
+  }
+
   const ectopicAtrialActivations = events.atria
     .filter((a) => a.kind === "ectopic" && a.conducted && a.pr !== undefined)
     .map((a) => a.time + a.pr!);

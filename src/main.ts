@@ -406,7 +406,9 @@ const controller = new SignalController(
   (next, measured, requestId) => publishSignal(next, measured, requestId),
   (message, requestId) => {
     if (!session.fail(requestId)) return;
-    toast(message);
+    // The persistent live region below carries the error. A duplicate long
+    // toast can cover that explanation on mobile and announce it twice.
+    clearToast();
     comparison.invalidate(message);
     showUnavailableSignal(message, true);
     $("#metrics").innerHTML =
