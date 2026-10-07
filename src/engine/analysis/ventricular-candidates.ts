@@ -32,19 +32,52 @@ function shape(s: Samples, i: number) {
       ),
     );
   }
-  let q = [0.5, 0.5, 0.5, 0.5];
-  for (let k = 0; k < 25; k++) {
-    let v = mat.map((row) => row.reduce((s, x, j) => s + x * q[j], 0)),
-      norm = Math.hypot(...v);
-    q = v.map((x) => x / (norm || 1));
-  }
-  const eigen = q.reduce(
-      (s, x, i) => s + x * mat[i].reduce((sum, x, j) => sum + x * q[j], 0),
-      0,
-    ),
-    trace = mat.reduce((s, row, i) => s + row[i], 0);
+  const trace = mat.reduce((sum, row, i) => sum + row[i], 0);
   if (!trace || !vel) return { rank: 1, rough: Infinity };
-  return { rank: 1 - eigen / trace, rough: acc / vel };
+  return { rank: covarianceResidual(mat), rough: acc / vel };
+}
+
+/** Fraction of a four-channel covariance outside its dominant direction.
+ * Symmetric Jacobi rotations avoid a power-iteration seed orthogonal to the
+ * principal eigenspace. The stopping bound is floating-point precision, not a
+ * physiological or classifier threshold. Never mutates the supplied matrix.
+ */
+export function covarianceResidual(mat: readonly (readonly number[])[]): number {
+  if (mat.length !== 4 || mat.some(row => row.length !== 4))
+    throw new Error("Expected four-channel covariance");
+  let scale = 0;
+  for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) {
+    if (!Number.isFinite(mat[i][j]) || mat[i][j] !== mat[j][i])
+      throw new Error("Expected finite symmetric covariance");
+    scale = Math.max(scale, Math.abs(mat[i][j]));
+  }
+  if (scale === 0) return 1;
+  const a = mat.map(row => row.map(value => value / scale));
+  const trace = a.reduce((sum, row, i) => sum + row[i], 0);
+  if (trace <= 0) throw new Error("Expected positive semidefinite covariance");
+  for (const row of a) for (let j = 0; j < 4; j++) row[j] /= trace;
+  const precision = 16 * Number.EPSILON;
+  let converged = false;
+  for (let rotation = 0; rotation < 64; rotation++) {
+    let p = 0, q = 1, largest = 0;
+    for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++)
+      if (Math.abs(a[i][j]) > largest) { p = i; q = j; largest = Math.abs(a[i][j]); }
+    if (largest <= precision) { converged = true; break; }
+    const off = a[p][q], tau = (a[q][q] - a[p][p]) / (2 * off);
+    const t = (tau < 0 ? -1 : 1) / (Math.abs(tau) + Math.hypot(1, tau));
+    const c = 1 / Math.hypot(1, t), s = t * c;
+    a[p][p] -= t * off; a[q][q] += t * off; a[p][q] = a[q][p] = 0;
+    for (let k = 0; k < 4; k++) if (k !== p && k !== q) {
+      const first = a[k][p], second = a[k][q];
+      a[k][p] = a[p][k] = c * first - s * second;
+      a[k][q] = a[q][k] = s * first + c * second;
+    }
+  }
+  if (!converged) throw new Error("Covariance eigensolver did not converge");
+  const eigenvalues = a.map((row, i) => row[i]);
+  if (Math.min(...eigenvalues) < -precision || Math.max(...eigenvalues) > 1 + precision)
+    throw new Error("Expected positive semidefinite covariance");
+  return Math.max(0, Math.min(1, 1 - Math.max(...eigenvalues)));
 }
 
 /** Group opposing slopes only when a recurrent return level is observable and
