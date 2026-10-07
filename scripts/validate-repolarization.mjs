@@ -127,7 +127,8 @@ try {
      intendedFinalAxisChange=p.id==='rv_acute'||p.id==='rv_chronic',
      intendedSecondaryChange=b.events.beats.some(beat=>beat.kind!=='normal') ||
        c.conduction==='lbbb' || c.conduction.includes('rbbb'),
-     reviewedMainChange=intendedFinalAxisChange||intendedSecondaryChange;
+     intendedLpfbSourceChange=p.id==='lpfb',
+     reviewedMainChange=intendedFinalAxisChange||intendedSecondaryChange||intendedLpfbSourceChange;
    const historicalContract=intendedRvGainChange ? assertRvAmplitudeChange(before.synthesize,a,r,c)
      : compareSignalContract(a,r,{exact:!intendedSourceChange,label:`historical/default/${p.id}`});
    const contract=compareSignalContract(r,b,{exact:!reviewedMainChange,label:`axis/default/${p.id}`});
@@ -144,7 +145,7 @@ try {
    if(intendedSourceChange) assert.ok(historicalContract.maxDifferenceMv>.03,`missing source change ${p.id}`);
    if(intendedSecondaryChange&&!intendedFinalAxisChange)
      assert.ok(contract.maxDifferenceMv>1e-6,`missing coupled-secondary change ${p.id}`);
-   defaults.push({id:p.id,intendedSourceChange,intendedRvGainChange,intendedFinalAxisChange,intendedSecondaryChange,
+   defaults.push({id:p.id,intendedLpfbSourceChange,intendedSourceChange,intendedRvGainChange,intendedFinalAxisChange,intendedSecondaryChange,
      reviewedMainExact:!reviewedMainChange,legacySourceExact:legacyContract.maxDifferenceMv===0,
      historicalMaxDifferenceMv:historicalContract.maxDifferenceMv,...contract});
  }

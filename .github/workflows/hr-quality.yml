@@ -15,6 +15,12 @@ concurrency:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --user 1001
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
@@ -51,11 +57,10 @@ jobs:
         run: |
           node scripts/compare-hr-quality.mjs "$RUNNER_TEMP/hr-baseline" "$RUNNER_TEMP/hr-quality/known" "$RUNNER_TEMP/hr-quality/known-results.json"
           node scripts/compare-hr-quality.mjs "$RUNNER_TEMP/hr-baseline" "$RUNNER_TEMP/hr-quality/replication" "$RUNNER_TEMP/hr-quality/replication-results.json"
-      - name: Build and install isolated browser check
+      - name: Build and verify the pinned browser runtime
         run: |
           npm run build
-          npm install --no-save --package-lock=false --legacy-peer-deps playwright@1.63.0
-          npx playwright install --with-deps chromium
+          node scripts/verify-browser-runtime.mjs
       - name: Verify the actual worker and visible review reason in production
         env:
           ECG_TEST_URL: http://127.0.0.1:5173/

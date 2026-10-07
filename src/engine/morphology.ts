@@ -119,6 +119,17 @@ export function qrsKernels(c: ECGCase, beat: Beat): Kernel[] {
       k.v = frontal(a, amp, k.v[2]);
     }
   }
+  // In the combined source retain the established main/terminal RV bases.
+  // Redistribute early LV direction against the intermediate basis so the
+  // integrated axis, delayed RV activity and secondary T reference stay intact.
+  if (block === "lpfb" || block === "rbbb_lpfb") {
+    const previous = ks[0].v;
+    const pr = project(previous);
+    const amplitude = Math.hypot(pr.I, (2 * pr.II - pr.I) / Math.sqrt(3));
+    ks[0].v = frontal(-60, amplitude, previous[2]);
+    for (let j = 0; j < 3; j++) ks[2].v[j] +=
+      (previous[j] - ks[0].v[j]) * kernelWeight(ks[0]) / kernelWeight(ks[2]);
+  }
   return ks;
 }
 /** Shared shape evaluation; the legacy arithmetic remains bit-for-bit intact. */

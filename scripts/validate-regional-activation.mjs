@@ -1,3 +1,4 @@
+import {predictLpfbSource} from './lib/lpfb-source-prediction.mjs';
 import {assertTeachingCatalogRevision} from './lib/teaching-scope-revision.mjs';
 import {predictWpwSupport} from './lib/wpw-support-prediction.mjs';
 import {predictAfClock,assertFrozenAfSampler} from './lib/af-clock-prediction.mjs';
@@ -32,7 +33,9 @@ try {
   await writeFile(signalFile,predictWpwSupport(predictTorsadesFrame(await readFile(signalFile,'utf8'))));
   const rhythmFile=path.join(base,'src/engine/rhythm.ts');
   await writeFile(rhythmFile,predictAfClock(await readFile(rhythmFile,'utf8')));
-  const referencePreparation='PR55 with independent QT initialization plus torsades-frame, compact WPW support and representative AF-clock predictions; unrelated defaults remain exact';
+  const morphologyFile=path.join(base,'src/engine/morphology.ts');
+  await writeFile(morphologyFile,predictLpfbSource(await readFile(morphologyFile,'utf8')));
+  const referencePreparation='PR55 with independent QT initialization plus torsades-frame, compact WPW support and representative AF-clock and LPFB source predictions; unrelated defaults remain exact';
   const before=await load(base,'before'),after=await load(process.cwd(),'after'),defaults=[];
   assertTeachingCatalogRevision(before.PRESETS,after.PRESETS);
   for(const p of before.PRESETS.filter(p=>p.strategy!=='pending'))for(const filter of ['off','diagnostic','monitor','aggressive']){

@@ -186,7 +186,7 @@ describe("Determinismo y catálogo", () => {
         // pre-onset sine leakage removed by the compact-support repair.
         const leak=wpwNativeLeadII(fromPreset(p),10,true);
         expectCatalogFingerprint(p.id,Float64Array.from(a.leads.II,(value,i)=>value+leak[i]));
-      } else if (!hasCoupledSecondary) expectCatalogFingerprint(p.id, a.leads.II);
+      } else if (!hasCoupledSecondary) expectCatalogFingerprint(p.id === "lpfb" ? "lpfb-source-v2" : p.id, a.leads.II);
     },
   );
 });

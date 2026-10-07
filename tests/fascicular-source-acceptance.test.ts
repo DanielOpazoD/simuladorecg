@@ -11,11 +11,11 @@ function prepare(id:'lafb'|'lpfb') {
  if(!beat?.qrs)throw Error('Missing declared QRS support');
  return {c,s,beat};
 }
-// Prepare outside expected-failure blocks: fixture/model failures must fail normally.
+// Prepare outside assertions so fixture/model failures fail normally.
 const anterior=prepare('lafb'),posterior=prepare('lpfb');
 const probe=(x:ReturnType<typeof prepare>,lead:'I'|'II'|'III'|'aVL'|'aVF',threshold:number)=>
  sourcePolarity(x.s.leads[lead],x.s.fs,x.beat.time,x.beat.time+x.beat.qrs!,threshold);
-const knownPosteriorI=thresholds.map(threshold=>({threshold,meetsRS:matches(probe(posterior,'I',threshold),'rS')}));
+const posteriorI=thresholds.map(threshold=>({threshold,meetsRS:matches(probe(posterior,'I',threshold),'rS')}));
 describe('Independent polarity probe',()=>{
  it('distinguishes qR, rS, QS and absent information',()=>{
   const get=(a:number[])=>sourcePolarity(a,1000,0,(a.length-1)/1000,.01);
@@ -37,7 +37,7 @@ describe('Fascicular source landmarks, not diagnostic validation',()=>{
   expect(matches(a,'qR')).toBe(true);expect(a.positivePeakMs).toBeGreaterThanOrEqual(45);
   for(const lead of ['II','III','aVF'] as const)expect(matches(probe(anterior,lead,threshold),'rS')).toBe(true);
  });
- it.fails.each(knownPosteriorI)('KNOWN DEBT: LPFB initial r in I is absent at relative probe $threshold',({meetsRS})=>{
+ it.each(posteriorI)('LPFB initial r and dominant S in I at relative probe $threshold',({meetsRS})=>{
   expect(meetsRS).toBe(true);
  });
  it.each(thresholds)('LPFB inferior initial-negative/dominant-positive features remain measurable at %s',threshold=>{
