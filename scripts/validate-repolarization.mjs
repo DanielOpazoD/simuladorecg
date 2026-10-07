@@ -87,7 +87,7 @@ try {
    return {path:p,unchanged:a.equals(b),sha256:createHash('sha256').update(b).digest('hex')};
  }));
  for(const f of detector.filter(f=>!f.unchanged)) {
-   if(f.path==='src/engine/analysis/ventricular-candidates.ts'){assertReviewedQrsTFile(f.path,await readFile(path.join(root,f.path)));continue;}
+   if(f.path!=='src/engine/measure.ts'&&Object.hasOwn(QRS_T_REVISION.files,f.path)){assertReviewedQrsTFile(f.path,await readFile(path.join(root,f.path)));continue;}
    if(f.path!=='src/engine/measure.ts')throw new Error('Detector freeze violated: '+f.path);
    assertReviewedMeasure(await readFile(path.join(baseDir,f.path)),await readFile(path.join(root,f.path)));
  }
