@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 const workflow=readFileSync(new URL('../.github/workflows/fidelity.yml',import.meta.url),'utf8');
 const build=workflow.split('  build:')[1].split('  portability:')[0];
-const verify=workflow.split('  verify:')[1].split('  accessibility:')[0];
+const verify=workflow.split('  verify-core:')[1].split('  verify:')[0];
 const accessibility=workflow.split('  accessibility:')[1];
 describe('CI evidence reuse without coverage removal',()=>{
   it.each([
