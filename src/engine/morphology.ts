@@ -1,4 +1,4 @@
-import { kernelWeight, regionalRbbbKernels, regionalWindow, usesRegionalActivation, type RegionalSupport } from "./regional-activation";
+import { kernelWeight, regionalRbbbKernels, regionalLbbbKernels, regionalWindow, usesRegionalActivation, type RegionalSupport } from "./regional-activation";
 import type { ECGCase, Beat } from "./types";
 import { ventricularSource } from "./ventricular-source";
 import { secondaryRepolarization } from "./secondary-repolarization";
@@ -64,7 +64,7 @@ export function qrsKernels(c: ECGCase, beat: Beat): Kernel[] {
         ? rbbb
         : normal
   ).map((k) => ({ ...k, v: [...k.v] as Vec }));
-  if (usesRegionalActivation(c, beat)) ks = regionalRbbbKernels(ks, c.qrs);
+  if (usesRegionalActivation(c, beat)) ks = c.conduction === "lbbb" ? regionalLbbbKernels(ks, c.qrs) : regionalRbbbKernels(ks, c.qrs);
   if (!c.septalQ && block === "normal") ks = ks.slice(1);
   let sum: Vec = [0, 0, 0];
   for (const k of ks) for (let j = 0; j < 3; j++) sum[j] += k.v[j] * kernelWeight(k);

@@ -2,6 +2,7 @@ import {predictWpwSupport} from './lib/wpw-support-prediction.mjs';
 import {predictAfClock,assertFrozenAfSampler} from './lib/af-clock-prediction.mjs';
 import {predictTorsadesFrame} from './lib/torsades-frame-prediction.mjs';
 import {assertTraceContract} from '../tests/support/repolarization-contract.mjs';
+import {assertLbbbRegionalSamples} from './lib/lbbb-regional-contract.mjs';
 import {predictQTInitialization,assertReviewedQTInitialization} from './lib/qt-initialization-revision.mjs';
 /** Frozen PR55 source versus candidate: defaults exact; opt-in samples causal. */
 import {build} from 'esbuild';
@@ -42,9 +43,10 @@ try {
     defaults.push({preset:p.id,filter,exact:c.conduction!=='wpw'&&c.rhythm!=='torsades'&&c.rhythm!=='af',predictedWpwSupport:c.conduction==='wpw',predictedAfClock:c.rhythm==='af',predictedTorsadesFrame:c.rhythm==='torsades'});
   }
   assert.equal(defaults.length,244);
-  const regional=assertRegionalSampleContract(after);
+  assert.throws(()=>assertLbbbRegionalSamples(before),/Source-area drift/,'Historical global stretching must fail the regional integral contract');
+  const regional=assertRegionalSampleContract(after),lbbbRegional=assertLbbbRegionalSamples(after);
   const report={schemaVersion:1,referencePreparation,baselineCommit:BASE,candidateCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),
-    clinicalValidation:false,defaults,regional,limitations:['Experimental temporal bases, not clinical calibration or anatomical activation mapping.','Default samples remain exact against the QT-initialization prediction; detector unchanged.']};
+    clinicalValidation:false,defaults,regional,lbbbRegional,limitations:['Experimental temporal bases, not clinical calibration or anatomical activation mapping.','Default samples remain exact against the QT-initialization prediction; detector unchanged.']};
   await mkdir(path.dirname(path.resolve(output)),{recursive:true});await writeFile(output,JSON.stringify(report,null,2)+'\n');
-  console.log(JSON.stringify({referencePreparation,defaultsExact:defaults.filter(r=>r.exact).length,predictedAfClock:defaults.filter(r=>r.predictedAfClock).length,predictedTorsades:defaults.filter(r=>r.predictedTorsadesFrame).length,...regional}));
+  console.log(JSON.stringify({referencePreparation,defaultsExact:defaults.filter(r=>r.exact).length,predictedAfClock:defaults.filter(r=>r.predictedAfClock).length,predictedTorsades:defaults.filter(r=>r.predictedTorsadesFrame).length,...regional,lbbbRegional}));
 } finally {await rm(temp,{recursive:true,force:true});}

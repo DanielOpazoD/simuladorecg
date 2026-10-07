@@ -18,7 +18,8 @@ eje. No se modifica el catálogo ni se introducen coeficientes fisiológicos.
 ## Duración y modelo de B en el mismo experimento
 
 **QRS solicitado B** y **Modelo de activación B** reutilizan `changeCase()` y el
-modelo regional de BRD existente. No hay otro generador ni coeficientes nuevos.
+modelo regional de BRD y la variante experimental de BRI. Son bases temporales
+de ingeniería, no un mapa anatómico ni tiempos de activación medidos en pacientes.
 A permanece capturado; variar QRS/modelo conserva el instante absoluto del cursor
 hasta el final del rango compartido. Cambiar conducción/fuente recupera sus
 parámetros coordinados y los del caso capturado. **Restablecer B = A** descarta
@@ -215,3 +216,11 @@ son **criterios de aceptación**, no una afirmación de que ya se hayan ejecutad
 en cualquier entorno que contenga este documento. La evidencia de ejecución debe
 adjuntar commit, entorno y limitaciones. Ninguna comprobación sintética o visual
 certifica validez clínica.
+
+
+La variante BRI conserva el reloj de una base inicial VD/septal y modifica los
+soportes de las contribuciones VI. Se activa explícitamente dentro de su dominio
+130–240 ms; el modelo solicitado incompatible permanece visible como inactivo.
+La plantilla histórica continúa siendo la predeterminada. La integral impuesta
+es una restricción de ingeniería, no una ley biológica. Ver
+[contrato y contraejemplos previos](lbbb-regional-contract.md).

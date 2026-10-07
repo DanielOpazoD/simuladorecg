@@ -54,7 +54,7 @@ export function activationCandidate(c: ECGCase, b: Beat, choice: string, edits: 
     if (edits.qrsMs !== next.qrs) next = changeCase(next, 'qrs', edits.qrsMs);
   }
   if (edits.activationModel !== undefined) {
-    if (!['template', 'regional-rbbb-v1'].includes(edits.activationModel)) throw Error('Modelo de activación no válido.');
+    if (!['template', 'regional-rbbb-v1', 'regional-lbbb-v1'].includes(edits.activationModel)) throw Error('Modelo de activación no válido.');
     if (edits.activationModel !== (next.activationModel ?? 'template')) next = changeCase(next, 'activationModel', edits.activationModel);
   }
   return next;
@@ -63,17 +63,18 @@ export function activationCandidate(c: ECGCase, b: Beat, choice: string, edits: 
 export function activationTiming(c: ECGCase, b: Beat) {
   const state = regionalActivationState(c), regional = usesRegionalActivation(c, b);
   const deltaDurationMs = c.conduction === 'wpw' && b.kind === 'normal' ? WPW_DELTA_SECONDS * 1000 : null;
-  const applied = b.kind !== 'normal' ? 'ventricular-source' : regional ? 'regional-rbbb-v1' : 'template';
-  const label = regional ? 'BRD regional · experimental' : state.requested ? 'Regional no aplicado'
+  const applied = b.kind !== 'normal' ? 'ventricular-source' : regional ? state.model : 'template';
+  const label = regional ? (state.model === 'regional-lbbb-v1' ? 'BRI regional · experimental' : 'BRD regional · experimental') : state.requested ? 'Regional no aplicado'
     : b.kind !== 'normal' ? 'Fuente ventricular' : deltaDurationMs ? 'Plantilla histórica + delta' : 'Plantilla histórica';
   const note = b.kind !== 'normal'
     ? 'Este latido usa su fuente ventricular, no el reloj regional de los latidos conducidos. El perfil puede imponer un QRS mínimo.'
+    : regional && state.model === 'regional-lbbb-v1' ? 'Base inicial VD/septal fija y bases VI diferidas. Son soportes de ingeniería, no mapa anatómico ni predicción de resincronización.'
     : regional ? 'Reloj septal/VI fijo; el soporte VD va de 55 ms al final del QRS. Son bases de ingeniería, no tiempos anatómicos medidos.'
       : state.requested ? `${state.reason} Se usa la plantilla histórica, conservando la selección solicitada.`
         : 'Al variar QRS se estiran conjuntamente las bases temporales de la plantilla.';
   return { requested: c.activationModel ?? 'template', applied, label, deltaDurationMs,
     note: deltaDurationMs ? `${note} Delta sintética adicional: 0–${deltaDurationMs} ms fijos, incluida en XYZ y en las doce derivaciones; no localiza una vía accesoria. ${WPW_REPOLARIZATION_LIMIT}` : note,
-    regions: regional ? regionalActivationTimeline(c.qrs) : [] };
+    regions: regional ? regionalActivationTimeline(c.qrs,state.model) : [] };
 }
 
 /** Sum the SAME temporal bases and eligible WPW delta as signal.ts, not the polygon of coefficients.

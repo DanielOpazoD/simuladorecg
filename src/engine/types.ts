@@ -1,5 +1,5 @@
 import { isVviDemand, vviScopeDescription } from "./vvi-demand";
-import { regionalActivationState, REGIONAL_ACTIVATION_LIMIT } from "./regional-activation";
+import { regionalActivationState, regionalActivationLimit } from "./regional-activation";
 import { VENTRICULAR_SOURCE_IDS, type VentricularSourceId } from "./ventricular-source";
 import { LEADS, type Lead } from "./lead-registry";
 export { LEADS, type Lead } from "./lead-registry";
@@ -56,7 +56,7 @@ export interface ECGCase {
   /** Optional in schema v1. Auto selects an illustrative source, not an origin diagnosis. */
   ventricularSource?: "auto" | VentricularSourceId;
   /** Opt-in engineering model; missing schema-v1 fields preserve historical samples. */
-  activationModel?: "template" | "regional-rbbb-v1";
+  activationModel?: "template" | "regional-rbbb-v1" | "regional-lbbb-v1";
   av: AV;
   conduction: Conduction;
   ischemia: Ischemia;
@@ -297,7 +297,7 @@ export function normalizeCase(input: unknown): ECGCase {
       "paced",
     ],
     ventricularSource: ["auto", ...VENTRICULAR_SOURCE_IDS],
-    activationModel: ["template", "regional-rbbb-v1"],
+    activationModel: ["template", "regional-rbbb-v1", "regional-lbbb-v1"],
     flutterPattern: ["fixed", "2-3", "3-4"],
     av: [
       "normal",
@@ -438,7 +438,7 @@ export function constraints(c: ECGCase): string[] {
   const out: string[] = [];
   if (isVviDemand(c)) out.push(vviScopeDescription(c));
   const regional = regionalActivationState(c);
-  if (regional.requested) out.push(regional.active ? REGIONAL_ACTIVATION_LIMIT :
+  if (regional.requested) out.push(regional.active ? regionalActivationLimit(c) :
     `Activación regional solicitada pero no aplicada: ${regional.reason} Se usa la plantilla histórica.`);
   if (c.rhythm !== "sinus" && c.av !== "normal")
     out.push(
