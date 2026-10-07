@@ -65,6 +65,9 @@ describe('Area T-end assistance is not automatic QT', () => {
     const i=suggestTEnds(s,m).findIndex(x=>x!==null); expect(i).toBeGreaterThanOrEqual(0);
     const html=beatDetail(s,m,c,i);
     expect(html).toContain('data-t-end-candidate'); expect(html).toContain('revisión manual');
+    expect(html).toContain('data-t-end-validation'); expect(html).toContain('Precisión insuficiente');
+    expect(html).toContain('41 finales T'); expect(html).toContain('32 ms'); expect(html).toContain('56 ms');
+    expect(html).toContain('no un margen de error de este latido');
     expect(html).toContain('No modifica QT/QTc'); expect(html).not.toMatch(/QT \d+ ms/);
     expect(m).toEqual(before); expect(m.qt).toBeNull(); expect(m.evidence.qt.status).toBe('unavailable');
     c.view.lead='V5'; expect(beatDetail(s,m,c,i)).toContain('no un límite validado de V5');
