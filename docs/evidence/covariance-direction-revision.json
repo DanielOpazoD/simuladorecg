@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "baselineCommit": "8287720a8dc928dec3b8653e5fccb47271e42c2d",
+  "previousDetectorSha256": "3f2eb3dfa4e6ccf190d668aad985008b270b810a7112b0251d69cd7a03eb0201",
+  "candidateDetectorSha256": "9766068adbe3e0ce8b30f9f766c3708a8de8b3a3668215104c07a8f9cb4fb040",
+  "clinicalValidation": false,
+  "native": {
+    "cases": 1712,
+    "accepted": 1656,
+    "unsupported": 56,
+    "exposedCorrect": 12,
+    "exposedTotal": 12,
+    "newlyFalseUsable": 0,
+    "newMissedQrsCases": 0,
+    "falseUsableBefore": 86,
+    "falseUsableAfter": 86,
+    "usableBefore": 1375,
+    "usableAfter": 1375
+  },
+  "nativeRowsExactlyEqual": 1656,
+  "annotated": {
+    "records": 80,
+    "numericallyIdentical": 80,
+    "changedRecords": 0,
+    "usableBefore": 75,
+    "usableAfter": 75
+  },
+  "strictNoise": {
+    "scenarios": 920,
+    "nativeComparisons": 20,
+    "failures": 0,
+    "rowsExactlyEqualToPrevious": true
+  },
+  "lapack": {
+    "cases": 400,
+    "maxAbsoluteDifference": 1.1102230246251565e-15,
+    "clinicalValidation": false
+  },
+  "analyticOldCandidateCounts": [
+    {
+      "fs": 250,
+      "polarity": -1,
+      "offset": 0,
+      "candidates": 12,
+      "correctQrs": 10
+    },
+    {
+      "fs": 250,
+      "polarity": -1,
+      "offset": 0.7,
+      "candidates": 10,
+      "correctQrs": 10
+    },
+    {
+      "fs": 250,
+      "polarity": 1,
+      "offset": 0,
+      "candidates": 15,
+      "correctQrs": 10
+    },
+    {
+      "fs": 250,
+      "polarity": 1,
+      "offset": 0.7,
+      "candidates": 10,
+      "correctQrs": 10
+    },
+    {
+      "fs": 500,
+      "polarity": -1,
+      "offset": 0,
+      "candidates": 12,
+      "correctQrs": 10
+    },
+    {
+      "fs": 500,
+      "polarity": -1,
+      "offset": 0.7,
+      "candidates": 10,
+      "correctQrs": 10
+    },
+    {
+      "fs": 500,
+      "polarity": 1,
+      "offset": 0,
+      "candidates": 13,
+      "correctQrs": 10
+    },
+    {
+      "fs": 500,
+      "polarity": 1,
+      "offset": 0.7,
+      "candidates": 10,
+      "correctQrs": 10
+    },
+    {
+      "fs": 1000,
+      "polarity": -1,
+      "offset": 0,
+      "candidates": 15,
+      "correctQrs": 10
+    },
+    {
+      "fs": 1000,
+      "polarity": -1,
+      "offset": 0.7,
+      "candidates": 10,
+      "correctQrs": 10
+    },
+    {
+      "fs": 1000,
+      "polarity": 1,
+      "offset": 0,
+      "candidates": 11,
+      "correctQrs": 10
+    },
+    {
+      "fs": 1000,
+      "polarity": 1,
+      "offset": 0.7,
+      "candidates": 12,
+      "correctQrs": 10
+    }
+  ],
+  "analyticNewCandidateCountEach": 10,
+  "reportHashes": {
+    "qrs-covariance-native1712.json": "1a02293dd6d51d9829848c1d23fe92b0d920645b01baef221631b0d0d5418b99",
+    "covariance-annotated80.json": "09be8ef2b013022d00d255385b56724ac9b22fad8574622170bfb57c0b3605a1",
+    "acceptance.json": "2ba8be1ee17cb342ed30d3130488e307585c3f7d663cbba2797e9610fb472d68",
+    "covariance-lapack-result.json": "a774d9a187e08e66a4704ad963dc3ca18dc5d14a3d88916ccd1e9db83f540db7",
+    "covariance-fixture-old-result.json": "5730f091e143104367022b5330d27f67d6f75e6ffb1574d6573f457519e74bc1"
+  },
+  "limits": [
+    "Analytic signals are adversarial numerical fixtures, not patients.",
+    "Real-data cohorts were already exposed; no external clinical validation.",
+    "This does not resolve the blocked regional LBBB or rejected LPFB source hypotheses.",
+    "Local evidence uses candidate file hashes; final publication requires exact-commit CI."
+  ]
+}
