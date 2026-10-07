@@ -99,6 +99,8 @@ jobs:
       - run: npm ci
       - name: Unit and signal contracts
         run: npm test -- --reporter=default --reporter=json --outputFile=${{ runner.temp }}/unit-results.json
+      - name: Record fascicular source gaps (not clinical readiness approval)
+        run: node scripts/audit-fascicular-source.mjs "${{ runner.temp }}/fascicular-source-results.json"
       - name: Discriminative noise-regression contracts
         run: node --test tests/noise-regression.node.mjs tests/t-peak-revision.node.mjs tests/qrs-event-reference.node.mjs > "${{ runner.temp }}/noise-regression.tap"
       - name: Regional activation and reviewed default prediction
