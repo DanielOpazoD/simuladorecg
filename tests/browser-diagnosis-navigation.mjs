@@ -86,7 +86,16 @@ for(const engine of engines){
    await page.locator('#case-search').fill('Brugada');assert.equal(await page.locator('#case-list button:disabled').count(),1);
    await choose('sinus');
    await page.locator('[data-panel=base]').click();
-   await page.locator('[data-key=hr]').evaluate(el=>{el.value='81';el.dispatchEvent(new Event('input',{bubbles:true}));});await ready();
+   // The panel click rebuilds its controls. Drive the live native input, not
+   // a programmatic event on an element handle that may have been detached.
+   const rate=page.locator('#inspector [data-key=hr]');
+   assert.equal(await rate.inputValue(),'72');
+   const beforeEdit=await page.evaluate(()=>window.__variantGenerations);
+   await rate.focus();
+   for(let step=0;step<9;step++)await rate.press('ArrowRight');
+   await page.waitForFunction(()=>document.querySelector('#inspector [data-key=hr]')?.value==='81');
+   await ready();
+   assert.ok(await page.evaluate(n=>window.__variantGenerations>n,beforeEdit),'Editing must reach the signal worker');
    assert.equal(await page.locator('#diagnosis-navigation').isVisible(),false,'Edited case must not retain an unverified diagnosis tab');
    assert.equal(await page.locator('#case-title').textContent(),'Exploración personalizada');
    assert.equal(await page.locator('#case-category').textContent(),'EXPLORACIÓN');
@@ -94,6 +103,9 @@ for(const engine of engines){
    assert.match(await page.locator('.exploration-count').textContent(),/1 ajuste/);
    assert.match(await page.locator('#exploration-context').textContent(),/no diagnostica/i);
    const custom=await exported('custom');assert.equal(custom.B.case.presetId,'custom');
+   assert.equal(custom.B.case.hr,81,'Export must reflect the actual native input');
+   await page.locator('#case-title').scrollIntoViewIfNeeded();
+   await page.screenshot({path:resolve(out,`${stem}-native-edit.png`)});
    await page.locator('#exploration-context summary').click();
    await page.locator('[data-action=exploration-changes]').click();
    assert.deepEqual(await page.locator('#dialog-content tbody tr td').allTextContents(),

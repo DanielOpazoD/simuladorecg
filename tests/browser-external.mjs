@@ -41,11 +41,11 @@ try {
   const page=await browser.newPage({viewport:{width,height:width===390?844:1000},deviceScaleFactor:1});
   page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());if(m.type()==='warning')warnings.push(m.text());});
   await page.addInitScript(()=>{
-    const Native=window.Worker;window.__externalFail=false;window.__externalDelay=false;window.__delayed=0;
+    const Native=window.Worker;window.__externalFail=false;window.__externalCorrupt=false;window.__externalDelay=false;window.__delayed=0;
     window.Worker=class extends Native {
       constructor(...args){super(...args);this.external=String(args[0]).includes('external-worker');}
       postMessage(...args){if(this.external&&window.__externalFail)throw new DOMException('Test failure','DataCloneError');return super.postMessage(...args);}
-      set onmessage(fn){super.onmessage=e=>{if(this.external&&window.__externalDelay){window.__delayed++;setTimeout(()=>fn(e),800);}else fn(e);};}
+      set onmessage(fn){super.onmessage=e=>{if(this.external&&window.__externalCorrupt&&e.data.measurement?.beats.length)e.data.measurement.beats[0].qrs/=1000;if(this.external&&window.__externalDelay){window.__delayed++;setTimeout(()=>fn(e),800);}else fn(e);};}
     };
   });
   await page.goto(url);await page.locator('#signal-loading').waitFor({state:'hidden'});
@@ -102,6 +102,15 @@ try {
   await read([wfdb[0],{...wfdb[1],buffer:dat.subarray(0,dat.length-2)}]);
   await page.waitForFunction(()=>document.querySelector('#external-message').textContent.includes('Longitud DAT'));
   assert.equal(await page.locator('#external-canvas').count(),0);assert.equal(await page.locator('[data-external=json]').count(),0);
+  // Reject mathematically inconsistent worker output, then recover exact data.
+  await page.evaluate(()=>window.__externalCorrupt=true);await read(wfdb);
+  await page.waitForFunction(()=>document.querySelector('#external-message').textContent.includes('inconsistentes'));
+  assert.equal(await page.locator('#external-metrics').count(),0);
+  assert.equal(await page.locator('[data-external=json]').count(),0);
+  await dialog.screenshot({path:resolve(out,`external-coordinate-rejected-${width}.png`)});
+  await page.evaluate(()=>window.__externalCorrupt=false);await read(wfdb);await ready();
+  const recovered=JSON.parse(await readFile(await exported('coordinate-recovery'),'utf8'));
+  assert.deepEqual(recovered,report);
   await read([{name:'long.csv',mimeType:'text/csv',buffer:Buffer.from(longCsv)}]);await ready();
   const pending=await page.locator('#external-start').evaluate(e=>{e.value='2';e.dispatchEvent(new Event('input',{bubbles:true}));return{metrics:!!document.querySelector('#external-metrics'),disabled:document.querySelector('[data-external=json]').disabled};});
   assert.deepEqual(pending,{metrics:false,disabled:true});
@@ -122,7 +131,7 @@ try {
   await page.waitForTimeout(900);assert.equal(await page.locator('#external-canvas').count(),0);
   await read(wfdb);await ready();await page.locator('[data-external=clear]').click();assert.equal(await page.locator('#external-canvas').count(),0);
   assert.deepEqual(network.filter(r=>r.method!=='GET'||!r.url.startsWith(new URL(url).origin)),[],'No data upload or external fetch in the import flow');
-  checks.push({width,zeroAreaAxisTransport:true,opposingAxisTransport:true,physicalSamples:60000,sampleHash:hash(report.leads),workflow:'WFDB -> marks/scale -> PNG/CSV/JSON -> exact CSV round trip -> corrupt pair rejected -> 20s recording/window -> stale-data guard -> transport failure/recovery -> close isolation -> late result ignored -> clear',networkRequests:network.length});
+  checks.push({width,zeroAreaAxisTransport:true,opposingAxisTransport:true,coordinateRejectionAndRecovery:true,physicalSamples:60000,sampleHash:hash(report.leads),workflow:'WFDB -> marks/scale -> PNG/CSV/JSON -> exact CSV round trip -> corrupt pair rejected -> 20s recording/window -> stale-data guard -> transport failure/recovery -> close isolation -> late result ignored -> clear',networkRequests:network.length});
   await page.close();
  }
  assert.deepEqual(errors,[]);assert.deepEqual(warnings,[]);
