@@ -1,0 +1,803 @@
+{
+  "candidateCommit": "28c16617a11709be95f4a440ea3acba1816533ce",
+  "algorithmFrozenLocalCommit": "96c288de3aba16e1c93531a7d80ed650c11c4abb",
+  "originalProtocolSha256": "f410c70e160d09f4d2c26248c2d880e7f35aeb60b684bd4b8dfb97141c22fbe3",
+  "role": "Prospectively frozen same-dataset evaluation; exposed after execution, never retune this candidate",
+  "clinicalValidation": false,
+  "outcome": {
+    "paired": false,
+    "coverage": true,
+    "qt": true,
+    "usable": true,
+    "terminal": true
+  },
+  "summary": {
+    "before": {
+      "records": 32,
+      "waves": {
+        "P": {
+          "tp": 122,
+          "fp": 0,
+          "fn": 115,
+          "sensitivity": 0.5147679324894515,
+          "ppv": 1,
+          "referenceEvents": 237,
+          "allPredictions": 142,
+          "excludedReferenceGroups": 0,
+          "outsideWindowPredictions": 13,
+          "unscoredNoReferencePredictions": 7,
+          "unscoredIncompleteReferencePredictions": 0,
+          "endpoint": {
+            "peak": {
+              "n": 122,
+              "biasMs": 15.877049180327928,
+              "maeMs": 17.729508196721294,
+              "medianAbsMs": 6.999999999999673,
+              "p95AbsMs": 69.99999999999984,
+              "maxAbsMs": 125.99999999999989,
+              "referenceEligible": 237,
+              "coverageOfEligible": 0.5147679324894515,
+              "recordsWithValues": 23,
+              "macroRecordMaeMs": 20.784937888198726
+            },
+            "onset": {
+              "n": 122,
+              "biasMs": 22.475409836065566,
+              "maeMs": 26.508196721311464,
+              "medianAbsMs": 20.999999999999687,
+              "p95AbsMs": 67.99999999999962,
+              "maxAbsMs": 153.99999999999991,
+              "referenceEligible": 237,
+              "coverageOfEligible": 0.5147679324894515,
+              "recordsWithValues": 23,
+              "macroRecordMaeMs": 32.512939958592135
+            },
+            "offset": {
+              "n": 0,
+              "biasMs": null,
+              "maeMs": null,
+              "medianAbsMs": null,
+              "p95AbsMs": null,
+              "maxAbsMs": null,
+              "referenceEligible": 237,
+              "coverageOfEligible": 0,
+              "recordsWithValues": 0,
+              "macroRecordMaeMs": null
+            },
+            "duration": {
+              "n": 0,
+              "biasMs": null,
+              "maeMs": null,
+              "medianAbsMs": null,
+              "p95AbsMs": null,
+              "maxAbsMs": null,
+              "referenceEligible": 237,
+              "coverageOfEligible": 0,
+              "recordsWithValues": 0,
+              "macroRecordMaeMs": null
+            }
+          }
+        },
+        "QRS": {
+          "tp": 289,
+          "fp": 23,
+          "fn": 0,
+          "sensitivity": 1,
+          "ppv": 0.9262820512820513,
+          "referenceEvents": 289,
+          "allPredictions": 373,
+          "excludedReferenceGroups": 0,
+          "outsideWindowPredictions": 61,
+          "unscoredNoReferencePredictions": 0,
+          "unscoredIncompleteReferencePredictions": 0,
+          "endpoint": {
+            "peak": {
+              "n": 289,
+              "biasMs": 15.650519031141906,
+              "maeMs": 16.903114186851244,
+              "medianAbsMs": 17.999999999998906,
+              "p95AbsMs": 27.000000000000135,
+              "maxAbsMs": 36.00000000000003,
+              "referenceEligible": 289,
+              "coverageOfEligible": 1,
+              "recordsWithValues": 32,
+              "macroRecordMaeMs": 17.04063514610391
+            },
+            "onset": {
+              "n": 273,
+              "biasMs": 5.65567765567767,
+              "maeMs": 12.395604395604405,
+              "medianAbsMs": 9.999999999999787,
+              "p95AbsMs": 30.00000000000025,
+              "maxAbsMs": 97.99999999999986,
+              "referenceEligible": 283,
+              "coverageOfEligible": 0.9646643109540636,
+              "recordsWithValues": 32,
+              "macroRecordMaeMs": 11.997995580808087
+            },
+            "offset": {
+              "n": 275,
+              "biasMs": 1.396363636363668,
+              "maeMs": 10.749090909090885,
+              "medianAbsMs": 6.000000000000227,
+              "p95AbsMs": 32.00000000000003,
+              "maxAbsMs": 124.00000000000011,
+              "referenceEligible": 286,
+              "coverageOfEligible": 0.9615384615384616,
+              "recordsWithValues": 32,
+              "macroRecordMaeMs": 11.42297077922076
+            },
+            "duration": {
+              "n": 273,
+              "biasMs": -4.498168498168481,
+              "maeMs": 20.190476190476183,
+              "medianAbsMs": 16.000000000000014,
+              "p95AbsMs": 49.99999999999982,
+              "maxAbsMs": 128.0000000000001,
+              "referenceEligible": 283,
+              "coverageOfEligible": 0.9646643109540636,
+              "recordsWithValues": 32,
+              "macroRecordMaeMs": 20.824677579365048
+            }
+          }
+        },
+        "T": {
+          "tp": 219,
+          "fp": 15,
+          "fn": 25,
+          "sensitivity": 0.8975409836065574,
+          "ppv": 0.9358974358974359,
+          "referenceEvents": 244,
+          "allPredictions": 275,
+          "excludedReferenceGroups": 14,
+          "outsideWindowPredictions": 27,
+          "unscoredNoReferencePredictions": 14,
+          "unscoredIncompleteReferencePredictions": 0,
+          "endpoint": {
+            "peak": {
+              "n": 219,
+              "biasMs": -8.35616438356163,
+              "maeMs": 12.949771689497746,
+              "medianAbsMs": 4.0000000000000036,
+              "p95AbsMs": 54.999999999999716,
+              "maxAbsMs": 137.00000000000045,
+              "referenceEligible": 244,
+              "coverageOfEligible": 0.8975409836065574,
+              "recordsWithValues": 31,
+              "macroRecordMaeMs": 16.601541111218562
+            },
+            "onset": {
+              "n": 0,
+              "biasMs": null,
+              "maeMs": null,
+              "medianAbsMs": null,
+              "p95AbsMs": null,
+              "maxAbsMs": null,
+              "referenceEligible": 244,
+              "coverageOfEligible": 0,
+              "recordsWithValues": 0,
+              "macroRecordMaeMs": null
+            },
+            "offset": {
+              "n": 53,
+              "biasMs": 85.54716981132071,
+              "maeMs": 90.8301886792453,
+              "medianAbsMs": 27.99999999999958,
+              "p95AbsMs": 272.0000000000002,
+              "maxAbsMs": 347.9999999999999,
+              "referenceEligible": 244,
+              "coverageOfEligible": 0.21721311475409835,
+              "recordsWithValues": 21,
+              "macroRecordMaeMs": 120.85419501133799
+            },
+            "duration": {
+              "n": 0,
+              "biasMs": null,
+              "maeMs": null,
+              "medianAbsMs": null,
+              "p95AbsMs": null,
+              "maxAbsMs": null,
+              "referenceEligible": 244,
+              "coverageOfEligible": 0,
+              "recordsWithValues": 0,
+              "macroRecordMaeMs": null
+            }
+          }
+        }
+      },
+      "intervals": {
+        "pr": {
+          "records": 32,
+          "referenceEligibleRecords": 30,
+          "numericWithReference": 8,
+          "coverageOfEligible": 0.26666666666666666,
+          "abstentionsWithReference": 22,
+          "numbersWithoutReference": 0,
+          "statuses": {
+            "usable": 0,
+            "review": 8,
+            "unavailable": 24
+          },
+          "statusPercent": {
+            "usable": 0,
+            "review": 25,
+            "unavailable": 75
+          },
+          "errors": {
+            "n": 8,
+            "biasMs": -5.5000000000000036,
+            "maeMs": 12.249999999999883,
+            "medianAbsMs": 10.500000000000014,
+            "p95AbsMs": 21.999999999999915,
+            "maxAbsMs": 21.999999999999915
+          },
+          "usableErrors": {
+            "n": 0,
+            "biasMs": null,
+            "maeMs": null,
+            "medianAbsMs": null,
+            "p95AbsMs": null,
+            "maxAbsMs": null
+          },
+          "reviewErrors": {
+            "n": 8,
+            "biasMs": -5.5000000000000036,
+            "maeMs": 12.249999999999883,
+            "medianAbsMs": 10.500000000000014,
+            "p95AbsMs": 21.999999999999915,
+            "maxAbsMs": 21.999999999999915
+          }
+        },
+        "qrs": {
+          "records": 32,
+          "referenceEligibleRecords": 32,
+          "numericWithReference": 32,
+          "coverageOfEligible": 1,
+          "abstentionsWithReference": 0,
+          "numbersWithoutReference": 0,
+          "statuses": {
+            "usable": 15,
+            "review": 17,
+            "unavailable": 0
+          },
+          "statusPercent": {
+            "usable": 46.875,
+            "review": 53.125,
+            "unavailable": 0
+          },
+          "errors": {
+            "n": 32,
+            "biasMs": -3.812499999999979,
+            "maeMs": 18.12499999999988,
+            "medianAbsMs": 14.000000000000085,
+            "p95AbsMs": 40.00000000000014,
+            "maxAbsMs": 75.99999999999991
+          },
+          "usableErrors": {
+            "n": 15,
+            "biasMs": -11.066666666666567,
+            "maeMs": 16.399999999999917,
+            "medianAbsMs": 13.999999999999645,
+            "p95AbsMs": 40.00000000000014,
+            "maxAbsMs": 40.00000000000014
+          },
+          "reviewErrors": {
+            "n": 17,
+            "biasMs": 2.588235294117597,
+            "maeMs": 19.64705882352925,
+            "medianAbsMs": 17.99999999999943,
+            "p95AbsMs": 75.99999999999991,
+            "maxAbsMs": 75.99999999999991
+          }
+        },
+        "qt": {
+          "records": 32,
+          "referenceEligibleRecords": 31,
+          "numericWithReference": 3,
+          "coverageOfEligible": 0.0967741935483871,
+          "abstentionsWithReference": 28,
+          "numbersWithoutReference": 0,
+          "statuses": {
+            "usable": 2,
+            "review": 1,
+            "unavailable": 29
+          },
+          "statusPercent": {
+            "usable": 6.25,
+            "review": 3.125,
+            "unavailable": 90.625
+          },
+          "errors": {
+            "n": 3,
+            "biasMs": -0.6666666666666288,
+            "maeMs": 10.000000000000037,
+            "medianAbsMs": 10,
+            "p95AbsMs": 16,
+            "maxAbsMs": 16
+          },
+          "usableErrors": {
+            "n": 2,
+            "biasMs": -5.999999999999943,
+            "maeMs": 10.000000000000057,
+            "medianAbsMs": 10.000000000000057,
+            "p95AbsMs": 16,
+            "maxAbsMs": 16
+          },
+          "reviewErrors": {
+            "n": 1,
+            "biasMs": 10,
+            "maeMs": 10,
+            "medianAbsMs": 10,
+            "p95AbsMs": 10,
+            "maxAbsMs": 10
+          }
+        }
+      },
+      "pairedIntervals": {
+        "pr": {
+          "n": 120,
+          "biasMs": -15.33333333333336,
+          "maeMs": 24.000000000000046,
+          "medianAbsMs": 18.9999999999999,
+          "p95AbsMs": 63.999999999999716,
+          "maxAbsMs": 143.99999999999994,
+          "referenceEligible": 232,
+          "coverageOfEligible": 0.5172413793103449,
+          "statusScope": "Global record status, not independently calibrated per-beat confidence"
+        },
+        "qrs": {
+          "n": 273,
+          "biasMs": -4.498168498168491,
+          "maeMs": 20.190476190476158,
+          "medianAbsMs": 16.000000000000085,
+          "p95AbsMs": 50.00000000000014,
+          "maxAbsMs": 127.99999999999969,
+          "referenceEligible": 283,
+          "coverageOfEligible": 0.9646643109540636,
+          "statusScope": "Global record status, not independently calibrated per-beat confidence"
+        },
+        "qt": {
+          "n": 52,
+          "biasMs": 80.0769230769231,
+          "maeMs": 89.76923076923073,
+          "medianAbsMs": 24.0000000000002,
+          "p95AbsMs": 284.0000000000001,
+          "maxAbsMs": 340.0000000000001,
+          "referenceEligible": 239,
+          "coverageOfEligible": 0.2175732217573222,
+          "statusScope": "Global record status, not independently calibrated per-beat confidence"
+        }
+      }
+    },
+    "after": {
+      "records": 32,
+      "waves": {
+        "P": {
+          "tp": 122,
+          "fp": 0,
+          "fn": 115,
+          "sensitivity": 0.5147679324894515,
+          "ppv": 1,
+          "referenceEvents": 237,
+          "allPredictions": 142,
+          "excludedReferenceGroups": 0,
+          "outsideWindowPredictions": 13,
+          "unscoredNoReferencePredictions": 7,
+          "unscoredIncompleteReferencePredictions": 0,
+          "endpoint": {
+            "peak": {
+              "n": 122,
+              "biasMs": 15.877049180327928,
+              "maeMs": 17.729508196721294,
+              "medianAbsMs": 6.999999999999673,
+              "p95AbsMs": 69.99999999999984,
+              "maxAbsMs": 125.99999999999989,
+              "referenceEligible": 237,
+              "coverageOfEligible": 0.5147679324894515,
+              "recordsWithValues": 23,
+              "macroRecordMaeMs": 20.784937888198726
+            },
+            "onset": {
+              "n": 122,
+              "biasMs": 22.475409836065566,
+              "maeMs": 26.508196721311464,
+              "medianAbsMs": 20.999999999999687,
+              "p95AbsMs": 67.99999999999962,
+              "maxAbsMs": 153.99999999999991,
+              "referenceEligible": 237,
+              "coverageOfEligible": 0.5147679324894515,
+              "recordsWithValues": 23,
+              "macroRecordMaeMs": 32.512939958592135
+            },
+            "offset": {
+              "n": 0,
+              "biasMs": null,
+              "maeMs": null,
+              "medianAbsMs": null,
+              "p95AbsMs": null,
+              "maxAbsMs": null,
+              "referenceEligible": 237,
+              "coverageOfEligible": 0,
+              "recordsWithValues": 0,
+              "macroRecordMaeMs": null
+            },
+            "duration": {
+              "n": 0,
+              "biasMs": null,
+              "maeMs": null,
+              "medianAbsMs": null,
+              "p95AbsMs": null,
+              "maxAbsMs": null,
+              "referenceEligible": 237,
+              "coverageOfEligible": 0,
+              "recordsWithValues": 0,
+              "macroRecordMaeMs": null
+            }
+          }
+        },
+        "QRS": {
+          "tp": 289,
+          "fp": 23,
+          "fn": 0,
+          "sensitivity": 1,
+          "ppv": 0.9262820512820513,
+          "referenceEvents": 289,
+          "allPredictions": 373,
+          "excludedReferenceGroups": 0,
+          "outsideWindowPredictions": 61,
+          "unscoredNoReferencePredictions": 0,
+          "unscoredIncompleteReferencePredictions": 0,
+          "endpoint": {
+            "peak": {
+              "n": 289,
+              "biasMs": 15.650519031141906,
+              "maeMs": 16.903114186851244,
+              "medianAbsMs": 17.999999999998906,
+              "p95AbsMs": 27.000000000000135,
+              "maxAbsMs": 36.00000000000003,
+              "referenceEligible": 289,
+              "coverageOfEligible": 1,
+              "recordsWithValues": 32,
+              "macroRecordMaeMs": 17.04063514610391
+            },
+            "onset": {
+              "n": 273,
+              "biasMs": 5.65567765567767,
+              "maeMs": 12.395604395604405,
+              "medianAbsMs": 9.999999999999787,
+              "p95AbsMs": 30.00000000000025,
+              "maxAbsMs": 97.99999999999986,
+              "referenceEligible": 283,
+              "coverageOfEligible": 0.9646643109540636,
+              "recordsWithValues": 32,
+              "macroRecordMaeMs": 11.997995580808087
+            },
+            "offset": {
+              "n": 275,
+              "biasMs": 1.396363636363668,
+              "maeMs": 10.749090909090885,
+              "medianAbsMs": 6.000000000000227,
+              "p95AbsMs": 32.00000000000003,
+              "maxAbsMs": 124.00000000000011,
+              "referenceEligible": 286,
+              "coverageOfEligible": 0.9615384615384616,
+              "recordsWithValues": 32,
+              "macroRecordMaeMs": 11.42297077922076
+            },
+            "duration": {
+              "n": 273,
+              "biasMs": -4.498168498168481,
+              "maeMs": 20.190476190476183,
+              "medianAbsMs": 16.000000000000014,
+              "p95AbsMs": 49.99999999999982,
+              "maxAbsMs": 128.0000000000001,
+              "referenceEligible": 283,
+              "coverageOfEligible": 0.9646643109540636,
+              "recordsWithValues": 32,
+              "macroRecordMaeMs": 20.824677579365048
+            }
+          }
+        },
+        "T": {
+          "tp": 222,
+          "fp": 15,
+          "fn": 22,
+          "sensitivity": 0.9098360655737705,
+          "ppv": 0.9367088607594937,
+          "referenceEvents": 244,
+          "allPredictions": 278,
+          "excludedReferenceGroups": 14,
+          "outsideWindowPredictions": 27,
+          "unscoredNoReferencePredictions": 14,
+          "unscoredIncompleteReferencePredictions": 0,
+          "endpoint": {
+            "peak": {
+              "n": 222,
+              "biasMs": -4.648648648648643,
+              "maeMs": 9.135135135135148,
+              "medianAbsMs": 3.0000000000001137,
+              "p95AbsMs": 44.99999999999993,
+              "maxAbsMs": 137.00000000000045,
+              "referenceEligible": 244,
+              "coverageOfEligible": 0.9098360655737705,
+              "recordsWithValues": 31,
+              "macroRecordMaeMs": 12.32384470368343
+            },
+            "onset": {
+              "n": 0,
+              "biasMs": null,
+              "maeMs": null,
+              "medianAbsMs": null,
+              "p95AbsMs": null,
+              "maxAbsMs": null,
+              "referenceEligible": 244,
+              "coverageOfEligible": 0,
+              "recordsWithValues": 0,
+              "macroRecordMaeMs": null
+            },
+            "offset": {
+              "n": 125,
+              "biasMs": -2.172090932627575,
+              "maeMs": 12.572090932627605,
+              "medianAbsMs": 7.000000000000117,
+              "p95AbsMs": 44.99999999999993,
+              "maxAbsMs": 115.99999999999966,
+              "referenceEligible": 244,
+              "coverageOfEligible": 0.5122950819672131,
+              "recordsWithValues": 27,
+              "macroRecordMaeMs": 13.779410896411832
+            },
+            "duration": {
+              "n": 0,
+              "biasMs": null,
+              "maeMs": null,
+              "medianAbsMs": null,
+              "p95AbsMs": null,
+              "maxAbsMs": null,
+              "referenceEligible": 244,
+              "coverageOfEligible": 0,
+              "recordsWithValues": 0,
+              "macroRecordMaeMs": null
+            }
+          }
+        }
+      },
+      "intervals": {
+        "pr": {
+          "records": 32,
+          "referenceEligibleRecords": 30,
+          "numericWithReference": 8,
+          "coverageOfEligible": 0.26666666666666666,
+          "abstentionsWithReference": 22,
+          "numbersWithoutReference": 0,
+          "statuses": {
+            "usable": 3,
+            "review": 5,
+            "unavailable": 24
+          },
+          "statusPercent": {
+            "usable": 9.375,
+            "review": 15.625,
+            "unavailable": 75
+          },
+          "errors": {
+            "n": 8,
+            "biasMs": -5.5000000000000036,
+            "maeMs": 12.249999999999883,
+            "medianAbsMs": 10.500000000000014,
+            "p95AbsMs": 21.999999999999915,
+            "maxAbsMs": 21.999999999999915
+          },
+          "usableErrors": {
+            "n": 3,
+            "biasMs": 4.666666666666619,
+            "maeMs": 11.33333333333321,
+            "medianAbsMs": 9.999999999999886,
+            "p95AbsMs": 21.999999999999858,
+            "maxAbsMs": 21.999999999999858
+          },
+          "reviewErrors": {
+            "n": 5,
+            "biasMs": -11.599999999999977,
+            "maeMs": 12.799999999999887,
+            "medianAbsMs": 11.000000000000142,
+            "p95AbsMs": 21.999999999999915,
+            "maxAbsMs": 21.999999999999915
+          }
+        },
+        "qrs": {
+          "records": 32,
+          "referenceEligibleRecords": 32,
+          "numericWithReference": 32,
+          "coverageOfEligible": 1,
+          "abstentionsWithReference": 0,
+          "numbersWithoutReference": 0,
+          "statuses": {
+            "usable": 15,
+            "review": 17,
+            "unavailable": 0
+          },
+          "statusPercent": {
+            "usable": 46.875,
+            "review": 53.125,
+            "unavailable": 0
+          },
+          "errors": {
+            "n": 32,
+            "biasMs": -3.812499999999979,
+            "maeMs": 18.12499999999988,
+            "medianAbsMs": 14.000000000000085,
+            "p95AbsMs": 40.00000000000014,
+            "maxAbsMs": 75.99999999999991
+          },
+          "usableErrors": {
+            "n": 15,
+            "biasMs": -11.066666666666567,
+            "maeMs": 16.399999999999917,
+            "medianAbsMs": 13.999999999999645,
+            "p95AbsMs": 40.00000000000014,
+            "maxAbsMs": 40.00000000000014
+          },
+          "reviewErrors": {
+            "n": 17,
+            "biasMs": 2.588235294117597,
+            "maeMs": 19.64705882352925,
+            "medianAbsMs": 17.99999999999943,
+            "p95AbsMs": 75.99999999999991,
+            "maxAbsMs": 75.99999999999991
+          }
+        },
+        "qt": {
+          "records": 32,
+          "referenceEligibleRecords": 31,
+          "numericWithReference": 11,
+          "coverageOfEligible": 0.3548387096774194,
+          "abstentionsWithReference": 20,
+          "numbersWithoutReference": 0,
+          "statuses": {
+            "usable": 7,
+            "review": 4,
+            "unavailable": 21
+          },
+          "statusPercent": {
+            "usable": 21.875,
+            "review": 12.5,
+            "unavailable": 65.625
+          },
+          "errors": {
+            "n": 11,
+            "biasMs": -11.072415630788457,
+            "maeMs": 14.799688358061298,
+            "medianAbsMs": 13.000000000000796,
+            "p95AbsMs": 24.172339055793316,
+            "maxAbsMs": 24.172339055793316
+          },
+          "usableErrors": {
+            "n": 7,
+            "biasMs": -13.785714285713953,
+            "maeMs": 13.785714285713953,
+            "medianAbsMs": 12.000000000000455,
+            "p95AbsMs": 22.999999999997954,
+            "maxAbsMs": 22.999999999997954
+          },
+          "reviewErrors": {
+            "n": 4,
+            "biasMs": -6.324142984668839,
+            "maeMs": 16.57414298466915,
+            "medianAbsMs": 19.062116441441844,
+            "p95AbsMs": 24.172339055793316,
+            "maxAbsMs": 24.172339055793316
+          }
+        }
+      },
+      "pairedIntervals": {
+        "pr": {
+          "n": 120,
+          "biasMs": -15.33333333333336,
+          "maeMs": 24.000000000000046,
+          "medianAbsMs": 18.9999999999999,
+          "p95AbsMs": 63.999999999999716,
+          "maxAbsMs": 143.99999999999994,
+          "referenceEligible": 232,
+          "coverageOfEligible": 0.5172413793103449,
+          "statusScope": "Global record status, not independently calibrated per-beat confidence"
+        },
+        "qrs": {
+          "n": 273,
+          "biasMs": -4.498168498168491,
+          "maeMs": 20.190476190476158,
+          "medianAbsMs": 16.000000000000085,
+          "p95AbsMs": 50.00000000000014,
+          "maxAbsMs": 127.99999999999969,
+          "referenceEligible": 283,
+          "coverageOfEligible": 0.9646643109540636,
+          "statusScope": "Global record status, not independently calibrated per-beat confidence"
+        },
+        "qt": {
+          "n": 124,
+          "biasMs": -8.689607794987486,
+          "maeMs": 18.237994891761677,
+          "medianAbsMs": 11.999999999999801,
+          "p95AbsMs": 56.00000000000006,
+          "maxAbsMs": 112.99999999999994,
+          "referenceEligible": 239,
+          "coverageOfEligible": 0.5188284518828452,
+          "statusScope": "Global record status, not independently calibrated per-beat confidence"
+        }
+      }
+    }
+  },
+  "comparison": {
+    "samePopulation": {
+      "before": {
+        "n": 2,
+        "biasMs": 7.000000000000057,
+        "maeMs": 7.000000000000057,
+        "medianAbsMs": 7.000000000000057,
+        "p95AbsMs": 10,
+        "maxAbsMs": 10
+      },
+      "after": {
+        "n": 2,
+        "biasMs": -20.89828596933819,
+        "maeMs": 20.89828596933819,
+        "medianAbsMs": 20.89828596933819,
+        "p95AbsMs": 24.172339055793316,
+        "maxAbsMs": 24.172339055793316
+      }
+    },
+    "newlyAvailable": {
+      "n": 9,
+      "biasMs": -8.888888888888516,
+      "maeMs": 13.44444444444421,
+      "medianAbsMs": 12.000000000000455,
+      "p95AbsMs": 22.999999999997954,
+      "maxAbsMs": 22.999999999997954
+    },
+    "lost": [
+      {
+        "id": 9,
+        "cohort": "prospective32",
+        "errorMs": -16
+      }
+    ],
+    "worse": [
+      {
+        "id": 30,
+        "cohort": "prospective32",
+        "before": 4.000000000000114,
+        "after": -24.172339055793316
+      },
+      {
+        "id": 72,
+        "cohort": "prospective32",
+        "before": 10,
+        "after": -17.624232882883064
+      }
+    ]
+  },
+  "decision": "pending explicit maintainer review; frozen paired criterion failed",
+  "samplingBoundaryExceptions": [
+    {
+      "id": 138,
+      "before": [
+        {
+          "peak": 6.896,
+          "onset": 6.83,
+          "offset": 6.894,
+          "maximumSamplingSlackSeconds": 0.002,
+          "valuesChanged": false
+        }
+      ],
+      "after": [
+        {
+          "peak": 6.896,
+          "onset": 6.83,
+          "offset": 6.894,
+          "maximumSamplingSlackSeconds": 0.002,
+          "valuesChanged": false
+        }
+      ]
+    }
+  ]
+}

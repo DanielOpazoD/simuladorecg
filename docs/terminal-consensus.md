@@ -87,3 +87,59 @@ validación. No se copió el repositorio independiente con licencia GPL.
 
 Los resultados de otras publicaciones, incluyendo evaluaciones por mejor
 canal, no se transfieren a este QT global de cuatro derivaciones.
+
+## Resultado reservado y decisión pendiente
+
+La reserva de 32 registros se adquirió tras congelar el candidato. El lector
+WFDB 4.3.1 confirmó exactamente 1.920.000 muestras físicas y 28.101 eventos de
+anotación. Ningún resultado ajustó el algoritmo.
+
+El primer intento abortó por un contrato estructural del evaluador: en el registro
+138, tanto el producto anterior como el candidato sitúan un centro de detección
+QRS una muestra (2 ms a 500 Hz) después del límite QRS. El QT está ausente en ambos.
+La reparación versionada `terminal-consensus-evaluation.mjs` admite únicamente
+esa discretización de una muestra para centros QRS previstos. No mueve valores,
+referencias ni límites; conserva y puntúa el error y registra cada excepción.
+P/T y referencias siguen estrictos; dos muestras todavía fallan. El evaluador
+original y su protocolo permanecen intactos. El addendum fija los nuevos archivos
+sin cambiar el algoritmo, cohorte ni metas.
+
+Resultado completo con esa reparación:
+
+- QT: 3/31 → 11/31 registros con referencia elegible. MAE de los 11 nuevos
+  resúmenes: 14,80 ms; máximo 24,17 ms. Siete se consideran utilizables por los
+  criterios de ingeniería, con máximo 23 ms.
+- Final T: 53/244 → 125/244; MAE 90,83 → 12,57 ms, p95 45 ms, máximo 116 ms.
+- Cumplen las metas absolutas QT, cobertura, terminales y confianza.
+- **No cumple la meta emparejada**: solo hay dos pares (se exigían tres), cuyo
+  MAE pasa de 7 a 20,90 ms. Registro 30: +4 → −24,17 ms; registro 72:
+  +10 → −17,62 ms. Un resumen previo se retira. El resultado global del protocolo
+  sigue siendo **fallido**, sin redefinirlo como éxito.
+
+Se ha solicitado al mantenedor una decisión explícita sobre este intercambio
+entre cobertura y precisión de esos pares. Hasta esa decisión y el cierre de
+los demás controles, el PR permanece en borrador.
+
+## Ruido: intercambio explícito, no regeneración del resultado anterior
+
+En los 920 escenarios conocidos, permanecen idénticas las muestras generadas,
+73.440 comparaciones morfológicas, detección, FC y QRS. En QT:
+
+- Observaciones utilizables correctas: 1.014 → 1.448.
+- Observaciones utilizables erróneas: 146 → 1.
+- Observaciones correctas conservadas: 1.143 → 2.161.
+- Observaciones erróneas conservadas: 320 → 69.
+
+La comparación estricta por estrato conserva 23 fallos; 22 estratos pierden alguna
+observación correcta/utilizable. **No se presenta como no-regresión estricta.**
+El criterio revisado exige conservar cada escenario limpio y la cobertura
+correcta agregada, reducir al menos 90% los errores utilizables y 50% los retenidos,
+y no introducir errores utilizables en un modo de adquisición disponible.
+El único error utilizable nuevo del analizador bruto ocurre con ruido basal
+0 dB y filtro demostrativo de 2 Hz; el contrato de adquisición ya retira su
+confianza en la interfaz. Se conserva ese resultado bruto, no se borra.
+
+El comparador verifica que el informe fue producido por exactamente los archivos
+congelados. Conserva la referencia histórica, todos los fallos por estrato y los
+resultados adversos. Es un intercambio de ingeniería posterior al desarrollo,
+no validación clínica ni una reserva nueva de ruido.

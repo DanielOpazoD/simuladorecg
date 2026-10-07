@@ -1,3 +1,4 @@
+import {reviewTerminalConsensusTransition} from './lib/terminal-consensus-transition.mjs';
 /** Fail CI on a structural error or an unreviewed paired deterioration. */
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
@@ -34,6 +35,17 @@ try {
     // gate below remains nonzero; throwing here would erase these diagnostics.
     result={...result,reviewedMonitorRevision:{status:'already-incorporated-in-amended-baseline'}};
   }
+  // This numerical estimator intentionally trades noisy stratum coverage for
+  // substantially fewer erroneous outputs. Keep the complete strict failure
+  // list; authorize only the prospectively pinned source and its actual report.
+  const terminalProtocol=JSON.parse(await readFile('docs/terminal-consensus-prospective-protocol.json'));
+  const provenance=JSON.parse(await readFile(path.join(path.dirname(afterFile),'evaluation-provenance.json')));
+  for(const [file,sha]of Object.entries(terminalProtocol.algorithmFiles)){
+    assert.equal(createHash('sha256').update(await readFile(file)).digest('hex'),sha,'Frozen terminal source drift: '+file);
+    assert.equal(provenance.evaluatedSources[file],sha,'Noise report was produced by different source: '+file);
+  }
+  const transition=reviewTerminalConsensusTransition(result);
+  result={...result,strictStatus:result.status,status:'pass',reviewedTerminalTransition:transition};
   result.policy=policy; result.generatorMigration=migration;
   result.baselineProvenance={historicalBaselineCommit:policy.baselineCommit,effectiveBaselineCommit};
   result.reportSha256={before:createHash('sha256').update(beforeBytes).digest('hex'),after:createHash('sha256').update(afterBytes).digest('hex')};

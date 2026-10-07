@@ -1,0 +1,13 @@
+import {it,expect} from 'vitest';
+import {reviewTerminalConsensusTransition as review} from '../scripts/lib/terminal-consensus-transition.mjs';
+const metrics=(good,bad)=>({usableGood:good,usableBad:bad,retainedGood:good,retainedBad:bad,unreferenced:0});
+const row=(noise,filter,a,b)=>({id:JSON.stringify(['sinus',noise,noise==='clean'?null:0,filter]),before:{tp:10,fp:0,fn:0,metrics:{hr:metrics(10,0),qrs:metrics(10,0),qt:a}},after:{tp:10,fp:0,fn:0,metrics:{hr:metrics(10,0),qrs:metrics(10,0),qt:b}}});
+const fixture=()=>({status:'fail',failures:[{domain:'quality',metric:'qt'}],quality:[row('clean','off',metrics(10,0),metrics(10,0)),row('bw','off',metrics(10,20),metrics(20,0))]});
+it('retains the strict report and records the post-hoc tradeoff explicitly',()=>{const x=fixture(),copy=structuredClone(x),r=review(x);expect(x).toEqual(copy);expect(r.historicalBaselineReplaced).toBe(false);expect(r.clinicalValidation).toBe(false);expect(r.totals.after.usableBad).toBe(0);});
+it.each(['morphology','detection','integrity'])('rejects a %s failure',domain=>{const x=fixture();x.failures.push({domain,metric:'qt'});expect(()=>review(x)).toThrow();});
+it('rejects numerical QRS evidence drift',()=>{const x=fixture();x.quality[1].after.metrics.qrs.usableBad=1;expect(()=>review(x)).toThrow();});
+it('rejects a loss on clean cases even when aggregate results improve',()=>{const x=fixture();x.quality[0].after.metrics.qt.usableGood=9;expect(()=>review(x)).toThrow();});
+it('rejects new falsely usable QT in diagnostic acquisition',()=>{const x=fixture();x.quality.push(row('em','diagnostic',metrics(0,0),metrics(0,1)));expect(()=>review(x)).toThrow();});
+it('retains the raw error when the existing 2 Hz display scope is unavailable',()=>{const x=fixture();x.quality.push(row('em','aggressive',metrics(0,0),metrics(0,1)));expect(review(x).newRawFalseInUnavailableScope).toHaveLength(1);});
+it('rejects disappearing correct coverage instead of rewarding abstention alone',()=>{const x=fixture();x.quality[1].after.metrics.qt=metrics(0,0);expect(()=>review(x)).toThrow();});
+it('rejects insufficient error reduction',()=>{const x=fixture();x.quality[1].after.metrics.qt.usableBad=3;expect(()=>review(x)).toThrow();});
