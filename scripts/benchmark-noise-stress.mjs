@@ -1,3 +1,4 @@
+import {qrsMidpointSeconds} from './lib/qrs-event-reference.mjs';
 /** Fixed stress protocol; evaluation sees references, analyzer receives fs/leads only. */
 import {build} from 'esbuild';
 import {readFile,writeFile,mkdtemp,mkdir,rm} from 'node:fs/promises';
@@ -49,7 +50,7 @@ try{
     Object.assign(c.artifacts,{baseline:0,muscle:0,mains:0,loose:0,reversed:false});
     const s=M.synthesize(c,p.segmentDurationSeconds);modelSignals[id]={c,s};
     // 150ms event matching uses the QRS midpoint, not an asserted clinical R peak.
-    refs[id]=s.events.beats.map(b=>({...b,time:b.time-p.cropSeconds[0],anchor:b.time-p.cropSeconds[0]+b.qrs/2})).filter(b=>b.anchor>=.2&&b.anchor<9.8);
+    refs[id]=s.events.beats.map(b=>({...b,time:b.time-p.cropSeconds[0],anchor:qrsMidpointSeconds({time:b.time-p.cropSeconds[0],qrs:b.qrs})})).filter(b=>b.anchor>=.2&&b.anchor<9.8);
     const chosen=new Map();
     for(const b of s.events.beats)if(b.time>=5&&b.time+b.qt<12&&!chosen.has(b.kind))chosen.set(b.kind,b);
     assert.ok(chosen.size>0,'No complete fixed-window cycle');

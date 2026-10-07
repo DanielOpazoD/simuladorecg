@@ -9,16 +9,16 @@ function morphology() {
     byLead:Object.fromEntries(LEADS.map(l=>[l,{errors:Object.fromEntries(METRICS.map(m=>[m,0])),
       exceeded:{j:false,j60:false,qrs:false,tPeak:false,tArea:false},requiresReview:false}]))}];
 }
-function fixture() {
-  return {schemaVersion:2,protocol:clone(p),noiseProtocolSha256:hash,noiseSha256:hash,
-    sourceCommit:'example',cleanSourceHashes:{sinus:hash},analyzerEntry:'src/engine/sample-analysis.ts',
+function fixture(protocol=p) {
+  return {schemaVersion:2,protocol:clone(protocol),noiseProtocolSha256:hash,noiseSha256:hash,
+    sourceCommit:'example',cleanSourceHashes:Object.fromEntries(protocol.presets.map(id=>[id,hash])),analyzerEntry:'src/engine/sample-analysis.ts',
     analyzerReceivesOnlySamples:true,modelAuditUsed:false,
-    rows:expectedRows(p).map(r=>({...r,achievedDb:r.snrDb,rmseMv:r.noise==='clean'?0:.1,morphology:morphology(),
+    rows:expectedRows(protocol).map(r=>({...r,achievedDb:r.snrDb,rmseMv:r.noise==='clean'?0:.1,morphology:morphology(),
       analysis:{tp:2,fp:0,fn:0,outsideWindow:0,matchedWithDelineation:2,
         errors:[0,1].map(()=>({kind:'normal',qrsMs:0,qtMs:0,onsetMs:0,offsetMs:0})),
         hr:{status:'usable',retained:true,error:0,exceedsReviewLimit:false},
         metricStatus:{qrs:'usable',qt:'usable'},reported:{hr:60,qrs:90,qt:380}}})),
-    native:p.filters.map(filter=>({preset:'sinus',filter,morphology:morphology()}))};
+    native:protocol.presets.flatMap(preset=>protocol.filters.map(filter=>({preset,filter,morphology:morphology()})))};
 }
 function checkMutation(mutator,pattern) {
   const b=fixture(),a=clone(b);mutator(a);
@@ -101,4 +101,38 @@ describe('Calibrated-noise acceptance protects observed information',()=>{
     const a=fixture();a.rows[0].analysis.hr.error=10;a.rows[0].analysis.hr.exceedsReviewLimit=true;
     const r=compareReports(a,a);assert.equal(r.status,'pass');assert.equal(r.quality[0].after.metrics.hr.usableBad,1);
   });
+});
+
+// Exercise the actual CLI with tiny synthetic reports; no dataset download or
+// patient reference is needed to prove that a failed gate retains its evidence.
+import {mkdtempSync,readFileSync,writeFileSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {spawnSync} from 'node:child_process';
+function cli(mutator,protocolOverride){
+ const temp=mkdtempSync(join(tmpdir(),'noise-gate-cli-'));
+ try{
+  const policy=JSON.parse(readFileSync('benchmarks/noise-stress/acceptance.json'));
+  const migration=JSON.parse(readFileSync('docs/qrs-coupled-repolarization-contract.json'));
+  const b=fixture(protocolOverride??JSON.parse(readFileSync('benchmarks/noise-stress/protocol.json')));b.sourceCommit=migration.baselineAmendment.amendedBaselineCommit;b.noiseProtocolSha256=policy.noiseProtocolSha256;
+  const a=clone(b);mutator(a);
+  const before=join(temp,'before.json'),after=join(temp,'after.json'),output=join(temp,'result.json');
+  writeFileSync(before,JSON.stringify(b));writeFileSync(after,JSON.stringify(a));
+  const child=spawnSync(process.execPath,['scripts/check-noise-regression.mjs',before,after,output],{encoding:'utf8'});
+  assert.equal(child.error,undefined);return {exit:child.status,report:JSON.parse(readFileSync(output))};
+ }finally{rmSync(temp,{recursive:true,force:true});}
+}
+describe('Noise gate CLI retains diagnostic evidence',()=>{
+ it('rejects a jointly reduced cohort despite copied frozen hash labels',()=>{const r=cli(()=>{},p);assert.equal(r.exit,1);assert.equal(r.report.status,'error');assert.match(r.report.error,/frozen protocol/);});
+ it('passes an unchanged complete synthetic report without claiming validation',()=>{
+  const r=cli(()=>{});assert.equal(r.exit,0);assert.equal(r.report.status,'pass');assert.equal(r.report.clinicalValidation,false);
+ });
+ it('still exits nonzero on a regression and preserves the exact failing stratum',()=>{
+  const r=cli(a=>a.rows[0].analysis.fp++);assert.equal(r.exit,1);assert.equal(r.report.status,'fail');
+  assert.ok(r.report.failures.some(f=>f.domain==='detection'));assert.ok(r.report.quality.length>0);
+  assert.match(r.report.reportSha256.before,/^[0-9a-f]{64}$/);assert.match(r.report.reportSha256.after,/^[0-9a-f]{64}$/);
+ });
+ it('keeps malformed reports distinct from measured regressions',()=>{
+  const r=cli(a=>a.rows.pop());assert.equal(r.exit,1);assert.equal(r.report.status,'error');assert.match(r.report.error,/scenarios/);
+ });
 });
