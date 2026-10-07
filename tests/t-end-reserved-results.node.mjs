@@ -1,7 +1,7 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';import {createHash} from 'node:crypto';
 import {summarizeReserved} from '../scripts/lib/t-end-reserved-summary.mjs';
-const bytes=readFileSync('docs/t-end-reserved-protocol.json'),p=JSON.parse(bytes),r=JSON.parse(readFileSync('benchmarks/t-end-reserved/results.json'));
+const bytes=readFileSync('docs/t-end-reserved-protocol.json'),p=JSON.parse(bytes),r=JSON.parse(readFileSync('docs/evidence/t-end-reserved-results.json'));
 test('published adverse outcome is recomputable with every frozen record',()=>{
  assert.equal(createHash('sha256').update(bytes).digest('hex'),r.protocolSha256);
  assert.deepEqual(r.records.map(x=>x.id),p.cohort.records);

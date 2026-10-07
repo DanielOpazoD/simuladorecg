@@ -95,7 +95,7 @@ tratarlos como datos expuestos y requerirá otra evaluación independiente.
 
 ## Evidencia conservada
 
-`benchmarks/t-end-reserved/results.json` conserva todos los registros, errores,
+`docs/evidence/t-end-reserved-results.json` conserva todos los registros, errores,
 denominadores, propuestas no emparejadas, resúmenes automáticos, hashes físicos,
 protocolo, fuentes y comprobación WFDB. Incluye el SHA256 del informe completo
 reproducible, sin copiar señales ni encabezados demográficos al repositorio.
