@@ -11,12 +11,14 @@ export const QRS_T_REVISION=Object.freeze({
  evaluationBaselineCommit:'63f32b03921158337052e7068abcb6e72ec72f79',
  iteration:'direction-invariant-covariance-v3',
  files:Object.freeze({
+  // Null-axis support is reviewed with the primitive, not a filename exemption.
+  'src/engine/measurement-support.ts':Object.freeze({before:'1b6df1bf5c5386a9bdd237109b43a49879fd10c93a4b43eceeb7acdddcf7ba33',after:'27168ab1b6fdcfdee8045ff31a3cf12fe4545ec9919b792df1db16651aca8f54'}),
   'src/engine/analysis/impulse-confidence.ts':Object.freeze({before:'20a40b8da435c503ea4044919022e5015cae53b818ab283feb158bfeb83055ef',after:'c6b5c4a06cf5c65bacf325e8c77517613ee4427af2075b10575898e03dcee62d'}),
   // Sample-preserving projection refactor. Historical analyzers restore these
   // exact predecessors too; see docs/frontal-projection-contract.md for paired evidence.
   'src/engine/leads.ts':Object.freeze({before:'d67c47738647a8aa47f98f01de045ab7381a842007c7d5fa3562f570dc711c16',after:'ab4a73f2345e133cbbe80757d08c1c64f4c54894f1ca521b82eff7041d386706'}),
   'src/engine/lead-registry.ts':Object.freeze({before:'21b9ad7996fc2813156e51d87488f48fae52085ea6935091396e7226589367d3',after:'7f4fe698cd38931a47d41b99e005ca30f642b05553e4137869bda5f99a8990e3'}),
-  'src/engine/measure.ts':Object.freeze({before:'ceaeef83b459bbb114dc8a9457af7d43d804c14a8cb8107fc2b250faf391d61e',after:'d3233069ad569ce84dc4b6e17d3c706e05d336ff84fdc8d23ea0aefe8277f52f'}),
+  'src/engine/measure.ts':Object.freeze({before:'ceaeef83b459bbb114dc8a9457af7d43d804c14a8cb8107fc2b250faf391d61e',after:'c78e48df10d2c394e0b94e2772a84971edf292ef00793363e1c01a9ff94d7d0e'}),
   'src/engine/analysis/ventricular-candidates.ts':Object.freeze({before:'0c7d0abb1834fd9407ca9fdd85c735b7794bcaf933d911f13222039ab4c0bec4',after:'9766068adbe3e0ce8b30f9f766c3708a8de8b3a3668215104c07a8f9cb4fb040'}),
  }),
 });
@@ -54,7 +56,7 @@ export const summarizeRateRevision=arr=>({scenarios:arr.length,beforeUsable:arr.
  * Actual revised quality is evaluated separately on unchanged samples. */
 export function preQrsTNumericsPlugin(root){
  return {name:'exact-pre-qrs-t-numerics',setup(builder){
-  builder.onLoad({filter:/\/(measure|ventricular-candidates|alternating-confidence|impulse-confidence|leads|lead-registry)\.ts$/},args=>{
+  builder.onLoad({filter:/\/(measure|measurement-support|ventricular-candidates|alternating-confidence|impulse-confidence|leads|lead-registry)\.ts$/},args=>{
    const file=relative(root,args.path),entry=file===OPPOSED_CYCLE_REVISION.file?OPPOSED_CYCLE_REVISION:QRS_T_REVISION.files[file];assert.ok(entry);
    const bytes=execFileSync('git',['show',QRS_T_REVISION.baselineCommit+':'+file]);
    assert.equal(createHash('sha256').update(bytes).digest('hex'),entry.before,'Unreviewed numerical predecessor');

@@ -19,10 +19,10 @@ describe('Frontal QRS observability is specific to the measured wave',()=>{
   it.each([250,500,1000].flatMap(fs=>[1,-1].flatMap(p=>[[fs,0,0,p],[fs,.75,-.5,p]])))
   ('retires only unsupported QRS axis at %s Hz, offsets %s/%s, polarity %s',(fs,a,b,p)=>{
     const s=absentQrs(fs,a,b,p),before=structuredClone(s),m=analyzeSamples(s),raw=measure(s);
-    expect(m.beats.length).toBeGreaterThan(3);expect(raw.axis).not.toBeNull();
+    expect(m.beats.length).toBeGreaterThan(3);expect(raw.axis).toBeNull();
     expect(m.axis).toBeNull();expect(m.evidence.axis.status).toBe('unavailable');
     expect(m.evidence.axis.count).toBe(0);expect(m.evidence.axis.reason).toContain('P/T');
-    expect(m.rejected?.axis).toBe(raw.axis);
+    expect(m.rejected?.axis).toBeUndefined();expect(raw.beats.every(b=>b.axis===null)).toBe(true);
     expect(m.hr).toBeCloseTo(60,8);
     for(const key of ['hr','instantHr','rr','pr','qrs','qt','qtc'] as const)expect(m[key]).toEqual(raw[key]);
     expect(m.beats).toEqual(raw.beats);expect(m.detectedPeaks).toEqual(raw.detectedPeaks);

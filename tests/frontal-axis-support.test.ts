@@ -18,7 +18,7 @@ describe('Zero frontal information is not a measured zero-degree axis',()=>{
     expect(m.qrs).not.toBeNull();expect(m.hr).not.toBeNull();
     expect(m.axis).toBeNull();expect(m.pAxis).toBeNull();expect(m.tAxis).toBeNull();
     expect(m.evidence.axis.status).toBe('unavailable');expect(m.evidence.axis.reason).toContain('I y II');
-    expect(m.rejected?.axis).toBe(0);expect(s).toEqual(before);
+    expect(m.rejected?.axis).toBeUndefined();expect(m.beats.every(b=>b.axis===null)).toBe(true);expect(s).toEqual(before);
   });
   it('does not invent a clinical low-voltage cutoff',()=>{
     expect(analyzeSamples(frontal(1e-14)).axis).not.toBeNull();

@@ -19,7 +19,7 @@ export function attachMeasurementSupport(m: Measurement, challenge: Challenge | 
     if(Math.abs(delta)<=MEASUREMENT_SUPPORT_POLICY.matchSeconds){matched.add(nominal[i]);i++;j++;}
     else if(delta<0)i++;else j++;
   }
-  const select=(key:MetricKey):DelineatedBeat[]=>m.beats.filter(b=>key==='pr'?b.pr!==null&&b.pOnset!==null:key==='qt'?b.qt!==null&&b.tEnd!==null:true);
+  const select=(key:MetricKey):DelineatedBeat[]=>m.beats.filter(b=>key==='pr'?b.pr!==null&&b.pOnset!==null:key==='qt'?b.qt!==null&&b.tEnd!==null:key==='axis'?b.axis!==null:true);
   const support={} as Record<MetricKey, SampleSupport>;
   for(const key of ['hr','pr','qrs','qt','axis'] as const) {
     const candidates=key==='hr'?nominal.slice(1).map((peak,k)=>({peak,start:nominal[k],end:peak,stableDetection:matched.has(peak)&&matched.has(nominal[k])})):

@@ -12,6 +12,13 @@ import {
 } from "./analysis/statistics";
 import { evidence, unavailable } from "./analysis/evidence";
 
+/** A zero vector has no direction; atan2(0, 0) is only a language convention.
+ * Exact zero only, with no voltage/area cutoff or clinical confidence claim.
+ */
+function observedFrontalDirection(first: number, second: number): number | null {
+  return first === 0 && second === 0 ? null : axisFromLeads(first, second);
+}
+
 /**
  * Independent sample-domain analysis. No ECGCase, event calendar, or truth input.
  * All fiducials are seconds in the recording; summaries use exactly these beats.
@@ -78,8 +85,8 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
   const morphologyEligible = landmarkRr >= 0.22 && landmarkRr <= 3;
   const historicalWidths: number[] = [];
   const beats: DelineatedBeat[] = [],
-    paxes: number[] = [],
-    taxes: number[] = [];
+    paxes: (number | null)[] = [],
+    taxes: (number | null)[] = [];
   for (let k = 1; morphologyEligible && k < peaks.length - 1; k++) {
     const peak = peaks[k];
     let baseIndex = Math.max(8, peak - Math.round(0.22 * fs));
@@ -250,7 +257,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
       pr: null,
       qrs: width * 1000,
       qt: null,
-      axis: axisFromLeads(ai, aii),
+      axis: observedFrontalDirection(ai, aii),
       noise,
     };
     const pLo = Math.max(
@@ -273,7 +280,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
         beat.pPeak = pp / fs;
         beat.pr = ((on - po) / fs) * 1000;
         paxes.push(
-          axisFromLeads(
+          observedFrontalDirection(
             s.leads.I[pp] - baseline[0],
             s.leads.II[pp] - baseline[1],
           ),
@@ -319,7 +326,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
       beat.tEnd = te / fs;
       beat.qt = ((te - on) / fs) * 1000;
       taxes.push(
-        axisFromLeads(
+        observedFrontalDirection(
           s.leads.I[tp] - baseline[0],
           s.leads.II[tp] - baseline[1],
         ),
@@ -409,6 +416,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
   const widths = beats.map((b) => b.qrs),
     prs = beats.flatMap((b) => (b.pr === null ? [] : [b.pr])),
     qts = beats.flatMap((b) => (b.qt === null ? [] : [b.qt]));
+  const axes = beats.flatMap(b => b.axis === null ? [] : [b.axis]);
   const pm = median(prs),
     consistent =
       prs.length >= Math.max(3, beats.length * 0.65) &&
@@ -461,13 +469,17 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
             24,
             "Retorno de amplitud o pendiente terminal; revisa T/U.",
           ),
-    axis: evidence(
-      unwrapAngles(beats.map((b) => b.axis)),
+    axis: axes.length ? evidence(
+      unwrapAngles(axes),
       eligible,
       12,
       "Eje de área neta entre límites QRS.",
-    ),
+    ) : unavailable("Áreas QRS de I y II nulas: no definen dirección frontal. La actividad P/T no aporta un eje QRS ni equivale a 0°.", eligible),
   };
+  if (axes.length > 0 && axes.length < beats.length) {
+    ev.axis.status = "review";
+    ev.axis.reason = "Algunos QRS carecen de área frontal neta: el resumen usa solo direcciones observables; revisa los complejos individualmente.";
+  }
   // A removed impulse can hide the true activation onset; preserve that uncertainty.
   const nearImpulse = (t: number | null) =>
     t !== null && masks.some((r) => t >= r.start - 0.008 && t <= r.end + 0.016);
@@ -508,7 +520,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     ev.qrs.reason = "Ruido elevado: revisa manualmente los límites.";
     ev.hr.status = "review";
     ev.hr.reason = "El ruido puede producir detecciones falsas.";
-    ev.axis.status = "review";
+    if (ev.axis.status !== "unavailable") ev.axis.status = "review";
   }
   return {
     hr,
@@ -517,9 +529,9 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     pr,
     qrs,
     qt,
-    axis: circularMedian(beats.map((b) => b.axis)),
-    pAxis: pr !== null && paxes.length ? circularMedian(paxes) : null,
-    tAxis: qt !== null && taxes.length ? circularMedian(taxes) : null,
+    axis: axes.length ? circularMedian(axes) : null,
+    pAxis: pr !== null && paxes.length && paxes.every(a => a !== null) ? circularMedian(paxes) : null,
+    tAxis: qt !== null && taxes.length && taxes.every(a => a !== null) ? circularMedian(taxes) : null,
     qtc: {
       bazett: q === null ? null : (q / Math.sqrt(rr)) * 1000,
       fridericia: q === null ? null : (q / Math.cbrt(rr)) * 1000,
