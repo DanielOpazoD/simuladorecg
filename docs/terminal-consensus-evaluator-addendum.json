@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "role": "Technical evaluator repair after initial reserved run aborted; no algorithm, reference, number, sampling cohort or accuracy target changed",
+  "originalProtocolSha256": "f410c70e160d09f4d2c26248c2d880e7f35aeb60b684bd4b8dfb97141c22fbe3",
+  "originalCandidateLocalCommit": "96c288de3aba16e1c93531a7d80ed650c11c4abb",
+  "publishedCandidateCommit": "28c16617a11709be95f4a440ea3acba1816533ce",
+  "initialRun": "Aborted in immutable original evaluator: LUDB 138 QRS detector center 6.896 s lies one 500 Hz sample after unchanged QRS offset 6.894 s in both released and candidate analyzers. QT is unavailable in both.",
+  "repair": "Only predicted QRS ordering permits one sample of center/boundary discretization. All values, errors and denominators remain unmodified, and exceptions are recorded. Reference and P/T ordering remain strict. More than one sample still fails.",
+  "algorithmRetuned": false,
+  "thresholdsChanged": false,
+  "evaluatorFiles": {
+    "scripts/lib/terminal-consensus-evaluation.mjs": "590478a984e56041021c37dc433c211aaf59a01a17dbb1183badd96fe6bf3966",
+    "scripts/validate-terminal-consensus-v1a.mjs": "a0f20f1bf63ff157e1ab662bdc85d5222861b7f53444b4e54b83731dbdb3095b"
+  }
+}

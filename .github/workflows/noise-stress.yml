@@ -30,6 +30,7 @@ jobs:
           git worktree add --detach "$RUNNER_TEMP/noise-acquisition" 784173f94bc103686efb321fc13f1b8f40913f76
           git worktree add --detach "$RUNNER_TEMP/noise-baseline" 9246093052b3171cca81fb77951fd8eb24523a7c
           git worktree add --detach "$RUNNER_TEMP/noise-transition-before" 3c10eacd5fa4382d232c368777bd9d5f3b7f3475
+          git worktree add --detach "$RUNNER_TEMP/noise-st-release" 10e3f39764ca3bf83f2fc9b543d4960ee12c1080
       - name: Discriminative reader, calibration, morphology and abstention tests
         run: |
           (cd "$RUNNER_TEMP/noise-acquisition" && python -m unittest discover -s tests -p test_noise_stress.py -v)
@@ -63,9 +64,10 @@ jobs:
       - name: Retain pre-ST comparison and enforce explicit source-migration bounds
         run: |
           node scripts/benchmark-noise-stress.mjs "$RUNNER_TEMP/noise-stress/transition-before" --noise-dir "$RUNNER_TEMP/noise-stress" --source-root "$RUNNER_TEMP/noise-transition-before" --analyzer worker
-          node scripts/check-secondary-st-transition.mjs "$RUNNER_TEMP/noise-stress/transition-before/noise-results.json" "$RUNNER_TEMP/noise-stress/after/noise-results.json" "$RUNNER_TEMP/noise-stress/secondary-st-transition.json"
-      - name: Enforce morphology and retained-quality non-regression
-        run: node scripts/check-noise-regression.mjs "$RUNNER_TEMP/noise-stress/before/noise-results.json" "$RUNNER_TEMP/noise-stress/after/noise-results.json" "$RUNNER_TEMP/noise-stress/acceptance-results.json"
+          node scripts/benchmark-noise-stress.mjs "$RUNNER_TEMP/noise-stress/st-release" --noise-dir "$RUNNER_TEMP/noise-stress" --source-root "$RUNNER_TEMP/noise-st-release" --analyzer worker
+          node scripts/check-secondary-st-transition.mjs "$RUNNER_TEMP/noise-stress/transition-before/noise-results.json" "$RUNNER_TEMP/noise-stress/st-release/noise-results.json" "$RUNNER_TEMP/noise-stress/secondary-st-transition.json"
+      - name: Enforce unchanged morphology and the explicit terminal-quality transition
+        run: node scripts/check-noise-regression.mjs "$RUNNER_TEMP/noise-stress/before/noise-results.json" "$RUNNER_TEMP/noise-stress/after/noise-results.json" "$RUNNER_TEMP/noise-stress/acceptance-results.json" --terminal-consensus
       - name: Preserve exact code, limits and runtime
         if: always()
         run: |

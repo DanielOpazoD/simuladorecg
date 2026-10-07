@@ -70,7 +70,7 @@ for(const [name,fixture,ids,split,protocolHash] of [
   }
   added+=assertPeakOnlyChange(measurements[0],measurements[1]);
   const actual=actualAnalyzer({fs:signal.fs,leads:signal.leads});
-  assertQrsTRefinement(measurements[1],actual);
+  assertQrsTRefinement(measurements[1],actual,{terminalReplacement:true});
   const evaluated=assessRecord(signal,references,()=>actual,p);
   revised.push({id,physicalSamplesSha256:samples,measurement:actual,...evaluated});
  }
@@ -96,7 +96,7 @@ for(const preset of PRESETS.filter(p=>p.strategy!=='pending'))for(const filter o
  const c=fromPreset(preset);c.filter=filter;const signal=synthesize(c,10),before=sampleHash(signal);
  const historical=analyzers.map(f=>f({fs:signal.fs,leads:signal.leads}));
  presetAdded+=assertPeakOnlyChange(...historical);
- assertQrsTRefinement(historical[1],actualAnalyzer({fs:signal.fs,leads:signal.leads}));
+ assertQrsTRefinement(historical[1],actualAnalyzer({fs:signal.fs,leads:signal.leads}),{terminalReplacement:true});
  assert.equal(sampleHash(signal),before);scenarios++;
 }
 const report={schemaVersion:1,baselineCommit:T_PEAK_REVISION.baselineCommit,candidateCommit:git(candidate,'rev-parse','HEAD'),

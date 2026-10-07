@@ -1,6 +1,6 @@
 import {restoreHistoricalRateScreen} from './lib/sample-entry-contract.mjs';
 import {qrsMidpointSeconds} from './lib/qrs-event-reference.mjs';
-import {QRS_T_REVISION,assertReviewedQrsTFile,assertQrsTRefinement,summarizeRateRevision,preQrsTNumericsPlugin} from './lib/qrs-t-revision.mjs';
+import {TERMINAL_SOURCE_REVISION,QRS_T_REVISION,assertReviewedQrsTFile,assertQrsTRefinement,summarizeRateRevision,preQrsTNumericsPlugin} from './lib/qrs-t-revision.mjs';
 import {assertReviewedAlternatingConfidence,assertReviewedImpulseConfidence,assertReviewedSampleEntry} from './lib/sample-entry-contract.mjs';
 /** Paired quality assessment. Evaluator has references; analyzeSamples does not. */
 import { build } from 'esbuild';
@@ -40,6 +40,7 @@ try {
     if(file==='src/engine/analysis/alternating-confidence.ts') assertReviewedAlternatingConfidence(await readFile(file));
     else if(file==='src/engine/analysis/impulse-confidence.ts') assertReviewedImpulseConfidence(await readFile(file));
     else if(QRS_T_REVISION.files[file] && file!=='src/engine/measure.ts') assertReviewedQrsTFile(file,await readFile(file));
+    else if(TERMINAL_SOURCE_REVISION[file])assert.equal(hash(await readFile(file)),TERMINAL_SOURCE_REVISION[file],'Unreviewed terminal dependency');
     else if(file==='src/engine/measure.ts') assertReviewedMeasure(await readFile(path.join(base,file)),await readFile(file));
     else assert.equal(hash(await readFile(file)),hash(await readFile(path.join(base,file))),`Unreviewed primitive change: ${file}`);
   }
@@ -69,7 +70,7 @@ try {
   };
   const compare=(samples,reference,context)=>{
     const {row,measurement:prior}=compareHistorical(samples,reference,context);historicalRows.push(row);
-    const next=C.analyzeSamples(samples);assertQrsTRefinement(prior,next);
+    const next=C.analyzeSamples(samples);assertQrsTRefinement(prior,next,{terminalReplacement:true});
     const error=(value)=>value===null||reference===null?null:value-reference;
     const beforeError=error(prior.hr),afterError=error(next.hr);
     return {...context,referenceBpm:reference,beforeHr:prior.hr,hr:next.hr,beforeErrorBpm:beforeError,errorBpm:afterError,

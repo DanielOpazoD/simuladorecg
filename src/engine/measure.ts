@@ -1,3 +1,5 @@
+import { constrainQtEvidence } from "./measurement-support";
+import { terminalConsensus } from "./terminal-delineation";
 import { type Signal, type Measurement, type DelineatedBeat } from "./types";
 import { suppressImpulses } from "./analysis/impulses";
 import { detectVentricularCandidates } from "./analysis/ventricular-candidates";
@@ -15,7 +17,10 @@ import { evidence, unavailable } from "./analysis/evidence";
 /** A zero vector has no direction; atan2(0, 0) is only a language convention.
  * Exact zero only, with no voltage/area cutoff or clinical confidence claim.
  */
-function observedFrontalDirection(first: number, second: number): number | null {
+function observedFrontalDirection(
+  first: number,
+  second: number,
+): number | null {
   return first === 0 && second === 0 ? null : axisFromLeads(first, second);
 }
 
@@ -46,7 +51,8 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
   }
   // Morphology windows remain anchored to the original sample landmarks.
   // Refining the ventricular train must not silently move existing boundaries.
-  const { peaks: ratePeaks, boundaryCandidates: peaks } = detectVentricularCandidates(input);
+  const { peaks: ratePeaks, boundaryCandidates: peaks } =
+    detectVentricularCandidates(input);
   const retained = new Set(ratePeaks);
   const nil: Measurement = {
     hr: null,
@@ -84,6 +90,14 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
   const landmarkRr = median(peaks.slice(1).map((p, i) => (p - peaks[i]) / fs));
   const morphologyEligible = landmarkRr >= 0.22 && landmarkRr <= 3;
   const historicalWidths: number[] = [];
+  const tangentEnds = new Map<number, number>();
+  const terminalFrames = new Map<
+    number,
+    {
+      magnitude: (j: number) => number;
+      baseAt: (j: number, l: number) => number;
+    }
+  >();
   const beats: DelineatedBeat[] = [],
     paxes: (number | null)[] = [],
     taxes: (number | null)[] = [];
@@ -287,106 +301,125 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
         );
       }
     }
-    const tLo = off + Math.round(0.04 * fs),
-      nextOn = peaks[k + 1] - Math.round(0.12 * fs);
-    const tHi = Math.min(
+    // A directly observed isoelectric return needs no extrapolated terminal
+    // estimator. Certify a quiet 40 ms plateau on the local four-lead baseline;
+    // noisy or drifting tails are left to the multiscale estimator below.
+    const lo = off + Math.round(0.04 * fs);
+    const hi = Math.min(
       n - 1,
-      nextOn,
+      peaks[k + 1] - Math.round(0.12 * fs),
       on + Math.round(Math.min(0.95, localRR * 0.82) * fs),
     );
-    let tp = tLo,
-      te = tLo,
-      quietT = 0,
-      started = false,
-      lastActive = tLo;
-    const minimumT = Math.max(0.012, noise * 6),
-      quietTNeeded = Math.round(0.04 * fs);
-    for (let j = tLo; j < tHi; j++) {
+    let tp = lo,
+      last = lo,
+      terminalQuiet = 0,
+      started = false;
+    for (let j = lo; j < hi; j++) {
       const value = magnitude(j);
-      if (!started && value > minimumT) started = true;
+      if (value > Math.max(0.012, noise * 6)) started = true;
       if (!started) continue;
       if (value > magnitude(tp)) tp = j;
-      const returnThreshold = Math.max(magnitude(tp) * 0.025, noise * 4, 0.004);
-      if (value > returnThreshold) {
-        lastActive = j;
-        quietT = 0;
-      } else quietT++;
-      if (quietT >= quietTNeeded) {
-        te = lastActive + 1;
+      if (value > Math.max(0.004, magnitude(tp) * 0.025)) {
+        last = j;
+        terminalQuiet = 0;
+      } else terminalQuiet++;
+      if (terminalQuiet >= Math.round(0.04 * fs)) {
+        if (
+          tp > lo + 3 &&
+          magnitude(tp) > Math.max(0.05, noise * 12) &&
+          noise <= 0.001
+        ) {
+          beat.tPeak = tp / fs;
+          beat.tEnd = (last + 1) / fs;
+          beat.qt = (beat.tEnd - beat.onset) * 1000;
+        }
         break;
       }
     }
-    const tAmplitude = magnitude(tp);
-    // A visible peak is evidence, not a QT measurement. Preserve it even when
-    // the independent terminal-return condition below cannot close the wave.
-    if (started && tp > tLo + 3 && tAmplitude > Math.max(0.05, noise * 12))
+    // Retain an observed peak even when the terminal boundary is unresolved.
+    if (
+      beat.tPeak === null &&
+      started &&
+      tp > lo + 3 &&
+      magnitude(tp) > Math.max(0.05, noise * 12)
+    )
       beat.tPeak = tp / fs;
-    if (te > tp && tp > tLo + 3 && tAmplitude > Math.max(0.05, noise * 12)) {
-      beat.tPeak = tp / fs;
-      beat.tEnd = te / fs;
-      beat.qt = ((te - on) / fs) * 1000;
-      // Peak direction must use the same local baseline as the T magnitude.
-      taxes.push(
-        observedFrontalDirection(
-          s.leads.I[tp] - baseAt(tp, 0),
-          s.leads.II[tp] - baseAt(tp, 1),
-        ),
-      );
-      // Tangent to the steepest terminal descent, after the last lobe's peak.
-      let terminalPeak = tp;
-      for (let j = tp + 1; j < te - 1; j++)
-        if (
-          magnitude(j) > tAmplitude * 0.15 &&
-          magnitude(j) >= magnitude(j - 1) &&
-          magnitude(j) > magnitude(j + 1)
-        )
-          terminalPeak = j;
+    if (beat.tPeak !== null && noise <= 0.001) {
       const half = Math.max(1, Math.round(0.008 * fs));
       let steepest = 0,
-        steepestIndex = terminalPeak,
         tangent: number | null = null;
-      for (let j = terminalPeak + half; j < te - half; j++) {
+      for (
+        let j = tp + half;
+        j < Math.min(hi - half, tp + Math.round(0.3 * fs));
+        j++
+      ) {
         const derivative =
-          (magnitude(j + half) - magnitude(j - half)) / ((2 * half) / fs);
+          ((magnitude(j + half) - magnitude(j - half)) * fs) / (2 * half);
         if (derivative < steepest) {
           steepest = derivative;
-          steepestIndex = j;
           tangent = j / fs - magnitude(j) / derivative;
         }
       }
-      if (
-        tangent !== null &&
-        tangent > terminalPeak / fs &&
-        tangent <= te / fs + 0.04
-      )
-        beat.tTangentEnd = tangent;
-      // A causal high-pass can leave a slowly recovering offset after T. Do not
-      // call that tail repolarization: require terminal slope to remain quiet.
-      let slopeQuiet = 0;
-      for (
-        let j = steepestIndex + half;
-        j < Math.min(tHi - half, te + Math.round(0.04 * fs));
-        j++
-      ) {
-        const d =
-          (magnitude(j + half) - magnitude(j - half)) / ((2 * half) / fs);
-        if (
-          Math.abs(d) < Math.max(0.04, Math.abs(steepest) * 0.08) &&
-          magnitude(j) < tAmplitude * 0.15
-        )
-          slopeQuiet++;
-        else slopeQuiet = 0;
-        if (slopeQuiet >= Math.round(0.024 * fs)) {
-          const slopeEnd = (j - slopeQuiet + 1) / fs;
-          if (slopeEnd > terminalPeak / fs && slopeEnd < beat.tEnd!) {
-            beat.tEnd = slopeEnd;
-            beat.qt = (slopeEnd - beat.onset) * 1000;
-          }
-          break;
+      if (tangent !== null && tangent > beat.tPeak && tangent < hi / fs)
+        tangentEnds.set(beat.peak, tangent);
+    }
+    terminalFrames.set(beat.peak, { magnitude, baseAt });
+    beats.push(beat);
+  }
+  const boundaries = new Map(
+    beats.map((b) => [Math.round(b.peak * fs), b.offset]),
+  );
+  const terminal = terminalConsensus(
+    input,
+    ratePeaks,
+    ratePeaks.map((p) => boundaries.get(p) ?? null),
+    ratePeaks.map((p) => {
+      const b = beats.find((b) => Math.round(b.peak * fs) === p);
+      if (!b || b.tPeak === null) return [];
+      const out = [];
+      if (b.tEnd !== null) out.push({ peak: b.tPeak, end: b.tEnd });
+      const tangent = tangentEnds.get(b.peak);
+      if (tangent !== undefined)
+        out.push({
+          peak: b.tPeak,
+          end: tangent,
+          requiresUnambiguousTail: true,
+        });
+      return out;
+    }),
+  );
+  for (const beat of beats) {
+    const t = terminal[ratePeaks.indexOf(Math.round(beat.peak * fs))];
+    beat.tEnd = null;
+    beat.qt = null;
+    if (t && t.peak > beat.offset && t.end > t.peak) {
+      beat.tPeak = t.peak;
+      beat.tEnd = t.end;
+      beat.qt = (t.end - beat.onset) * 1000;
+      const frame = terminalFrames.get(beat.peak)!;
+      const tp = Math.round(t.peak * fs),
+        te = Math.round(t.end * fs);
+      taxes.push(
+        observedFrontalDirection(
+          s.leads.I[tp] - frame.baseAt(tp, 0),
+          s.leads.II[tp] - frame.baseAt(tp, 1),
+        ),
+      );
+      const half = Math.max(1, Math.round(0.008 * fs));
+      let steepest = 0,
+        tangent: number | null = null;
+      for (let j = tp + half; j < te - half; j++) {
+        const derivative =
+          ((frame.magnitude(j + half) - frame.magnitude(j - half)) * fs) /
+          (2 * half);
+        if (derivative < steepest) {
+          steepest = derivative;
+          tangent = j / fs - frame.magnitude(j) / derivative;
         }
       }
+      if (tangent !== null && tangent > t.peak && tangent <= t.end + 0.04)
+        beat.tTangentEnd = tangent;
     }
-    beats.push(beat);
   }
   if (beats.length < 3 || beats.length < (ratePeaks.length - 2) * 0.45) {
     if (ratePeaks.length >= 4) {
@@ -417,7 +450,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
   const widths = beats.map((b) => b.qrs),
     prs = beats.flatMap((b) => (b.pr === null ? [] : [b.pr])),
     qts = beats.flatMap((b) => (b.qt === null ? [] : [b.qt]));
-  const axes = beats.flatMap(b => b.axis === null ? [] : [b.axis]);
+  const axes = beats.flatMap((b) => (b.axis === null ? [] : [b.axis]));
   const axis = directionSummary(axes);
   const pm = median(prs),
     consistent =
@@ -437,7 +470,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
         : null;
   const pr = consistent && !noisy ? pm : null,
     q = qt === null ? null : qt / 1000;
-  const eligible = peaks.slice(1,-1).filter(p=>retained.has(p)).length;
+  const eligible = peaks.slice(1, -1).filter((p) => retained.has(p)).length;
   const ev = {
     hr: evidence(
       intervals,
@@ -469,21 +502,33 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
             qts,
             eligible,
             24,
-            "Retorno de amplitud o pendiente terminal; revisa T/U.",
+            "Final T contrastado entre estimadores sobre las muestras; revisa T/U.",
           ),
-    axis: axes.length ? evidence(
-      unwrapAngles(axes),
-      eligible,
-      12,
-      "Eje de área neta entre límites QRS.",
-    ) : unavailable("Áreas QRS de I y II nulas: no definen dirección frontal. La actividad P/T no aporta un eje QRS ni equivale a 0°.", eligible),
+    axis: axes.length
+      ? evidence(
+          unwrapAngles(axes),
+          eligible,
+          12,
+          "Eje de área neta entre límites QRS.",
+        )
+      : unavailable(
+          "Áreas QRS de I y II nulas: no definen dirección frontal. La actividad P/T no aporta un eje QRS ni equivale a 0°.",
+          eligible,
+        ),
   };
   if (axes.length > 0 && axis === null) {
-    ev.axis = {...unavailable("Direcciones QRS opuestas y equilibradas: no existe un eje global único. La actividad eléctrica permanece observable por latido.", eligible), count: axes.length};
+    ev.axis = {
+      ...unavailable(
+        "Direcciones QRS opuestas y equilibradas: no existe un eje global único. La actividad eléctrica permanece observable por latido.",
+        eligible,
+      ),
+      count: axes.length,
+    };
   }
   if (axis !== null && axes.length > 0 && axes.length < beats.length) {
     ev.axis.status = "review";
-    ev.axis.reason = "Algunos QRS carecen de área frontal neta: el resumen usa solo direcciones observables; revisa los complejos individualmente.";
+    ev.axis.reason =
+      "Algunos QRS carecen de área frontal neta: el resumen usa solo direcciones observables; revisa los complejos individualmente.";
   }
   // A removed impulse can hide the true activation onset; preserve that uncertainty.
   const nearImpulse = (t: number | null) =>
@@ -509,16 +554,26 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
   }
   // Dropping candidate waves can shrink width dispersion without fixing the
   // underlying boundary estimator. Do not promote QRS precision for that reason.
-  const priorQrsSupport = evidence(historicalWidths, peaks.length - 2, 16, "Límites QRS reproducibles.");
+  const priorQrsSupport = evidence(
+    historicalWidths,
+    peaks.length - 2,
+    16,
+    "Límites QRS reproducibles.",
+  );
   if (ev.qrs.status === "usable" && priorQrsSupport.status !== "usable") {
     ev.qrs.status = "review";
-    ev.qrs.reason = "La selección QRS/T cambió el conjunto de límites; la precisión QRS previa aún requiere revisión.";
+    ev.qrs.reason =
+      "La selección QRS/T cambió el conjunto de límites; la precisión QRS previa aún requiere revisión.";
   }
   // Removing some smooth post-complex candidates is not proof that every
   // remaining short interval is a ventricular activation. Preserve ambiguity.
-  if (ratePeaks.length < peaks.length && intervals.some(value => value < rr * 0.75)) {
+  if (
+    ratePeaks.length < peaks.length &&
+    intervals.some((value) => value < rr * 0.75)
+  ) {
     ev.hr.status = "review";
-    ev.hr.reason = "Persisten intervalos cortos después de discriminar candidatos QRS/T; verifica el conteo con calibres.";
+    ev.hr.reason =
+      "Persisten intervalos cortos después de discriminar candidatos QRS/T; verifica el conteo con calibres.";
   }
   if (noisy) {
     ev.qrs.status = "review";
@@ -535,8 +590,14 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     qrs,
     qt,
     axis,
-    pAxis: pr !== null && paxes.length && paxes.every(a => a !== null) ? directionSummary(paxes) : null,
-    tAxis: qt !== null && taxes.length && taxes.every(a => a !== null) ? directionSummary(taxes) : null,
+    pAxis:
+      pr !== null && paxes.length && paxes.every((a) => a !== null)
+        ? directionSummary(paxes)
+        : null,
+    tAxis:
+      qt !== null && taxes.length && taxes.every((a) => a !== null)
+        ? directionSummary(taxes)
+        : null,
     qtc: {
       bazett: q === null ? null : (q / Math.sqrt(rr)) * 1000,
       fridericia: q === null ? null : (q / Math.cbrt(rr)) * 1000,
@@ -546,7 +607,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     quality:
       "Análisis de muestras · primeros 10 s · los límites y las cifras comparten el mismo delineador.",
     beats,
-    evidence: ev,
+    evidence: constrainQtEvidence(ev),
     window: { start: 0, end: n / fs },
     detectedPeaks: ratePeaks.map((p) => p / fs),
   };

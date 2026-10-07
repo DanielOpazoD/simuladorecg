@@ -42,5 +42,14 @@ export function attachMeasurementSupport(m: Measurement, challenge: Challenge | 
       if(key==='pr')result.pAxis=null;
       if(key==='qt'){result.tAxis=null;result.qtc={bazett:null,fridericia:null,framingham:null,hodges:null};}}
   }
-  return result;
+  const evidence=constrainQtEvidence(result.evidence);
+  return evidence===result.evidence?result:{...result,evidence};
+}
+
+/** A QT interval includes the ventricular onset. Agreement at T-end cannot
+ * promote the whole interval above the confidence of its QRS boundaries. */
+export function constrainQtEvidence(evidence: Measurement['evidence']): Measurement['evidence'] {
+  if(evidence.qt.status!=='usable'||evidence.qrs.status==='usable')return evidence;
+  return {...evidence,qt:{...evidence.qt,status:'review',
+    reason:'El final T es concordante, pero los límites QRS requieren revisión; verifica el inicio y el final del QT con calibres.'}};
 }
