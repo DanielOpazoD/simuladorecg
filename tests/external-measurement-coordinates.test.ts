@@ -38,3 +38,14 @@ describe('external measurement coordinates are internally coherent',()=>{
   expect(validate(m).measurement?.beats[0].tPeak).not.toBeNull();
  });
 });
+
+it('validates the preserved terminal audit instead of trusting worker metadata',()=>{
+ const m=structuredClone(original),b=m.beats[0];
+ if(b.tEnd===null||b.qt===null)throw Error('Fixture needs a measured T');
+ b.terminalRevision={method:'area-return-reconciliation-v1',previousEnd:b.tEnd+.1,previousQt:b.qt+100,previousTangentEnd:null,areaEnd:b.tEnd,leadCount:3,spreadMs:4};
+ b.tTangentEnd=null;expect(validate(m).measurement).toBe(m);
+ for(const change of [{areaEnd:NaN},{previousQt:12},{leadCount:2},{spreadMs:40},{previousEnd:11}]){
+  const broken=structuredClone(m);Object.assign(broken.beats[0].terminalRevision!,change);
+  expect(()=>validate(broken)).toThrow();
+ }
+});

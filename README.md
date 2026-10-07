@@ -133,3 +133,9 @@ al umbral y existe actividad de fondo elevada. No corrige la frecuencia ni
 clasifica una arritmia. [Contrato y evaluación pareada](docs/hr-detection-quality.md).
 Los informes históricos de `measure()` continúan describiendo el primitivo
 congelado; no deben confundirse con la entrada completa actual del worker.
+
+### Reconciliación numérica del final T
+
+El delineador contrasta retorno y área multiderivación para corregir cierres tardíos
+o ausentes y recalcular QT/QTc. Conserva el cálculo previo y exige revisión de los
+valores nuevos. [Contrato, resultados emparejados y límites](docs/qt-reconciliation.md).

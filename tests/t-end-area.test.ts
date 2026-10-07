@@ -60,7 +60,7 @@ describe('Area T-end assistance is not automatic QT', () => {
     expect(m.beats).toEqual(saved.m.beats); expect(m.qt).toEqual(saved.m.qt); expect(m.qtc).toEqual(saved.m.qtc);
     expect(suggestTEnds(s,m)).toEqual(candidates);
   });
-  it('displays a proposal on tachycardia without adding a QT interval', () => {
+  it('shows the reconciled tachycardia value with its review status and prior return', () => {
     const c=fromPreset(presetById('tachy')!),s=synthesize(c,10),m=measure(s),before=structuredClone(m);
     const i=suggestTEnds(s,m).findIndex(x=>x!==null); expect(i).toBeGreaterThanOrEqual(0);
     const html=beatDetail(s,m,c,i);
@@ -68,8 +68,8 @@ describe('Area T-end assistance is not automatic QT', () => {
     expect(html).toContain('data-t-end-validation'); expect(html).toContain('Precisión insuficiente');
     expect(html).toContain('41 finales T'); expect(html).toContain('32 ms'); expect(html).toContain('56 ms');
     expect(html).toContain('no un margen de error de este latido');
-    expect(html).toContain('No modifica QT/QTc'); expect(html).not.toMatch(/QT \d+ ms/);
-    expect(m).toEqual(before); expect(m.qt).toBeNull(); expect(m.evidence.qt.status).toBe('unavailable');
+    expect(html).toContain('data-qt-reconciliation'); expect(html).toContain('Retorno previo: sin cierre'); expect(html).toContain('requiere revisión');
+    expect(m).toEqual(before); expect(m.qt).toBeCloseTo(322, 5); expect(m.evidence.qt.status).toBe('review');
     c.view.lead='V5'; expect(beatDetail(s,m,c,i)).toContain('no un límite validado de V5');
   });
 });

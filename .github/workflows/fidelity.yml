@@ -183,6 +183,7 @@ jobs:
           node tests/browser-worker-recovery.mjs
           node tests/browser-t-peak-evidence.mjs
           node tests/browser-t-end-assistance.mjs
+          node tests/browser-qt-reconciliation.mjs
           node tests/browser-posterior-amplitude.mjs
           node tests/browser-comparison.mjs
           node tests/browser-comparison-external.mjs
@@ -201,6 +202,19 @@ jobs:
         with:
           name: secondary-st-visual-${{ github.sha }}
           path: .sites-runtime/secondary-st-visual/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Stage focused QT numerical evidence
+        if: always()
+        run: |
+          mkdir -p .sites-runtime/qt-visual
+          find "$RUNNER_TEMP/ecg-evidence/browser" -maxdepth 1 -type f \( -name 'qt-reconciliation-*.png' -o -name 'qt-reconciliation-*.json' -o -name 't-end-assistance-*.png' \) -exec cp {} .sites-runtime/qt-visual/ \;
+      - name: Archive focused QT numerical evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: qt-numerical-visual-${{ github.sha }}
+          path: .sites-runtime/qt-visual/
           if-no-files-found: error
           retention-days: 14
       - name: Archive exact reviewed source and reports

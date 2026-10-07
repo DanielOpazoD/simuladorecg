@@ -174,6 +174,16 @@ export interface DelineatedBeat {
   tPeak: number | null;
   tEnd: number | null;
   tTangentEnd: number | null;
+  /** Original return estimate retained when sample-domain reconciliation changes QT. */
+  terminalRevision?: {
+    method: 'area-return-reconciliation-v1';
+    previousEnd: number | null;
+    previousQt: number | null;
+    previousTangentEnd: number | null;
+    areaEnd: number;
+    leadCount: number;
+    spreadMs: number;
+  };
   rr: number;
   pr: number | null;
   qrs: number;

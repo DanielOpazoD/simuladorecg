@@ -1,3 +1,4 @@
+import { reconcileTEnds } from './reconcile-t-end';
 import { type Signal, type Measurement, type DelineatedBeat } from "./types";
 import { suppressImpulses } from "./analysis/impulses";
 import { detectVentricularCandidates } from "./analysis/ventricular-candidates";
@@ -388,6 +389,9 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     }
     beats.push(beat);
   }
+  const originalQtValues = beats.flatMap(b => b.qt === null ? [] : [b.qt]);
+  const originalQtCount = originalQtValues.length;
+  const terminalRevisions = reconcileTEnds(input, beats, ratePeaks.map(p => p / fs), { start: 0, end: n / fs });
   if (beats.length < 3 || beats.length < (ratePeaks.length - 2) * 0.45) {
     if (ratePeaks.length >= 4) {
       const hr = 60 / (intervals.reduce((a, b) => a + b, 0) / intervals.length);
@@ -435,6 +439,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
       regular && !noisy && qts.length >= beats.length * 0.6
         ? median(qts) || null
         : null;
+  const originalQtAvailable = regular && !noisy && originalQtCount >= beats.length * 0.6;
   const pr = consistent && !noisy ? pm : null,
     q = qt === null ? null : qt / 1000;
   const eligible = peaks.slice(1,-1).filter(p=>retained.has(p)).length;
@@ -478,6 +483,15 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
       "Eje de área neta entre límites QRS.",
     ) : unavailable("Áreas QRS de I y II nulas: no definen dirección frontal. La actividad P/T no aporta un eje QRS ni equivale a 0°.", eligible),
   };
+  // Adding corrected beat endpoints does not promote confidence. A previously
+  // usable summary may retain its state only if it is unchanged at one sample.
+  const preservesQtSummary = originalQtAvailable && qt !== null &&
+    Math.abs(qt - median(originalQtValues)) <= 1000 / fs + 1e-8 &&
+    evidence(originalQtValues, eligible, 24, "").status === "usable";
+  if (terminalRevisions > 0 && !preservesQtSummary && ev.qt.status !== "unavailable") {
+    ev.qt.status = "review";
+    ev.qt.reason = "QT recalculado con un estimador de área multiderivación; conserva el retorno previo para comparación. Verifica final de T y T/U con calibres.";
+  }
   if (axes.length > 0 && axis === null) {
     ev.axis = {...unavailable("Direcciones QRS opuestas y equilibradas: no existe un eje global único. La actividad eléctrica permanece observable por latido.", eligible), count: axes.length};
   }
@@ -502,7 +516,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
         "Límite próximo a un estímulo breve suprimido en la copia de análisis; verifica con calibres.";
     }
   }
-  if (pr !== null && qt === null) {
+  if (pr !== null && !originalQtAvailable) {
     ev.pr.status = "review";
     ev.pr.reason =
       "No se separa la T: la onda atribuida a P podría ser repolarización previa.";
@@ -536,7 +550,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     qt,
     axis,
     pAxis: pr !== null && paxes.length && paxes.every(a => a !== null) ? directionSummary(paxes) : null,
-    tAxis: qt !== null && taxes.length && taxes.every(a => a !== null) ? directionSummary(taxes) : null,
+    tAxis: originalQtAvailable && taxes.length && taxes.every(a => a !== null) ? directionSummary(taxes) : null,
     qtc: {
       bazett: q === null ? null : (q / Math.sqrt(rr)) * 1000,
       fridericia: q === null ? null : (q / Math.cbrt(rr)) * 1000,

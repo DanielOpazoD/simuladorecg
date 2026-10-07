@@ -1,0 +1,53 @@
+name: QT numerical reconciliation
+on:
+  pull_request:
+  push:
+    branches: ['main']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/setup-node@v5
+        with: {node-version: '22.16.0', cache: npm}
+      - uses: actions/setup-python@v6
+        with: {python-version: '3.11'}
+      - run: npm ci
+      - run: python -m pip install wfdb==4.3.1
+      - name: Restore the exact pre-reconciliation product
+        run: git worktree add --detach "$RUNNER_TEMP/qt-before" 5294bdff3d79bb9edbe7bd97a439bfed11b5c535
+      - name: Verify numerical correction and preserved original boundaries
+        run: npx vitest run tests/t-end-reconciliation.test.ts tests/qrs-t-revision.test.mjs
+      - name: Reproduce the two exposed cohorts
+        run: |
+          python scripts/prepare-ludb-expansion.py --output "$RUNNER_TEMP/original40" --crosscheck
+          python scripts/prepare-ludb-delineation.py --output "$RUNNER_TEMP/calibration40" --crosscheck
+      - name: Compare actual QT and all nonterminal invariants on exposed records
+        run: node scripts/validate-qt-reconciliation.mjs --baseline "$RUNNER_TEMP/qt-before" --original "$RUNNER_TEMP/original40/fixtures" --calibration "$RUNNER_TEMP/calibration40/fixtures" --output "$RUNNER_TEMP/qt-reconciliation/exposed"
+      - name: Acquire only the prospectively frozen remaining cohort
+        run: python scripts/prepare-qt-reconciliation.py --output "$RUNNER_TEMP/prospective40" --crosscheck
+      - name: Evaluate frozen targets without retuning or omitting adverse outcomes
+        run: node scripts/validate-qt-reconciliation.mjs --baseline "$RUNNER_TEMP/qt-before" --prospective "$RUNNER_TEMP/prospective40/fixtures" --output "$RUNNER_TEMP/qt-reconciliation/prospective"
+      - name: Preserve exact evidence and source without demographic headers
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/qt-reconciliation"
+          git archive HEAD | gzip > "$RUNNER_TEMP/qt-reconciliation/source.tar.gz"
+          git rev-parse HEAD > "$RUNNER_TEMP/qt-reconciliation/commit.txt"
+          for name in original40 calibration40 prospective40; do
+            test ! -d "$RUNNER_TEMP/$name" || { rm -rf "$RUNNER_TEMP/$name/raw"; cp -r "$RUNNER_TEMP/$name" "$RUNNER_TEMP/qt-reconciliation/$name"; }
+          done
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: qt-reconciliation-${{ github.sha }}
+          path: ${{ runner.temp }}/qt-reconciliation/
+          retention-days: 30

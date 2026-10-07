@@ -5,11 +5,11 @@ import {synthesize} from '../src/engine/signal';
 import {fromPreset,presetById} from '../src/presets/catalog';
 import {beatDetail} from '../src/ui/beat-detail';
 describe('T-peak evidence is not an interval',()=>{
-  it('preserves visible candidates without creating a T end or QT',()=>{
+  it('keeps unclosed candidates separate from independently reconciled intervals',()=>{
     const c=fromPreset(presetById('tachy')!),s=synthesize(c,10),m=measure(s);
     const candidates=m.beats.filter(b=>b.tPeak!==null&&b.tEnd===null);
-    expect(candidates.length).toBeGreaterThan(0);expect(m.qt).toBeNull();
-    expect(m.evidence.qt.status).toBe('unavailable');
+    expect(candidates.length).toBeGreaterThan(0);expect(m.qt).not.toBeNull();
+    expect(m.evidence.qt.status).toBe('review');
     for(const b of candidates){expect(b.qt).toBeNull();expect(b.tTangentEnd).toBeNull();expect(b.tPeak!).toBeGreaterThan(b.offset);}
   });
   it('presents the candidate explicitly without a QT interval band',()=>{
