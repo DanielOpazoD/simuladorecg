@@ -1,3 +1,4 @@
+import {covarianceResidual} from './ventricular-candidates';
 import type {Measurement, Signal} from '../types';
 const NAMES=['I','II','V1','V5'] as const;
 export const IMPULSE_CONFIDENCE_POLICY=Object.freeze({minimumCandidates:3,maximumResidual:.001,reviewResidual:.005,maximumEnergySpanSeconds:.024,minimumFraction:.8});
@@ -19,15 +20,7 @@ export function briefImpulseFractions(s:Pick<Signal,'fs'|'leads'>,peaks:readonly
   }
   const trace=covariance.reduce((sum,row,i)=>sum+row[i],0);
   if(!trace||!slopes.length)continue;
-  // Start on the strongest diagonal so an anti-parallel field cannot cancel the seed.
-  const diagonal=covariance.map((row,i)=>row[i]),seed=diagonal.indexOf(Math.max(...diagonal));
-  let q:number[]=diagonal.map((_,i)=>i===seed?1:0);
-  for(let k=0;k<25;k++){
-   const v=covariance.map(row=>row.reduce((sum,x,i)=>sum+x*q[i],0)),norm=Math.hypot(...v);
-   q=v.map(x=>x/(norm||1));
-  }
-  const eigen=q.reduce((sum,x,i)=>sum+x*covariance[i].reduce((t,v,j)=>t+v*q[j],0),0);
-  const residual=Math.max(0,1-eigen/trace);
+  const residual=covarianceResidual(covariance);
   const total=slopes.reduce((sum,v)=>sum+v*v,0);
   let cumulative=0,first=-1,last=slopes.length-1;
   for(let i=0;i<slopes.length;i++){

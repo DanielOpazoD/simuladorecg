@@ -1,3 +1,4 @@
+import {assertReviewedQrsTFile} from './qrs-t-revision.mjs';
 import {assertReviewedOpposedCycle} from './opposed-cycle-revision.mjs';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
@@ -25,8 +26,7 @@ export function assertReviewedSampleEntry(source, previous) {
 }
 
 export function assertReviewedImpulseConfidence(source) {
-  assert.equal(createHash('sha256').update(source).digest('hex'),
-    '20a40b8da435c503ea4044919022e5015cae53b818ab283feb158bfeb83055ef', 'Unreviewed impulse-confidence change');
+  assertReviewedQrsTFile('src/engine/analysis/impulse-confidence.ts', source);
 }
 
 export function assertReviewedSampleDependencies(actual,historical,candidate) {
