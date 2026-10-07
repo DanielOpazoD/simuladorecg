@@ -60,3 +60,16 @@ dialog.external-lab { width: min(1420px, calc(100vw - 32px)); max-width: calc(10
   .external-review fieldset { padding:10px; }
   .external-review canvas { width:100%; }
 }
+
+/* Keep the five safety-critical estimates readable in a narrow dialog without
+   changing native table semantics or hiding their reasons behind horizontal scroll. */
+.external-metrics-wrapper { container-type:inline-size; }
+@container (max-width:560px) {
+  #external-metrics { min-width:0; table-layout:fixed; }
+  #external-metrics th, #external-metrics td { padding:8px 4px; overflow-wrap:anywhere; }
+  #external-metrics th:nth-child(1) { width:19%; }
+  #external-metrics th:nth-child(2) { width:23%; }
+  #external-metrics th:nth-child(3) { width:17%; }
+  #external-metrics th:nth-child(4) { width:41%; }
+  #external-metrics td:last-child { max-width:none; }
+}
