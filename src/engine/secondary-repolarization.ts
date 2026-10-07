@@ -35,6 +35,12 @@ export function secondaryRepolarization(c: ECGCase,b: Beat,ks: readonly Kernel[]
   // Secondary ST is explicitly not represented; do not infer normal ST from null.
   return{mode,t:opposite(reference,T_REFERENCE_AMPLITUDE*.9),st:null,reference};
 }
-export function secondaryDiscordanceDot(reference:Vec,repolarization:Vec):number{
-  const q=project(reference),r=project(repolarization); return q.I*r.I+q.II*r.II;
+/** Frontal-plane dot product, not a 3D angle or a diagnostic criterion.
+ * I and II are 60° apart; convert both to orthogonal frontal coordinates.
+ */
+export function secondaryDiscordanceDot(reference: Vec, repolarization: Vec): number {
+  const q = project(reference), r = project(repolarization);
+  const qy = (2 * q.II - q.I) / Math.sqrt(3);
+  const ry = (2 * r.II - r.I) / Math.sqrt(3);
+  return q.I * r.I + qy * ry;
 }
