@@ -143,3 +143,10 @@ El comparador verifica que el informe fue producido por exactamente los archivos
 congelados. Conserva la referencia histórica, todos los fallos por estrato y los
 resultados adversos. Es un intercambio de ingeniería posterior al desarrollo,
 no validación clínica ni una reserva nueva de ruido.
+
+La migración histórica de ST se reproduce con el producto ST publicado
+`10e3f39764ca3bf83f2fc9b543d4960ee12c1080`, no con el nuevo delineador QT.
+Así no se atribuyen cambios de QT al antiguo contrato del generador. En paralelo,
+la comparación actual sigue exigiendo identidad de fuente y morfología frente
+al baseline ST y aplica el intercambio QT solo con `--terminal-consensus`.
+El comando sin ese argumento conserva su rechazo estricto original.
