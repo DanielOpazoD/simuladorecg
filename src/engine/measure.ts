@@ -72,11 +72,15 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
   const intervals = ratePeaks.slice(1).map((p, i) => (p - ratePeaks[i]) / fs),
     rr = median(intervals);
   if (rr < 0.22 || rr > 3) return nil;
+  // Rate refinement cannot authorize morphology rejected by the original train.
+  // Keep rate-only recovery, but do not invent new interval delineations.
+  const landmarkRr = median(peaks.slice(1).map((p, i) => (p - peaks[i]) / fs));
+  const morphologyEligible = landmarkRr >= 0.22 && landmarkRr <= 3;
   const historicalWidths: number[] = [];
   const beats: DelineatedBeat[] = [],
     paxes: number[] = [],
     taxes: number[] = [];
-  for (let k = 1; k < peaks.length - 1; k++) {
+  for (let k = 1; morphologyEligible && k < peaks.length - 1; k++) {
     const peak = peaks[k];
     let baseIndex = Math.max(8, peak - Math.round(0.22 * fs));
     for (let j = baseIndex; j < peak - Math.round(0.04 * fs); j++)

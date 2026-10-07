@@ -33,7 +33,7 @@ Punto de entrada a `docs/`. La navegación vigente empieza en el [README](../REA
 ## Analizador y medición
 - [Integridad de entrada antes de medir](sample-input-contract.md)
 - [Calidad y procedencia de las medidas](measurement-support-quality.md) · [Medidas retiradas entre etapas](audit-rejection-provenance.md)
-- [FC: incertidumbre de detección](hr-detection-quality.md) · [Discriminación QRS–T y límites](qrs-t-discrimination.md)
+- [FC: incertidumbre de detección](hr-detection-quality.md) · [Discriminación QRS–T y límites](qrs-t-discrimination.md) · [Componentes de QRS ancho](wide-qrs-candidates.md)
 - [Pico T sin QT fabricado](t-peak-evidence.md)
 - Final de T: [ayuda por área](t-end-area-assistance.md) · [estratos de concordancia](t-end-confidence.md) · [concordancia visible](t-end-confidence-ui.md) · protocolos [área](t-end-area-protocol.json) y [concordancia](t-end-confidence-protocol.json)
 - [Monitor 0,5–40 Hz y fase cero](monitor-phase-revision.md)
