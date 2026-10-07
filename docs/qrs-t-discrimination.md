@@ -1,4 +1,4 @@
-# QRS–T discrimination: development candidate, not clinical validation
+# QRS–T discrimination: scope and numerical revision
 
 Baseline: `ca2aa852d2fe5c6affdfdc31db2b9160211944f9`.
 
@@ -36,8 +36,9 @@ multilead covariance rule or its thresholds.
   it cannot be certified as an unchanged detector.
 - Run unit, types/build and browser measurement flows before publishing completion.
 
-This document records an experiment. No independent patient validation or completed
-acceptance is claimed. Unseen reserved T-end evaluation data are not used here.
+Passing the required gates establishes technical acceptance of this revision,
+not independent clinical validation. Unseen reserved T-end evaluation data are
+not used here.
 
 ## Development findings and revisions
 
@@ -70,11 +71,14 @@ Current exposed development evidence:
   bytes, frozen baseline or source-model output was relaxed or changed.
 - Transfer and noise cases have now been inspected and are development evidence,
   not a fresh holdout. The reserved T-end holdout remains untouched.
-- The already exposed 40-record LUDB calibration cohort has identical P/QRS/T
-  detection, boundary errors, interval coverage and statuses before/after. This is
-  non-regression on those records, not evidence of improved patient discrimination.
-  Reader cross-check: 2,400,000 physical samples and 36,504 annotation events agree
-  with WFDB 4.3.1. Production-browser checks remain pending.
+- Both already exposed LUDB cohorts (original40 and calibration40, 80 records)
+  have identical summaries of P/QRS/T detection, boundary errors, interval coverage
+  and statuses before/after. This is non-regression, not improved patient
+  discrimination. The calibration reader cross-check covers 2,400,000 physical
+  samples and 36,504 annotation events against WFDB 4.3.1.
+- Production-browser checks exercise the real worker and visible 73/120 bpm
+  results in Chromium, WebKit and Firefox at desktop/mobile widths. The exact
+  commit-specific CI results and screenshots are required release evidence.
 
 ## Numerical identity and historical checks
 

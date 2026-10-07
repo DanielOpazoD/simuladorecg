@@ -1,4 +1,5 @@
 import {describe,it,expect} from 'vitest';
+import {auditMeasurement} from '../src/engine/analysis/model-audit';
 import {synthesize} from '../src/engine/signal';
 import {fromPreset,presetById} from '../src/presets/catalog';
 import {analyzeSamples} from '../src/engine/sample-analysis';
@@ -14,6 +15,8 @@ describe('sample-only QRS–T discrimination, exposed regressions',()=>{
   const m=analyzeSamples({fs:s.fs,leads:s.leads});
   expect(m.hr).not.toBeNull();expect(Math.abs(m.hr!-hr)).toBeLessThan(1);
   expect(m.evidence.hr.status).toBe('usable');
+  const displayed=auditMeasurement(s,m);
+  expect(displayed.hr).toBe(m.hr);expect(displayed.evidence.hr.status).toBe('usable');
   for(const time of m.detectedPeaks){
    expect(s.events.beats.some(b=>time>=b.time&&time<=b.time+b.qrs!)).toBe(true);
    expect(s.events.beats.some(b=>{const t=tWaveSupport(c,b.qrs!,b.qt!);return time>=b.time+t.start&&time<=b.time+t.start+t.duration;})).toBe(false);
