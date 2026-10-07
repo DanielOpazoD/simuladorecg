@@ -26,6 +26,8 @@ jobs:
       - run: npm ci
       - name: Unit contracts and production build on macOS
         run: npm run check
+      - name: Prospective evaluation integrity and statistical contracts
+        run: node --test tests/t-end-reserved-*.node.mjs
   amplitude-regression:
     runs-on: ubuntu-latest
     timeout-minutes: 15
