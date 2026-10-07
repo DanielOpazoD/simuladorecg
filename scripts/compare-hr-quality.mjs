@@ -1,3 +1,4 @@
+import {restoreHistoricalRateScreen} from './lib/sample-entry-contract.mjs';
 import {qrsMidpointSeconds} from './lib/qrs-event-reference.mjs';
 import {QRS_T_REVISION,assertReviewedQrsTFile,assertQrsTRefinement,summarizeRateRevision,preQrsTNumericsPlugin} from './lib/qrs-t-revision.mjs';
 import {assertReviewedAlternatingConfidence,assertReviewedImpulseConfidence,assertReviewedSampleEntry} from './lib/sample-entry-contract.mjs';
@@ -31,7 +32,7 @@ try {
   // Preserve every historical quality-only assertion on exact pre-revision
   // primitives; evaluate actual revised numerical results separately below.
   await build({entryPoints:['src/engine/sample-analysis.ts'],bundle:true,platform:'node',format:'esm',outfile:path.join(temp,'pre-revision.mjs'),
-    plugins:[preQrsTNumericsPlugin(process.cwd())]});
+    plugins:[{name:'restore-frozen-hr-screen',setup(b){b.onLoad({filter:/\/sample-analysis\.ts$/},async args=>({contents:restoreHistoricalRateScreen(await readFile(args.path,'utf8')),loader:'ts'}));}},preQrsTNumericsPlugin(process.cwd())]});
   const A = await import(pathToFileURL(path.join(temp,'pre-revision.mjs')));
   assert.deepEqual(A.HR_QUALITY_POLICY, policy.qualityPolicy, 'Policy changed after replication protocol');
   assertReviewedSampleEntry(await readFile('src/engine/sample-analysis.ts'));
@@ -102,7 +103,7 @@ try {
   for(const noise of ['clean',...p.records]) for(const snrDb of noise==='clean'?[null]:p.snrDb) for(const filter of p.filters)
     groups.push({noise,snrDb,filter,...summarize(rows.filter(r=>r.noise===noise&&r.snrDb===snrDb&&r.filter===filter))});
   const newlyFalse=rows.filter(r=>r.after==='usable'&&r.beyondReview&&!(r.before==='usable'&&r.beforeBeyondReview));
-  const report={schemaVersion:2,role,clinicalValidation:false,policy,numericalRevision:QRS_T_REVISION,newlyFalseUsable:newlyFalse,
+  const report={schemaVersion:2,role,clinicalValidation:false,policy,actualQualityPolicy:C.HR_QUALITY_POLICY,qualityRevision:"single-candidate-rate-sensitivity; historical policy restored only in reference bundle",numericalRevision:QRS_T_REVISION,newlyFalseUsable:newlyFalse,
     historicalQualityContract:{scope:'Exact pre-QRS/T numerical primitives; all historical equality assertions preserved',unchangedNonTpeakPrimitiveOutputs:identical,addedTPeakCandidates:addedTPeaks,rows:historicalRows},
     overall:summarize(rows),groups,cleanDefaults,rows,limitations:policy.limitations,
     provenance:{commit:execFileSync('git',['rev-parse','HEAD']).toString().trim(),baselineCommit:policy.baselineCommit,

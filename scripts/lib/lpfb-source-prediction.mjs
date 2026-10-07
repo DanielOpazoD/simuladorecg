@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 /** Frozen-source mathematical prediction of the LPFB early-vector intervention.
- * Retains area, time supports, main and delayed RV sources. Does not read the
+ * Retains kernel-weighted area, time supports and delayed RV source. Does not read the
  * candidate implementation. Independent clinical landmarks are separate tests. */
 export function predictLpfbSource(source){
  const ratio=source.includes('kernelWeight(k)')?'kernelWeight(ks[0]) / kernelWeight(ks[2])':'ks[0].sigma / ks[2].sigma';

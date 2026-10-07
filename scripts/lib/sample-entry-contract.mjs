@@ -9,17 +9,20 @@ import { createHash } from 'node:crypto';
  * is reviewed with the complete LPFB source repair (docs/lpfb-resolution.md).
  * Future revisions must supply new evidence; a filename-only allowlist is unsafe.
  */
+export function restoreHistoricalRateScreen(source) {
+  return source.toString()
+      .replace('  maximumRateDisagreementBpm: 5,\n','')
+      .replace(/  \/\/ A single extra candidate[\s\S]*?(?=  const requiresReview =)/,'')
+      .replace('    ((unmatched >= HR_QUALITY_POLICY.minimumUnmatched &&\n    unmatchedFraction >= HR_QUALITY_POLICY.unmatchedFraction) || (unmatched > 0 && rateDisagreement));',
+        '    unmatched >= HR_QUALITY_POLICY.minimumUnmatched &&\n    unmatchedFraction >= HR_QUALITY_POLICY.unmatchedFraction;');
+}
+
 export function assertReviewedSampleEntry(source, previous) {
   assert.equal(createHash('sha256').update(source).digest('hex'),
     '38cb87e3d610eae68f6e0cd0b66cac86ebe43c77a2739a47ce6fec8efaaa6c09',
     'Unreviewed sample-entry change: acquisition guard or analysis policy differs');
   if (previous !== undefined) {
-    // Restore only the reviewed single-candidate rate sensitivity screen.
-    const restored = source.toString()
-      .replace('  maximumRateDisagreementBpm: 5,\n','')
-      .replace(/  \/\/ A single extra candidate[\s\S]*?(?=  const requiresReview =)/,'')
-      .replace('    ((unmatched >= HR_QUALITY_POLICY.minimumUnmatched &&\n    unmatchedFraction >= HR_QUALITY_POLICY.unmatchedFraction) || (unmatched > 0 && rateDisagreement));',
-        '    unmatched >= HR_QUALITY_POLICY.minimumUnmatched &&\n    unmatchedFraction >= HR_QUALITY_POLICY.unmatchedFraction;');
+    const restored = restoreHistoricalRateScreen(source);
     const core = restored.split('\n/** Engineering acquisition domain')[0]
       .replace("import {reviewAlternatingCandidates} from './analysis/alternating-confidence';\n", '')
       .replace('reviewAlternatingCandidates(input, withholdImpulseDominatedMeasurements(input, retireUnsupportedFrontalAxis(input, attachMeasurementSupport(next, quality))))', 'withholdImpulseDominatedMeasurements(input, retireUnsupportedFrontalAxis(input, attachMeasurementSupport(next, quality)))')

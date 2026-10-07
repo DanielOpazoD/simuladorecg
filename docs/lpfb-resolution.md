@@ -10,7 +10,7 @@ teach a QS pattern instead of the expected initial r and dominant S.
 
 The final intervention redirects the early vector left-superior (-60 degrees),
 retains its frontal magnitude and Z, and balances its integrated area against
-the intermediate/main component. The original temporal supports, total XYZ area,
+the intermediate/main component. The original temporal supports, total kernel-weighted XYZ area,
 mean axis and delayed RV component remain intact. This applies to isolated LPFB
 and the combined BRD+LPFB source. It is an illustrative basis model, not an
 anatomical propagation simulation or population calibration.

@@ -124,7 +124,7 @@ try {
   const report={schemaVersion:2,stage:coherence?'A02-A03-independent-prediction':'A01-characterization-only',baselineCommit:BASE,
     eventCalendarRevision:'Strict bounded events and causal RR/PR assertions; optional programmed flutter sequences. Historical default samples remain exact.',
     torsadesFrameRevision:'Secondary T shares the historical time-varying QRS frame. Non-torsades defaults and QRS-only traces remain exact.',
-    lpfbSourceRevision:'Early left-superior source with dominant right-inferior activation; isolated LPFB only. Full frozen-source prediction.',
+    lpfbSourceRevision:'Early left-superior activation with kernel-weighted area conservation in isolated and combined LPFB. Full frozen-source prediction.',
     wpwSupportRevision:'Independent compact-support correction; no negative-phase delta before native onset.',
     afClockRevision:'Representative gamma renewal CV0.22; frozen candidate and independent source prediction, not universal AF physiology.',
     qtInitializationRevision:'First event retains nominal ventricular RR; adaptation starts at second event. Separate from A02/A03 morphology.',
