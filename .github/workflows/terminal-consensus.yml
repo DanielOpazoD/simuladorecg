@@ -36,7 +36,11 @@ jobs:
       - name: Acquire only the frozen remaining 32 records and independently verify their reader
         run: python scripts/prepare-terminal-consensus.py --output "$RUNNER_TEMP/prospective32" --crosscheck
       - name: Evaluate frozen targets without retuning or hiding adverse outcomes
+        id: frozen
+        continue-on-error: true
         run: node scripts/validate-terminal-consensus-v1a.mjs --baseline "$RUNNER_TEMP/qt-before" --prospective "$RUNNER_TEMP/prospective32/fixtures" --output "$RUNNER_TEMP/terminal-consensus/prospective"
+      - name: Enforce the explicit maintainer decision on the identical reported tradeoff
+        run: node scripts/accept-terminal-consensus-release.mjs "$RUNNER_TEMP/terminal-consensus/prospective/comparison.json" "$RUNNER_TEMP/terminal-consensus/prospective/release-decision.json"
       - name: Preserve source and complete evidence without demographic headers
         if: always()
         run: |

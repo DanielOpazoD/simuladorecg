@@ -1,7 +1,7 @@
 # Reemplazo numérico del final T y QT
 
-Estado: candidato congelado; no integrar hasta completar el conjunto reservado,
-la regresión de ruido, pruebas de navegador y todos los controles del commit.
+Estado: candidato congelado con excepción emparejada autorizada por el mantenedor;
+la integración sigue condicionada a todos los controles del commit.
 No es validación clínica ni un dispositivo diagnóstico.
 
 ## Problema y solución
@@ -88,7 +88,7 @@ validación. No se copió el repositorio independiente con licencia GPL.
 Los resultados de otras publicaciones, incluyendo evaluaciones por mejor
 canal, no se transfieren a este QT global de cuatro derivaciones.
 
-## Resultado reservado y decisión pendiente
+## Resultado reservado y decisión explícita
 
 La reserva de 32 registros se adquirió tras congelar el candidato. El lector
 WFDB 4.3.1 confirmó exactamente 1.920.000 muestras físicas y 28.101 eventos de
@@ -116,9 +116,13 @@ Resultado completo con esa reparación:
   +10 → −17,62 ms. Un resumen previo se retira. El resultado global del protocolo
   sigue siendo **fallido**, sin redefinirlo como éxito.
 
-Se ha solicitado al mantenedor una decisión explícita sobre este intercambio
-entre cobertura y precisión de esos pares. Hasta esa decisión y el cierre de
-los demás controles, el PR permanece en borrador.
+El 7 de octubre de 2026 el mantenedor autorizó explícitamente integrar este
+candidato después de comunicar ese intercambio. La decisión versionada fija
+los hashes del protocolo, reparación, resumen y comparación aprobados.
+El ensayo original continúa fallido. Un control de publicación distinto exige
+exactamente ese resultado autorizado y el mismo algoritmo; cualquier otra
+regresión, población, fuente o resultado vuelve a bloquear la publicación.
+La integración sigue condicionada al resto de las verificaciones del commit.
 
 ## Ruido: intercambio explícito, no regeneración del resultado anterior
 

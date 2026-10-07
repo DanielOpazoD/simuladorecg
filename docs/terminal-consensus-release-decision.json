@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "approved": true,
+  "repository": "DanielOpazoD/simuladorecg",
+  "pullRequest": 150,
+  "decisionDate": "2026-10-07",
+  "authorization": "Explicit maintainer approval in the direct project conversation after disclosure of the reserved-cohort paired regression.",
+  "scope": "Integrate this frozen candidate despite the two paired QT errors increasing from mean 7 to 20.90 ms and only two pairs rather than the planned three. All absolute precision, coverage, terminal and usable-confidence targets must remain exactly as reported. No permission to claim the original frozen test passed or to retune on the reserved records.",
+  "protocolSha256": "f410c70e160d09f4d2c26248c2d880e7f35aeb60b684bd4b8dfb97141c22fbe3",
+  "evaluatorAddendumSha256": "1825f48ebbc52149191f44026b4962d14981c435affa0686b34f9ae45a1d3e11",
+  "approvedSummarySha256": "97888ca46914093bf4473ec415f423ea67b752d95b8c91b06f9085916313959a",
+  "approvedComparisonSha256": "e833c99b5acafb429ccbc5117ff8164912d89a61a04e1787fab364e9785c5a93",
+  "clinicalValidation": false
+}

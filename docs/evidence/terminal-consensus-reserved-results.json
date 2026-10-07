@@ -776,7 +776,7 @@
       }
     ]
   },
-  "decision": "pending explicit maintainer review; frozen paired criterion failed",
+  "decision": "Explicit maintainer approval on 2026-10-07 for this documented paired tradeoff; original frozen criterion remains failed",
   "samplingBoundaryExceptions": [
     {
       "id": 138,
