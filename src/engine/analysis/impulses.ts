@@ -13,16 +13,19 @@ export function suppressImpulses(s: Pick<Signal, "fs" | "leads">): {
     long = new Float64Array(n),
     h = Math.max(1, Math.round(0.002 * fs)),
     k = Math.max(1, Math.round(0.008 * fs));
+  const { I, II, V1, V5 } = s.leads;
   for (let i = k; i < n - k; i++) {
     short[i] = Math.hypot(
-      ...names.map(
-        (l) => ((s.leads[l][i + h] - s.leads[l][i - h]) * fs) / (2 * h),
-      ),
+      ((I[i + h] - I[i - h]) * fs) / (2 * h),
+      ((II[i + h] - II[i - h]) * fs) / (2 * h),
+      ((V1[i + h] - V1[i - h]) * fs) / (2 * h),
+      ((V5[i + h] - V5[i - h]) * fs) / (2 * h),
     );
     long[i] = Math.hypot(
-      ...names.map(
-        (l) => ((s.leads[l][i + k] - s.leads[l][i - k]) * fs) / (2 * k),
-      ),
+      ((I[i + k] - I[i - k]) * fs) / (2 * k),
+      ((II[i + k] - II[i - k]) * fs) / (2 * k),
+      ((V1[i + k] - V1[i - k]) * fs) / (2 * k),
+      ((V5[i + k] - V5[i - k]) * fs) / (2 * k),
     );
   }
   const globalShort = Math.max(...short),
@@ -56,7 +59,7 @@ export function suppressImpulses(s: Pick<Signal, "fs" | "leads">): {
       ),
     );
     const magnitude = (j: number) =>
-      Math.hypot(...names.map((l, k) => s.leads[l][j] - base[k]));
+      Math.hypot(I[j] - base[0], II[j] - base[1], V1[j] - base[2], V5[j] - base[3]);
     let center = index;
     for (
       let j = Math.max(0, index - Math.round(0.008 * fs));
