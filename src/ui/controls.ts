@@ -26,18 +26,18 @@ export function amplitudeControlState(c: ECGCase) {
 /** Applicability of this model's primary-T direction control, not clinical impossibility. */
 export function tAxisControlState(c: ECGCase) {
   const rhythm = rhythmControlState(c);
-  if (rhythm.noOrganizedBeats) return {disabled: true, reason: "Sin onda T organizada."};
-  if (c.tAmp === 0) return {disabled: true, reason: "T anulada: activa su amplitud. El eje se conserva."};
+  if (rhythm.noOrganizedBeats) return {disabled: true, reason: "Control inactivo: no hay T organizada."};
+  if (c.tAmp === 0) return {disabled: true, reason: "Control inactivo: T anulada. El eje se conserva."};
   if (rhythm.qrsAxisDisabled || c.conduction === "lbbb" || c.conduction.includes("rbbb"))
-    return {disabled: true, reason: "Derivado del QRS. Este valor se conserva para la T primaria."};
+    return {disabled: true, reason: "Control inactivo. Derivado del QRS; valor conservado para T primaria."};
   if (c.overload !== "none")
-    return {disabled: true, reason: "Fijado por el patrón de sobrecarga. El valor se conserva."};
+    return {disabled: true, reason: "Control inactivo: dirección fijada por la sobrecarga."};
   // Probe the actual primary-vector rule instead of duplicating cancellation
   // factors for every ischemic/electrolyte combination in the interface.
   const beat = {time: 0, rr: 1, kind: "normal" as const};
   const first = tVector({...c, tAxis: 0}, beat), second = tVector({...c, tAxis: 90}, beat);
   if (first.every((value, i) => value === second[i]))
-    return {disabled: true, reason: "El patrón actual no usa este eje; se conserva el valor."};
+    return {disabled: true, reason: "Control inactivo: este patrón no usa el eje solicitado."};
   return {disabled: false, reason: "Ajusta la T primaria; la T secundaria sigue el QRS."};
 }
 

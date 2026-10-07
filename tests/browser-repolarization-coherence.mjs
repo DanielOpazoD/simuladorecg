@@ -33,10 +33,13 @@ try{
   assert.equal(await axisControl.isDisabled(),true);
   assert.equal(await axisControl.inputValue(),'25');
   assert.equal(await axisControl.getAttribute('aria-describedby'),'t-axis-note');
+  assert.ok(await axisControl.evaluate(e=>Number(getComputedStyle(e).opacity)<1));
+  assert.match(await page.locator('#t-axis-note').innerText(),/Control inactivo/);
   assert.match(await page.locator('#t-axis-note').innerText(),/Derivado del QRS/);
   const primary={...base,conduction:'normal',overload:'none',rhythm:'sinus',ectopy:'none',ventricularSource:'auto'};
   await importCase(primary);
   assert.equal(await axisControl.isDisabled(),false);assert.equal(await axisControl.inputValue(),'25');
+  assert.equal(await axisControl.evaluate(e=>getComputedStyle(e).opacity),'1');
   const changeWithKeyboard=async(control,key)=>{
    const previous=await page.locator('#ecg').evaluate(e=>e.toDataURL());
    await control.focus();await control.press(key);

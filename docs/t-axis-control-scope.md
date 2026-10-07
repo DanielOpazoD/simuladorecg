@@ -26,3 +26,9 @@ Verification requires:
 No generator, acquisition, diagnostic measurement or model coefficient is changed.
 Local browser execution is not part of the verification record; rendered checks
 and screenshots are produced by the repository's existing CI browser workflow.
+
+Actual first-pass CI screenshots showed that the custom range still looked active
+despite its disabled semantics. The reviewed revision therefore adds a visibly
+muted native disabled state and the explicit text “Control inactivo”; the associated
+reason remains readable. Browser checks verify the computed inactive/active opacity
+as well as interaction and value retention. This required a new exact-head CI run.
