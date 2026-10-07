@@ -103,3 +103,13 @@ Las pruebas recomputan el resultado adverso desde sus filas, preservan la cobert
 y prueban conjuntos vacíos, correlación intrarregistro, errores extremos y datos
 no finitos. CI verde aquí significa integridad/reproducibilidad; **no** que se
 hayan cumplido los criterios de precisión.
+
+## Aclaración posterior sobre la escala de origen
+
+La comprobación con WFDB acredita aritmética idéntica según los encabezados, no
+una verificación independiente del voltaje original. La [auditoría de escala y
+morfología](annotated-morphology-reference.md) posterior encontró ganancias
+compatibles con normalización por canal en los 80 registros de desarrollo. Por
+eso estos resultados temporales describen la conversión literal de la fuente y
+no validan calibración absoluta ni transportabilidad multiderivación. No se
+modificaron el protocolo prospectivo, sus umbrales ni su resultado adverso.

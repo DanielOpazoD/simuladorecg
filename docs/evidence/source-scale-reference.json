@@ -1,0 +1,1428 @@
+{
+  "schemaVersion": 1,
+  "morphologyReportSha256": "e60048c6580a759496997808ceb8d024abbc1f682503699d113f5e35b8f23c41",
+  "originalControlReportSha256": "898493dae54c6785abe5add0febf06ba5f251741d3fde6d85f41aca8f6285248",
+  "cohorts": [
+    {
+      "name": "original40",
+      "fixtureManifestSha256": "73d6a17412a616f12f6f3c0b2be95bef1b5439d50e2b1040e82e8565d97e681d",
+      "protocolSha256": "65e740ec19d301c9dbf2f852839998323b90b608fb3de8b9b9ad4cee7dd3cd0c",
+      "records": 40
+    },
+    {
+      "name": "calibration40",
+      "fixtureManifestSha256": "2ac717ea3c36799c817f7e6377f023bd217b463594219c0f5ce7f2ae548171c6",
+      "protocolSha256": "61853f2ed360fc0266cc7db9ef4304564515edb489eb5085c3bf0bdc1bc986fe",
+      "records": 40
+    }
+  ],
+  "sourceHashes": {
+    "tests/support/morphology-metrics.ts": "debf760223590e697c39f33dff3183c5a935f7ae8cf6c262c2a53c73c96c622f",
+    "tests/support/annotated-morphology.ts": "fb7b8f94678a5e11737c4d660f0275f21f18cc000cec802eaa989bc88d7cc5bd",
+    "scripts/lib/source-scale.mjs": "b9d14cbb0eab9b29aff1a18d3a5f25f035849aad24bdb4fc781fb67c5296e71d",
+    "scripts/reference-annotated-morphology.mjs": "6e5df13a73264f724bdf3b5e0adb8561bbd8c34f4562405d4e690f2cdbb8c0be",
+    "tests/reference/ludb/load-ludb.mjs": "f9d346bf75147fce13464bb83125545cb8adc0da1f6cf4db101b6daf39ff4498"
+  },
+  "absoluteAmplitudeReference": {
+    "eligible": false,
+    "blockedMetrics": [
+      "qrsPeakToPeakMv",
+      "tPeakMv",
+      "tSignedAreaMvS",
+      "tAbsoluteAreaMvS",
+      "jMv",
+      "j60Mv"
+    ],
+    "reason": "LUDB header gains track digital channel range; reader arithmetic agreement does not establish original physical voltage. No inferred rescaling."
+  },
+  "recordBalancedScaleInvariantMetrics": {
+    "I": {
+      "tFwhmMs": {
+        "available": 77,
+        "missing": 3,
+        "total": 80,
+        "p05": 38.47329887872899,
+        "median": 91.1288917948092,
+        "p95": 121.36037923152986
+      },
+      "tSymmetry": {
+        "available": 78,
+        "missing": 2,
+        "total": 80,
+        "p05": 0.5506755952380971,
+        "median": 0.7342747111681636,
+        "p95": 1.2724673202614325
+      },
+      "tToQrs": {
+        "available": 79,
+        "missing": 1,
+        "total": 80,
+        "p05": -0.18699896520152878,
+        "median": 0.23799749143305782,
+        "p95": 0.6654367441350609
+      }
+    },
+    "II": {
+      "tFwhmMs": {
+        "available": 74,
+        "missing": 6,
+        "total": 80,
+        "p05": 52.20046519460025,
+        "median": 93.4501706375176,
+        "p95": 134.7896486085011
+      },
+      "tSymmetry": {
+        "available": 79,
+        "missing": 1,
+        "total": 80,
+        "p05": 0.5462463630340164,
+        "median": 0.7560975609756098,
+        "p95": 1.1298809523809479
+      },
+      "tToQrs": {
+        "available": 79,
+        "missing": 1,
+        "total": 80,
+        "p05": -0.13795937994755048,
+        "median": 0.23892019829307645,
+        "p95": 0.43419720011638074
+      }
+    },
+    "III": {
+      "tFwhmMs": {
+        "available": 78,
+        "missing": 2,
+        "total": 80,
+        "p05": 23.762696174825336,
+        "median": 75.71681716766099,
+        "p95": 129.35883044785848
+      },
+      "tSymmetry": {
+        "available": 80,
+        "missing": 0,
+        "total": 80,
+        "p05": 0.3912940078236128,
+        "median": 0.7659096659919046,
+        "p95": 1.2281093427644967
+      },
+      "tToQrs": {
+        "available": 80,
+        "missing": 0,
+        "total": 80,
+        "p05": -0.2666242322833223,
+        "median": 0.07761969090692797,
+        "p95": 0.4493176411364212
+      }
+    },
+    "aVR": {
+      "tFwhmMs": {
+        "available": 75,
+        "missing": 5,
+        "total": 80,
+        "p05": 59.5361969125265,
+        "median": 91.06349555867688,
+        "p95": 136.10056454173025
+      },
+      "tSymmetry": {
+        "available": 78,
+        "missing": 2,
+        "total": 80,
+        "p05": 0.5239175663186071,
+        "median": 0.7173479292493521,
+        "p95": 1.097564186965105
+      },
+      "tToQrs": {
+        "available": 79,
+        "missing": 1,
+        "total": 80,
+        "p05": -0.43190419480890563,
+        "median": -0.2470850778925699,
+        "p95": 0.06458519927199066
+      }
+    },
+    "aVL": {
+      "tFwhmMs": {
+        "available": 78,
+        "missing": 2,
+        "total": 80,
+        "p05": 21.19049496560411,
+        "median": 82.7505199979498,
+        "p95": 118.5799950533111
+      },
+      "tSymmetry": {
+        "available": 78,
+        "missing": 2,
+        "total": 80,
+        "p05": 0.5336182877406292,
+        "median": 0.8132766812865501,
+        "p95": 1.5901190476190452
+      },
+      "tToQrs": {
+        "available": 79,
+        "missing": 1,
+        "total": 80,
+        "p05": -0.26753573975260053,
+        "median": 0.12847014989101047,
+        "p95": 0.5082330141842196
+      }
+    },
+    "aVF": {
+      "tFwhmMs": {
+        "available": 78,
+        "missing": 2,
+        "total": 80,
+        "p05": 48.42156793322236,
+        "median": 91.63991718939302,
+        "p95": 133.54553693712285
+      },
+      "tSymmetry": {
+        "available": 80,
+        "missing": 0,
+        "total": 80,
+        "p05": 0.5410563673081522,
+        "median": 0.7408291805094124,
+        "p95": 1.3265670314637428
+      },
+      "tToQrs": {
+        "available": 80,
+        "missing": 0,
+        "total": 80,
+        "p05": -0.12341911930447155,
+        "median": 0.1955411633080128,
+        "p95": 0.47665666756009284
+      }
+    },
+    "V1": {
+      "tFwhmMs": {
+        "available": 64,
+        "missing": 16,
+        "total": 80,
+        "p05": 36.98228477424386,
+        "median": 75.80611187887054,
+        "p95": 169.84711436112602
+      },
+      "tSymmetry": {
+        "available": 79,
+        "missing": 1,
+        "total": 80,
+        "p05": 0.4981481481481488,
+        "median": 0.811320754716985,
+        "p95": 20.899999999999597
+      },
+      "tToQrs": {
+        "available": 79,
+        "missing": 1,
+        "total": 80,
+        "p05": -0.34692830788920376,
+        "median": 0.053737357640317326,
+        "p95": 0.26478886914697686
+      }
+    },
+    "V2": {
+      "tFwhmMs": {
+        "available": 75,
+        "missing": 5,
+        "total": 80,
+        "p05": 70.45293408056263,
+        "median": 116.0879844701368,
+        "p95": 155.76424968889836
+      },
+      "tSymmetry": {
+        "available": 79,
+        "missing": 1,
+        "total": 80,
+        "p05": 0.5724295774647866,
+        "median": 0.8461426066627683,
+        "p95": 1.3371428571428614
+      },
+      "tToQrs": {
+        "available": 80,
+        "missing": 0,
+        "total": 80,
+        "p05": -0.2357055573731451,
+        "median": 0.20777308567030034,
+        "p95": 0.4766309325124293
+      }
+    },
+    "V3": {
+      "tFwhmMs": {
+        "available": 78,
+        "missing": 2,
+        "total": 80,
+        "p05": 66.27485538331226,
+        "median": 107.97724363855366,
+        "p95": 151.4021977164089
+      },
+      "tSymmetry": {
+        "available": 79,
+        "missing": 1,
+        "total": 80,
+        "p05": 0.5620260382936456,
+        "median": 0.7416666666666638,
+        "p95": 1.173978848250802
+      },
+      "tToQrs": {
+        "available": 80,
+        "missing": 0,
+        "total": 80,
+        "p05": -0.15725693275381927,
+        "median": 0.2565752198002704,
+        "p95": 0.5838280104081225
+      }
+    },
+    "V4": {
+      "tFwhmMs": {
+        "available": 78,
+        "missing": 2,
+        "total": 80,
+        "p05": 68.52911734256976,
+        "median": 100.1916155830454,
+        "p95": 147.02315419805572
+      },
+      "tSymmetry": {
+        "available": 80,
+        "missing": 0,
+        "total": 80,
+        "p05": 0.4537175448219985,
+        "median": 0.7162343470483015,
+        "p95": 0.9321660482374745
+      },
+      "tToQrs": {
+        "available": 80,
+        "missing": 0,
+        "total": 80,
+        "p05": -0.22315946336885156,
+        "median": 0.19703650469241674,
+        "p95": 0.42600834297629436
+      }
+    },
+    "V5": {
+      "tFwhmMs": {
+        "available": 78,
+        "missing": 2,
+        "total": 80,
+        "p05": 63.67716184264636,
+        "median": 95.14157249998618,
+        "p95": 132.29405417780455
+      },
+      "tSymmetry": {
+        "available": 79,
+        "missing": 1,
+        "total": 80,
+        "p05": 0.5514813016027219,
+        "median": 0.7435807656395919,
+        "p95": 1.1263331138907213
+      },
+      "tToQrs": {
+        "available": 80,
+        "missing": 0,
+        "total": 80,
+        "p05": -0.24060431698561616,
+        "median": 0.18502794684076213,
+        "p95": 0.3804581410746743
+      }
+    },
+    "V6": {
+      "tFwhmMs": {
+        "available": 74,
+        "missing": 6,
+        "total": 80,
+        "p05": 66.81185033604899,
+        "median": 95.49956920985838,
+        "p95": 125.91813312142948
+      },
+      "tSymmetry": {
+        "available": 77,
+        "missing": 3,
+        "total": 80,
+        "p05": 0.5712215909090882,
+        "median": 0.7586206896551677,
+        "p95": 1.0412001594896383
+      },
+      "tToQrs": {
+        "available": 79,
+        "missing": 1,
+        "total": 80,
+        "p05": -0.17487837320843796,
+        "median": 0.19141596465824245,
+        "p95": 0.41512173429662713
+      }
+    }
+  },
+  "windowAccounting": {
+    "annotatedQrs": 8746,
+    "reasons": {
+      "annotated-windows-admitted": 6961,
+      "baseline-overlaps-annotated-wave": 819,
+      "missing-T-association": 898,
+      "incomplete-QRS-window": 68
+    },
+    "j60Contexts": {
+      "before-T": 6151,
+      "inside-T": 810,
+      "after-T": 0,
+      "unavailable": 1785
+    }
+  },
+  "ludbScale": {
+    "records": 80,
+    "channels": 960,
+    "gainEqualsRangeChannels": 960,
+    "rawEinthovenExactRecords": 80,
+    "declaredMvEinthovenRmsMedian": 0.061688139799916525,
+    "recordsEvidence": [
+      {
+        "id": 7,
+        "cohort": "original40",
+        "physicalSamplesSha256": "6d7a9ab5be1d4cb14c33bbf283a069ae91d9ae66db91879e7c36e163886a79cd",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.05964911361145279
+      },
+      {
+        "id": 11,
+        "cohort": "original40",
+        "physicalSamplesSha256": "efd4ec984d05981de96da9b09001148d6b7da7c684065b467e370e0dd6914cf3",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.046105342545658984
+      },
+      {
+        "id": 13,
+        "cohort": "original40",
+        "physicalSamplesSha256": "b308d8975ca8bacb4917e86804d86cfda1cbf2acfa4b09b7bae77a920612d727",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.08128576933423656
+      },
+      {
+        "id": 18,
+        "cohort": "original40",
+        "physicalSamplesSha256": "8eb80ffff74fc01ec243800fc4b8ab7d9c388a34477fcd8d1ddb83a92b438c9b",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.04041625640243171
+      },
+      {
+        "id": 19,
+        "cohort": "original40",
+        "physicalSamplesSha256": "07c4fca8e4376ccbf34e5341aa6c1d0c71545512290d01ccc75ca962c7f9880c",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.0678618417280356
+      },
+      {
+        "id": 26,
+        "cohort": "original40",
+        "physicalSamplesSha256": "96a331c302ad0631f1cbf028e9fd772689757f05e154f53ee4a8bc345e1a69c7",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.06159707978306687
+      },
+      {
+        "id": 36,
+        "cohort": "original40",
+        "physicalSamplesSha256": "5cb0eec2bb6ce840988eeac0b6d1cd064432517cbb4397ef74ef6c8dfa4cf88f",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.07823363646013963
+      },
+      {
+        "id": 39,
+        "cohort": "original40",
+        "physicalSamplesSha256": "18692eec93da414aa0cfa0caed0e48e151d8bf2fb23521c68ab6b44dad773afd",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.038304101923957744
+      },
+      {
+        "id": 40,
+        "cohort": "original40",
+        "physicalSamplesSha256": "105326d2ca433c467c303fdf7308bed644002398ccec544ddc4f592bd989c3d8",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.021607237988908488
+      },
+      {
+        "id": 41,
+        "cohort": "original40",
+        "physicalSamplesSha256": "91889f7bfffe4505c283efa0330d3e8dd651733da3adcbcf1344faf28916c221",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.16572780759871333
+      },
+      {
+        "id": 44,
+        "cohort": "original40",
+        "physicalSamplesSha256": "f055137eaf6bf69dea83468b4dbbca8cb0ab7aaa50e4b41afbf98869ab46d778",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.020007421291411066
+      },
+      {
+        "id": 51,
+        "cohort": "original40",
+        "physicalSamplesSha256": "3147f970544a3b7dd79bd39820ceabf13dcd4873b92595929eb05d85d57476b8",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.07762868198606353
+      },
+      {
+        "id": 52,
+        "cohort": "original40",
+        "physicalSamplesSha256": "2c7019af2d553e7800716ee2a66dd74ca93093acf20ba7df805db841185d1d70",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.03431403584731365
+      },
+      {
+        "id": 60,
+        "cohort": "original40",
+        "physicalSamplesSha256": "8323bf4e8c7abb243d5d10da6a0dadcb58ad71366da9d8c2d55f9c78937fd152",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.07443081216082424
+      },
+      {
+        "id": 64,
+        "cohort": "original40",
+        "physicalSamplesSha256": "156bf50ad08c0b21b5317be133e568a1e544deff4789d197cb51098ff1abb82a",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.016712915748169615
+      },
+      {
+        "id": 69,
+        "cohort": "original40",
+        "physicalSamplesSha256": "30d669a98e8c23b92a46ce5ac8efd4adbec514dd61880d3019b32e6b9a8f317e",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.07020637344347441
+      },
+      {
+        "id": 74,
+        "cohort": "original40",
+        "physicalSamplesSha256": "17714dd4acb956c127bb627489923bbc3eacc18d1e6990b477981816a78fbc05",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.047938603835218606
+      },
+      {
+        "id": 75,
+        "cohort": "original40",
+        "physicalSamplesSha256": "7a6b8f157fa45f162697fd7c4b902ed74bb60fb44ef10c24a57740dce5ba143e",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.04998786343574298
+      },
+      {
+        "id": 82,
+        "cohort": "original40",
+        "physicalSamplesSha256": "65d64203b0277cec01f194d19cc2fe24d8e88766085d7c0aa42edd9ca1f0d05d",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.013220001862344849
+      },
+      {
+        "id": 107,
+        "cohort": "original40",
+        "physicalSamplesSha256": "dc0b16948d41205a0fe8edc14ab25baa7b8247f99ce95874122b3faf8f1ce195",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.0007632543062261707
+      },
+      {
+        "id": 124,
+        "cohort": "original40",
+        "physicalSamplesSha256": "d86d3630a5d7c9251423f5e1d51cc3ec3fac38d67ec85a9f5c60a49b15c3f98c",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.011485981187304383
+      },
+      {
+        "id": 125,
+        "cohort": "original40",
+        "physicalSamplesSha256": "05eee7e36f5032d23e98efd7fc793ce4c389d88536f5a73994d19b15a7cf6ed7",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.07960947610195226
+      },
+      {
+        "id": 130,
+        "cohort": "original40",
+        "physicalSamplesSha256": "f14799d4e3f9910f072844da4c3dc767b666951cd32718938d8acdfe155092ab",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.04386330915513366
+      },
+      {
+        "id": 140,
+        "cohort": "original40",
+        "physicalSamplesSha256": "8a2c300e49a6cc98723d3432f35cfefd6e94822bada2a26688436b3bf409aa16",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.10115278612972564
+      },
+      {
+        "id": 142,
+        "cohort": "original40",
+        "physicalSamplesSha256": "ba154676261c001982166618c754934d559106a1eab18623db69479b3f85a1d4",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.06468488621639232
+      },
+      {
+        "id": 146,
+        "cohort": "original40",
+        "physicalSamplesSha256": "fab0cc02e23fdef21f231a7df91ce7015b0f1f68b517e933c04f567329683e82",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.06203490237620849
+      },
+      {
+        "id": 154,
+        "cohort": "original40",
+        "physicalSamplesSha256": "62228ebcf99222ee19826836bf921a34afb85b91d6085c0903c91d884543dd52",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.08180442766353545
+      },
+      {
+        "id": 157,
+        "cohort": "original40",
+        "physicalSamplesSha256": "101e1eeeaa49c24c6e306a4f6e2a70651ae341712ca702555ed0414bd79e2f83",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.12336151502041787
+      },
+      {
+        "id": 161,
+        "cohort": "original40",
+        "physicalSamplesSha256": "5926e05adf4b854f76258205afe54155a243b2cf6e46327b08801747596b8c43",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.08475795119299533
+      },
+      {
+        "id": 166,
+        "cohort": "original40",
+        "physicalSamplesSha256": "04c916f23720f57cf1bca7960cd17aaa36324d9c3e7f35185127ed249a614cca",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.08286657913469994
+      },
+      {
+        "id": 173,
+        "cohort": "original40",
+        "physicalSamplesSha256": "10ac483ddefaf87066d5dd26e5dab1768c7c97c05bbf3d000865954d80afd221",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.055833894362064145
+      },
+      {
+        "id": 175,
+        "cohort": "original40",
+        "physicalSamplesSha256": "e8eb023336456e1d5bff2cdfb7ea6f1080ebadbe1a65480ef0840782692633e6",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.07431168922912662
+      },
+      {
+        "id": 176,
+        "cohort": "original40",
+        "physicalSamplesSha256": "3e41814618745f43812c6c15a9337067106d070d8ff9e8a8ed17de55e4f47642",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.04882497688227649
+      },
+      {
+        "id": 178,
+        "cohort": "original40",
+        "physicalSamplesSha256": "2c999bb003a080430a83b03cd01043180dce7bd46cb545f17c134d0181cf3716",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.05263364229030227
+      },
+      {
+        "id": 179,
+        "cohort": "original40",
+        "physicalSamplesSha256": "2235f340bed4e05c87c064f4a4ec78c3e1fe8441dd893842f2f476cfa24073a9",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.04501557125528984
+      },
+      {
+        "id": 184,
+        "cohort": "original40",
+        "physicalSamplesSha256": "45435bc92a60fee4cff9be635a5b5af41ee4f1b6b546e84f72898e28226393e8",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.07811545054874461
+      },
+      {
+        "id": 188,
+        "cohort": "original40",
+        "physicalSamplesSha256": "f18e13c580dedb0cddb8d55bf506f3ea58dfd7a03b320158dbf8c231bd290499",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.06170685931565971
+      },
+      {
+        "id": 193,
+        "cohort": "original40",
+        "physicalSamplesSha256": "955f91779deb7fa71b082b1bf7c1e8b72770042f1a92162ee8118dc20aec6b44",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.1080760739034084
+      },
+      {
+        "id": 195,
+        "cohort": "original40",
+        "physicalSamplesSha256": "217aceca466b9bea7ef344a7662d2de8afdaf5d61096ea124ecd621c956355cc",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.08106874524810054
+      },
+      {
+        "id": 197,
+        "cohort": "original40",
+        "physicalSamplesSha256": "70509ce5a7edd4193caeab6577cc892eb386335bdae75a2a52cc05961027feb1",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.05738921417174688
+      },
+      {
+        "id": 5,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "a8bfba60f906db4a92f7dca4a4cdea997ba570b1aaa42f2f07faa867debd04b8",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.02205031959401879
+      },
+      {
+        "id": 12,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "6fb33e692b96b9560ce7bccebafbd24e86102c4e77a705e670c563c13577a9ec",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.04451902490595311
+      },
+      {
+        "id": 16,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "ae3a5bfb92fd6cad5a7632c011b669e7eb91f0ff36eeeb11f9c468ece54a2d67",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.03353787041886957
+      },
+      {
+        "id": 17,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "cbe44d3cd01b0a9c6481965751f0d26d8ab8762519576fb9dfafd3af8a5d94f2",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.012261395516782115
+      },
+      {
+        "id": 20,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "b2543932d7308fb3f84a89ad67c540b58d2f1ea54ebe48a4fe5378fbfade7233",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.06479925726726864
+      },
+      {
+        "id": 21,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "9aa11876886038b9f660ba7c833667550380570deb972a3969386c8b0d70d511",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.06515864525069749
+      },
+      {
+        "id": 33,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "b1393b8b1f93703259cc256bb7ea3c28672029d08e589092caca046a58929b81",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.04507904759337082
+      },
+      {
+        "id": 34,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "c00a14d8d3ef1ba45568770263b02f8f706f8909c65c294a9c3d13a74d5e3821",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.07325939907021982
+      },
+      {
+        "id": 35,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "66cb0b9e68acb36839aca057a2bcce4a98ed21578b5e4c8b77e36056a38238bc",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.058495235998454076
+      },
+      {
+        "id": 49,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "01f78848339120e52fc090908afd5b4bcebb96349cc665ec2b476d5949a5583a",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.05020884239058068
+      },
+      {
+        "id": 56,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "56a71050d04a9d3222dc055da9347fe03b431732d5b3fb5fcf4cd380420d1f04",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.04798365713432127
+      },
+      {
+        "id": 57,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "48580c8965d44df6d89b6cdcfc3b99a27f05a926c1ab73e9df44b1294b3097c1",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.058419617561156656
+      },
+      {
+        "id": 62,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "947059acb69b1d6deab4798fe07520c7b3e5e3e9401dae44471371fcc270b6f5",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.06230125003342261
+      },
+      {
+        "id": 63,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "e6c2cec963cc80ce37aefd4ce68c77dc743736249739d29930bc351c6c4c5fa5",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.1167478595109839
+      },
+      {
+        "id": 66,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "dc48e91041c3b5d29d40a339306551bced34610048b3f129727bce498e059c0c",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.020277257060453496
+      },
+      {
+        "id": 68,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "f263e5556ffd909890f5200b17653744563d31e1bbb2d50db49b42c8dc470ac9",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.079039970673696
+      },
+      {
+        "id": 70,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "1a2e0b5556e069a3e124def3b78c8f18a2168af76fbc35902262b4b3611926b3",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.09791367109236995
+      },
+      {
+        "id": 77,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "f0eb593bbafcd147f34bfaf4083bd42571ad586bc95f8cfe69d48d6e35a41138",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.025197005957067697
+      },
+      {
+        "id": 79,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "9821aa77101fcf3e8eb070a1fb7a95f25ef8c49ddcbff6150c9f998c55ac4f6a",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.05232574901112341
+      },
+      {
+        "id": 80,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "210daa31a51c4be99da128c815d71a2891eebd2124bc35dd674a34eca8fc5477",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.06300948055417978
+      },
+      {
+        "id": 85,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "c19024a7fcc31a6d53a88243b1682145213f52554420c8cab904d4197fa8d7ac",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.02068272808107164
+      },
+      {
+        "id": 87,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "f7a03cc19a5279bff31c22228e3dd01e1424431668e86db544d0b663d8e542ac",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.11996505946791952
+      },
+      {
+        "id": 88,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "a25d5da1e25b3e5ccc72cdc873e0ea5a631b1c637e472689e6007aa9dc5a36ab",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.011030719394016335
+      },
+      {
+        "id": 95,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "a7ff6dfa8d3251a0a55c64f6beebfa2236382064f3e6d588960ff8862dbeb9e7",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.06000856770482532
+      },
+      {
+        "id": 105,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "61cc3c6770e5f587a64e3880629fcc0484d806296007210e972a0b023d0a6b02",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.08139937806508793
+      },
+      {
+        "id": 113,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "b4dff09858bda8e0234a2a5cddcd3f03dc6a6dbe02d0f9e83ec19266be67e60e",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.0756081085207327
+      },
+      {
+        "id": 118,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "e92d7b579238efee1fd6754309568cc7e82aa925d806d8d58e0d66191e5e7537",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.06165753130723321
+      },
+      {
+        "id": 128,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "6dbc5203fd7c0440fa2256687796447e088d5a1b1eb8217bdd55a928bd2e7667",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.045704270604047144
+      },
+      {
+        "id": 131,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "686a763ea196f3d865640ea817e6bddbf183d1ff5de60b78ad4febb33edadec2",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.02720570640343357
+      },
+      {
+        "id": 133,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "69ffa885b15ddf262bb6bb8f5ac25c5ff7058b236c77900fb626b286aeff45a7",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.08617704729589364
+      },
+      {
+        "id": 136,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "9b2c85df57f821d08dc8906cdc9fb619d6f3f1240bcfa5837c496d6693382b31",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.08310798607341005
+      },
+      {
+        "id": 139,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "c0a3ee63234603e57d8ac0aed9c58c3738224bdea98eda42bb0ab9bad0d9e009",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.07239233551729374
+      },
+      {
+        "id": 141,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "20eafc7c9b49ed7c9d5c3f464b09e79ba242e8acf062803f2059d18ce8f0e2d9",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.06525545456053655
+      },
+      {
+        "id": 167,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "0768f8fcf6f9ebf76c2642ad46f0980f79bd438ad080478d4b36ae20fb19b9df",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.10434567430778462
+      },
+      {
+        "id": 169,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "3b2a7ba49f5f6a715d8a2702b25e6672792ccc9a9140a5af8ffcd8dd54eb817f",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.08355177556388847
+      },
+      {
+        "id": 180,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "6c3b89a4b5be66286313d999d8a4a04cfacff1d3f58b337a9f954d16bcca7710",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.09530064173068135
+      },
+      {
+        "id": 185,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "fad33083705d9fb19977e68f089e7728732a955d31b7bb6301eaf5994f48e257",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.06166942028417334
+      },
+      {
+        "id": 189,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "04ef493ea480fc8b5df25edfe83279def1a9d29a31696e092ab31f2b03edd4b7",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.0551794245797066
+      },
+      {
+        "id": 191,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "b8fb5206c7c4f0bdfe12de754c1375ac278355f348dfaa59cf6a4a5d27cd9b22",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.11149358680035659
+      },
+      {
+        "id": 198,
+        "cohort": "calibration40",
+        "physicalSamplesSha256": "162e3a5e99be6d7c07437f6dc64a9526a30ebfdeddb37d4620934e12619a5991",
+        "gainEqualsRangeChannels": 12,
+        "rawEinthovenRms": 0,
+        "declaredMvEinthovenRms": 0.08369253343294529
+      }
+    ]
+  },
+  "ptbxlOriginalScale": {
+    "summary": {
+      "records": 64,
+      "physicalSamplesCrosschecked": 3840000,
+      "gainEqualsRangeChannels": 0,
+      "maxDeclaredMvEinthovenRms": 0.0004356604182158418
+    },
+    "sourceManifestSha256": "b7224b92b341511ec3ceb13dc6652079b2c36a06504bcb49506f157f51dc695d",
+    "recordsEvidence": [
+      {
+        "id": 12667,
+        "sourceSha256": "acc3015649b88af5a9e419ad74b2e7d552a96814ea26700a7ac92bef4f3b5b70",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00039899874686520235
+      },
+      {
+        "id": 15869,
+        "sourceSha256": "1c7a5e4968600c2b40a55e67bfd141614cad5587459620592202af3b08227a2a",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00031080540535840195
+      },
+      {
+        "id": 4811,
+        "sourceSha256": "e5388e6d8abe3fce034edf50b38e9ae300b7b69e6a9eaa5358e31db242698d22",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00039293765408777206
+      },
+      {
+        "id": 10299,
+        "sourceSha256": "78cb6a275bb511cfeac63b48e480083cbdd7b7ad9e88604c00d020e94838b683",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00034058772731852946
+      },
+      {
+        "id": 20895,
+        "sourceSha256": "9927b976fd83851b0f9054792aab0cf11b2180f4b79f5ff7dbcb1578ef375f80",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00037762415176998467
+      },
+      {
+        "id": 11572,
+        "sourceSha256": "6d8875b1a87e8b80dc6b4eee7caa840b59c25815b6db192330d966563faded42",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003883297567789543
+      },
+      {
+        "id": 13343,
+        "sourceSha256": "1d19ef5883688331f1d2a3c622907253575a32978582b6b21d5a43212fbf1623",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0004356604182158418
+      },
+      {
+        "id": 5644,
+        "sourceSha256": "fead1806b39b3b0b9412144bfde7fb1740cce4319ee7d342294196658a7992e2",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003944616584663226
+      },
+      {
+        "id": 20635,
+        "sourceSha256": "ec7120b5d5be1cc0e8c1fcfbb9d94bc155023feccfe093f3027aff6bc8cc7130",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00041400483088969157
+      },
+      {
+        "id": 10817,
+        "sourceSha256": "ddb38f681acaa29e0b0bdb7c406dc7e73fde2ae314a62ff1b3d363ea952a4686",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00038026306683663257
+      },
+      {
+        "id": 13738,
+        "sourceSha256": "38b764fe2ca535b311975bfbf2836a476447fc36a7e369c738c1acb6d3b968ec",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00032465366161495954
+      },
+      {
+        "id": 10042,
+        "sourceSha256": "6655e747584eb0dc723be4ad32bef4ee630448b36b0f1c20e9ee63552de00b06",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003944616584663222
+      },
+      {
+        "id": 19341,
+        "sourceSha256": "07056278ec799e971aa8e70cf15a451d0e94c0735a063e11705c2025f9a75472",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003891015291668766
+      },
+      {
+        "id": 15794,
+        "sourceSha256": "4b5f1a419bc4b955d0db14eaf051b9a92b71ea271033d00a532c81c6ba5f0fbc",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.000401995024844838
+      },
+      {
+        "id": 9181,
+        "sourceSha256": "1fa41476d2efff94a8de96f9a013a52dd10c118e106aaa6934c8c9169586843f",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00031843366656181363
+      },
+      {
+        "id": 15956,
+        "sourceSha256": "fd8c06904217033c10b8565b2c0c175cd09b12b231adc58af8dff9e348aa8b71",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0004032369030731213
+      },
+      {
+        "id": 19949,
+        "sourceSha256": "edac57b5bdacd32a00a07e89f9c8599cc6244d749484a4215815ba13b65d732a",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003893584466786373
+      },
+      {
+        "id": 9331,
+        "sourceSha256": "da0219795a4a87fcb21031f7ddfb87c5bf4994d4a35dabf947164e389c7f8553",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003919183588453109
+      },
+      {
+        "id": 10780,
+        "sourceSha256": "023ecf4788b36874925c72ccf194463e0ae51906f3ce1c4853f6f7ea424f726f",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00036687872655688454
+      },
+      {
+        "id": 4915,
+        "sourceSha256": "ef8d356729823fd38d0d2cbf7f776f84b82cdfcdeba5b6c0f8a6e78381d9e9ac",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003159113799786273
+      },
+      {
+        "id": 9762,
+        "sourceSha256": "30ea2ff8ab1bd001329638d389d5e0248138c62fa734c4b75e94092b4f6a63b3",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00035128336140500686
+      },
+      {
+        "id": 14101,
+        "sourceSha256": "3bf389edeeb4a403f89435f5b968df23778adea0e217e44bbefc029e900cd5e0",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003836665218650197
+      },
+      {
+        "id": 20526,
+        "sourceSha256": "038a8ac94dc63f80685948f8ea617f288253693a06d201e994c0cf44cacbcd2e",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00036523964735499454
+      },
+      {
+        "id": 8500,
+        "sourceSha256": "e43d7f588a0825f81ee7e806967c95353850392d67df039ce9757a9aecaadc8f",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003679673898594836
+      },
+      {
+        "id": 6671,
+        "sourceSha256": "030307bd4d2daa78d1f2982d19563aa311e4380f2185d1b234e4a4153921cbb9",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00033823069050575676
+      },
+      {
+        "id": 6647,
+        "sourceSha256": "6b48433787df1ae12b9eccbe0a523c8f529bda98907c0fdd362d03ba13e7b99c",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00038183766184073786
+      },
+      {
+        "id": 17845,
+        "sourceSha256": "4d958faaa4290c7217de235ab8f795f49e588d038af674e42870fb3bf318158b",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00033911649915626416
+      },
+      {
+        "id": 18453,
+        "sourceSha256": "88e9008e3d7032fae92d85f9f9809e9fa387b817321c43158307a40c2766b11b",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003563705936241105
+      },
+      {
+        "id": 19673,
+        "sourceSha256": "104557c80ba4095895bbb112d5c4f4f6a85bb5a6d6ccae59a2be7910ae9c9409",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00030822070014845
+      },
+      {
+        "id": 877,
+        "sourceSha256": "02c9d85f9455a69900274410ad7b42c8f1d1b64b576bcfb722fee38dee1a2708",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00039217343102255375
+      },
+      {
+        "id": 12415,
+        "sourceSha256": "13c61c8abbcfa4da4e4521b03f2344dac1fcea2112787132403ce66af0e9e059",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00041521078984053624
+      },
+      {
+        "id": 7874,
+        "sourceSha256": "03150ebc35e752f2ec01a9a58da02c1e827827a5aabf9970e42ba9539c87b4e6",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003854867053479298
+      },
+      {
+        "id": 746,
+        "sourceSha256": "8e00f62b295de4024a70485bf9547c78df3dee32cae408a7e58c13f75ac00fd6",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003818376618407375
+      },
+      {
+        "id": 21034,
+        "sourceSha256": "45658c439504939b2d92d46ea3d1c93c878fcd5d1cfadb43cf6b6b5a4d308b39",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.000399499687108766
+      },
+      {
+        "id": 16020,
+        "sourceSha256": "03f6a9ac4d2809788f1387f98eff7c410c9e349348ab42adc8faf141d8e54eeb",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0004024922359499653
+      },
+      {
+        "id": 21358,
+        "sourceSha256": "f70f3d4b794ed120b9b5e4229601594ea9fb17db31e4c900513809691817aa10",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003292415526630876
+      },
+      {
+        "id": 8390,
+        "sourceSha256": "43f376aff9c94d6fbab59fb8a29e16aba54e9c154fecf2db0d2197bf7ab9ed88",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00034205262752974233
+      },
+      {
+        "id": 19022,
+        "sourceSha256": "5b55c83bb8d892cb246e28beef250b70047159501c2a7e56e3197db8e2d8cee3",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.000330151480384384
+      },
+      {
+        "id": 11436,
+        "sourceSha256": "1cd2b666a61897711a03b29b9767a643068402e8f8bdc69300a0399fcd4a8efc",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00035805027579936403
+      },
+      {
+        "id": 19820,
+        "sourceSha256": "d1eeea0456c7adc4db8a735dd77f65f3013876cd63b6860ab9be5a41d56425c0",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003797367509209525
+      },
+      {
+        "id": 5334,
+        "sourceSha256": "91d31c5e6b3855d34b9c6bd54fdf397ef8384f7bdf78ed18c60ee25d0ae606b7",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0004197618372363095
+      },
+      {
+        "id": 1484,
+        "sourceSha256": "d2ebfbfc6b9298a33ec3f0aa2ae1bfb8872ddc563f166ebd22457f531fa19900",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.000356651090002542
+      },
+      {
+        "id": 92,
+        "sourceSha256": "bdb46c9b780000958ba8d72a99be9fd123fd4fcf3f7a8d603d9aa4d1eb048d76",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0004027406113120476
+      },
+      {
+        "id": 2847,
+        "sourceSha256": "44f07ad4c72c996818fa0265fc77b89f8d3bbf13597a1f0a1cb2e2ce3618c903",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00036166282640050397
+      },
+      {
+        "id": 1446,
+        "sourceSha256": "c174ea49b1152c008b4120256f0da86cebffee822e2f24073b22e115a088a430",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003316624790355408
+      },
+      {
+        "id": 10914,
+        "sourceSha256": "1b15ec0caeaefc694468b4ca6fc223b33b77ed124c6b6c1ee6348334a38ac39b",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003815756805667802
+      },
+      {
+        "id": 8566,
+        "sourceSha256": "ec48eaec877dfe529393ba9304649bd2ec97b8905da666fdb2e566e9d156c76a",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.000309192496674807
+      },
+      {
+        "id": 15263,
+        "sourceSha256": "a852fd87a39404b2c6fa1b2ad851ea61e4a69b9e850935d3c080c57122a2f08f",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003588871688985289
+      },
+      {
+        "id": 14102,
+        "sourceSha256": "47716f4059ef25b69862bfd8eac09f600871f53d318aa645520f86553ae858c2",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00041976183723630936
+      },
+      {
+        "id": 18686,
+        "sourceSha256": "290ab60f6dd61b8de6c19c4d47895511d552fa05b898e95656162480de1539b4",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003586084215408238
+      },
+      {
+        "id": 9681,
+        "sourceSha256": "3be96829dec8e2abcc4f6685a7498a4b34bdd2bea1bd6cc164e0cf4f04884a57",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00039166312055132456
+      },
+      {
+        "id": 17698,
+        "sourceSha256": "0c6388ad0710a1e0bde7ee9d9649375f08cc99ba7680d234872949191d07a281",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00040546269865426784
+      },
+      {
+        "id": 10400,
+        "sourceSha256": "3af958aeaccaf03af43e1f5e11924b92e7362b5fee924d82899b7f1232224ef8",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00035042830935870566
+      },
+      {
+        "id": 18341,
+        "sourceSha256": "325c5ef81d846dc312343281e1f55db060d5c3eded76a7a7dac9b1f61520c73f",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00035693136595149643
+      },
+      {
+        "id": 21312,
+        "sourceSha256": "6db67363595b4da02343b8ef3bbd9ea035f13e90eacfa122e7747d35fc577dd5",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00036469165057621117
+      },
+      {
+        "id": 16491,
+        "sourceSha256": "41da195de87caaace7b60e7dfd7b204928a0f64d4b99f53f93e08c5e8ab48293",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00032802438933713534
+      },
+      {
+        "id": 16439,
+        "sourceSha256": "4d4a57bd8719fe9980dcbf54c2a49ac1a3ce4a4084b19af05411e31bd35dde5b",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00031080540535840195
+      },
+      {
+        "id": 14001,
+        "sourceSha256": "f7427ff40256ef220090947ce01d2b172c19ae7d239789eb07a6675d5b13dae6",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00030265491900843177
+      },
+      {
+        "id": 5128,
+        "sourceSha256": "bee16255733f3d19745b2f88d8ae0d60a413aa25dfa1de244c615cfdb682665d",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003826225293941817
+      },
+      {
+        "id": 18657,
+        "sourceSha256": "41fb148da91321564a9c2806fe1657643114bc698391c9acc6842bfa5f946839",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003773592452822663
+      },
+      {
+        "id": 8895,
+        "sourceSha256": "c77af6dc6fc2e9081dec0d15ac0ea079183548f4ba3ef7aeeb0d144006d63346",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003934463114581218
+      },
+      {
+        "id": 15832,
+        "sourceSha256": "536cbf5a6065b0a1d91c79484de6915637f96afc17d317713bd8a37c5e2c0319",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.0003773592452822663
+      },
+      {
+        "id": 4843,
+        "sourceSha256": "8065eb87662e0adb38729ff8080c91ca4ceb555bb9575107d058fd9a72dca980",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.00042544094772365554
+      },
+      {
+        "id": 10123,
+        "sourceSha256": "22cdedb12fe1b9dc34523a364a62fec1f5d580c6f8594633c9a6b0c14f4aa4d1",
+        "gainEqualsRangeChannels": 0,
+        "declaredMvEinthovenRms": 0.000378417758568492
+      }
+    ],
+    "scriptSha256": "1b9d6d922daf532f9c4310e3cffddc910c892db9447bbb9b2602a7cf019b9a8f"
+  },
+  "clinicalValidation": false,
+  "generatorTuned": false,
+  "rescalingApplied": false,
+  "limitations": [
+    "Each record contributes one median per lead/metric; beats are not independent patients.",
+    "A baseline free of annotated overlap is not proven isoelectric or noise-free.",
+    "Ambiguous and missing windows retain explicit denominators.",
+    "J+60 inside or after T is not pooled as an ST-only reference.",
+    "Human annotations are per lead, not global boundaries.",
+    "LUDB absolute voltage and 12SL median-unit conflicts remain quarantined; no inferred conversion is used.",
+    "Heterogeneous ECG distributions must not be taught as normal ranges.",
+    "Whole-record voltage is not annotated QRS or T amplitude.",
+    "No normal-range or diagnostic-threshold inference.",
+    "12SL median beats remain quarantined; no inferred conversion.",
+    "Source calibration support is not clinical validation."
+  ]
+}

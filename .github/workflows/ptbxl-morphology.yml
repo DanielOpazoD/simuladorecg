@@ -41,6 +41,8 @@ jobs:
         run: python "$RUNNER_TEMP/ptbxl-acquisition/scripts/ptbxl-benchmark.py" --output "$RUNNER_TEMP/ptbxl-reference"
       - name: Verify original physical calibration without reinterpreting vendor medians
         run: python scripts/ptbxl-original-reference.py --reference "$RUNNER_TEMP/ptbxl-reference" --output "$RUNNER_TEMP/ptbxl-reference/original-waveforms"
+      - name: Recheck original voltage against raw counts and limb identity
+        run: node scripts/audit-original-source-scale.mjs --original "$RUNNER_TEMP/ptbxl-reference/original-waveforms" --raw "$RUNNER_TEMP/ptbxl-reference/raw/ptb-xl" --output "$RUNNER_TEMP/ptbxl-reference/original-scale-control.json"
       - name: Describe median beats and unchanged generated samples separately
         run: node scripts/benchmark-ptbxl-samples.mjs "$RUNNER_TEMP/ptbxl-reference"
       - name: Describe generator gaps using the exact reference from this job
