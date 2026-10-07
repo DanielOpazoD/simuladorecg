@@ -1,3 +1,4 @@
+import {prepareConfidenceCounterfactual} from './lib/confidence-counterfactual.mjs';
 import {qrsMidpointSeconds} from './lib/qrs-event-reference.mjs';
 import {OPPOSED_CYCLE_REVISION,assertReviewedOpposedCycle,assertQualityOnlyRevision} from './lib/opposed-cycle-revision.mjs';
 /** Paired sample-only numerical revision: known regressions plus transfer/ectopy.
@@ -26,8 +27,8 @@ try{
   sourceHashes[label]=Object.fromEntries(await Promise.all(Object.keys(r.metafile.inputs).filter(f=>f!=='<stdin>').map(async f=>[path.relative(root,path.resolve(f)),createHash('sha256').update(await readFile(f)).digest('hex')])));
   return (await import(pathToFileURL(outfile))).analyzeSamples;
  }
- const qualityBaseline=path.join(temp,'quality-baseline');await mkdir(qualityBaseline);
- execFileSync('tar',['-xf','-','-C',qualityBaseline],{input:execFileSync('git',['archive',OPPOSED_CYCLE_REVISION.baselineCommit],{maxBuffer:100*1024*1024})});
+ const qualityBaseline=path.join(temp,'quality-baseline');
+ const qualityCounterfactual=await prepareConfidenceCounterfactual(process.cwd(),qualityBaseline);
  assertReviewedOpposedCycle(await readFile(OPPOSED_CYCLE_REVISION.file));
  const before=await analyzer(baseline,'before'),qualityBefore=await analyzer(qualityBaseline,'qualityBefore'),after=await analyzer(process.cwd(),'after');
  const file=path.join(temp,'model.mjs');const modelBuild=await build({stdin:{contents:"export {synthesize} from './src/engine/signal';export {fromPreset,presetById,PRESETS} from './src/presets/catalog';export {ModelScopeError} from './src/engine/constraints';",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',metafile:true,outfile:file});
@@ -60,7 +61,7 @@ try{
  const newlyFalse=valid.filter(r=>bad(r.after,r)&&!bad(r.before,r)),lost=valid.filter(r=>r.after.fn>r.before.fn);
  const known=valid.filter(r=>r.label==='exposed'),failedKnown=known.filter(r=>r.after.status!=='usable'||r.after.hr===null||Math.abs(r.after.hr-r.referenceHR)>1||r.after.fp>0);
  const summary={cases:rows.length,accepted:valid.length,unsupported:rows.length-valid.length,exposedCorrect:known.length-failedKnown.length,exposedTotal:known.length,newlyFalseUsable:newlyFalse.length,newMissedQrsCases:lost.length,falseUsableBefore:valid.filter(r=>bad(r.before,r)).length,falseUsableAfter:valid.filter(r=>bad(r.after,r)).length,usableBefore:valid.filter(r=>r.before.status==='usable').length,usableAfter:valid.filter(r=>r.after.status==='usable').length};
- const qualityRevision={...OPPOSED_CYCLE_REVISION,numericallyIdentical:valid.length,usableBefore:valid.filter(r=>r.qualityBefore.status==='usable').length,usableAfter:summary.usableAfter,
+ const qualityRevision={...OPPOSED_CYCLE_REVISION,...qualityCounterfactual,numericallyIdentical:valid.length,usableBefore:valid.filter(r=>r.qualityBefore.status==='usable').length,usableAfter:summary.usableAfter,
   falseUsableBefore:valid.filter(r=>bad(r.qualityBefore,r)).length,falseUsableAfter:summary.falseUsableAfter,
   accurateNewReviews:valid.filter(r=>r.qualityBefore.status==='usable'&&r.after.status==='review'&&!bad(r.qualityBefore,r)).length};
  await mkdir(path.dirname(path.resolve(output)),{recursive:true});await writeFile(output,JSON.stringify({baselineCommit,candidateCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),sourceHashes,modelSourceHashes,candidateTreeDirty:execFileSync('git',['status','--porcelain','--untracked-files=no'],{encoding:'utf8'}).trim()!=='',qualityRevision,clinicalValidation:false,scope:'Exposed deterministic synthetic evaluation, not independent patient validation. Five bpm is an engineering error screen.',summary,rows,newlyFalse,lost,failedKnown},null,2)+'\n');
