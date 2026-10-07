@@ -58,3 +58,5 @@ Punto de entrada a `docs/`. La navegación vigente empieza en el [README](../REA
 - Material gráfico y casos: `browser-captures/`, `trazados/`, `casos/`
 
 - [Referencia tabular QRS con unidades trazables](ptbxl-tabular-amplitude-reference.md)
+
+- [Evaluación prospectiva del final T reservado](t-end-reserved-evaluation.md): protocolo, límites y resultados de la reserva, sin habilitar QT automático
