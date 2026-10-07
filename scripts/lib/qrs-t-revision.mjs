@@ -18,7 +18,7 @@ export const QRS_T_REVISION=Object.freeze({
   // exact predecessors too; see docs/frontal-projection-contract.md for paired evidence.
   'src/engine/leads.ts':Object.freeze({before:'d67c47738647a8aa47f98f01de045ab7381a842007c7d5fa3562f570dc711c16',after:'ab4a73f2345e133cbbe80757d08c1c64f4c54894f1ca521b82eff7041d386706'}),
   'src/engine/lead-registry.ts':Object.freeze({before:'21b9ad7996fc2813156e51d87488f48fae52085ea6935091396e7226589367d3',after:'7f4fe698cd38931a47d41b99e005ca30f642b05553e4137869bda5f99a8990e3'}),
-  'src/engine/measure.ts':Object.freeze({before:'ceaeef83b459bbb114dc8a9457af7d43d804c14a8cb8107fc2b250faf391d61e',after:'c78e48df10d2c394e0b94e2772a84971edf292ef00793363e1c01a9ff94d7d0e'}),
+  'src/engine/measure.ts':Object.freeze({before:'ceaeef83b459bbb114dc8a9457af7d43d804c14a8cb8107fc2b250faf391d61e',after:'db1aded1c8ac86068e54a7f502f15dca55c8d3f93f4654c99ee13b0e73267a17'}),
   'src/engine/analysis/ventricular-candidates.ts':Object.freeze({before:'0c7d0abb1834fd9407ca9fdd85c735b7794bcaf933d911f13222039ab4c0bec4',after:'df93e6f7eec4f59464badb9191c9af2e0299e1678e2489bfd0f4fd306bd7140e'}),
  }),
 });
