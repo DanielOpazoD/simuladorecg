@@ -239,7 +239,9 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
     let muscle = 0;
     for (let i = 0; i < n; i++) {
       const t = i / FS;
-      muscle = 0.3 * muscle + 0.7 * normal(r);
+      // This RNG is private to this lead and only feeds the muscle artifact.
+      // At exactly zero amplitude no variate can affect any emitted sample.
+      if (c.artifacts.muscle !== 0) muscle = 0.3 * muscle + 0.7 * normal(r);
       arr[i] =
         xyz[0][i] * row[0] +
         xyz[1][i] * row[1] +
