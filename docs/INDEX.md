@@ -60,3 +60,5 @@ Punto de entrada a `docs/`. La navegación vigente empieza en el [README](../REA
 - [Referencia tabular QRS con unidades trazables](ptbxl-tabular-amplitude-reference.md)
 
 - [Evaluación prospectiva del final T reservado](t-end-reserved-evaluation.md): protocolo, límites y resultados de la reserva, sin habilitar QT automático
+
+- [Referencias originales y auditoría de escala](annotated-morphology-reference.md): morfología anotada, límites de amplitud LUDB y control de originales PTB-XL

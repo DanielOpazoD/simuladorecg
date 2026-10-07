@@ -23,6 +23,10 @@ jobs:
         with: {python-version: '3.11'}
       - run: npm ci
       - run: npx vitest run tests/t-end-area.test.ts tests/t-peak-evidence.test.ts
+      - name: Source-scale and annotated morphology contracts
+        run: |
+          node --test tests/source-scale*.node.mjs
+          npx vitest run tests/annotated-morphology.test.ts
       - run: python -m pip install wfdb==4.3.1
       - name: Reacquire only the two already observed cohorts
         run: |
@@ -30,6 +34,8 @@ jobs:
           python scripts/prepare-ludb-delineation.py --output "$RUNNER_TEMP/calibration40" --crosscheck
       - name: Evaluate aid separately, preserving all automatic outputs and matching
         run: node scripts/evaluate-t-end-assistance.mjs --original "$RUNNER_TEMP/original40/fixtures" --calibration "$RUNNER_TEMP/calibration40/fixtures" --output "$RUNNER_TEMP/t-end-assistance"
+      - name: Audit original morphology without another source download
+        run: node scripts/reference-annotated-morphology.mjs --original "$RUNNER_TEMP/original40/fixtures" --calibration "$RUNNER_TEMP/calibration40/fixtures" --output "$RUNNER_TEMP/t-end-assistance/original-morphology"
       - name: Archive exact source and reports without raw demographic headers
         if: always()
         run: |
