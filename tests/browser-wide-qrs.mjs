@@ -12,9 +12,9 @@ const fixtures=[{name:'wide-qrs',samples:wideDeflectionFixture(),csv:wideDeflect
  {name:'opposed-cycle',samples:opposedCycleFixture(),csv:opposedCycleCsv(),hr:200,candidates:31}];
 for(const engine of [chromium,webkit,firefox]){
  const browser=await engine.launch({headless:true});
- try{for(const width of [1440,390])for(const fixture of fixtures){
+ try{for(const width of [1440,390,320])for(const fixture of fixtures){
   const {samples,csv,hr,candidates}=fixture;
-  const page=await browser.newPage({viewport:{width,height:width===390?844:1000}}),tag=`${fixture.name}-${engine.name()}-${width}`,errors=[];
+  const page=await browser.newPage({viewport:{width,height:width<600?844:1000}}),tag=`${fixture.name}-${engine.name()}-${width}`,errors=[];
   page.setDefaultTimeout(30_000);page.setDefaultNavigationTimeout(30_000);
   page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error'||m.type()==='warning')errors.push(m.text());});
   try{
@@ -29,6 +29,19 @@ for(const engine of [chromium,webkit,firefox]){
    assert.equal(await row.locator('td').nth(1).innerText(),hr.toFixed(1)+' lpm');
    assert.equal(await row.locator('td').nth(2).innerText(),'Revisar');
    if(fixture.name==='opposed-cycle')assert.match(await row.locator('td').nth(3).innerText(),/dirección opuesta/);
+   if(width<=390){
+    const readable=await page.locator('#external-metrics').evaluate(table=>{
+     const box=table.getBoundingClientRect(),wrapper=table.parentElement;
+     return {fits:table.scrollWidth<=wrapper.clientWidth+1,
+       cellsFit:[...table.querySelectorAll('tbody td')].every(cell=>{const r=cell.getBoundingClientRect();return r.left>=box.left-1&&r.right<=box.right+1&&cell.scrollWidth<=cell.clientWidth+1;}),
+       headers:[...table.querySelectorAll('thead th')].every(th=>th.getAttribute('scope')==='col'),
+       explicitSemantics:table.getAttribute('role')==='table'&&[...table.querySelectorAll('tbody tr')].every(row=>row.getAttribute('role')==='row')&&[...table.querySelectorAll('td')].every(cell=>cell.getAttribute('role')==='cell')};
+    });
+    assert.deepEqual(readable,{fits:true,cellsFit:true,headers:true,explicitSemantics:true});
+   }
+   const accessibleTable=page.getByRole('table',{name:'Estimaciones automáticas del ECG'});
+   assert.equal(await accessibleTable.getByRole('columnheader').count(),4);
+   assert.equal(await accessibleTable.getByRole('cell').count(),20);
    await row.scrollIntoViewIfNeeded();await dialog.screenshot({path:resolve(out,tag+'-measurements.png')});
    const pending=page.waitForEvent('download');await page.locator('[data-external=json]').click();
    const file=resolve(out,tag+'-report.json');await(await pending).saveAs(file);
