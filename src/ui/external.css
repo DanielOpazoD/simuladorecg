@@ -61,15 +61,16 @@ dialog.external-lab { width: min(1420px, calc(100vw - 32px)); max-width: calc(10
   .external-review canvas { width:100%; }
 }
 
-/* Keep the five safety-critical estimates readable in a narrow dialog without
-   changing native table semantics or hiding their reasons behind horizontal scroll. */
+/* Keep complete uncertainty reasons readable without shrinking type. Explicit
+   table roles preserve relationships while narrow rows use a stacked layout. */
 .external-metrics-wrapper { container-type:inline-size; }
 @container (max-width:560px) {
-  #external-metrics { min-width:0; table-layout:fixed; }
-  #external-metrics th, #external-metrics td { padding:8px 4px; overflow-wrap:anywhere; }
-  #external-metrics th:nth-child(1) { width:19%; }
-  #external-metrics th:nth-child(2) { width:23%; }
-  #external-metrics th:nth-child(3) { width:17%; }
-  #external-metrics th:nth-child(4) { width:41%; }
-  #external-metrics td:last-child { max-width:none; }
+  #external-metrics, #external-metrics tbody { display:block; min-width:0; }
+  #external-metrics thead { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+  #external-metrics tbody tr { display:grid; grid-template-columns:minmax(0,1fr) auto; margin-bottom:12px; border:1px solid var(--line); border-radius:6px; }
+  #external-metrics td { display:block; min-width:0; padding:6px 8px; border:0; overflow-wrap:anywhere; }
+  #external-metrics td:first-child, #external-metrics td:nth-child(3) { font-weight:600; }
+  #external-metrics td:nth-child(2) { text-align:right; }
+  #external-metrics td:nth-child(3), #external-metrics td:last-child { grid-column:1/-1; }
+  #external-metrics td:last-child { max-width:none; border-top:1px solid var(--line); padding:8px; }
 }

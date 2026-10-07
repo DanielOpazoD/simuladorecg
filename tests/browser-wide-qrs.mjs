@@ -33,12 +33,15 @@ for(const engine of [chromium,webkit,firefox]){
     const readable=await page.locator('#external-metrics').evaluate(table=>{
      const box=table.getBoundingClientRect(),wrapper=table.parentElement;
      return {fits:table.scrollWidth<=wrapper.clientWidth+1,
-       cellsFit:[...table.querySelectorAll('th,td')].every(cell=>{const r=cell.getBoundingClientRect();return r.left>=box.left-1&&r.right<=box.right+1&&cell.scrollWidth<=cell.clientWidth+1;}),
+       cellsFit:[...table.querySelectorAll('tbody td')].every(cell=>{const r=cell.getBoundingClientRect();return r.left>=box.left-1&&r.right<=box.right+1&&cell.scrollWidth<=cell.clientWidth+1;}),
        headers:[...table.querySelectorAll('thead th')].every(th=>th.getAttribute('scope')==='col'),
-       nativeDisplay:getComputedStyle(table).display};
+       explicitSemantics:table.getAttribute('role')==='table'&&[...table.querySelectorAll('tbody tr')].every(row=>row.getAttribute('role')==='row')&&[...table.querySelectorAll('td')].every(cell=>cell.getAttribute('role')==='cell')};
     });
-    assert.deepEqual(readable,{fits:true,cellsFit:true,headers:true,nativeDisplay:'table'});
+    assert.deepEqual(readable,{fits:true,cellsFit:true,headers:true,explicitSemantics:true});
    }
+   const accessibleTable=page.getByRole('table',{name:'Estimaciones automáticas del ECG'});
+   assert.equal(await accessibleTable.getByRole('columnheader').count(),4);
+   assert.equal(await accessibleTable.getByRole('cell').count(),20);
    await row.scrollIntoViewIfNeeded();await dialog.screenshot({path:resolve(out,tag+'-measurements.png')});
    const pending=page.waitForEvent('download');await page.locator('[data-external=json]').click();
    const file=resolve(out,tag+'-report.json');await(await pending).saveAs(file);
