@@ -53,21 +53,6 @@ function validateMeasurement(value: unknown): asserts value is Measurement {
         (b.qt !== null && (b.tPeak === null || b.tPeak <= b.offset || b.tEnd! <= b.tPeak ||
           !durationMatches(b.qt,b.onset,b.tEnd!))))
       throw Error('QT no corresponde a sus límites temporales.');
-    if (b.terminalRevision !== undefined) {
-      const r = b.terminalRevision;
-      if (!r || typeof r !== 'object') throw Error('Revisión terminal incompleta.');
-      keys(r, ['method','previousEnd','previousQt','previousTangentEnd','areaEnd','leadCount','spreadMs']);
-      if (r.method !== 'area-return-reconciliation-v1' ||
-          ![r.previousEnd,r.previousQt,r.previousTangentEnd].every(finiteOrNull) ||
-          ![r.previousEnd,r.previousTangentEnd].every(withinWindow) ||
-          !Number.isFinite(r.areaEnd) || r.areaEnd !== b.tEnd || b.qt === null ||
-          !Number.isInteger(r.leadCount) || r.leadCount < 3 || r.leadCount > 4 ||
-          !Number.isFinite(r.spreadMs) || r.spreadMs < 0 || r.spreadMs > 24.000001 ||
-          (r.previousEnd === null) !== (r.previousQt === null) ||
-          (r.previousEnd !== null && (!durationMatches(r.previousQt!,b.onset,r.previousEnd) || r.previousEnd - r.areaEnd <= .04)) ||
-          b.tTangentEnd !== null)
-        throw Error('La revisión terminal no conserva límites y unidades coherentes.');
-    }
   }
   for (const key of ['hr','pr','qrs','qt','axis'] as const) {
     const e = m.evidence?.[key];

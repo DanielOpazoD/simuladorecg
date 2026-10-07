@@ -15,7 +15,7 @@ try{
   const preset=async id=>{if(width===390)await page.locator('[data-action="catalog"]').click();await chooseCatalogPreset(page, id);await page.locator('#signal-loading').waitFor({state:'hidden'});};
   await preset('tachy');const detail=page.locator('#beat-detail');
   await detail.locator('[data-t-end-assistance]').waitFor();await detail.scrollIntoViewIfNeeded();
-  assert.match(await detail.innerText(),/revisión manual/);assert.match(await detail.innerText(),/QT recalculado: 322 ms/);
+  assert.match(await detail.innerText(),/revisión manual/);assert.doesNotMatch(await detail.innerText(),/QT \d+ ms/);
   const validation=detail.locator('[data-t-end-validation]');
   assert.match(await validation.innerText(),/Precisión insuficiente/);
   assert.equal(await validation.isVisible(),true);
@@ -30,7 +30,7 @@ try{
   await detail.screenshot({path:resolve(out,'t-end-validation-expanded-'+width+'.png')});
   assert.ok((await detail.boundingBox()).height>collapsedHeight);
   await page.keyboard.press('Space');assert.equal(await evidence.evaluate(e=>e.open),false);
-  assert.match(await detail.innerText(),/el resultado requiere revisión/);
+  assert.match(await detail.innerText(),/No modifica QT\/QTc/);
   assert.match(await detail.innerText(),/no es probabilidad clínica/);
   const time=await detail.locator('[data-t-end-candidate]').getAttribute('data-t-end-candidate');
   await page.locator('#detail-lead').selectOption('V5');
@@ -53,8 +53,7 @@ try{
   await preset('asystole');await page.waitForFunction(()=>!document.querySelector('#beat-detail [data-t-end-assistance]'));
   assert.equal(await detail.locator('[data-t-end-candidate]').count(),0);
   assert.equal(await detail.locator('[data-t-end-validation]').count(),0);
-  assert.equal(await detail.locator('[data-qt-reconciliation]').count(),0);
-  checks.push({width,flow:'tachy -> numerical QT with retained prior endpoint and review -> V5 same endpoint -> next beat -> mobile graph-only scroll -> asystole clears aid'});
+  checks.push({width,flow:'tachy -> review marker without QT -> V5 same endpoint -> next beat -> mobile graph-only scroll -> asystole clears aid'});
   await page.close();
  }
  assert.deepEqual(errors,[]);assert.deepEqual(warnings,[]);

@@ -49,7 +49,6 @@ try {
   assertReviewedAlternatingConfidence(await readFile('src/engine/analysis/alternating-confidence.ts'));
   reviewedSourceContracts.push('src/engine/analysis/alternating-confidence.ts');
   for(const file of Object.keys(QRS_T_REVISION.files)){assertReviewedQrsTFile(file,await readFile(file));reviewedSourceContracts.push(file);}
-  // The measure.ts check above pins both terminal-estimator files byte-for-byte.
   reviewedSourceContracts.push(...Object.keys(TERMINAL_SOURCE_REVISION));
   // Reviewed calendar integrity: all valid historical samples still compared below.
   for(const file of ['src/engine/constraints.ts','src/engine/rhythm.ts','src/engine/event-calendar.ts','src/engine/flutter-conduction.ts','src/engine/vvi-demand.ts']) {

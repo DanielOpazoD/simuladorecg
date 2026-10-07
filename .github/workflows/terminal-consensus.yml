@@ -1,0 +1,54 @@
+name: Terminal QT consensus
+on:
+  pull_request:
+  push:
+    branches: ['main']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/setup-node@v5
+        with: {node-version: '22.16.0', cache: npm}
+      - uses: actions/setup-python@v6
+        with: {python-version: '3.11'}
+      - run: npm ci
+      - run: python -m pip install wfdb==4.3.1
+      - name: Restore the exact last released analyzer
+        run: git worktree add --detach "$RUNNER_TEMP/qt-before" 10e3f39764ca3bf83f2fc9b543d4960ee12c1080
+      - name: Verify endpoint, dependency and historical-source contracts
+        run: npx vitest run tests/terminal-consensus.test.ts tests/delineation.test.ts tests/fidelity.test.ts tests/qrs-t-revision.test.mjs
+      - name: Reproduce every exposed comparison cohort
+        run: |
+          python scripts/prepare-ludb-expansion.py --output "$RUNNER_TEMP/original40" --crosscheck
+          python scripts/prepare-ludb-delineation.py --output "$RUNNER_TEMP/calibration40" --crosscheck
+          python scripts/prepare-terminal-exposed.py --output "$RUNNER_TEMP/exposed-v1-40"
+      - name: Compare actual numbers, boundaries and all preserved nonterminal measurements
+        run: node scripts/validate-terminal-consensus.mjs --baseline "$RUNNER_TEMP/qt-before" --original "$RUNNER_TEMP/original40/fixtures" --calibration "$RUNNER_TEMP/calibration40/fixtures" --exposed-v1 "$RUNNER_TEMP/exposed-v1-40/fixtures" --output "$RUNNER_TEMP/terminal-consensus/exposed"
+      - name: Acquire only the frozen remaining 32 records and independently verify their reader
+        run: python scripts/prepare-terminal-consensus.py --output "$RUNNER_TEMP/prospective32" --crosscheck
+      - name: Evaluate frozen targets without retuning or hiding adverse outcomes
+        run: node scripts/validate-terminal-consensus.mjs --baseline "$RUNNER_TEMP/qt-before" --prospective "$RUNNER_TEMP/prospective32/fixtures" --output "$RUNNER_TEMP/terminal-consensus/prospective"
+      - name: Preserve source and complete evidence without demographic headers
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/terminal-consensus"
+          git archive HEAD | gzip > "$RUNNER_TEMP/terminal-consensus/source.tar.gz"
+          git rev-parse HEAD > "$RUNNER_TEMP/terminal-consensus/commit.txt"
+          for name in original40 calibration40 exposed-v1-40 prospective32; do
+            test ! -d "$RUNNER_TEMP/$name" || { rm -rf "$RUNNER_TEMP/$name/raw"; cp -r "$RUNNER_TEMP/$name" "$RUNNER_TEMP/terminal-consensus/$name"; }
+          done
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: terminal-consensus-${{ github.sha }}
+          path: ${{ runner.temp }}/terminal-consensus/
+          retention-days: 30

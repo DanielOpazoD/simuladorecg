@@ -58,7 +58,7 @@ try {
  const assertNumericalRevision=(samples,current)=>{
   const prior=preQrsTMeasure(samples);
   assertPeakOnlyChange(before.measure(samples),prior);
-  assertQrsTRefinement(prior,current);
+  assertQrsTRefinement(prior,current,{terminalReplacement:true});
  };
  const outfile = path.join(temp,'metrics.mjs');
  await build({entryPoints:[path.join(root,'tests/support/morphology-metrics.ts')],bundle:true,platform:'node',format:'esm',outfile});

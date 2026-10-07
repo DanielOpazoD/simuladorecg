@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
-"""Acquire only the frozen prospective QT-reconciliation cohort; never invoke a detector."""
+"""Acquire only the frozen prospective terminal-consensus cohort; never invoke a detector."""
 import argparse, hashlib, importlib.util, json, subprocess, time
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
-PROTOCOL=ROOT/'docs/qt-reconciliation-prospective-protocol.json'
+PROTOCOL=ROOT/'docs/terminal-consensus-prospective-protocol.json'
 def prepare(output:Path,crosscheck:bool=False):
     protocol_bytes=PROTOCOL.read_bytes(); p=json.loads(protocol_bytes)
-    original=ROOT/'tests/reference/ludb-delineation/protocol.json'
-    old=json.loads(original.read_bytes())
-    expected=sorted(set(old['previouslyObservedRecords']+old['calibration']['records']+old['holdout']['records']))
+    previous=json.loads((ROOT/'docs/evidence/qt-reconciliation-v1-protocol.json').read_bytes())
+    expected=sorted(set(previous['excludedRecords']+previous['cohort']['records']))
     if expected!=p['excludedRecords']:
-        raise ValueError('Previously exposed records must all be excluded')
-    ids=[i for i in range(1,201) if i not in p['excludedRecords']]
-    selected=sorted(sorted(ids,key=lambda i:hashlib.sha256(f"{p['cohort']['seed']}:{i}".encode()).hexdigest())[:40])
-    if selected!=p['cohort']['records']:
-        raise ValueError('Deterministic reserved selection mismatch')
+        raise ValueError('Every exposed record must be excluded')
+    selected=[i for i in range(1,201) if i not in expected]
+    if selected!=p['cohort']['records'] or len(selected)!=32:
+        raise ValueError('The complete remaining 32-record cohort is required')
     for file,digest in {**p['algorithmFiles'],**p['evaluatorFiles']}.items():
         if hashlib.sha256((ROOT/file).read_bytes()).hexdigest()!=digest:
             raise ValueError('Frozen evaluator/reader changed: '+file)
@@ -27,7 +25,7 @@ def prepare(output:Path,crosscheck:bool=False):
             except Exception:
                 if attempt==2:raise
                 time.sleep(2**attempt)
-    module.fetch=retry; module.SPLITS={'qt-reconciliation-v1':p['cohort']['records']}
+    module.fetch=retry; module.SPLITS={'terminal-consensus-v1':p['cohort']['records']}
     module.prepare(output,preserve_unassigned=True)
     fixtures=output/'fixtures'; manifest_path=fixtures/'manifest.json'
     manifest=json.loads(manifest_path.read_bytes())
@@ -39,9 +37,9 @@ def prepare(output:Path,crosscheck:bool=False):
         import numpy as np, wfdb
         counts={'records':0,'physicalSamples':0,'annotationEvents':0}
         for record in p['cohort']['records']:
-            meta=json.loads((fixtures/f'qt-reconciliation-v1/{record}.json').read_text())
+            meta=json.loads((fixtures/f'terminal-consensus-v1/{record}.json').read_text())
             original=wfdb.rdrecord(str(output/f'raw/data/{record}'))
-            raw=np.fromfile(fixtures/f'qt-reconciliation-v1/{record}.dat',dtype='<i2').reshape(meta['samples'],len(meta['channels']))
+            raw=np.fromfile(fixtures/f'terminal-consensus-v1/{record}.dat',dtype='<i2').reshape(meta['samples'],len(meta['channels']))
             for i,ch in enumerate(meta['channels']):
                 values=(raw[:,i].astype(float)-ch['baseline'])/ch['adcGain']
                 if not np.array_equal(values,original.p_signal[:,i]):

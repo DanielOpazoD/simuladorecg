@@ -37,10 +37,10 @@ try {
   assert.deepEqual(A.HR_QUALITY_POLICY, policy.qualityPolicy, 'Policy changed after replication protocol');
   assertReviewedSampleEntry(await readFile('src/engine/sample-analysis.ts'));
   for (const file of Object.keys(next.metafile.inputs).filter(f => !f.endsWith('/sample-analysis.ts') && !f.endsWith('/measurement-support.ts'))) {
-    if(TERMINAL_SOURCE_REVISION[file]) assert.equal(hash(await readFile(file)),TERMINAL_SOURCE_REVISION[file],'Unreviewed terminal estimator: '+file);
-    else if(file==='src/engine/analysis/alternating-confidence.ts') assertReviewedAlternatingConfidence(await readFile(file));
+    if(file==='src/engine/analysis/alternating-confidence.ts') assertReviewedAlternatingConfidence(await readFile(file));
     else if(file==='src/engine/analysis/impulse-confidence.ts') assertReviewedImpulseConfidence(await readFile(file));
     else if(QRS_T_REVISION.files[file] && file!=='src/engine/measure.ts') assertReviewedQrsTFile(file,await readFile(file));
+    else if(TERMINAL_SOURCE_REVISION[file])assert.equal(hash(await readFile(file)),TERMINAL_SOURCE_REVISION[file],'Unreviewed terminal dependency');
     else if(file==='src/engine/measure.ts') assertReviewedMeasure(await readFile(path.join(base,file)),await readFile(file));
     else assert.equal(hash(await readFile(file)),hash(await readFile(path.join(base,file))),`Unreviewed primitive change: ${file}`);
   }
@@ -70,7 +70,7 @@ try {
   };
   const compare=(samples,reference,context)=>{
     const {row,measurement:prior}=compareHistorical(samples,reference,context);historicalRows.push(row);
-    const next=C.analyzeSamples(samples);assertQrsTRefinement(prior,next);
+    const next=C.analyzeSamples(samples);assertQrsTRefinement(prior,next,{terminalReplacement:true});
     const error=(value)=>value===null||reference===null?null:value-reference;
     const beforeError=error(prior.hr),afterError=error(next.hr);
     return {...context,referenceBpm:reference,beforeHr:prior.hr,hr:next.hr,beforeErrorBpm:beforeError,errorBpm:afterError,

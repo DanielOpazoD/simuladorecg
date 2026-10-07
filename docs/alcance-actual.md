@@ -25,10 +25,3 @@ Las correcciones se añaden en I, II y V1–V6; III/aVR/aVL/aVF se derivan despu
 - Pendiente: calibración regional poblacional, revisión clínica humana independiente, propagación anatómica, repolarización secundaria de WPW, calibración cuantitativa del ST secundario y proporcionalidad de QRS ancho, derivaciones adicionales y sensado/demanda de AAI/DDD. VVI dispone de demanda idealizada y una variante sin captura total sin escape; no valida dispositivos, fusión ni fallos intermitentes.
 
 La guía clínica original contiene valores ajustables y propuestas futuras; no todos son contratos implementados. Ver `enfoque-clinico.md` y `referencias/README.md`. Una limitación del modelo no se enseña como imposibilidad fisiológica.
-
-## QT estimado
-
-La reconciliación terminal modifica realmente los extremos y QT/QTc a partir de
-muestras, conservando el retorno previo por latido. Los valores nuevos requieren
-revisión; un resumen antes utilizable solo conserva ese estado si no cambia más
-de una muestra. No existe validación clínica. Véase [evidencia y límites](qt-reconciliation.md).

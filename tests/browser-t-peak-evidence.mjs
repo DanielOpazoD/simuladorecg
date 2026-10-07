@@ -17,21 +17,15 @@ try{
   await page.locator('#signal-loading').waitFor({state:'hidden'});
   if(width===390)await page.locator('[data-action="catalog"]').click();
   await chooseCatalogPreset(page, 'tachy');await page.locator('#signal-loading').waitFor({state:'hidden'});
-  const detail=page.locator('#beat-detail');
-  await detail.locator('[data-qt-reconciliation]').waitFor();
-  assert.match(await detail.innerText(),/QT recalculado: 322 ms/);
-  assert.match(await detail.innerText(),/verificar con calibres/);
-  // The last beat has no delineated successor and must remain unclosed.
-  for(let i=0;i<50&&!await detail.locator('[data-action=next-beat]').isDisabled();i++)await detail.locator('[data-action=next-beat]').click();
   await page.getByText('Pico T candidato de la envolvente',{exact:false}).waitFor({state:'visible'});
-  await detail.scrollIntoViewIfNeeded();
+  const detail=page.locator('#beat-detail');await detail.scrollIntoViewIfNeeded();
   assert.match(await detail.innerText(),/T candidata/);assert.doesNotMatch(await detail.innerText(),/QT \d+ ms/);
   const first=await detail.innerText();
   await page.locator('#detail-lead').selectOption('V5');
   assert.match(await detail.innerText(),/no equivale al pico de cada derivación/);
   assert.doesNotMatch(await detail.innerText(),/QT \d+ ms/);
   await detail.screenshot({path:resolve(out,'t-candidate-'+width+'.png')});
-  checks.push({width,flow:'tachy reconciled QT -> final unclosed beat -> V5 -> no fabricated final-beat QT',text:first});
+  checks.push({width,flow:'tachy -> visible envelope T candidate -> V5 -> no QT band',text:first});
   if(width===390)await page.locator('[data-action="catalog"]').click();
   await chooseCatalogPreset(page, 'sinus');await page.locator('#signal-loading').waitFor({state:'hidden'});
   await page.waitForFunction(()=>!document.querySelector('#beat-detail')?.textContent.includes('Pico T candidato de la envolvente'));
