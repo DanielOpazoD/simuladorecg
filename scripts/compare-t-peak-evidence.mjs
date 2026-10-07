@@ -1,5 +1,5 @@
 import {QRS_T_REVISION,assertReviewedQrsTFile,assertQrsTRefinement,preQrsTNumericsPlugin} from './lib/qrs-t-revision.mjs';
-import {assertReviewedSampleEntry,assertReviewedAlternatingConfidence,assertReviewedImpulseConfidence,assertReviewedSampleDependencies} from './lib/sample-entry-contract.mjs';
+import {restoreHistoricalRateScreen,assertReviewedSampleEntry,assertReviewedAlternatingConfidence,assertReviewedImpulseConfidence,assertReviewedSampleDependencies} from './lib/sample-entry-contract.mjs';
 /** Paired evidence-only revision: fixed, already observed LUDB cohorts; no holdout. */
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
@@ -39,7 +39,7 @@ assertReviewedAlternatingConfidence(readFileSync('src/engine/analysis/alternatin
 const analyzers=[];
 for(const [i,root] of [base,candidate].entries()){
  const bundle=resolve(out,'analyzer-'+i+'.mjs');
- const r=await build({absWorkingDir:root,entryPoints:[p.analysisEntry],bundle:true,platform:'node',format:'esm',metafile:true,outfile:bundle,plugins:i===1?[preQrsTNumericsPlugin(candidate)]:[]});
+ const r=await build({absWorkingDir:root,entryPoints:[p.analysisEntry],bundle:true,platform:'node',format:'esm',metafile:true,outfile:bundle,plugins:i===1?[{name:'restore-frozen-rate-screen',setup(b){b.onLoad({filter:/\/sample-analysis\.ts$/},args=>({contents:restoreHistoricalRateScreen(readFileSync(args.path,'utf8')),loader:'ts'}));}},preQrsTNumericsPlugin(candidate)]:[]});
  assertReviewedSampleDependencies(Object.keys(r.metafile.inputs),analyzedFiles,i===1);
  analyzers.push((await import(pathToFileURL(bundle))).analyzeSamples);
 }
