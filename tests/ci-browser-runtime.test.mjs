@@ -33,3 +33,12 @@ it('rejects version drift, dependency mutation and skipped runtime checks',()=>{
  for(const changed of mutations)expect(()=>check(changed)).toThrow();
  expect(()=>check(workflow,'^1.63.0')).toThrow();
 });
+
+it('uses the container-mapped temporary directory for shell report arguments',()=>{
+ const core=job(workflow,'verify-core');
+ expect(core).toContain('--outputFile="$RUNNER_TEMP/unit-results.json"');
+ for(const line of core.split('\n').filter(l=>l.includes('run:')))
+  expect(line).not.toContain('${{ runner.temp }}');
+ // Environment/action inputs are translated by Actions; shell text is not.
+ expect(core).toContain('ECG_EVIDENCE_DIR: ${{ runner.temp }}/ecg-evidence/browser');
+});

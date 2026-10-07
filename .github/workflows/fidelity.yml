@@ -137,30 +137,30 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Unit and signal contracts
-        run: npm test -- --reporter=default --reporter=json --outputFile=${{ runner.temp }}/unit-results.json
+        run: npm test -- --reporter=default --reporter=json --outputFile="$RUNNER_TEMP/unit-results.json"
       - name: Record fascicular source gaps (not clinical readiness approval)
-        run: node scripts/audit-fascicular-source.mjs "${{ runner.temp }}/fascicular-source-results.json"
+        run: node scripts/audit-fascicular-source.mjs "$RUNNER_TEMP/fascicular-source-results.json"
       - name: Discriminative noise-regression contracts
-        run: node --test tests/noise-regression.node.mjs tests/t-peak-revision.node.mjs tests/qrs-event-reference.node.mjs > "${{ runner.temp }}/noise-regression.tap"
+        run: node --test tests/noise-regression.node.mjs tests/t-peak-revision.node.mjs tests/qrs-event-reference.node.mjs > "$RUNNER_TEMP/noise-regression.tap"
       - name: Regional activation and reviewed default prediction
-        run: node scripts/validate-regional-activation.mjs "${{ runner.temp }}/regional-activation-results.json"
+        run: node scripts/validate-regional-activation.mjs "$RUNNER_TEMP/regional-activation-results.json"
       - name: Paired representative AF clock and worker confidence
-        run: node scripts/validate-af-clock.mjs "${{ runner.temp }}/af-clock-results.json"
+        run: node scripts/validate-af-clock.mjs "$RUNNER_TEMP/af-clock-results.json"
       - name: Paired native WPW support and worker confidence
-        run: node scripts/validate-wpw-support.mjs "${{ runner.temp }}/wpw-support-results.json"
+        run: node scripts/validate-wpw-support.mjs "$RUNNER_TEMP/wpw-support-results.json"
       - name: Total VVI noncapture sample-only uncertainty
-        run: node scripts/validate-vvi-noncapture.mjs "${{ runner.temp }}/vvi-noncapture-results.json"
+        run: node scripts/validate-vvi-noncapture.mjs "$RUNNER_TEMP/vvi-noncapture-results.json"
       - name: Use the exact production build
         uses: actions/download-artifact@v7
         with:
           name: ecg-browser-build-${{ github.sha }}
           path: dist
       - name: Independent QRS/ST/T prediction against frozen source
-        run: node scripts/validate-repolarization-scope.mjs "${{ runner.temp }}/repolarization-scope-results.json" --coherence
+        run: node scripts/validate-repolarization-scope.mjs "$RUNNER_TEMP/repolarization-scope-results.json" --coherence
       - name: Matched repolarization comparison and detector freeze
-        run: node scripts/validate-repolarization.mjs --output "${{ runner.temp }}/repolarization-comparison.json"
+        run: node scripts/validate-repolarization.mjs --output "$RUNNER_TEMP/repolarization-comparison.json"
       - name: Complete historical and current 61-preset by four-filter comparison
-        run: node scripts/validate-posterior-amplitude.mjs "${{ runner.temp }}/qrs-default-results.json" --scope defaults
+        run: node scripts/validate-posterior-amplitude.mjs "$RUNNER_TEMP/qrs-default-results.json" --scope defaults
       - name: Verify pinned browser runtime
         run: node scripts/verify-browser-runtime.mjs
       - name: Production identity, browser flows and PNG pixel metrology
