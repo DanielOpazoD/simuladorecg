@@ -19,7 +19,7 @@ try{
   await page.locator('[data-action="json"]').click();const originalFile=resolve(out,`coherence-case-${width}.json`);
   await(await download).saveAs(originalFile);
   const original=JSON.parse(await readFile(originalFile,'utf8'));
-  const base={...original,hr:60,atrialRate:60,variability:0,filter:'off',qtc:600,ischemia:'none',st:0,pAmp:0,electrolyte:'none',tAmp:.28};
+  const base={...original,hr:60,atrialRate:60,variability:0,filter:'off',qtc:600,ischemia:'none',st:0,pAmp:0,electrolyte:'none',tAmp:.28,tAxis:25};
   const importCase=async(c,kind='changed')=>{
    const previous=await page.locator('#ecg').evaluate(e=>e.toDataURL());
    await page.locator('#file-input').setInputFiles({name:'coherence.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(c))});
@@ -27,7 +27,30 @@ try{
    if(kind==='changed')await page.waitForFunction(p=>document.querySelector('#ecg').toDataURL()!==p,previous);
    await ready();
   };
-  await importCase(base);await page.locator('[data-action="compare"]').click();await page.locator('#compare-pin').click();
+  await importCase(base);
+  await page.locator('[data-panel="st"]').click();
+  const axisControl=page.locator('[data-key="tAxis"]');
+  assert.equal(await axisControl.isDisabled(),true);
+  assert.equal(await axisControl.inputValue(),'25');
+  assert.equal(await axisControl.getAttribute('aria-describedby'),'t-axis-note');
+  assert.match(await page.locator('#t-axis-note').innerText(),/Derivado del QRS/);
+  const primary={...base,conduction:'normal',overload:'none',rhythm:'sinus',ectopy:'none',ventricularSource:'auto'};
+  await importCase(primary);
+  assert.equal(await axisControl.isDisabled(),false);assert.equal(await axisControl.inputValue(),'25');
+  const changeWithKeyboard=async(control,key)=>{
+   const previous=await page.locator('#ecg').evaluate(e=>e.toDataURL());
+   await control.focus();await control.press(key);
+   await page.waitForFunction(p=>document.querySelector('#ecg').toDataURL()!==p,previous);await ready();
+  };
+  await changeWithKeyboard(axisControl,'ArrowRight');assert.equal(await axisControl.inputValue(),'30');
+  await changeWithKeyboard(page.locator('[data-key="tAmp"]'),'Home');
+  assert.equal(await axisControl.isDisabled(),true);assert.equal(await axisControl.inputValue(),'30');
+  await changeWithKeyboard(page.locator('[data-key="tAmp"]'),'End');
+  assert.equal(await axisControl.isDisabled(),false);assert.equal(await axisControl.inputValue(),'30');
+  await importCase(base);assert.equal(await axisControl.isDisabled(),true);assert.equal(await axisControl.inputValue(),'25');
+  await page.locator('#t-axis-note').scrollIntoViewIfNeeded();
+  await page.screenshot({path:resolve(out,`t-axis-controls-${width}.png`)});
+  await page.locator('[data-action="compare"]').click();await page.locator('#compare-pin').click();
   const exported=async name=>{const wait=page.waitForEvent('download');await page.locator('#compare-json').click();const file=resolve(out,`coherence-${name}-${width}.json`);await(await wait).saveAs(file);return JSON.parse(await readFile(file,'utf8'));};
   const normal=await exported('normal');assert.deepEqual(normal.A.leads,normal.B.leads);
   await importCase({...base,tAmp:0});const zero=await exported('zero');
@@ -55,7 +78,7 @@ try{
   await importCase(base,'recovery');const recovered=await exported('recovered');
   assert.deepEqual(recovered.A.leads,normal.A.leads);assert.deepEqual(recovered.B.leads,normal.A.leads);
   assert.equal(await page.locator('vite-error-overlay').count(),0);
-  checks.push({width,checked,maxErrorMv,isolatedST60V2Mv:zero.B.leads.V2[index],scopeRejection:true,exactRecovery:true});
+  checks.push({width,checked,maxErrorMv,isolatedST60V2Mv:zero.B.leads.V2[index],scopeRejection:true,exactRecovery:true,tAxisApplicabilityAndRestoration:true});
   await page.close();
  }
  assert.deepEqual(errors,[]);assert.deepEqual(warnings,[]);
