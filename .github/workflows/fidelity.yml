@@ -11,6 +11,29 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
+  build:
+    # One immutable production build; numerical and multi-engine checks can then
+    # run independently. Both remain mandatory before integration.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22.16.0'
+          cache: npm
+      - run: npm ci
+      - name: Types and production build
+        run: npm run build
+      - name: Share exact browser build
+        uses: actions/upload-artifact@v6
+        with:
+          name: ecg-browser-build-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
   portability:
     # The maintainer develops on macOS arm64; unit contracts must pass there too.
     runs-on: macos-latest
@@ -61,6 +84,7 @@ jobs:
           path: ${{ runner.temp }}/amplitude-evidence/
           retention-days: 14
   verify:
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -89,8 +113,11 @@ jobs:
         run: node scripts/validate-vvi-noncapture.mjs "${{ runner.temp }}/vvi-noncapture-results.json"
       - name: Paired QRS-T discrimination, transfer and ectopy
         run: node scripts/validate-qrs-t-discrimination.mjs "${{ runner.temp }}/qrs-t-discrimination-results.json"
-      - name: Types and production build
-        run: npm run build
+      - name: Use the exact production build
+        uses: actions/download-artifact@v7
+        with:
+          name: ecg-browser-build-${{ github.sha }}
+          path: dist
       - name: Independent QRS/ST/T prediction against frozen source
         run: node scripts/validate-repolarization-scope.mjs "${{ runner.temp }}/repolarization-scope-results.json" --coherence
       - name: Matched repolarization comparison and detector freeze
@@ -124,15 +151,6 @@ jobs:
           node tests/browser-external-review.mjs
           node tests/browser-repolarization-coherence.mjs
           node tests/browser-visual-workspace.mjs
-      # Small handoff artifact: downstream browsers do not need raw reports/PNGs.
-      # The complete archival artifact below remains unchanged for review.
-      - name: Share exact browser build
-        uses: actions/upload-artifact@v6
-        with:
-          name: ecg-browser-build-${{ github.sha }}
-          path: dist/
-          if-no-files-found: error
-          retention-days: 14
       - name: Archive exact reviewed source and reports
         if: always()
         run: |
@@ -152,7 +170,7 @@ jobs:
           path: ${{ runner.temp }}/ecg-evidence/
           retention-days: 14
   accessibility:
-    needs: verify
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

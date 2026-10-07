@@ -5,7 +5,7 @@ import type { ECGCase } from "../engine/types";
 export const WPW_REPOLARIZATION_LIMIT =
   "Preexcitación aproximada: la delta no modifica el ST-T secundario en este modelo. No uses esta T para aprender la repolarización típica de WPW.";
 export const SECONDARY_ST_RATIO_LIMIT =
-  "Repolarización secundaria aproximada: al variar el voltaje QRS, la relación ST/QRS no está calibrada. Este modelo no permite validar criterios proporcionales de Sgarbossa.";
+  "La T secundaria es aproximada; el ST secundario no está representado. Un ST plano no demuestra repolarización normal. La relación ST/QRS no está calibrada y no permite validar criterios proporcionales de Sgarbossa.";
 
 export function repolarizationLimitations(c: ECGCase): string[] {
   if (c.rhythm === "vf" || c.rhythm === "asystole" || isVviNoncapture(c)) return [];

@@ -1,0 +1,54 @@
+{
+  "status": "rejected-unpublished",
+  "clinicalValidation": false,
+  "reports": [
+    {
+      "report": "local-competition256.json",
+      "sha256": "89eb142b2e83ff015207b3b84a157ec741f784c107d6f7d3c97ac195eec6af1e",
+      "summary": {
+        "scenarios": 256,
+        "newFalseUsable": 0,
+        "newMissedQrsCases": 15,
+        "usableBefore": 128,
+        "usableAfter": 107
+      }
+    },
+    {
+      "report": "global-nms-held256.json",
+      "sha256": "1be0c9d550207910d88a47012f2c157b601c643ebfe0f23bb6f09b0ffddd4965",
+      "summary": {
+        "scenarios": 256,
+        "newFalseUsable": 0,
+        "newMissedQrsCases": 1,
+        "usableBefore": 97,
+        "usableAfter": 97
+      }
+    },
+    {
+      "report": "global-nms-native1712.json",
+      "sha256": "2f4879b0d3b6f293966ef36ed66cc8fd562b4f7e7f15c3134885ece0ab64c4b6",
+      "summary": {}
+    },
+    {
+      "report": "strict-diagnostic.json",
+      "sha256": "ff90dc24909c1d996660de7981a2a0a77eb2147ce29648ca1c5c2819cac4bf6e",
+      "summary": {
+        "status": "fail",
+        "scenarios": 920
+      }
+    },
+    {
+      "report": "fixed-window-lbbb256.json",
+      "sha256": "6da4857938db88e4c04200faba5510a0a4a16aa0e2cb84880e958dcb83431101",
+      "summary": {
+        "scenarios": 256,
+        "newFalseUsable": 19,
+        "newMissedQrsCases": 6,
+        "usableBefore": 19,
+        "usableAfter": 53
+      }
+    }
+  ],
+  "decision": "No detector revision accepted; regional release remains blocked.",
+  "invalidExperiment": "Wrong-checkout identical-model run excluded; selected-model assertion added."
+}

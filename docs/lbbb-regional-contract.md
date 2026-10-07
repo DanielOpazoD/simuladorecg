@@ -1,5 +1,10 @@
 # Proposed regional LBBB surrogate: decision before implementation
 
+**Current release status: BLOCKED.** The corrected evaluator finds 15 additional
+missed-QRS scenarios. Historical preliminary claims below are retained with their
+correction; they are not release evidence. PR120 is integrated, but does not resolve
+this event-matching failure.
+
 Defect: changing QRS duration in the existing LBBB template stretches all four
 vector bases, including the early right-ventricular/septal contribution. Explore
 an optional regional surrogate that preserves an early clock and delays/spreads
@@ -63,7 +68,7 @@ non-QRS candidates in this case, demonstrating that a near-correct average rate
 alone does not validate event identity or interval delineation.
 
 
-## Recovery after independent confidence revision (PR120 pending)
+## Historical preliminary recovery claim — invalid event matching, corrected below
 
 The independent opposed-cycle screen removes the interval-ratio prerequisite,
 without changing model samples, candidate times or numerical measurements. The
@@ -103,3 +108,23 @@ relaxed. This fails the release gate. The PR remains a draft until the detector
 or model interaction is resolved and the full corrected gate passes. New unit
 contracts reject 240 milliseconds supplied as 240 event seconds and require a
 240 ms complex starting at 1 s to have its midpoint at 1.12 s, not 1.00012 s.
+
+
+## Continued detector experiments: none accepted
+
+Three bounded sample-only alternatives were tested without changing source
+waveforms, the 256-case domain or matching tolerance. Clean rank-one preference
+left all 15 additional missed-QRS scenarios. Global energy-ordered suppression
+reduced these to one but caused 21 new falsely usable cases in the 1,712-scenario
+native sweep and failed 151 strict noise strata. A fixed-origin 180 ms competition
+window retained six additional missed-QRS scenarios and introduced 19 newly
+falsely usable regional rate cases. None was published or registered as a reviewed
+numerical revision; reducing an aggregate error count did not excuse new failures.
+
+The evaluator now asserts that the requested regional model is actually active
+and that the comparator is the template. An earlier scratch run accidentally used
+a checkout without the regional implementation, making both sides identical; its
+apparent pass is invalid and is excluded from acceptance evidence. This assertion
+prevents silently accepting such a comparison. The shared event-unit helper and
+its six contracts come unchanged from main/PR125. Full-domain failure remains a
+mandatory gate, not an expected-failure test converted to green.

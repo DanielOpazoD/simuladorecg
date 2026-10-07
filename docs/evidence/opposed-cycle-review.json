@@ -75,6 +75,16 @@
         "newMissedQrsCases": 0,
         "usableBefore": 128,
         "usableAfter": 107
+      },
+      "eventMatchingClaimInvalid": true,
+      "correction": {
+        "reason": "The initial evaluator treated event QRS seconds as milliseconds; use time + qrs / 2. Previous missed-QRS and event identity claims are invalid.",
+        "correctedReportSha256": "75000184ab0f6e283d749ecf003f8d6a7955f219fe55f349db060e0716dffb6a",
+        "scenarios": 256,
+        "newMissedQrsCases": 15,
+        "newFalseUsableRateCases": 0,
+        "regionalModelReleaseBlocked": true,
+        "confidencePRMeasurementsUnaffected": true
       }
     }
   },

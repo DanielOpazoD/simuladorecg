@@ -6,7 +6,7 @@ import {mkdtemp,writeFile,rm,readFile} from 'node:fs/promises';import {tmpdir} f
 const output=process.argv[2];assert.ok(output,'Usage: validate-lbbb-worker.mjs OUTPUT');
 const temp=await mkdtemp(path.join(tmpdir(),'lbbb-worker-'));
 try{
- const file=path.join(temp,'api.mjs');await build({stdin:{contents:"export {synthesize} from './src/engine/signal';export {fromPreset,presetById} from './src/presets/catalog';export {ModelScopeError} from './src/engine/constraints';",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',outfile:file});
+ const file=path.join(temp,'api.mjs');await build({stdin:{contents:"export {synthesize} from './src/engine/signal';export {fromPreset,presetById} from './src/presets/catalog';export {ModelScopeError} from './src/engine/constraints';export {regionalActivationState} from './src/engine/regional-activation';",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',outfile:file});
  const model=await import(pathToFileURL(file));const analyzerFile=path.join(temp,'analyzer.mjs');
  const bundle=await build({stdin:{contents:"export {analyzeSamples} from './src/engine/sample-analysis';export {applyAcquisitionScope} from './src/engine/acquisition-measurement';",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',metafile:true,outfile:analyzerFile});
  assert.ok(!Object.keys(bundle.metafile.inputs).some(f=>/\/(signal|rhythm|model-audit)\.ts$/.test(f)),'Model truth imported by analyzer');
@@ -20,7 +20,9 @@ try{
   if(noise!==undefined){c.artifacts={...c.artifacts,baseline:noise,muscle:noise,mains:noise};c.seed=seed;}
   const pair={};
   for(const activationModel of ['template','regional-lbbb-v1']){
-   const s=model.synthesize({...c,activationModel},10);
+   const selected={...c,activationModel};
+   assert.equal(model.regionalActivationState(selected).active,activationModel==='regional-lbbb-v1','Reference must exercise the requested model, not silent fallback');
+   const s=model.synthesize(selected,10);
    const m=api.applyAcquisitionScope(api.analyzeSamples({fs:s.fs,leads:s.leads}),filter);
    const reference=s.events.beats.map(qrsMidpointSeconds).filter(t=>t>=.2&&t<=9.8);
    const matched=matchQrsEvents(reference,m.detectedPeaks.filter(t=>t>=.2&&t<=9.8),.15);

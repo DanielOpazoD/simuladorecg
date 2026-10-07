@@ -660,7 +660,7 @@ export const PRESETS: Preset[] = [
     "Estimulación ventricular representativa desde VD.",
     ["Espiga antes de QRS", "QRS ancho tipo BRI y eje superior"],
     "vectorial",
-    "Estimulación capturada a frecuencia fija; sensado, demanda y fallos pendientes. " + SECONDARY_ST_RATIO_LIMIT,
+    "Por defecto, estimulación fija capturada. VVI ofrece demanda idealizada y una variante sin captura total sin escape; no simula fusión ni fallos intermitentes. " + SECONDARY_ST_RATIO_LIMIT,
   ),
   p(
     "ddd",
