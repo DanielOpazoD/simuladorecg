@@ -96,7 +96,24 @@ function retireUnsupportedFrontalAxis(input: Samples, m: Measurement): Measureme
     for(let i=1;i<n;i++)if(a[i]!==a[0])return false;
     return true;
   };
-  if (!flat('I') || !flat('II') || (m.axis===null && m.pAxis===null && m.tAxis===null)) return m;
+  if (!flat('I') || !flat('II')) {
+    // P/T activity elsewhere cannot supply the missing QRS direction. This is
+    // exact local constancy, not a clinical low-voltage or noise threshold.
+    const flatQrs = (onset: number, offset: number, lead: 'I' | 'II') => {
+      const a = input.leads[lead];
+      const start = Math.max(0, Math.round(onset * input.fs));
+      const end = Math.min(n, Math.round(offset * input.fs));
+      if (end - start < 2) return false;
+      for (let i = start + 1; i < end; i++) if (a[i] !== a[start]) return false;
+      return true;
+    };
+    if (m.axis === null || !m.beats.length || !m.beats.every(b =>
+      flatQrs(b.onset, b.offset, 'I') && flatQrs(b.onset, b.offset, 'II'))) return m;
+    return {...m, axis: null, rejected: {...m.rejected, axis: m.axis},
+      evidence: {...m.evidence, axis: {...m.evidence.axis, status: 'unavailable', count: 0, spread: null,
+        reason: 'I y II no contienen variación en los QRS delimitados: la actividad P/T fuera de ellos no permite estimar el eje QRS. No equivale a un eje de 0°.'}}};
+  }
+  if (m.axis===null && m.pAxis===null && m.tAxis===null) return m;
   return {...m, axis:null, pAxis:null, tAxis:null,
     rejected:m.axis===null?m.rejected:{...m.rejected,axis:m.axis},
     evidence:{...m.evidence,axis:{...m.evidence.axis,status:'unavailable',count:0,spread:null,
