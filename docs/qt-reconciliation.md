@@ -84,3 +84,15 @@ The four-lead global reference is an explicit evaluator aggregation of separate
 lead annotations, not a separately adjudicated global endpoint. Review status is
 not a calibrated probability. Neither the source's configured QT nor the
 absence of a software assertion establishes patient accuracy.
+
+## Frozen v1 prospective outcome: failed
+
+The first 40-record execution is retained in
+[evidence/qt-reconciliation-v1-results.json](evidence/qt-reconciliation-v1-results.json)
+and [workflow 37685303666](https://github.com/DanielOpazoD/simuladorecg/actions/runs/37685303666).
+Same-population QT MAE improved from 74.3 to 36.6 ms on 10 records, but all available
+outputs had MAE 27.8 ms, p95 144 ms and maximum 149 ms. These failed the frozen
+25/60/100 ms targets. Availability increased from 10 to 20 of 39 reference-eligible
+records; only the previously usable output retained that state. The v1 candidate
+is not accepted for merge. Its algorithm, selection and targets remain frozen.
+Any further candidate is a separate revision and cannot claim this cohort is unseen.

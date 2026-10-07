@@ -1,6 +1,6 @@
 import {restoreHistoricalRateScreen} from './lib/sample-entry-contract.mjs';
 import {qrsMidpointSeconds} from './lib/qrs-event-reference.mjs';
-import {QRS_T_REVISION,assertReviewedQrsTFile,assertQrsTRefinement,summarizeRateRevision,preQrsTNumericsPlugin} from './lib/qrs-t-revision.mjs';
+import {TERMINAL_SOURCE_REVISION,QRS_T_REVISION,assertReviewedQrsTFile,assertQrsTRefinement,summarizeRateRevision,preQrsTNumericsPlugin} from './lib/qrs-t-revision.mjs';
 import {assertReviewedAlternatingConfidence,assertReviewedImpulseConfidence,assertReviewedSampleEntry} from './lib/sample-entry-contract.mjs';
 /** Paired quality assessment. Evaluator has references; analyzeSamples does not. */
 import { build } from 'esbuild';
@@ -37,7 +37,8 @@ try {
   assert.deepEqual(A.HR_QUALITY_POLICY, policy.qualityPolicy, 'Policy changed after replication protocol');
   assertReviewedSampleEntry(await readFile('src/engine/sample-analysis.ts'));
   for (const file of Object.keys(next.metafile.inputs).filter(f => !f.endsWith('/sample-analysis.ts') && !f.endsWith('/measurement-support.ts'))) {
-    if(file==='src/engine/analysis/alternating-confidence.ts') assertReviewedAlternatingConfidence(await readFile(file));
+    if(TERMINAL_SOURCE_REVISION[file]) assert.equal(hash(await readFile(file)),TERMINAL_SOURCE_REVISION[file],'Unreviewed terminal estimator: '+file);
+    else if(file==='src/engine/analysis/alternating-confidence.ts') assertReviewedAlternatingConfidence(await readFile(file));
     else if(file==='src/engine/analysis/impulse-confidence.ts') assertReviewedImpulseConfidence(await readFile(file));
     else if(QRS_T_REVISION.files[file] && file!=='src/engine/measure.ts') assertReviewedQrsTFile(file,await readFile(file));
     else if(file==='src/engine/measure.ts') assertReviewedMeasure(await readFile(path.join(base,file)),await readFile(file));
