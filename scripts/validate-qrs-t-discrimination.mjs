@@ -1,3 +1,4 @@
+import {qrsMidpointSeconds} from './lib/qrs-event-reference.mjs';
 import {OPPOSED_CYCLE_REVISION,assertReviewedOpposedCycle,assertQualityOnlyRevision} from './lib/opposed-cycle-revision.mjs';
 /** Paired sample-only numerical revision: known regressions plus transfer/ectopy.
  * Synthetic event references are confined to this evaluator, never the detector. */
@@ -37,11 +38,11 @@ try{
   const noise=changes.noise;delete c.noise;
   c.artifacts={...c.artifacts,...(noise===undefined?{}:{baseline:noise,muscle:noise,mains:noise})};
   let s;try{s=model.synthesize(c,10);}catch(error){if(!(error instanceof model.ModelScopeError))throw error;rows.push({label,id,changes,unsupported:String(error)});return;}
-  const reference=s.events.beats.filter(b=>b.time+b.qrs/2>=.2&&b.time+b.qrs/2<9.8);
+  const reference=s.events.beats.filter(b=>qrsMidpointSeconds(b)>=.2&&qrsMidpointSeconds(b)<9.8);
   const referenceHR=reference.length>=2?60*(reference.length-1)/(reference.at(-1).time-reference[0].time):null;
   const sampleHash=()=>createHash('sha256').update(Buffer.concat(Object.values(s.leads).map(a=>Buffer.from(a.buffer,a.byteOffset,a.byteLength)))).digest('hex');
   const frozen=sampleHash();
-  const run=m=>{const match=matchQrsEvents(reference.map(b=>b.time+b.qrs/2),m.detectedPeaks.filter(t=>t>=.2&&t<9.8),.15);return {hr:m.hr,status:m.evidence.hr.status,tp:match.tp,fp:match.fp,fn:match.fn,candidates:m.detectedPeaks.length,reportedQrs:m.qrs};};
+  const run=m=>{const match=matchQrsEvents(reference.map(b=>qrsMidpointSeconds(b)),m.detectedPeaks.filter(t=>t>=.2&&t<9.8),.15);return {hr:m.hr,status:m.evidence.hr.status,tp:match.tp,fp:match.fp,fn:match.fn,candidates:m.detectedPeaks.length,reportedQrs:m.qrs};};
   const sampleInput={fs:s.fs,leads:s.leads};
   const prior=qualityBefore(sampleInput),next=after(sampleInput);assertQualityOnlyRevision(prior,next);
   rows.push({label,id,changes,referenceHR,before:run(before(sampleInput)),qualityBefore:run(prior),after:run(next)});assert.equal(sampleHash(),frozen,'Analyzer mutated the ECG');

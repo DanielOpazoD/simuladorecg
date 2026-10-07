@@ -17,6 +17,9 @@ try {
   const effectiveBaselineCommit = migration.baselineAmendment?.amendedBaselineCommit ?? policy.baselineCommit;
   assert.equal(before.sourceCommit,effectiveBaselineCommit,'Not the reviewed baseline commit');
   assert.equal(before.noiseProtocolSha256,policy.noiseProtocolSha256,'Unreviewed acquisition protocol');
+  const protocolBytes=await readFile('benchmarks/noise-stress/protocol.json');
+  assert.equal(createHash('sha256').update(protocolBytes).digest('hex'),policy.noiseProtocolSha256,'Unreviewed frozen protocol bytes');
+  assert.deepEqual(before.protocol,JSON.parse(protocolBytes),'Report differs from the frozen protocol; copied hash labels are insufficient');
   result=compareReports(before,after,{...policy.numericalTolerance,allowedCleanSourceChanges:migration.allowedCleanSourceChanges});
   const usesGeneratorAmendment = effectiveBaselineCommit !== policy.baselineCommit;
   if (policy.monitorRevision && !usesGeneratorAmendment) {
@@ -27,7 +30,8 @@ try {
     // The amended source baseline already contains the previously reviewed monitor
     // migration. Re-applying its required improvement ratios against itself would
     // be nonsensical; require the stricter ordinary paired non-regression result.
-    assert.equal(result.status,'pass','Amended generator baseline must pass strict paired non-regression');
+    // Keep status='fail' and its strata/coverage evidence. The final exit-code
+    // gate below remains nonzero; throwing here would erase these diagnostics.
     result={...result,reviewedMonitorRevision:{status:'already-incorporated-in-amended-baseline'}};
   }
   result.policy=policy; result.generatorMigration=migration;

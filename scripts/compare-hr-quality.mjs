@@ -1,3 +1,4 @@
+import {qrsMidpointSeconds} from './lib/qrs-event-reference.mjs';
 import {QRS_T_REVISION,assertReviewedQrsTFile,assertQrsTRefinement,summarizeRateRevision,preQrsTNumericsPlugin} from './lib/qrs-t-revision.mjs';
 import {assertReviewedAlternatingConfidence,assertReviewedImpulseConfidence,assertReviewedSampleEntry} from './lib/sample-entry-contract.mjs';
 /** Paired quality assessment. Evaluator has references; analyzeSamples does not. */
@@ -85,7 +86,7 @@ try {
     const c=B.fromPreset(B.presetById(id));Object.assign(c,{filter:'off',notch:0,variability:0});
     Object.assign(c.artifacts,{baseline:0,muscle:0,mains:0,loose:0,reversed:false});
     const signal=B.synthesize(c,p.segmentDurationSeconds);
-    const events=signal.events.beats.filter(b=>b.time-p.cropSeconds[0]+b.qrs/2>=.2&&b.time-p.cropSeconds[0]+b.qrs/2<9.8);
+    const events=signal.events.beats.filter(b=>qrsMidpointSeconds({time:b.time-p.cropSeconds[0],qrs:b.qrs})>=.2&&qrsMidpointSeconds({time:b.time-p.cropSeconds[0],qrs:b.qrs})<9.8);
     const reference=events.length>1?60*(events.length-1)/(events.at(-1).time-events[0].time):null;
     for(const segment of [null,...source.segments]) for(const snrDb of segment?p.snrDb:[null]) {
       const channels=segment?.channels??[new Float64Array(signal.leads.I.length),new Float64Array(signal.leads.I.length)];
