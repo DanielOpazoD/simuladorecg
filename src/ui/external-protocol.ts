@@ -27,12 +27,32 @@ function validateMeasurement(value: unknown): asserts value is Measurement {
   keys(m.qtc, ['bazett','fridericia','framingham','hodges']);
   if (!m.window || m.window.start !== 0 || m.window.end !== 10 || typeof m.quality !== 'string' || m.quality.length > 4000) throw Error('Ventana o calidad de análisis no válida.');
   if (!Array.isArray(m.beats) || m.beats.length > 1000 || !Array.isArray(m.detectedPeaks) || m.detectedPeaks.length > 1000 ||
-    m.detectedPeaks.some(x => !Number.isFinite(x) || x < 0 || x >= 10)) throw Error('Candidatos no válidos.');
+    m.detectedPeaks.some((x,i) => !Number.isFinite(x) || x < 0 || x >= 10 || (i > 0 && x <= m.detectedPeaks[i-1]))) throw Error('Candidatos no válidos.');
+  const withinWindow = (t: number | null) => t === null || (t >= 0 && t <= 10);
+  // Roundoff tolerance in milliseconds, not clinical interval accuracy.
+  const durationMatches = (ms: number, start: number, end: number) =>
+    Math.abs(ms - (end - start) * 1000) <= 1e-7;
+  let previousPeak = -Infinity;
   for (const b of m.beats) {
     for (const key of ['peak','onset','offset','rr','qrs','noise'] as const)
       if (!Number.isFinite(b[key])) throw Error('Candidato incompleto.');
     for (const key of ['pOnset','pPeak','tPeak','tEnd','tTangentEnd','pr','qt','axis'] as const)
       if (!finiteOrNull(b[key])) throw Error('Límite no válido.');
+    const index = m.detectedPeaks.indexOf(b.peak);
+    if (index <= 0 || b.peak <= previousPeak || b.onset >= b.offset || b.noise < 0 ||
+        !durationMatches(b.qrs,b.onset,b.offset) ||
+        Math.abs(b.rr - (b.peak - m.detectedPeaks[index-1])) > 1e-9 ||
+        ![b.onset,b.offset,b.pOnset,b.pPeak,b.tPeak,b.tEnd,b.tTangentEnd].every(withinWindow))
+      throw Error('Coordenadas o unidades del candidato inconsistentes.');
+    previousPeak = b.peak;
+    if ((b.pr === null) !== (b.pOnset === null) || (b.pr === null) !== (b.pPeak === null) ||
+        (b.pr !== null && (b.pOnset! > b.pPeak! || b.pPeak! >= b.onset ||
+          !durationMatches(b.pr,b.pOnset!,b.onset))))
+      throw Error('PR no corresponde a sus límites temporales.');
+    if ((b.qt === null) !== (b.tEnd === null) ||
+        (b.qt !== null && (b.tPeak === null || b.tPeak <= b.offset || b.tEnd! <= b.tPeak ||
+          !durationMatches(b.qt,b.onset,b.tEnd!))))
+      throw Error('QT no corresponde a sus límites temporales.');
   }
   for (const key of ['hr','pr','qrs','qt','axis'] as const) {
     const e = m.evidence?.[key];
