@@ -83,7 +83,40 @@ jobs:
           name: qrs-amplitude-${{ matrix.scope }}-${{ github.sha }}
           path: ${{ runner.temp }}/amplitude-evidence/
           retention-days: 14
-  verify:
+  qrs-discrimination:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22.16.0'
+          cache: npm
+      - run: npm ci
+      - name: Complete native QRS-T, transfer and ectopy matrix
+        run: node scripts/validate-qrs-t-discrimination.mjs "${{ runner.temp }}/qrs-t-discrimination-results.json"
+      - name: Require the generated report
+        run: test -s "$RUNNER_TEMP/qrs-t-discrimination-results.json"
+      - name: Archive exact native evidence
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/qrs-discrimination-evidence"
+          git archive HEAD | gzip > "$RUNNER_TEMP/qrs-discrimination-evidence/source.tar.gz"
+          git rev-parse HEAD > "$RUNNER_TEMP/qrs-discrimination-evidence/source-commit.txt"
+          node -p 'JSON.stringify(process.versions,null,2)' > "$RUNNER_TEMP/qrs-discrimination-evidence/runtime.json"
+          cp "$RUNNER_TEMP/qrs-t-discrimination-results.json" "$RUNNER_TEMP/qrs-discrimination-evidence/" 2>/dev/null || true
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: qrs-discrimination-${{ github.sha }}
+          path: ${{ runner.temp }}/qrs-discrimination-evidence/
+          if-no-files-found: error
+          retention-days: 14
+  verify-core:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -111,8 +144,6 @@ jobs:
         run: node scripts/validate-wpw-support.mjs "${{ runner.temp }}/wpw-support-results.json"
       - name: Total VVI noncapture sample-only uncertainty
         run: node scripts/validate-vvi-noncapture.mjs "${{ runner.temp }}/vvi-noncapture-results.json"
-      - name: Paired QRS-T discrimination, transfer and ectopy
-        run: node scripts/validate-qrs-t-discrimination.mjs "${{ runner.temp }}/qrs-t-discrimination-results.json"
       - name: Use the exact production build
         uses: actions/download-artifact@v7
         with:
@@ -169,6 +200,28 @@ jobs:
           name: ecg-evidence-${{ github.sha }}
           path: ${{ runner.temp }}/ecg-evidence/
           retention-days: 14
+  verify:
+    # Preserve the existing merge-check name and fail closed on every prerequisite.
+    if: ${{ always() }}
+    needs: [build, verify-core, qrs-discrimination, accessibility, portability, amplitude-regression]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require the complete fidelity workflow
+        env:
+          RESULT_BUILD: ${{ needs['build'].result }}
+          RESULT_CORE: ${{ needs['verify-core'].result }}
+          RESULT_NATIVE: ${{ needs['qrs-discrimination'].result }}
+          RESULT_BROWSER: ${{ needs['accessibility'].result }}
+          RESULT_PORTABILITY: ${{ needs['portability'].result }}
+          RESULT_AMPLITUDE: ${{ needs['amplitude-regression'].result }}
+        run: |
+          test "$RESULT_BUILD" = "success"
+          test "$RESULT_CORE" = "success"
+          test "$RESULT_NATIVE" = "success"
+          test "$RESULT_BROWSER" = "success"
+          test "$RESULT_PORTABILITY" = "success"
+          test "$RESULT_AMPLITUDE" = "success"
   accessibility:
     needs: build
     runs-on: ubuntu-latest
