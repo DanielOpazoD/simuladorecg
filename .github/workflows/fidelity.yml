@@ -183,6 +183,7 @@ jobs:
           node tests/browser-accessibility.mjs
           node tests/browser-vvi-noncapture.mjs
           node tests/browser-qrs-t-discrimination.mjs
+          node tests/browser-wide-qrs.mjs
           ECG_GROUP_ENGINES=all node tests/browser-diagnosis-navigation.mjs
           ECG_REGIONAL_ENGINES=all node tests/browser-regional-activation.mjs
       - uses: actions/upload-artifact@v6

@@ -7,9 +7,11 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 export const QRS_T_REVISION=Object.freeze({
  baselineCommit:'ca2aa852d2fe5c6affdfdc31db2b9160211944f9',
+ evaluationBaselineCommit:'63f32b03921158337052e7068abcb6e72ec72f79',
+ iteration:'continuous-wide-components-v2',
  files:Object.freeze({
   'src/engine/measure.ts':Object.freeze({before:'ceaeef83b459bbb114dc8a9457af7d43d804c14a8cb8107fc2b250faf391d61e',after:'cae31c6ba97c65b35f7bc51838d24ab96c47cf05ce6be977bf02aab0b51d0635'}),
-  'src/engine/analysis/ventricular-candidates.ts':Object.freeze({before:'0c7d0abb1834fd9407ca9fdd85c735b7794bcaf933d911f13222039ab4c0bec4',after:'532a1108430d005cd193e160bede946baf416e4bc21e8ce1187150b91d253f53'}),
+  'src/engine/analysis/ventricular-candidates.ts':Object.freeze({before:'0c7d0abb1834fd9407ca9fdd85c735b7794bcaf933d911f13222039ab4c0bec4',after:'3f2eb3dfa4e6ccf190d668aad985008b270b810a7112b0251d69cd7a03eb0201'}),
  }),
 });
 export function assertReviewedQrsTFile(file,source){

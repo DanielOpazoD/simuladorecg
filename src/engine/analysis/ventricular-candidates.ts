@@ -47,6 +47,64 @@ function shape(s: Samples, i: number) {
   return { rank: 1 - eigen / trace, rough: acc / vel };
 }
 
+/** Group opposing slopes only when a recurrent return level is observable and
+ * the intervening deflection never returns to it. This is a sample-domain
+ * engineering feature, not identification of a clinical isoelectric baseline.
+ * Keeping similar repeating shapes separate protects genuine rapid QRS trains.
+ */
+function groupContinuousCandidates(s: Samples, peaks: number[]): number[] {
+  const close = (distance: number) => distance > 0.18 && distance < 0.28;
+  if (!peaks.some((peak, i) => i > 0 && close((peak - peaks[i - 1]) / s.fs)))
+    return peaks;
+  const n = Math.min(s.leads.I.length, 10 * s.fs);
+  if (n < 3 * s.fs) return peaks;
+  const rows = names.map(lead => Array.from(s.leads[lead].slice(0, n)).sort((a, b) => a - b));
+  const middle = rows.map(row => row[Math.floor(n / 2)]);
+  const range = Math.max(...rows.map(row =>
+    row[Math.floor((n - 1) * 0.98)] - row[Math.floor((n - 1) * 0.02)]));
+  if (range <= 0) return peaks;
+  const step = range * 0.02;
+  const bins = new Map<string, { count: number; sum: number[] }>();
+  for (let i = 0; i < n; i++) {
+    const values = names.map(lead => s.leads[lead][i]);
+    const key = values.map((value, k) => Math.round((value - middle[k]) / step)).join(",");
+    let bin = bins.get(key);
+    if (!bin) { bin = { count: 0, sum: [0, 0, 0, 0] }; bins.set(key, bin); }
+    bin.count++;
+    values.forEach((value, k) => { bin!.sum[k] += value; });
+  }
+  const mode = [...bins.values()].sort((a, b) => b.count - a.count)[0];
+  if (mode.count < n * 0.04) return peaks;
+  const returnLevel = mode.sum.map(value => value / mode.count);
+  const magnitude = (i: number) => Math.hypot(...names.map((lead, k) => s.leads[lead][i] - returnLevel[k]));
+  const keep: number[] = [];
+  for (const candidate of peaks) {
+    const previous = keep.at(-1);
+    if (previous !== undefined && close((candidate - previous) / s.fs)) {
+      let maximum = 0, minimum = Infinity;
+      for (let i = previous; i <= candidate; i++) maximum = Math.max(maximum, magnitude(i));
+      const edge = Math.round(0.024 * s.fs);
+      for (let i = previous + edge; i <= candidate - edge; i++) minimum = Math.min(minimum, magnitude(i));
+      if (minimum > maximum * 0.12) {
+        const radius = Math.round(0.04 * s.fs), a: number[] = [], b: number[] = [];
+        for (const lead of names) {
+          const first = Array.from(s.leads[lead].slice(previous - radius, previous + radius + 1));
+          const second = Array.from(s.leads[lead].slice(candidate - radius, candidate + radius + 1));
+          const meanA = first.reduce((sum, value) => sum + value, 0) / first.length;
+          const meanB = second.reduce((sum, value) => sum + value, 0) / second.length;
+          a.push(...first.map(value => value - meanA));
+          b.push(...second.map(value => value - meanB));
+        }
+        const correlation = a.reduce((sum, value, i) => sum + value * b[i], 0) /
+          (Math.hypot(...a) * Math.hypot(...b));
+        if (correlation < -0.5) continue;
+      }
+    }
+    keep.push(candidate);
+  }
+  return keep;
+}
+
 export function detectVentricularCandidates(
   s: Samples,
   { medianWidth = 0.014, candidateFraction = 0.35, tReject = true } = {},
@@ -177,13 +235,16 @@ export function detectVentricularCandidates(
     for(const i of peaks) {
       const p=refined.at(-1),d=p===undefined?9:(i-p)/fs;
       if (p !== undefined && d >= 0.2 && d <= 0.4) {
+        // Strict clean-shape evidence does not require T energy below QRS.
+        const raw = shape(s, i), prior = shape(s, p);
+        if (raw.rank < 0.00001 && prior.rank > 0.005 && raw.rough < 0.7 * prior.rough) continue;
         const f = shape(smoothed, i), g = shape(smoothed, p);
         if (f.rank < 0.003 && g.rank > 0.01 && f.rank < 0.1 * g.rank && f.rough < 0.85 * g.rough)
           continue;
       }
       refined.push(i);
     }
-    peaks=refined;
+    peaks = groupContinuousCandidates(s, refined);
   }
   return { peaks, boundaryCandidates, leads, energy, threshold, high, candidates };
 }
