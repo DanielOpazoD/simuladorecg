@@ -1,3 +1,4 @@
+import {assertTeachingCatalogSource,assertTeachingCatalogRevision} from './lib/teaching-scope-revision.mjs';
 import {QRS_T_REVISION,assertReviewedQrsTFile} from './lib/qrs-t-revision.mjs';
 import {predictWpwSupport} from './lib/wpw-support-prediction.mjs';
 import {assertNoncaptureTeachingScope} from './lib/noncapture-teaching-contract.mjs';
@@ -29,6 +30,8 @@ try {
   execFileSync('tar',['-xf','-','-C',base],{input:execFileSync('git',['archive',BASE],{maxBuffer:100*1024*1024})});
   const changedFiles=execFileSync('git',['diff','--name-only',BASE,'HEAD','--','src/engine','src/presets'],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
   const reviewedSourceContracts=['src/engine/ventricular-trajectory.ts','src/engine/af-rr.ts'];
+  assertTeachingCatalogSource(await readFile('src/presets/catalog.ts','utf8'),await readFile(path.join(base,'src/presets/catalog.ts'),'utf8'));
+  reviewedSourceContracts.push('src/presets/catalog.ts');
   const teachingFile='src/presets/teaching-limits.ts';
   assertNoncaptureTeachingScope(await readFile(teachingFile,'utf8'),await readFile(path.join(base,teachingFile),'utf8'));
   reviewedSourceContracts.push(teachingFile);
@@ -78,7 +81,7 @@ try {
     await writeFile(rhythmFile,predictAfClock(await readFile(rhythmFile,'utf8')));
     expected=await load(predicted,'expected');
   }
-  assert.deepEqual(after.PRESETS,before.PRESETS,'Catalog must stay frozen');
+  assertTeachingCatalogRevision(before.PRESETS,after.PRESETS);
   function check(c,label){
     const original=before.synthesize(c,10),actual=after.synthesize(c,10),prediction=expected.synthesize(c,10);
     const result=assertTraceContract(prediction,actual,label,coherence?1e-12:0);

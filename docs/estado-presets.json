@@ -253,7 +253,7 @@
     "categoria": "Conducción intraventricular",
     "estado": "aproximado",
     "estrategia": "vectorial",
-    "limitacion": "Repolarización secundaria aproximada: al variar el voltaje QRS, la relación ST/QRS no está calibrada. Este modelo no permite validar criterios proporcionales de Sgarbossa."
+    "limitacion": "La T secundaria es aproximada; el ST secundario no está representado. Un ST plano no demuestra repolarización normal. La relación ST/QRS no está calibrada y no permite validar criterios proporcionales de Sgarbossa."
   },
   {
     "id": "lafb",
@@ -389,7 +389,7 @@
     "categoria": "Isquemia y ST",
     "estado": "aproximado",
     "estrategia": "vectorial",
-    "limitacion": "Caso ilustrativo; sin cálculo automático de score. Repolarización secundaria aproximada: al variar el voltaje QRS, la relación ST/QRS no está calibrada. Este modelo no permite validar criterios proporcionales de Sgarbossa."
+    "limitacion": "Caso ilustrativo; sin cálculo automático de score. La T secundaria es aproximada; el ST secundario no está representado. Un ST plano no demuestra repolarización normal. La relación ST/QRS no está calibrada y no permite validar criterios proporcionales de Sgarbossa."
   },
   {
     "id": "pericarditis",
@@ -437,7 +437,7 @@
     "categoria": "Marcapasos",
     "estado": "aproximado",
     "estrategia": "vectorial",
-    "limitacion": "Estimulación capturada a frecuencia fija; sensado, demanda y fallos pendientes. Repolarización secundaria aproximada: al variar el voltaje QRS, la relación ST/QRS no está calibrada. Este modelo no permite validar criterios proporcionales de Sgarbossa."
+    "limitacion": "Por defecto, estimulación fija capturada. VVI ofrece demanda idealizada y una variante sin captura total sin escape; no simula fusión ni fallos intermitentes. La T secundaria es aproximada; el ST secundario no está representado. Un ST plano no demuestra repolarización normal. La relación ST/QRS no está calibrada y no permite validar criterios proporcionales de Sgarbossa."
   },
   {
     "id": "ddd",
@@ -445,7 +445,7 @@
     "categoria": "Marcapasos",
     "estado": "aproximado",
     "estrategia": "vectorial",
-    "limitacion": "Secuencia fija; no simula demanda, PVARP, seguimiento ni límite superior. Repolarización secundaria aproximada: al variar el voltaje QRS, la relación ST/QRS no está calibrada. Este modelo no permite validar criterios proporcionales de Sgarbossa."
+    "limitacion": "Secuencia fija; no simula demanda, PVARP, seguimiento ni límite superior. La T secundaria es aproximada; el ST secundario no está representado. Un ST plano no demuestra repolarización normal. La relación ST/QRS no está calibrada y no permite validar criterios proporcionales de Sgarbossa."
   },
   {
     "id": "hyperk",
