@@ -161,6 +161,8 @@ jobs:
         run: node scripts/validate-repolarization.mjs --output "$RUNNER_TEMP/repolarization-comparison.json"
       - name: Complete historical and current 61-preset by four-filter comparison
         run: node scripts/validate-posterior-amplitude.mjs "$RUNNER_TEMP/qrs-default-results.json" --scope defaults
+      - name: Complete LPFB repair and unchanged catalog
+        run: node scripts/validate-lpfb-resolution.mjs "$RUNNER_TEMP/lpfb-resolution-results.json"
       - name: Verify pinned browser runtime
         run: node scripts/verify-browser-runtime.mjs
       - name: Production identity, browser flows and PNG pixel metrology
@@ -272,6 +274,7 @@ jobs:
           node scripts/verify-production.mjs
           case "$ECG_BROWSER_GROUP" in
             source)
+              node tests/browser-lpfb-resolution.mjs
               ECG_ACTIVATION_ENGINES=all node tests/browser-activation.mjs
               ECG_REGIONAL_ENGINES=all node tests/browser-regional-activation.mjs
               ;;

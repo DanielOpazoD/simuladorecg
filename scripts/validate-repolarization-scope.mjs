@@ -1,3 +1,4 @@
+import {predictLpfbSource} from './lib/lpfb-source-prediction.mjs';
 import {assertTeachingCatalogSource,assertTeachingCatalogRevision} from './lib/teaching-scope-revision.mjs';
 import {QRS_T_REVISION,assertReviewedQrsTFile} from './lib/qrs-t-revision.mjs';
 import {predictWpwSupport} from './lib/wpw-support-prediction.mjs';
@@ -79,6 +80,8 @@ try {
     await writeFile(qtFile,predictQTInitialization(await readFile(qtFile,'utf8')));
     const rhythmFile=path.join(predicted,'src/engine/rhythm.ts');
     await writeFile(rhythmFile,predictAfClock(await readFile(rhythmFile,'utf8')));
+    const morphologyFile=path.join(predicted,'src/engine/morphology.ts');
+    await writeFile(morphologyFile,predictLpfbSource(await readFile(morphologyFile,'utf8')));
     expected=await load(predicted,'expected');
   }
   assertTeachingCatalogRevision(before.PRESETS,after.PRESETS);
@@ -97,7 +100,7 @@ try {
       {
         const c={...before.fromPreset(preset),filter},label=`${preset.id}/${filter}`;
         // Default phenotypes are outside this repair's numerical delta: exact, not tolerance-based.
-        if(coherence && c.conduction!=='wpw' && c.rhythm!=='torsades' && c.rhythm!=='af' && !(c.rhythm==='sinus' && ['mobitz1','mobitz2','two_one','high'].includes(c.av)))
+        if(coherence && c.conduction!=='lpfb' && c.conduction!=='wpw' && c.rhythm!=='torsades' && c.rhythm!=='af' && !(c.rhythm==='sinus' && ['mobitz1','mobitz2','two_one','high'].includes(c.av)))
           assertTraceContract(before.synthesize(c,10),after.synthesize(c,10),label+'/default-frozen');
         if(coherence && c.rhythm==='torsades') {
           // The complete QRS/acquisition chain must remain bit-identical when T is removed.
@@ -121,6 +124,7 @@ try {
   const report={schemaVersion:2,stage:coherence?'A02-A03-independent-prediction':'A01-characterization-only',baselineCommit:BASE,
     eventCalendarRevision:'Strict bounded events and causal RR/PR assertions; optional programmed flutter sequences. Historical default samples remain exact.',
     torsadesFrameRevision:'Secondary T shares the historical time-varying QRS frame. Non-torsades defaults and QRS-only traces remain exact.',
+    lpfbSourceRevision:'Early left-superior source with dominant right-inferior activation; isolated LPFB only. Full frozen-source prediction.',
     wpwSupportRevision:'Independent compact-support correction; no negative-phase delta before native onset.',
     afClockRevision:'Representative gamma renewal CV0.22; frozen candidate and independent source prediction, not universal AF physiology.',
     qtInitializationRevision:'First event retains nominal ventricular RR; adaptation starts at second event. Separate from A02/A03 morphology.',

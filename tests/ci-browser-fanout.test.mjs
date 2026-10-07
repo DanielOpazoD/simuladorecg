@@ -2,7 +2,7 @@ import {it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 const source=readFileSync('.github/workflows/fidelity.yml','utf8');
-const groups={source:['activation','regional-activation'],navigation:['diagnosis-navigation'],interaction:['accessibility','vvi-noncapture','qrs-t-discrimination','wide-qrs']};
+const groups={source:['lpfb-resolution','activation','regional-activation'],navigation:['diagnosis-navigation'],interaction:['accessibility','vvi-noncapture','qrs-t-discrimination','wide-qrs']};
 const job=(text,name)=>text.match(new RegExp('(?:^|\\n)  '+name+':\\n([\\s\\S]*?)(?=\\n  [a-z][a-z-]*:\\n|$)'))?.[1]??'';
 function validate(text){
  const matrix=job(text,'browser-contracts'),gate=job(text,'accessibility');
@@ -26,14 +26,14 @@ function execute(text,group,fail=''){
  const stub='node(){ if [ "$1" = "$FAIL_SCRIPT" ]; then return 23; fi; printf "%s|%s|%s|%s\\n" "$1" "$ECG_ACTIVATION_ENGINES" "$ECG_GROUP_ENGINES" "$ECG_REGIONAL_ENGINES"; };\n';
  return execFileSync('bash',['-e','-o','pipefail','-c',stub+route],{env:{...process.env,ECG_BROWSER_GROUP:group,FAIL_SCRIPT:fail},encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim().split('\n');
 }
-it('routes every unchanged browser script exactly once across three independent groups',()=>{
+it('routes every required browser script exactly once across three independent groups',()=>{
  const all=[];
  for(const [group,scripts] of Object.entries(groups)){
   const lines=execute(source,group),paths=lines.map(l=>l.split('|')[0]);
   expect(paths).toEqual(scripts.map(s=>'tests/browser-'+s+'.mjs'));all.push(...paths);
   for(const line of lines)if(/activation|diagnosis-navigation/.test(line))expect(line.split('|').slice(1)).toContain('all');
  }
- expect(new Set(all).size).toBe(7);expect(all.length).toBe(7);expect(()=>execute(source,'unknown')).toThrow();
+ expect(new Set(all).size).toBe(8);expect(all.length).toBe(8);expect(()=>execute(source,'unknown')).toThrow();
 });
 it('propagates a failure from every routed browser command',()=>{
  for(const [group,scripts] of Object.entries(groups))for(const script of scripts)

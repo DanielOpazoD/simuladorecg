@@ -18,6 +18,7 @@ export const HR_QUALITY_POLICY = Object.freeze({
   backgroundRatio: 0.1,
   unmatchedFraction: 0.075,
   minimumUnmatched: 2,
+  maximumRateDisagreementBpm: 5,
 });
 
 export function heartRateDetectionQuality(input: Samples, peaksSeconds: readonly number[]) {
@@ -39,10 +40,17 @@ export function heartRateDetectionQuality(input: Samples, peaksSeconds: readonly
   const largest = Math.max(peaksSeconds.length, challenged.length);
   const unmatched = largest - matched;
   const unmatchedFraction = largest ? unmatched / largest : 0;
+  // A single extra candidate can change a 10-second rate by >5/min even when
+  // the count-fraction screen misses it. Compare two sample-only estimates.
+  const rate = (peaks: readonly number[]) => peaks.length >= 2 && peaks.at(-1)! > peaks[0]
+    ? 60 * (peaks.length - 1) / (peaks.at(-1)! - peaks[0]) : null;
+  const nominalRate = rate(peaksSeconds), challengedRate = rate(challenged.map(p=>p/input.fs));
+  const rateDisagreement = nominalRate !== null && challengedRate !== null &&
+    Math.abs(nominalRate - challengedRate) > HR_QUALITY_POLICY.maximumRateDisagreementBpm;
   const requiresReview = backgroundRatio !== null &&
     backgroundRatio > HR_QUALITY_POLICY.backgroundRatio &&
-    unmatched >= HR_QUALITY_POLICY.minimumUnmatched &&
-    unmatchedFraction >= HR_QUALITY_POLICY.unmatchedFraction;
+    ((unmatched >= HR_QUALITY_POLICY.minimumUnmatched &&
+    unmatchedFraction >= HR_QUALITY_POLICY.unmatchedFraction) || (unmatched > 0 && rateDisagreement));
   return { requiresReview, backgroundRatio, unmatchedFraction, unmatched, matched,
     nominalCount: peaksSeconds.length, challengedCount: challenged.length, challengedPeaksSeconds: challenged.map(p=>p/input.fs) };
 }
