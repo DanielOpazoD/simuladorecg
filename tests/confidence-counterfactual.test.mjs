@@ -15,7 +15,7 @@ it('substitutes exactly the verified historical policy and detects other changes
   await mkdir(before);
   await cp('src',path.join(before,'src'),{recursive:true});
   await writeFile(path.join(before,OPPOSED_CYCLE_REVISION.file),
-    await readFile('tests/reference/alternating-confidence-v1.txt'));
+    await readFile('tests/support/alternating-confidence-v1.txt'));
   const evidence=await assertConfidenceCounterfactual(process.cwd(),before);
   expect(evidence.comparison).toBe('single-policy-substitution');
   const changed=Object.entries(evidence.sourceHashes).filter(([,h])=>h.current!==h.previous).map(([f])=>f);
