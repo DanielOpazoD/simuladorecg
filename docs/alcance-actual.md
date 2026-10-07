@@ -22,6 +22,6 @@ Las correcciones se añaden en I, II y V1–V6; III/aVR/aVL/aVF se derivan despu
 
 - Implementado: cuatro perfiles heurísticos; amplitud/forma local en dos fases; adquisición invertida con explicación específica; avisos WPW/BRI/estimulación; comparación obligatoria de fuentes y muestras; escala común del caso.
 - Probado: rasgos de fixtures sintéticos, regresiones de muestras y geometría de archivos exportados. LUDB es un subconjunto conocido de delimitación QRS; STAFF es exploración, no verdad adjudicada.
-- Pendiente: calibración regional poblacional, revisión clínica humana independiente, propagación anatómica, repolarización secundaria de WPW, proporcionalidad calibrada de QRS ancho, derivaciones adicionales y sensado/demanda de marcapasos.
+- Pendiente: calibración regional poblacional, revisión clínica humana independiente, propagación anatómica, repolarización secundaria de WPW, ST secundario y proporcionalidad calibrada de QRS ancho, derivaciones adicionales y sensado/demanda de AAI/DDD. VVI dispone de demanda idealizada y una variante sin captura total sin escape; no valida dispositivos, fusión ni fallos intermitentes.
 
 La guía clínica original contiene valores ajustables y propuestas futuras; no todos son contratos implementados. Ver `enfoque-clinico.md` y `referencias/README.md`. Una limitación del modelo no se enseña como imposibilidad fisiológica.

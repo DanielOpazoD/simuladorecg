@@ -295,7 +295,7 @@ export function renderPaper(
         ? "segmentos simultáneos"
         : "columnas secuenciales") +
       " · " +
-      (c.view.cabrera ? "orden de Cabrera" : "orden estándar"),
+      (c.view.cabrera ? "orden de Cabrera" : "orden estándar") + " · sin validación clínica",
     5,
     layout.heightMm - 3,
   );

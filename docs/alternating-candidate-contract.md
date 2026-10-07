@@ -74,10 +74,12 @@ may need review as well; this conservative cost must be measured, not hidden.
   remain intact. Their separate frozen legacy path restores exact predecessor
   confidence bytes; current quality is evaluated separately, never substituted
   into historical assertions.
-- The held regional model's exposed 256-case sweep now has zero new falsely usable
-  HR cases and zero additional missed QRS relative to its template comparator.
-  Two preexisting falsely usable template cases remain. This model is not shipped
-  by the confidence PR. Agreement of an estimated rate with its reference alone
+- Correction: the held regional model's initial 256-case event-matching result
+  had a seconds/milliseconds defect. Corrected midpoint matching exposes 15
+  additional-missed-QRS scenarios; the earlier zero-missed claim is invalid.
+  Zero new falsely usable *rates* and two preexisting template rate failures
+  remain, but rate agreement cannot establish correct event identity. The model
+  remains blocked in PR121 and is not shipped by the confidence PR. Agreement of an estimated rate with its reference alone
   does not prove that detected events are the correct QRS complexes.
 - Actual browser acceptance imports independent analytical CSVs into the real
   external worker, verifies a visible `Revisar` state at 200 bpm, retains all 31

@@ -1,3 +1,4 @@
+import {assertTeachingCatalogRevision} from './lib/teaching-scope-revision.mjs';
 import {predictWpwSupport} from './lib/wpw-support-prediction.mjs';
 import {predictAfClock,assertFrozenAfSampler} from './lib/af-clock-prediction.mjs';
 import {predictTorsadesFrame} from './lib/torsades-frame-prediction.mjs';
@@ -33,7 +34,7 @@ try {
   await writeFile(rhythmFile,predictAfClock(await readFile(rhythmFile,'utf8')));
   const referencePreparation='PR55 with independent QT initialization plus torsades-frame, compact WPW support and representative AF-clock predictions; unrelated defaults remain exact';
   const before=await load(base,'before'),after=await load(process.cwd(),'after'),defaults=[];
-  assert.deepEqual(before.PRESETS,after.PRESETS,'No new or relabelled presets');
+  assertTeachingCatalogRevision(before.PRESETS,after.PRESETS);
   for(const p of before.PRESETS.filter(p=>p.strategy!=='pending'))for(const filter of ['off','diagnostic','monitor','aggressive']){
     const c={...before.fromPreset(p),filter};
     const a=before.synthesize(c,10),b=after.synthesize(c,10);
