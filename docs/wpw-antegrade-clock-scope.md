@@ -52,3 +52,10 @@ outcome rows match. Independent source prediction passed 244 default/filter
 cases (14,640,000 sample comparisons) plus 54 modifier cases. The newly rejected
 combinations are tested explicitly under all four acquisition filters. Neither
 this check nor clinical source citations validate the underlying WPW morphology.
+
+The first actual mobile capture exposed a duplicate long error toast covering
+the persistent explanation. It was not accepted for merge. Generation failures
+now clear transient notifications; the existing persistent live region and
+signal-state message retain the complete error. Browser assertions require the
+duplicate overlay to be absent before capturing the stable error state. Recovery
+and all error details remain available; no failed result is hidden.

@@ -84,6 +84,8 @@ try{
   assert.match(await page.locator('#signal-loading').innerText(),/no representa esa conducción/);
   assert.match(await page.locator('#signal-loading').innerText(),/no una imposibilidad clínica/);
   assert.equal(await page.locator('#compare-json').count(),0,'No pre-excited AF tracing is invented');
+  assert.equal(await page.locator('#toast').textContent(),'','Persistent error must not have a duplicate overlay');
+  await page.waitForFunction(()=>getComputedStyle(document.querySelector('#toast')).opacity==='0');
   await page.locator('#signal-loading').screenshot({path:resolve(out,`wpw-clock-scope-${width}.png`)});
   await importCase(base,'recovery');const wpwRecovered=await exported('wpw-clock-recovered');
   assert.deepEqual(wpwRecovered.B.leads,normal.A.leads);
