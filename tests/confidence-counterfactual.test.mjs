@@ -1,15 +1,22 @@
 import {it,expect} from 'vitest';
-import {mkdtemp,rm,readFile,writeFile} from 'node:fs/promises';
+import {mkdtemp,rm,readFile,writeFile,cp,mkdir} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
-import {prepareConfidenceCounterfactual,assertConfidenceCounterfactual} from '../scripts/lib/confidence-counterfactual.mjs';
+import {assertConfidenceCounterfactual} from '../scripts/lib/confidence-counterfactual.mjs';
 import {OPPOSED_CYCLE_REVISION,assertQualityOnlyRevision} from '../scripts/lib/opposed-cycle-revision.mjs';
 
 it('substitutes exactly the verified historical policy and detects other changes',async()=>{
  const temp=await mkdtemp(path.join(tmpdir(),'confidence-counterfactual-test-'));
  try {
   const before=path.join(temp,'before');
-  const evidence=await prepareConfidenceCounterfactual(process.cwd(),before);
+  // Unit tests must also work in a shallow checkout or source ZIP. This
+  // frozen predecessor is checked against the same required historical hash;
+  // the full-history regression jobs exercise prepareConfidenceCounterfactual.
+  await mkdir(before);
+  await cp('src',path.join(before,'src'),{recursive:true});
+  await writeFile(path.join(before,OPPOSED_CYCLE_REVISION.file),
+    await readFile('tests/reference/alternating-confidence-v1.txt'));
+  const evidence=await assertConfidenceCounterfactual(process.cwd(),before);
   expect(evidence.comparison).toBe('single-policy-substitution');
   const changed=Object.entries(evidence.sourceHashes).filter(([,h])=>h.current!==h.previous).map(([f])=>f);
   expect(changed).toEqual([OPPOSED_CYCLE_REVISION.file]);
