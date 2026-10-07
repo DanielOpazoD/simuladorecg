@@ -25,10 +25,11 @@ jobs:
       - name: Adversarial evidence and reference contracts
         run: node --test tests/t-peak-revision.node.mjs tests/ludb-frozen-baseline.node.mjs
       # The new AF timing protocol is separate from every frozen delineation dataset.
-      # Keep all other benchmark additions/edits covered by the historical freeze.
+      # Keep every protocol frozen. The adjacent exact-source checker admits only
+      # declared teaching prose replacements, never catalog parameters or findings.
       - name: Preserve generator, quality policies and historical protocols
         run: |
-          git diff --exit-code 2f8247a859badf3f66c307258904ac7c099c38fb HEAD -- src/presets public benchmarks tests/reference ':(exclude)benchmarks/af-rhythm/**' ':(exclude)src/presets/teaching-limits.ts'
+          git diff --exit-code 2f8247a859badf3f66c307258904ac7c099c38fb HEAD -- src/presets public benchmarks tests/reference ':(exclude)benchmarks/af-rhythm/**' ':(exclude)src/presets/teaching-limits.ts' ':(exclude)src/presets/catalog.ts'
           node scripts/check-frozen-teaching.mjs 2f8247a859badf3f66c307258904ac7c099c38fb
           git worktree add "$RUNNER_TEMP/frozen-product" 519267d3b595a27ea8d35a5eae6296c780b58ec4
       - run: python -m pip install wfdb==4.3.1
