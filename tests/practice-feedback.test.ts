@@ -80,7 +80,7 @@ describe("Practice evidence, not diagnostic classification",()=>{
   it("retains specific P2 limitations in wide-QRS exercises",()=>{
     const c=fromPreset(presetById('lbbb')!);
     const f=practiceFeedback('lbbb',c,null,null);
-    expect(f.limitations.join(' ')).toMatch(/no está calibrada/);
+    expect(f.limitations.join(' ')).toMatch(/no están calibradas clínicamente/);
     expect(f.cue).toMatch(/secundarios/);
   });
 });

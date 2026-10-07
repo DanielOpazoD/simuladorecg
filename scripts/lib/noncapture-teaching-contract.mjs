@@ -1,9 +1,9 @@
 import {OLD_SECONDARY_SCOPE,CURRENT_SECONDARY_SCOPE} from './teaching-scope-revision.mjs';
 import assert from 'node:assert/strict';
-/** Only the explicit no-activation warning omission is admitted; the declared absence disclosure is normalized back,
+/** Only the explicit no-activation warning omission is admitted; the declared secondary-ST scope disclosure is normalized back,
  * and every other condition remains exact against the frozen source. */
 export function assertNoncaptureTeachingScope(current, historical) {
- assert.equal(current.split(CURRENT_SECONDARY_SCOPE).length,2,'Secondary-ST absence disclosure changed');
+ assert.equal(current.split(CURRENT_SECONDARY_SCOPE).length,2,'Secondary-ST scope disclosure changed');
  const normalized=current.replace(CURRENT_SECONDARY_SCOPE,OLD_SECONDARY_SCOPE);
  const imported='import { isVviNoncapture } from "../engine/vvi-demand";\n';
  const guard=' || isVviNoncapture(c)';

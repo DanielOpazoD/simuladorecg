@@ -1,6 +1,7 @@
 import { describe, it } from 'vitest';
 import assert from 'node:assert/strict';
 import { synthesize } from '../src/engine/signal';
+import { tWaveSupport } from '../src/engine/constraints';
 import { qrsKernels } from '../src/engine/morphology';
 import { fromPreset, presetById } from '../src/presets/catalog';
 import { LEADS, type ECGCase, type Signal } from '../src/engine/types';
@@ -40,16 +41,16 @@ describe('All right-ventricular QRS components share gain and existing low-volta
     }
   });
   for (const id of ['rv_acute', 'rv_chronic'])
-    it(`${id}: preserves P/ST/T outside QRS plus antialias support`, () => {
+    it(`${id}: preserves other waves outside QRS and its coupled ST support`, () => {
       const c = {...setup(id), pAmp: .3, tAmp: .28};
       const a = synthesize({...c, qrsAmp: .1}, 10);
       const b = synthesize({...c, qrsAmp: 3, electrolyte: 'lowvoltage'}, 10);
       let checked = 0;
       for (const l of LEADS) for (let i = a.fs; i < 9 * a.fs; i++) {
         const t = i / a.fs;
-        if (a.events.beats.some(x => t >= x.time - .041 && t <= x.time + x.qrs! + .041)) continue;
+        if (a.events.beats.some(x => t >= x.time - .041 && t <= x.time + Math.max(x.qrs!,x.qt!-tWaveSupport(c,x.qrs!,x.qt!).duration/2) + .041)) continue;
         assert.ok(Math.abs(a.leads[l][i] - b.leads[l][i]) < 1e-12,
-          "Outside-QRS difference exceeds numerical roundoff tolerance"); checked++;
+          "Outside-QRS/ST difference exceeds numerical roundoff tolerance"); checked++;
       }
       assert.ok(checked > 10000); assert.deepEqual(a.events, b.events); assert.deepEqual(a.truth, b.truth);
     });

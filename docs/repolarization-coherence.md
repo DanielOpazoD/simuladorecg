@@ -1,5 +1,8 @@
 # Coherencia de repolarización — entrega A01 → A02/A03
 
+Nota de versión: esta entrega histórica documenta el ST ausente y un candidato rechazado.
+La implementación posterior y sus límites están en [secondary-st-resolution.md](secondary-st-resolution.md).
+
 ## A01: evidencia antes de cambiar el motor
 
 Fuente congelada: `b744caca103f0aeefcdb7ddfd98fd5fea9f08588`.

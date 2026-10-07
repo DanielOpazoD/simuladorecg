@@ -5,21 +5,23 @@ import { createHash } from 'node:crypto';
 
 /** Reviewed acquisition guard, wave-specific zero-information axis and impulse-confidence retirement.
  * The localized QRS retirement evidence is in docs/qrs-axis-observability.md.
- * Numerical detection/delineation stay frozen. The single-candidate rate screen
+ * Numerical QRS/T revisions are pinned separately. The rate-confidence screen
  * is reviewed with the complete LPFB source repair (docs/lpfb-resolution.md).
  * Future revisions must supply new evidence; a filename-only allowlist is unsafe.
  */
 export function restoreHistoricalRateScreen(source) {
   return source.toString()
-      .replace('  maximumRateDisagreementBpm: 5,\n','')
-      .replace(/  \/\/ A single extra candidate[\s\S]*?(?=  const requiresReview =)/,'')
-      .replace('    ((unmatched >= HR_QUALITY_POLICY.minimumUnmatched &&\n    unmatchedFraction >= HR_QUALITY_POLICY.unmatchedFraction) || (unmatched > 0 && rateDisagreement));',
-        '    unmatched >= HR_QUALITY_POLICY.minimumUnmatched &&\n    unmatchedFraction >= HR_QUALITY_POLICY.unmatchedFraction;');
+    .replace('  maximumRateDisagreementBpm: 5,\n','')
+    .replace('  majorCandidateDisagreement: .4,\n','')
+    .replace('detectVentricularCandidates, candidateShape','detectVentricularCandidates')
+    .replace(/  \/\/ A single extra candidate[\s\S]*?(?=  return { requiresReview,)/,
+      '  const requiresReview = backgroundRatio !== null &&\n    backgroundRatio > HR_QUALITY_POLICY.backgroundRatio &&\n    unmatched >= HR_QUALITY_POLICY.minimumUnmatched &&\n    unmatchedFraction >= HR_QUALITY_POLICY.unmatchedFraction;\n')
+    .replace('Frecuencia sensible al umbral de detección:', 'Frecuencia sensible al umbral de detección y actividad de fondo elevada:');
 }
 
 export function assertReviewedSampleEntry(source, previous) {
   assert.equal(createHash('sha256').update(source).digest('hex'),
-    '38cb87e3d610eae68f6e0cd0b66cac86ebe43c77a2739a47ce6fec8efaaa6c09',
+    '845b22742cb314b61de97e7d538f2b1e267c955cf6f09aa7bff3a0eb70d9973a',
     'Unreviewed sample-entry change: acquisition guard or analysis policy differs');
   if (previous !== undefined) {
     const restored = restoreHistoricalRateScreen(source);

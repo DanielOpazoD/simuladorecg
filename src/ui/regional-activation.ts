@@ -23,5 +23,5 @@ export function regionalActivationControls(c: ECGCase): string {
     [["template", "Plantilla histórica"], ["regional-rbbb-v1", "BRD regional · experimental"]],
     c.activationModel ?? "template", !state.available && !state.requested)}
     <p class="control-note" id="regional-activation-status"><strong>${label}.</strong> ${esc(note)}</p>
-    ${timeline}<p class="control-note">Comparación: fija A con la plantilla, activa el modelo regional y contrasta B con la misma escala. No representa refractariedad, isquemia causal ni ST secundario.</p>`;
+    ${timeline}<p class="control-note">Comparación: fija A con la plantilla, activa el modelo regional y contrasta B con la misma escala. Incluye ST/T secundarios aproximados. No representa refractariedad ni isquemia causal.</p>`;
 }

@@ -9,19 +9,19 @@ import {createHash} from 'node:crypto';
 export const QRS_T_REVISION=Object.freeze({
  baselineCommit:'ca2aa852d2fe5c6affdfdc31db2b9160211944f9',
  evaluationBaselineCommit:'63f32b03921158337052e7068abcb6e72ec72f79',
- iteration:'direction-invariant-covariance-v3',
+ iteration:'direction-invariant-covariance-v3-separated-apices',
  files:Object.freeze({
   'src/engine/analysis/statistics.ts':Object.freeze({before:'c8c20531ca3eb5483529d426357360ac1381ac934a3c3ef3d5d3cd21023e5a4b',after:'bdc0b500a3a3883df095054ca9a8298b4c8ea7df7bb336fea01cf266d875e8a6'}),
   'src/engine/analysis/impulses.ts':Object.freeze({before:'362814239fb6dcae06025cb065c6f6dfef08bb5341cabaef01c58d8227222cb1',after:'4ed73f13c6b8dc7460c34b9dd37ad5c5561511ea0f6585d30c6b1585ea14ebe2'}),
   // Null-axis support is reviewed with the primitive, not a filename exemption.
-  'src/engine/measurement-support.ts':Object.freeze({before:'1b6df1bf5c5386a9bdd237109b43a49879fd10c93a4b43eceeb7acdddcf7ba33',after:'27168ab1b6fdcfdee8045ff31a3cf12fe4545ec9919b792df1db16651aca8f54'}),
+  'src/engine/measurement-support.ts':Object.freeze({before:'1b6df1bf5c5386a9bdd237109b43a49879fd10c93a4b43eceeb7acdddcf7ba33',after:'d07ae50c5534e986d7b776a082e1677f816eaac74542bbe053144763599e162f'}),
   'src/engine/analysis/impulse-confidence.ts':Object.freeze({before:'20a40b8da435c503ea4044919022e5015cae53b818ab283feb158bfeb83055ef',after:'c6b5c4a06cf5c65bacf325e8c77517613ee4427af2075b10575898e03dcee62d'}),
   // Sample-preserving projection refactor. Historical analyzers restore these
   // exact predecessors too; see docs/frontal-projection-contract.md for paired evidence.
   'src/engine/leads.ts':Object.freeze({before:'d67c47738647a8aa47f98f01de045ab7381a842007c7d5fa3562f570dc711c16',after:'ab4a73f2345e133cbbe80757d08c1c64f4c54894f1ca521b82eff7041d386706'}),
   'src/engine/lead-registry.ts':Object.freeze({before:'21b9ad7996fc2813156e51d87488f48fae52085ea6935091396e7226589367d3',after:'7f4fe698cd38931a47d41b99e005ca30f642b05553e4137869bda5f99a8990e3'}),
   'src/engine/measure.ts':Object.freeze({before:'ceaeef83b459bbb114dc8a9457af7d43d804c14a8cb8107fc2b250faf391d61e',after:'0cc0f8e7930b4a56d4254417fb17cba0417cc1ca76abf9d1c64e59241aa4b130'}),
-  'src/engine/analysis/ventricular-candidates.ts':Object.freeze({before:'0c7d0abb1834fd9407ca9fdd85c735b7794bcaf933d911f13222039ab4c0bec4',after:'df93e6f7eec4f59464badb9191c9af2e0299e1678e2489bfd0f4fd306bd7140e'}),
+  'src/engine/analysis/ventricular-candidates.ts':Object.freeze({before:'0c7d0abb1834fd9407ca9fdd85c735b7794bcaf933d911f13222039ab4c0bec4',after:'7e1bdccec01a09fcaa4abb73e6c063ca53fbe0128758edae6c6118347c49ed42'}),
  }),
 });
 export function assertReviewedQrsTFile(file,source){

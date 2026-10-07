@@ -1,3 +1,4 @@
+import {secondaryRepolarization,secondarySTEnvelope} from './secondary-repolarization';
 import { torsadesFrame } from './torsades-frame';
 import { ventricularSource } from "./ventricular-source";
 import { PRECORDIAL_LEADS } from "./lead-registry";
@@ -127,6 +128,14 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
       if (c.stShape === "convex") shape = 1 + 0.3 * Math.sin(Math.PI * u);
       return scale(lv, Math.max(0, envelope) * shape);
     });
+    const secondaryST=secondaryRepolarization(c,b,ks).st;
+    if(secondaryST){
+      const j=b.time+dur, start=j-.040, end=tStart+tLen*.5;
+      add(start,end-start,(_u,t)=>{
+        const envelope=secondarySTEnvelope(t,j,tStart,tLen);
+        return scale(tors?torsadesFrame(secondaryST,t,c.hr):secondaryST,envelope);
+      });
+    }
     add(tStart, tLen, (u, t) =>
       scale(tors ? torsadesFrame(tv, t, c.hr) : tv, tWave(u, c.electrolyte === "hyperkalemia")),
     );

@@ -1,7 +1,7 @@
 /** Explicit prose-only revision; all identifiers, findings and physiological patches stay exact. */
 import assert from 'node:assert/strict';
 export const OLD_SECONDARY_SCOPE='Repolarización secundaria aproximada: al variar el voltaje QRS, la relación ST/QRS no está calibrada. Este modelo no permite validar criterios proporcionales de Sgarbossa.';
-export const CURRENT_SECONDARY_SCOPE='La T secundaria es aproximada; el ST secundario no está representado. Un ST plano no demuestra repolarización normal. La relación ST/QRS no está calibrada y no permite validar criterios proporcionales de Sgarbossa.';
+export const CURRENT_SECONDARY_SCOPE='ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa.';
 export const OLD_VVI_SCOPE='Estimulación capturada a frecuencia fija; sensado, demanda y fallos pendientes. ';
 export const CURRENT_VVI_SCOPE='Por defecto, estimulación fija capturada. VVI ofrece demanda idealizada y una variante sin captura total sin escape; no simula fusión ni fallos intermitentes. ';
 export function assertTeachingCatalogSource(current,historical){

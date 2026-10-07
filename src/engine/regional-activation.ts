@@ -11,7 +11,7 @@ export interface RegionalSupport {
   weight: number;
 }
 export const REGIONAL_ACTIVATION_LIMIT =
-  "Activación regional experimental de BRD: tiempos y áreas de las bases son parámetros de ingeniería, no un mapa anatómico ni calibración clínica. No añade ST secundario ni valida Sgarbossa.";
+  "Activación regional experimental de BRD: tiempos y áreas de las bases son parámetros de ingeniería, no un mapa anatómico ni calibración clínica. ST/T secundarios se acoplan a la actividad tardía; no valida Sgarbossa.";
 
 /** Retain an incompatible requested mode visibly; never silently label it active. */
 export function regionalActivationState(c: ECGCase) {

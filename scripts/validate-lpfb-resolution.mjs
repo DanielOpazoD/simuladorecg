@@ -1,3 +1,4 @@
+import {predictSecondaryST} from './lib/secondary-st-prediction.mjs';
 import {matchQrsEvents} from '../tests/reference/ludb/load-ludb.mjs';
 import {qrsMidpointSeconds} from './lib/qrs-event-reference.mjs';
 /** Frozen paired source regression. Clinical morphology is tested independently
@@ -16,6 +17,7 @@ try{
  const root=path.join(temp,'before');await mkdir(root);
  execFileSync('tar',['-xf','-','-C',root],{input:execFileSync('git',['archive',baseline],{maxBuffer:100*1024*1024})});
  async function load(root,name){const file=path.join(temp,name+'.mjs');await build({stdin:{contents:"export {synthesize} from './src/engine/signal';export {fromPreset,presetById,PRESETS} from './src/presets/catalog';export {analyzeSamples} from './src/engine/sample-analysis';",resolveDir:root},bundle:true,platform:'node',format:'esm',outfile:file});return import(pathToFileURL(file));}
+ await predictSecondaryST(root);
  const before=await load(root,'old'),after=await load(process.cwd(),'new');const rows=[];
  for(const p of after.PRESETS.filter(p=>p.strategy!=='pending'&&p.id!=='lpfb'))for(const filter of ['off','diagnostic','monitor','aggressive']){
   const c={...after.fromPreset(p),filter},a=before.synthesize(c,10),b=after.synthesize(c,10);

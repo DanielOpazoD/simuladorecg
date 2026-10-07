@@ -32,8 +32,9 @@ export function secondaryRepolarization(c: ECGCase,b: Beat,ks: readonly Kernel[]
     reference=Math.hypot(...delayed)>1e-9?delayed:integrated(ks,()=>true);
   }
   if(!reference)return{mode,t:null,st:null,reference:null};
-  // Secondary ST is explicitly not represented; do not infer normal ST from null.
-  return{mode,t:opposite(reference,T_REFERENCE_AMPLITUDE*.9),st:null,reference};
+  // Illustrative secondary ST scales with source strength, independently of T gain.
+  const st=c.rhythm === "torsades" ? null : reference.map(v=>-.20*v) as Vec;
+  return{mode,t:opposite(reference,T_REFERENCE_AMPLITUDE*.9),st,reference};
 }
 /** Frontal-plane dot product, not a 3D angle or a diagnostic criterion.
  * I and II are 60° apart; convert both to orthogonal frontal coordinates.
@@ -43,4 +44,15 @@ export function secondaryDiscordanceDot(reference: Vec, repolarization: Vec): nu
   const qy = (2 * q.II - q.I) / Math.sqrt(3);
   const ry = (2 * r.II - r.I) / Math.sqrt(3);
   return q.I * r.I + qy * ry;
+}
+
+/** Compact C1 secondary ST support. It overlaps late ventricular activation,
+ * reaches J smoothly and joins the ascending T limb without extending QT.
+ * Times and amplitude are illustrative engineering choices, not calibration.
+ */
+export function secondarySTEnvelope(time: number, j: number, tStart: number, tDuration: number): number {
+  const start=j-.040, end=tStart+tDuration*.5;
+  if(time<=start||time>=end)return 0;
+  const smooth=(x:number)=>{const a=Math.max(0,Math.min(1,x));return a*a*(3-2*a);};
+  return smooth((time-start)/.040)*(1-smooth((time-tStart)/(end-tStart)));
 }

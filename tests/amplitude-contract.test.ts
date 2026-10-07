@@ -50,10 +50,11 @@ describe("T amplitude is a scale of the entire T component", () => {
     const s = synthesize(c, 10),
       b = s.events.beats[3];
     // Beyond QRS and the local de Winter ST correction, including FIR support.
-    // These cases have no secondary ST component; T=0 is not a claim that
+    // Start after the secondary ST-to-T transition and the 40 ms FIR support.
+    // T=0 is not a claim that
     // ST elevation, a U wave, or artifact must disappear in other cases.
-    const start = Math.max(b.time + b.qrs! + 0.1, b.time + b.qt! - 0.1),
-      end = b.time + b.qt! - 0.02;
+    const start = Math.max(b.time + b.qrs! + 0.1, b.time + b.qt! - 0.04),
+      end = b.time + b.qt! - 0.01;
     expect(end - start).toBeGreaterThan(0.025);
     for (const lead of LEADS) {
       let max = 0;

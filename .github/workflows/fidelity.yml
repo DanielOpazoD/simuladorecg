@@ -163,6 +163,8 @@ jobs:
         run: node scripts/validate-posterior-amplitude.mjs "$RUNNER_TEMP/qrs-default-results.json" --scope defaults
       - name: Complete LPFB repair and unchanged catalog
         run: node scripts/validate-lpfb-resolution.mjs "$RUNNER_TEMP/lpfb-resolution-results.json"
+      - name: Complete secondary ST source and worker contract
+        run: node scripts/validate-secondary-st.mjs "$RUNNER_TEMP/secondary-st-source-results.json"
       - name: Verify pinned browser runtime
         run: node scripts/verify-browser-runtime.mjs
       - name: Production identity, browser flows and PNG pixel metrology
@@ -188,6 +190,17 @@ jobs:
           node tests/browser-external-review.mjs
           node tests/browser-repolarization-coherence.mjs
           node tests/browser-visual-workspace.mjs
+      - name: Archive focused secondary ST visual evidence
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: secondary-st-visual-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/ecg-evidence/browser/coherence-view-*.png
+            ${{ runner.temp }}/ecg-evidence/browser/coherence-trace-*.png
+            ${{ runner.temp }}/ecg-evidence/browser/t-axis-controls-*.png
+          if-no-files-found: error
+          retention-days: 14
       - name: Archive exact reviewed source and reports
         if: always()
         run: |
