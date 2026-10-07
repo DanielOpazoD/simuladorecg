@@ -10,6 +10,7 @@ const names = ["I", "II", "V1", "V5"] as const;
 const quant = (a: number[], p: number) =>
   a.slice().sort((x, y) => x - y)[Math.floor((a.length - 1) * p)] ?? 0;
 function shape(s: Samples, i: number) {
+  const {I, II, V1, V5} = s.leads;
   const fs = s.fs,
     n = s.leads.I.length,
     mat = Array.from({ length: 4 }, () => Array(4).fill(0));
@@ -27,9 +28,10 @@ function shape(s: Samples, i: number) {
       for (let b = 0; b < 4; b++) mat[a][b] += v[a] * v[b];
     vel += Math.hypot(...v);
     acc += Math.hypot(
-      ...names.map(
-        (l) => s.leads[l][j + half] - 2 * s.leads[l][j] + s.leads[l][j - half],
-      ),
+      I[j + half] - 2 * I[j] + I[j - half],
+      II[j + half] - 2 * II[j] + II[j - half],
+      V1[j + half] - 2 * V1[j] + V1[j - half],
+      V5[j + half] - 2 * V5[j] + V5[j - half],
     );
   }
   const trace = mat.reduce((sum, row, i) => sum + row[i], 0);
@@ -142,6 +144,7 @@ export function detectVentricularCandidates(
   s: Samples,
   { medianWidth = 0.014, candidateFraction = 0.35, tReject = true } = {},
 ) {
+  const {I, II, V1, V5} = s.leads;
   const fs = s.fs,
     n = Math.min(s.leads.I.length, Math.round(10 * fs));
   let short = 0,
@@ -154,17 +157,19 @@ export function detectVentricularCandidates(
     short = Math.max(
       short,
       (shortSlope[j] = Math.hypot(
-        ...names.map(
-          (l) => ((s.leads[l][j + f] - s.leads[l][j - f]) * fs) / (2 * f),
-        ),
+        ((I[j + f] - I[j - f]) * fs) / (2 * f),
+        ((II[j + f] - II[j - f]) * fs) / (2 * f),
+        ((V1[j + f] - V1[j - f]) * fs) / (2 * f),
+        ((V5[j + f] - V5[j - f]) * fs) / (2 * f),
       )),
     );
     long = Math.max(
       long,
       (longSlope[j] = Math.hypot(
-        ...names.map(
-          (l) => ((s.leads[l][j + b] - s.leads[l][j - b]) * fs) / (2 * b),
-        ),
+        ((I[j + b] - I[j - b]) * fs) / (2 * b),
+        ((II[j + b] - II[j - b]) * fs) / (2 * b),
+        ((V1[j + b] - V1[j - b]) * fs) / (2 * b),
+        ((V5[j + b] - V5[j - b]) * fs) / (2 * b),
       )),
     );
   }
@@ -186,7 +191,12 @@ export function detectVentricularCandidates(
   );
   const slope = Float64Array.from({ length: n }, (_, i) =>
       i
-        ? Math.hypot(...names.map((l) => (leads[l][i] - leads[l][i - 1]) * fs))
+        ? Math.hypot(
+            (leads.I[i] - leads.I[i - 1]) * fs,
+            (leads.II[i] - leads.II[i - 1]) * fs,
+            (leads.V1[i] - leads.V1[i - 1]) * fs,
+            (leads.V5[i] - leads.V5[i - 1]) * fs,
+          )
         : 0,
     ),
     energy = new Float64Array(n),
