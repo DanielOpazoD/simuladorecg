@@ -107,6 +107,27 @@ for(const engine of [chromium,firefox,webkit]){
      if(m.qt!==null)assert.ok(Math.abs(m.qt-410)<=30);
     }
    }
+   for(const [id,changes,name,unresolvedQt] of [
+    ['wpw',{hr:55,electrolyte:'lowvoltage',filter:'off'},'boundaries-wpw-lowvoltage-off',false],
+    ['wpw',{hr:55,electrolyte:'lowvoltage',filter:'diagnostic'},'boundaries-wpw-lowvoltage-diagnostic',false],
+    ['wpw',{hr:60,qrsAmp:.5,tAmp:.28,filter:'off'},'boundaries-wpw-amplitude-off',false],
+    ['wpw',{hr:60,qrsAmp:.5,tAmp:.28,filter:'diagnostic'},'boundaries-wpw-amplitude-diagnostic',false],
+    ['rbbb',{hr:60,qrs:240,qtc:350,activationModel:'regional-rbbb-v1',filter:'diagnostic'},'boundaries-rbbb-terminal',false],
+    ['rbbb',{hr:120,qrs:240,qtc:520,activationModel:'regional-rbbb-v1',filter:'diagnostic'},'boundaries-rbbb-overlap',true],
+   ]){
+    await chooseCatalogPreset(page,id);await ready();
+    const base=await exported(name+'-base');
+    const result=await verifyIdentity({...base.B.case,...changes,variability:0,seed:53,
+     artifacts:{...base.B.case.artifacts,baseline:0,muscle:0,mains:0}},name),m=result.B.measurement;
+    for(const [key,value]of Object.entries(changes))assert.equal(result.B.case[key],value);
+    const references=result.B.events.beats.filter(b=>b.time>.3&&b.time+b.qrs<9.7);
+    const qrs=references.map(b=>b.qrs*1000).sort((a,b)=>a-b);
+    assert.ok(m.qrs!==null&&Math.abs(m.qrs-qrs[Math.floor(qrs.length/2)])<=20);
+    if(unresolvedQt)assert.equal(m.qt,null,'A terminal ventricular deflection cannot become a fabricated T boundary');
+    else {const qt=references.map(b=>b.qt*1000).sort((a,b)=>a-b);assert.ok(m.qt!==null&&Math.abs(m.qt-qt[Math.floor(qt.length/2)])<=30);}
+    for(const key of ['qrs','qt'])assert.equal(result.metrics.find(row=>row.key===key).b,m[key]);
+    assert.deepEqual(result.A.leads,original.A.leads);
+   }
    const restored=await imported(original.B.case,'restored');assert.deepEqual(restored.B.leads,original.B.leads);
    assert.deepEqual(restored.B.measurement,original.B.measurement);assert.deepEqual(errors,[]);
   }catch(error){await page.screenshot({path:resolve(out,tag+'-failure.png'),fullPage:true}).catch(()=>{});await writeFile(resolve(out,tag+'-failure.json'),JSON.stringify({error:String(error.stack),errors},null,2));throw error;}

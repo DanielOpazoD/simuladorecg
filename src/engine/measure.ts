@@ -69,6 +69,11 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
       .filter((c) => c.displacedPredecessor !== undefined)
       .map((c) => c.marker),
   );
+  const precedingSlowContours = new Map(
+    complexes
+      .filter((c) => c.precedingSlowContour !== undefined)
+      .map((c) => [c.marker, c.precedingSlowContour!]),
+  );
   const mergedComponents = new Map(
     complexes
       .filter((complex) => complex.support.length > 1)
@@ -313,7 +318,17 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
       const atBaseline = (j: number) =>
         magnitude(j) < Math.max(0.008, noise * 5, amplitude * 0.08) &&
         derivative(j) < Math.max(derivativeThreshold, maximumSlope * 0.08);
+      let separationOnset: number | null = null;
+      const precedingSlowContour = precedingSlowContours.get(marker);
       for (let j = peak; j > left; j--) {
+        if (
+          separationOnset === null &&
+          precedingSlowContour !== undefined &&
+          j > precedingSlowContour + 0.04 * fs &&
+          j < marker - 0.04 * fs &&
+          atBaseline(j)
+        )
+          separationOnset = j + 1;
         const insideSupport =
           repair &&
           supportStart !== null &&
@@ -337,6 +352,14 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
         )
           break;
       }
+      // A short return can separate a different preceding contour, but must
+      // not move a QRS boundary that never entered that contour in the first place.
+      if (
+        separationOnset !== null &&
+        precedingSlowContour !== undefined &&
+        on <= precedingSlowContour
+      )
+        on = Math.max(on, separationOnset);
       quiet = 0;
       neutral = 0;
       for (let j = marker; j < right; j++) {

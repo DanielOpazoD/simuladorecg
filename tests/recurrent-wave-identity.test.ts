@@ -90,7 +90,7 @@ describe("recurrent wave identity independent of amplitude dominance", () => {
       expectIdentity(signal, measurement.detectedPeaks);
     });
   for (const filter of ["off", "diagnostic"] as const)
-    it(`keeps unsupported overlapping WPW intervals unpromoted: ${filter}`, () => {
+    it(`resolves the observed preceding-wave overlap without spurious WPW intervals: ${filter}`, () => {
       const signal = recording("wpw", {
         qrsAmp: 0.5,
         tAmp: 0.8,
@@ -99,7 +99,20 @@ describe("recurrent wave identity independent of amplitude dominance", () => {
         seed: 53,
       });
       const measurement = analyzeSamples(signal);
-      expect(measurement.qrs).toBeNull();
-      expect(measurement.qt).toBeNull();
+      // The prior canonical-window prototype produced QRS232/QT498–500 ms.
+      // Correct observed separation may now replace abstention, never accuracy.
+      expect(measurement.qrs).not.toBeNull();
+      expect(measurement.qt).not.toBeNull();
+      expectIdentity(signal, measurement.detectedPeaks);
+      for (const beat of measurement.beats) {
+        const ref = signal.events.beats.find(
+          (b) =>
+            beat.peak >= b.time - 0.01 && beat.peak <= b.time + b.qrs! + 0.03,
+        );
+        expect(ref).toBeDefined();
+        expect(Math.abs(beat.qrs - ref!.qrs! * 1000)).toBeLessThanOrEqual(20);
+        if (beat.qt !== null)
+          expect(Math.abs(beat.qt - ref!.qt! * 1000)).toBeLessThanOrEqual(30);
+      }
     });
 });

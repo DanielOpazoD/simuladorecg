@@ -9,6 +9,8 @@ export interface VentricularComplexObservation {
   readonly refractoryRestored: boolean;
   /** Distinct preceding observed contour displaced during recovery; not a P-wave diagnosis. */
   readonly displacedPredecessor?: number;
+  /** Repeated distinct preceding slow observation; not a P-wave diagnosis. */
+  readonly precedingSlowContour?: number;
 }
 
 /** Ventricular candidate detector — sample-domain detector only. No events, case, labels, truth, or audit input.
@@ -526,10 +528,11 @@ export function detectVentricularCandidates(
   const threshold = Math.max(1.9, quant(Array.from(energy), 0.98) * 0.2),
     candidates: number[] = [],
     allMaxima: number[] = [],
-    supportMaxima: number[] = [];
+    supportMaxima: number[] = [],
+    observedMaxima: number[] = [];
   for (let i = Math.max(1, win); i < n - 1; i++) {
     if (
-      energy[i] <= threshold ||
+      energy[i] <= 1.9 ||
       energy[i] < energy[i - 1] ||
       energy[i] <= energy[i + 1]
     )
@@ -544,6 +547,8 @@ export function detectVentricularCandidates(
       }
       if (f > 3.5 * b) continue;
     }
+    observedMaxima.push(i);
+    if (energy[i] <= threshold) continue;
     supportMaxima.push(i);
     if (i < Math.round(0.15 * fs)) continue;
     allMaxima.push(i);
@@ -762,12 +767,13 @@ export function detectVentricularCandidates(
   // Development prototype: temporal bandwidth is normalized by the observed
   // deflection energy, so a larger atrial/repolarization wave cannot win by
   // amplitude alone. Constants are exposed engineering choices, not validation.
-  const bandwidthCache = new Map<number, number>();
-  const bandwidth = (at: number) => {
-    const cached = bandwidthCache.get(at);
+  const bandwidthCache = new Map<string, number>();
+  const bandwidthAtRadius = (at: number, radiusSeconds: number) => {
+    const key = `${at}:${radiusSeconds}`;
+    const cached = bandwidthCache.get(key);
     if (cached !== undefined) return cached;
     const h = Math.max(1, Math.round(0.004 * fs));
-    const radius = Math.round(0.08 * fs);
+    const radius = Math.round(radiusSeconds * fs);
     let first = 0,
       third = 0;
     for (
@@ -785,9 +791,11 @@ export function detectVentricularCandidates(
       }
     }
     const result = first > 0 ? Math.sqrt(third / first) : Infinity;
-    bandwidthCache.set(at, result);
+    bandwidthCache.set(key, result);
     return result;
   };
+
+  const bandwidth = (at: number) => bandwidthAtRadius(at, 0.08);
 
   // Recover a recurrent fast observation suppressed by a larger
   // distinct slow contour. References are observed maxima, never a rhythm clock.
@@ -1246,6 +1254,95 @@ export function detectVentricularCandidates(
       ?.filter((p) => !displacedWaveSupport.has(p));
     if (support && support.length > 1) mergedComponents.set(marker, support);
   }
+  // Retain recurrent rapid terminal support even when its
+  // amplitude is below the global candidate threshold. This adds support only.
+  if (tReject) {
+    const compactFrames = new Map<number, number[] | null>();
+    const compactStrength = new Map<number, number>();
+    const compactFrame = (at: number) => {
+      if (compactFrames.has(at)) return compactFrames.get(at)!;
+      const radius = Math.round(0.04 * fs),
+        h = Math.max(1, Math.round(0.004 * fs));
+      if (at - radius - 2 * h < 0 || at + radius + 2 * h >= n) return null;
+      const values: number[] = [];
+      // Repetition must belong to the rapid component itself, not to a much
+      // larger slow envelope surrounding unrelated high-frequency noise.
+      for (const lead of names) {
+        const row = leads[lead];
+        for (let j = at - radius; j <= at + radius; j++)
+          values.push(
+            row[j + 2 * h] - 2 * row[j + h] + 2 * row[j - h] - row[j - 2 * h],
+          );
+      }
+      const norm = Math.hypot(...values);
+      compactStrength.set(at, norm);
+      const result = norm ? values.map((v) => v / norm) : null;
+      compactFrames.set(at, result);
+      return result;
+    };
+    const compactSimilarity = (a: number, b: number) => {
+      const x = compactFrame(a),
+        y = compactFrame(b);
+      return x && y ? dot(x, y) : -1;
+    };
+    const localizedRapidComponent = (point: number) => {
+      const preceding = point - Math.round(0.08 * fs);
+      return (
+        compactFrame(point) !== null &&
+        compactFrame(preceding) !== null &&
+        compactStrength.get(point)! > 5 * compactStrength.get(preceding)!
+      );
+    };
+    const observedTerminalReturn = (point: number) => {
+      const end = Math.min(n - 1, point + Math.round(0.04 * fs));
+      for (let j = point + 1; j <= end; j++) if (energy[j] <= 1.9) return true;
+      return false;
+    };
+    const pairs = peaks.flatMap((marker) => {
+      if (bandwidth(marker) < 0.18) return [];
+      return observedMaxima
+        .filter(
+          (point) =>
+            energy[point] <= threshold &&
+            localizedRapidComponent(point) &&
+            observedTerminalReturn(point) &&
+            point - marker > 0.08 * fs &&
+            point - marker < 0.28 * fs &&
+            bandwidthAtRadius(point, 0.04) > 0.25 &&
+            recoverySimilarity(marker, point) < 0.9 &&
+            !peaks.some(
+              (other) => other !== marker && other > marker && other <= point,
+            ) &&
+            peaks.every(
+              (other) =>
+                other === marker || point - marker < Math.abs(point - other),
+            ),
+        )
+        .map((point) => ({ marker, point }));
+    });
+    const confirmed = pairs.filter(
+      (p) =>
+        new Set(
+          pairs
+            .filter(
+              (q) =>
+                Math.abs(p.point - p.marker - (q.point - q.marker)) <=
+                  0.03 * fs &&
+                recoverySimilarity(p.marker, q.marker) >= 0.98 &&
+                compactSimilarity(p.point, q.point) >= 0.98,
+            )
+            .map((q) => q.marker),
+        ).size >= 4,
+    );
+    for (const { marker, point } of confirmed) {
+      mergedComponents.set(
+        marker,
+        [
+          ...new Set([...(mergedComponents.get(marker) ?? [marker]), point]),
+        ].sort((a, b) => a - b),
+      );
+    }
+  }
   // Evaluate exclusions on the immutable observed population. Apply them only
   // after the existing support and template stages have finished, so removing a
   // wave cannot change another candidate's classification context.
@@ -1257,8 +1354,45 @@ export function detectVentricularCandidates(
           (component) => bandwidth(component) >= 0.18,
         ),
     );
+  const precedingSlowContours = new Map<number, number>();
+  if (tReject) {
+    const pairs = peaks.flatMap((marker) => {
+      if (bandwidth(marker) < 0.18) return [];
+      return observedMaxima
+        .filter(
+          (point) =>
+            marker - point > 0.08 * fs &&
+            marker - point <= 0.18 * fs &&
+            bandwidthAtRadius(point, 0.04) < 0.18 &&
+            shape(s, point).rank > 2 * shape(s, marker).rank &&
+            recoverySimilarity(point, marker) < 0.9,
+        )
+        .map((point) => ({ marker, point }));
+    });
+    for (const p of pairs) {
+      const support = new Set(
+        pairs
+          .filter(
+            (q) =>
+              Math.abs(p.marker - p.point - (q.marker - q.point)) <=
+                0.03 * fs &&
+              recoverySimilarity(p.marker, q.marker) >= 0.98 &&
+              recoverySimilarity(p.point, q.point) >= 0.98,
+          )
+          .map((q) => q.marker),
+      );
+      if (support.size >= 4)
+        precedingSlowContours.set(
+          p.marker,
+          Math.max(precedingSlowContours.get(p.marker) ?? -Infinity, p.point),
+        );
+    }
+  }
   const complexes: VentricularComplexObservation[] = peaks.map((marker) => ({
     marker,
+    ...(precedingSlowContours.has(marker)
+      ? { precedingSlowContour: precedingSlowContours.get(marker)! }
+      : {}),
     support: [...new Set(mergedComponents.get(marker) ?? [marker])].sort(
       (a, b) => a - b,
     ),

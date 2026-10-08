@@ -40,6 +40,8 @@ jobs:
           (cd "$RUNNER_TEMP/noise-identity-release" && npm ci)
           git worktree add --detach "$RUNNER_TEMP/noise-wave-release" e588cddbe54479d8157246cb784a6415bccde46f
           (cd "$RUNNER_TEMP/noise-wave-release" && npm ci)
+          git worktree add --detach "$RUNNER_TEMP/noise-support-release" ddba83dcbc85cbc8679986380446fc6aebbe7e20
+          (cd "$RUNNER_TEMP/noise-support-release" && npm ci)
       - name: Discriminative reader, calibration, morphology and abstention tests
         run: |
           (cd "$RUNNER_TEMP/noise-acquisition" && python -m unittest discover -s tests -p test_noise_stress.py -v)
@@ -95,8 +97,13 @@ jobs:
           cd "$RUNNER_TEMP/noise-wave-release"
           node scripts/benchmark-noise-stress.mjs "$RUNNER_TEMP/noise-stress/wave-release" --noise-dir "$RUNNER_TEMP/noise-stress" --analyzer worker
           node scripts/check-released-noise.mjs "$RUNNER_TEMP/noise-stress/identity-release/noise-results.json" "$RUNNER_TEMP/noise-stress/wave-release/noise-results.json" "$RUNNER_TEMP/noise-stress/recurrent-wave-transition.json" --strict-released
-      - name: Strict current numerical comparison with immutable PR154
-        run: node scripts/check-released-noise.mjs "$RUNNER_TEMP/noise-stress/wave-release/noise-results.json" "$RUNNER_TEMP/noise-stress/after/noise-results.json" "$RUNNER_TEMP/noise-stress/acceptance-results.json" --strict-released
+      - name: Preserve the immutable PR154 to PR155 complete-support transition
+        run: |
+          cd "$RUNNER_TEMP/noise-support-release"
+          node scripts/benchmark-noise-stress.mjs "$RUNNER_TEMP/noise-stress/support-release" --noise-dir "$RUNNER_TEMP/noise-stress" --analyzer worker
+          node scripts/check-released-noise.mjs "$RUNNER_TEMP/noise-stress/wave-release/noise-results.json" "$RUNNER_TEMP/noise-stress/support-release/noise-results.json" "$RUNNER_TEMP/noise-stress/complete-support-transition.json" --strict-released
+      - name: Strict current numerical comparison with immutable PR155
+        run: node scripts/check-released-noise.mjs "$RUNNER_TEMP/noise-stress/support-release/noise-results.json" "$RUNNER_TEMP/noise-stress/after/noise-results.json" "$RUNNER_TEMP/noise-stress/acceptance-results.json" --strict-released
       - name: Characterize the full WPW source change under the same exposed noise windows
         run: |
           node scripts/benchmark-noise-stress.mjs "$RUNNER_TEMP/noise-stress/wpw-before" --noise-dir "$RUNNER_TEMP/noise-stress" --source-root "$RUNNER_TEMP/noise-qt-release" --analyzer worker --supplement-preset wpw
