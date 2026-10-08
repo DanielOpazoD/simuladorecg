@@ -24,6 +24,7 @@ try{
    const previous=await page.locator('#ecg').evaluate(e=>e.toDataURL());
    await page.locator('#file-input').setInputFiles({name:'coherence.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(c))});
    if(kind==='scope'){await page.locator('#signal-loading.signal-unavailable').waitFor();return;}
+   if(kind==='unchanged')await page.waitForFunction(value=>Number(document.querySelector('[data-key="tAxis"]').value)===value,c.tAxis);
    if(kind==='changed')await page.waitForFunction(p=>document.querySelector('#ecg').toDataURL()!==p,previous);
    await ready();
   };

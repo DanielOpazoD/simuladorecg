@@ -85,8 +85,8 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  for(const id of ['wpw','lbbb','vvi','ddd']) {
   await select(id);
   const message=await page.locator('#warnings').innerText();
-  assert.match(message,id==='wpw'?/delta no modifica el ST-T secundario/:/relación ST\/QRS no están calibradas clínicamente/);
-  assert.match(await page.locator('#limitation').innerText(),id==='wpw'?/delta no modifica/:/no están calibradas clínicamente/);
+  assert.match(message,id==='wpw'?/ST y T siguen la activación QRS incluida la onda delta/:/relación ST\/QRS no están calibradas clínicamente/);
+  assert.match(await page.locator('#limitation').innerText(),id==='wpw'?/Amplitudes no calibradas/:/no están calibradas clínicamente/);
  }
  await page.screenshot({path:path.join(out,'secondary-repolarization-limit.png')});
  await select('aai');assert.doesNotMatch(await page.locator('#warnings').innerText(),/ST\/QRS/);
