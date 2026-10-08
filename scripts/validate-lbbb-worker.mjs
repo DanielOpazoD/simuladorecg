@@ -14,6 +14,7 @@ try{
  const cases=[];
  for(const hr of [40,60,72,100,120])for(const qrs of [130,160,200,240])for(const qtc of [350,430,520])for(const filter of ['off','diagnostic','monitor','aggressive'])cases.push({hr,qrs,qtc,filter,cohort:'exposed240'});
  for(const hr of [40,120])for(const qrs of [130,240])for(const qtc of [350,520])for(const filter of ['off','diagnostic'])cases.push({hr,qrs,qtc,filter,cohort:'noisy-boundary-transfer',noise:.05,seed:53});
+ for(const qrs of Array.from({length:12},(_,i)=>130+i*10))for(const filter of ['off','diagnostic','monitor','aggressive'])cases.push({hr:72,qrs,qtc:410,filter,cohort:'browser-controls-48'});
  for(const config of cases){
   const {hr,qrs,qtc,filter,cohort,noise,seed}=config;
   const c={...model.fromPreset(model.presetById('lbbb')),hr,qrs,qtc,filter};
@@ -39,13 +40,14 @@ try{
   }
   rows.push({...config,...pair,newlyWrongQrs:pair['regional-lbbb-v1'].intervalQuality.qrs.usableBad>pair.template.intervalQuality.qrs.usableBad,newlyWrongQt:pair['regional-lbbb-v1'].intervalQuality.qt.usableBad>pair.template.intervalQuality.qt.usableBad,newlyMissedPhase:pair['regional-lbbb-v1'].phaseFn>pair.template.phaseFn,newlyMissedQrs:pair['regional-lbbb-v1'].fn>pair.template.fn,newlyFalseUsable:pair['regional-lbbb-v1'].falselyUsable&&!pair.template.falselyUsable});
  }
- assert.equal(rows.length,256);assert.equal(rows.filter(r=>r.cohort==='exposed240').length,240);const failures=rows.filter(r=>r.newlyFalseUsable);
+ assert.equal(rows.length,304);assert.equal(rows.filter(r=>r.cohort==='exposed240').length,240);const failures=rows.filter(r=>r.newlyFalseUsable);
  const wrongRegionalSummaries=rows.filter(r=>r['regional-lbbb-v1'].intervalQuality.qrs.status==='usable'&&Math.abs(r['regional-lbbb-v1'].intervalQuality.qrs.reported-r.qrs)>20);
  const report={schemaVersion:2,absoluteWrongRegionalQrsSummaries:wrongRegionalSummaries.length,sourceCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),
   analyzerSourceHashes:Object.fromEntries(await Promise.all(Object.keys(bundle.metafile.inputs).filter(f=>f!=='<stdin>').map(async f=>[f,createHash('sha256').update(await readFile(f)).digest('hex')]))),
   scenarios:rows.length,newWrongQrsCases:rows.filter(r=>r.newlyWrongQrs).length,newWrongQtCases:rows.filter(r=>r.newlyWrongQt).length,newPhaseMissedCases:rows.filter(r=>r.newlyMissedPhase).length,preexistingFalseUsable:rows.filter(r=>r.template.falselyUsable).length,newFalseUsable:failures.length,newMissedQrsCases:rows.filter(r=>r.newlyMissedQrs).length,usableBefore:rows.filter(r=>r.template.status==='usable').length,usableAfter:rows.filter(r=>r['regional-lbbb-v1'].status==='usable').length,rows,
-  clinicalValidation:false,limitation:'Previously exposed 240-case development sweep plus 16 noisy boundary transfer cases; ±5 bpm is the unchanged engineering screen, not a clinical acceptance limit. All historical failures remain visible.'};
+  clinicalValidation:false,limitation:'Exposed 240-case development sweep, 16 noisy boundary transfer cases, and 48 browser-control cases including the actual QTc 410 ms default; ±5 bpm is the unchanged engineering screen, not a clinical acceptance limit. All historical failures remain visible.'};
  await writeFile(output,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({scenarios:rows.length,preexisting:report.preexistingFalseUsable,newFalseUsable:failures,newMissedQrsCases:report.newMissedQrsCases,usableBefore:report.usableBefore,usableAfter:report.usableAfter}));
+ for(const row of rows.filter(r=>r.cohort==='browser-controls-48'&&['off','diagnostic'].includes(r.filter))){const q=row['regional-lbbb-v1'].intervalQuality;assert.ok(q.qrs.reported!==null&&Math.abs(q.qrs.reported-row.qrs)<=20,'Default control must retain the actual complete QRS');assert.ok(q.qt.reported!==null&&q.qt.maxAbs<=30,'Default control must retain accurate observable QT');}
  assert.equal(wrongRegionalSummaries.length,0,'Usable regional QRS summary exceeds existing 20 ms error screen');
  assert.equal(report.newWrongQrsCases,0,'Additional usable QRS errors beyond existing 20 ms review flag');
  assert.equal(report.newWrongQtCases,0,'Additional usable QT errors beyond existing 30 ms review flag');

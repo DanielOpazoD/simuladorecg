@@ -1,3 +1,4 @@
+import {QRS_T_REVISION,assertReviewedQrsTFile} from './lib/qrs-t-revision.mjs';
 /** Frozen paired non-regression screen. Reference annotations never enter analysis. */
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
@@ -10,7 +11,9 @@ import {pathToFileURL} from 'node:url';
 import {isDeepStrictEqual} from 'node:util';
 import {matchQrsEvents} from '../tests/reference/ludb/load-ludb.mjs';
 
-const [dataRoot,output]=process.argv.slice(2);
+const [dataRoot,output,mode]=process.argv.slice(2);
+assert.ok(mode===undefined||mode==='--current-replay');
+const currentReplay=mode==='--current-replay';
 assert.ok(dataRoot&&output,'Usage: validate-complete-complex-incart.mjs DATA_DIR OUTPUT');
 const hash=b=>createHash('sha256').update(b).digest('hex');
 const protocolBytes=await readFile('docs/complete-complex-incart-protocol.json'),p=JSON.parse(protocolBytes);
@@ -20,7 +23,11 @@ const expected=p.dataset.records.flatMap(record=>p.dataset.segmentStartsSeconds.
 assert.equal(expected.length,p.dataset.expectedWindows);
 assert.deepEqual(manifest.rows.map(r=>[r.record,r.startSeconds]),expected);
 assert.ok(manifest.rows.every(r=>r.digitalAndPhysicalDecoderParity&&r.nativeReader==='WFDB 4.3.1'));
-for(const [file,sha]of Object.entries(p.analyzerFiles))assert.equal(hash(await readFile(file)),sha,'Frozen algorithm changed: '+file);
+const expectedFiles=currentReplay?Object.fromEntries(Object.entries(p.analyzerFiles).map(([file,sha])=>[file,QRS_T_REVISION.files[file]?.after??sha])):p.analyzerFiles;
+for(const [file,sha]of Object.entries(expectedFiles)){
+ assert.equal(hash(await readFile(file)),sha,'Unreviewed evaluated source: '+file);
+ if(currentReplay&&QRS_T_REVISION.files[file])assertReviewedQrsTFile(file,await readFile(file));
+}
 assert.equal(execFileSync('git',['status','--porcelain','--untracked-files=no'],{encoding:'utf8'}).trim(),'','Dirty evaluated source');
 const candidateCommit=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
 const temp=await mkdtemp(path.join(tmpdir(),'incart-collision-'));
@@ -35,7 +42,7 @@ try{
   return(await import(pathToFileURL(file))).analyzeSamples;
  }
  const before=await analyzer(baseline,'before'),after=await analyzer(process.cwd(),'after');
- assert.deepEqual(sourceHashes.after,p.analyzerFiles,'Unpinned dependency');
+ assert.deepEqual(sourceHashes.after,expectedFiles,'Unpinned dependency');
  const rows=[];
  for(const entry of manifest.rows){
   const bytes=await readFile(path.join(dataRoot,'fixtures',entry.file));assert.equal(hash(bytes),entry.fixtureSha256);
@@ -64,8 +71,8 @@ try{
  const sum=(side,key)=>rows.reduce((n,r)=>n+r[side][key],0);
  const missed=rows.filter(r=>r.after.fn>r.before.fn),newFalseUsable=rows.filter(r=>r.after.falselyUsable&&!r.before.falselyUsable);
  const summary={windows:rows.length,recordings:p.dataset.records.length,patientGroups:manifest.patientGroups,unchangedWindows:rows.filter(r=>r.unchanged).length,changedWindows:rows.filter(r=>!r.unchanged).length,additionalMissedBeatWindows:missed.length,newFalselyUsableHrWindows:newFalseUsable.length,before:{tp:sum('before','tp'),fp:sum('before','fp'),fn:sum('before','fn'),falselyUsable:rows.filter(r=>r.before.falselyUsable).length},after:{tp:sum('after','tp'),fp:sum('after','fp'),fn:sum('after','fn'),falselyUsable:rows.filter(r=>r.after.falselyUsable).length}};
- const passed=rows.length===p.dataset.expectedWindows&&missed.length===0&&newFalseUsable.length===0&&summary.after.fp<=summary.before.fp;
- const report={status:passed?'pass':'fail',clinicalValidation:false,protocolSha256:hash(protocolBytes),manifestSha256:hash(manifestBytes),baselineCommit:p.baselineCommit,candidateCommit,sourceHashes,summary,rows,interpretation:p.interpretation};
+ const passed=rows.length===p.dataset.expectedWindows&&missed.length===0&&newFalseUsable.length===0&&summary.after.fp<=summary.before.fp&&(!currentReplay||rows.every(r=>r.unchanged));
+ const report={role:currentReplay?'current-exposed-exact-parity':'frozen-prespecified-temporal-screen',frozenReferenceCommit:'4f9bce8ad1f0a3daa7562cf980ab2843e818393f',status:passed?'pass':'fail',clinicalValidation:false,protocolSha256:hash(protocolBytes),manifestSha256:hash(manifestBytes),baselineCommit:p.baselineCommit,candidateCommit,sourceHashes,summary,rows,interpretation:currentReplay?['All target windows are now exposed. This is exact current-product preservation, not a new prospective experiment or independent patient validation.',...p.interpretation]:p.interpretation};
  await mkdir(path.dirname(path.resolve(output)),{recursive:true});await writeFile(output,JSON.stringify(report,null,2)+'\n');
  console.log(JSON.stringify({status:report.status,summary}));assert.ok(passed,'Prespecified temporal non-regression screen failed; retain all outcomes');
 }finally{await rm(temp,{recursive:true,force:true});}

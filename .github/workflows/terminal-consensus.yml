@@ -27,6 +27,8 @@ jobs:
           git worktree add --detach "$RUNNER_TEMP/qt-before" 10e3f39764ca3bf83f2fc9b543d4960ee12c1080
           git worktree add --detach "$RUNNER_TEMP/qt-release" d208370f883b9f1d3a22c34db62d97daacb279c6
           (cd "$RUNNER_TEMP/qt-release" && npm ci)
+          git worktree add --detach "$RUNNER_TEMP/complete-complex-frozen" 4f9bce8ad1f0a3daa7562cf980ab2843e818393f
+          (cd "$RUNNER_TEMP/complete-complex-frozen" && npm ci)
       - name: Verify endpoint, dependency and historical-source contracts
         run: npx vitest run tests/terminal-consensus.test.ts tests/delineation.test.ts tests/fidelity.test.ts tests/qrs-t-revision.test.mjs tests/terminal-evaluator-sampling.test.mjs
       - name: Reproduce every exposed comparison cohort
@@ -48,15 +50,18 @@ jobs:
       - name: Require current product to preserve every released measurement on all 152 exposed records
         run: node scripts/validate-released-analyzer.mjs --baseline "$RUNNER_TEMP/qt-release" --original "$RUNNER_TEMP/original40/fixtures" --calibration "$RUNNER_TEMP/calibration40/fixtures" --exposed-v1 "$RUNNER_TEMP/exposed-v1-40/fixtures" --consensus "$RUNNER_TEMP/prospective32/fixtures" --output "$RUNNER_TEMP/terminal-consensus/current-product"
       - name: Extract the prespecified additional INCART temporal windows
-        run: python scripts/prepare-complete-complex-incart.py "$RUNNER_TEMP/incart-complete-complex"
+        run: cd "$RUNNER_TEMP/complete-complex-frozen" && python scripts/prepare-complete-complex-incart.py "$RUNNER_TEMP/incart-complete-complex"
       - name: Compare frozen whole-complex analyzer on every temporal target
-        run: node scripts/validate-complete-complex-incart.mjs "$RUNNER_TEMP/incart-complete-complex" "$RUNNER_TEMP/terminal-consensus/incart-complete-complex-results.json"
+        run: cd "$RUNNER_TEMP/complete-complex-frozen" && node scripts/validate-complete-complex-incart.mjs "$RUNNER_TEMP/incart-complete-complex" "$RUNNER_TEMP/terminal-consensus/incart-complete-complex-frozen-results.json"
+      - name: Require current product to preserve all now-exposed temporal measurements
+        run: node scripts/validate-complete-complex-incart.mjs "$RUNNER_TEMP/incart-complete-complex" "$RUNNER_TEMP/terminal-consensus/incart-complete-complex-current-results.json" --current-replay
       - name: Preserve source and complete evidence without demographic headers
         if: always()
         run: |
           mkdir -p "$RUNNER_TEMP/terminal-consensus"
           git archive d208370f883b9f1d3a22c34db62d97daacb279c6 | gzip > "$RUNNER_TEMP/terminal-consensus/frozen-qt-source.tar.gz"
           git archive HEAD | gzip > "$RUNNER_TEMP/terminal-consensus/source.tar.gz"
+          git archive 4f9bce8ad1f0a3daa7562cf980ab2843e818393f | gzip > "$RUNNER_TEMP/terminal-consensus/frozen-complete-complex-source.tar.gz"
           git rev-parse HEAD > "$RUNNER_TEMP/terminal-consensus/commit.txt"
           for name in original40 calibration40 exposed-v1-40 prospective32; do
             test ! -d "$RUNNER_TEMP/$name" || { rm -rf "$RUNNER_TEMP/$name/raw"; cp -r "$RUNNER_TEMP/$name" "$RUNNER_TEMP/terminal-consensus/$name"; }

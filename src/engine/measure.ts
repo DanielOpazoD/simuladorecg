@@ -95,12 +95,14 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
   const intervals = ratePeaks.slice(1).map((p, i) => (p - ratePeaks[i]) / fs),
     rr = median(intervals);
   if (rr < 0.22 || rr > 3) return nil;
-  // Assess duration against distinct observed complexes, while retaining
-  // original windows as independent evidence of boundary ambiguity.
+  const regular = mad(intervals) < rr * 0.05 && spread(intervals) < rr * 0.16;
+  // Assess duration against distinct observed complexes, retaining original
+  // windows separately as evidence of boundary ambiguity.
   const landmarkRr = median(peaks.slice(1).map((p, i) => (p - peaks[i]) / fs));
   const morphologyEligible = landmarkRr >= 0.22 && landmarkRr <= 3;
   const historicalWidths: number[] = [];
   const originalWindowWidths: number[] = [];
+  let fallbackBeats = 0;
   const tangentEnds = new Map<number, number>();
   const terminalFrames = new Map<
     number,
@@ -152,20 +154,24 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     }
     const observedCentre = peak;
     const originalIndex = originalLandmarks.indexOf(marker);
-    for (let attempt = 0; attempt < 2; attempt++) {
+    let originalAdmissible = false;
+    // First preserve the original window; then try complete observed support.
+    // If that merger is physically inadmissible, a terminal-limb first window
+    // can be rechecked with ventricular neighbors, without forcing the merger.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const repair = attempt === 1;
       const previousLandmark =
-        attempt === 0
-          ? originalLandmarks[originalIndex - 1]
-          : peaks[complexIndex - 1];
+        attempt > 0
+          ? peaks[complexIndex - 1]
+          : originalLandmarks[originalIndex - 1];
       const nextLandmark =
-        attempt === 0
-          ? originalLandmarks[originalIndex + 1]
-          : peaks[complexIndex + 1];
-      peak = attempt === 0 ? marker : observedCentre;
-      // An internal voltage plateau is not a baseline. On the repair pass,
-      // search before the earliest supported slope rather than before the apex.
+        attempt > 0
+          ? peaks[complexIndex + 1]
+          : originalLandmarks[originalIndex + 1];
+      peak = repair ? observedCentre : marker;
+      // An internal plateau is not baseline: repair starts before the first slope.
       const baselineAnchor =
-        attempt === 1 && supportStart !== null ? supportStart : peak;
+        repair && supportStart !== null ? supportStart : peak;
       let baseIndex = Math.max(8, baselineAnchor - Math.round(0.22 * fs));
       for (let j = baseIndex; j < baselineAnchor - Math.round(0.04 * fs); j++)
         if (energy[j] < energy[baseIndex]) baseIndex = j;
@@ -286,7 +292,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
         derivative(j) < Math.max(derivativeThreshold, maximumSlope * 0.08);
       for (let j = peak; j > left; j--) {
         const insideSupport =
-          attempt === 1 &&
+          repair &&
           supportStart !== null &&
           supportEnd !== null &&
           j >= supportStart &&
@@ -302,7 +308,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
         } else if (insideSupport) quiet = 0;
         else if (
           ++quiet >= quietSamples &&
-          (attempt === 0 ||
+          (!repair ||
             !recovered.has(marker) ||
             magnitude(j) <= Math.max(0.008, noise * 5, amplitude * 0.08))
         )
@@ -312,7 +318,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
       neutral = 0;
       for (let j = marker; j < right; j++) {
         const insideSupport =
-          attempt === 1 &&
+          repair &&
           supportStart !== null &&
           supportEnd !== null &&
           j >= supportStart &&
@@ -328,6 +334,29 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
         } else if (insideSupport) quiet = 0;
         else if (++quiet >= quietSamples) break;
       }
+      const width = (off - on) / fs,
+        localRR = (marker - previousLandmark) / fs;
+      const admissible =
+        on > left + 1 &&
+        off < right - 1 &&
+        width >= 0.04 &&
+        width <= 0.28 &&
+        width <= Math.min(localRR, (nextLandmark - peak) / fs) * 0.75;
+      if (attempt === 0)
+        originalAdmissible =
+          on > left + 1 &&
+          off < right - 1 &&
+          width >= 0.04 &&
+          width <= 0.28 &&
+          width <=
+            Math.min(
+              (marker - peaks[complexIndex - 1]) / fs,
+              (peaks[complexIndex + 1] - marker) / fs,
+            ) *
+              0.75 &&
+          on <= observedCentre &&
+          off >= observedCentre &&
+          off - marker <= 0.04 * fs;
       // A wider supported window can repair a truncated complex. It cannot, by
       // itself, erase between-beat ambiguity in the original observed windows.
       if (attempt === 0) {
@@ -357,16 +386,10 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
             (on > observedCentre || off < observedCentre)))
       )
         continue;
-      if (on <= left + 1 || off >= right - 1) continue beatsLoop;
-      // Report the center of the derivative transition (sampling resolution applies).
-      const width = (off - on) / fs,
-        localRR = (marker - previousLandmark) / fs;
-      if (
-        width < 0.04 ||
-        width > 0.28 ||
-        width > Math.min(localRR, (nextLandmark - peak) / fs) * 0.75
-      )
+      if (!admissible) {
+        if (repair && originalAdmissible) continue;
         continue beatsLoop;
+      }
       historicalWidths.push(width * 1000);
       if (!retained.has(marker)) continue beatsLoop;
       let ai = 0,
@@ -482,6 +505,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
       }
       terminalFrames.set(beat.peak, { magnitude, baseAt });
       beats.push(beat);
+      if (attempt === 2) fallbackBeats++;
       break;
     }
   }
@@ -498,12 +522,20 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
       const out = [];
       if (b.tEnd !== null) out.push({ peak: b.tPeak, end: b.tEnd });
       const tangent = tangentEnds.get(b.peak);
-      if (tangent !== undefined)
-        out.push({
+      // In the existing regular-RR QT domain, materially conflicting baseline
+      // returns challenge the stricter tangent first. It still needs all four
+      // wavelet leads within 20 ms and no competing later peak. Otherwise the
+      // existing observed return remains available; no endpoint is averaged blindly.
+      if (tangent !== undefined) {
+        const candidate = {
           peak: b.tPeak,
           end: tangent,
           requiresUnambiguousTail: true,
-        });
+        };
+        if (regular && b.tEnd !== null && Math.abs(b.tEnd - tangent) > 0.024)
+          out.unshift(candidate);
+        else out.push(candidate);
+      }
       return out;
     }),
   );
@@ -578,7 +610,6 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
       pm <= 400 &&
       mad(prs) < 12 &&
       spread(prs) < 35;
-  const regular = mad(intervals) < rr * 0.05 && spread(intervals) < rr * 0.16;
   const noise = median(beats.map((b) => b.noise)),
     noisy = noise > 0.015;
   const hr = 60 / (intervals.reduce((a, b) => a + b, 0) / intervals.length),
@@ -635,6 +666,15 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
           eligible,
         ),
   };
+  if (
+    fallbackBeats > 0 &&
+    (beats.length - fallbackBeats < 3 ||
+      beats.length - fallbackBeats < (ratePeaks.length - 2) * 0.45)
+  ) {
+    ev.hr.status = "review";
+    ev.hr.reason =
+      "Intervalos recuperados con ventanas alternativas; verifica el conteo ventricular.";
+  }
   if (
     ev.qrs.status === "usable" &&
     originalWindowWidths.length >= 3 &&
@@ -696,8 +736,8 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     ev.qrs.reason =
       "La selección QRS/T cambió el conjunto de límites; la precisión QRS previa aún requiere revisión.";
   }
-  // Keep this check on the original train. Combining two morphology slopes
-  // must not erase evidence of unrelated short intervals in the rate train.
+  // Removing some smooth post-complex candidates is not proof that every
+  // remaining short interval is a ventricular activation. Preserve ambiguity.
   if (
     ratePeaks.length < originalLandmarks.length &&
     intervals.some((value) => value < rr * 0.75)

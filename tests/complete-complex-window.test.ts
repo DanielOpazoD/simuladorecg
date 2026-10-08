@@ -80,3 +80,29 @@ it("keeps the same QRS fiducial when the competing slope belongs to that complex
   expect(m.evidence.qrs.status).toBe("review");
   expect(Math.abs(m.qrs! - 165)).toBeLessThanOrEqual(20);
 });
+
+it.each(
+  Array.from({ length: 12 }, (_, i) => 130 + i * 10).flatMap((qrs) =>
+    ["off", "diagnostic"].map((filter) => ({ qrs, filter })),
+  ),
+)(
+  "retains actual intervals across the default regional controls: $qrs ms / $filter",
+  ({ qrs, filter }) => {
+    const c = {
+      ...fromPreset(presetById("lbbb")!),
+      qrs,
+      filter: filter as "off" | "diagnostic",
+      activationModel: "regional-lbbb-v1" as const,
+    };
+    const s = synthesize(c, 10),
+      m = analyzeSamples({ fs: s.fs, leads: s.leads });
+    expect(m.qrs).not.toBeNull();
+    expect(Math.abs(m.qrs! - qrs)).toBeLessThanOrEqual(20);
+    expect(m.qt).not.toBeNull();
+    expect(Math.abs(m.hr! - c.hr)).toBeLessThanOrEqual(5);
+    const qts = s.events.beats.map((b) => { expect(b.qt).toBeDefined(); return b.qt! * 1000; }).sort((a, b) => a - b);
+    expect(
+      Math.abs(m.qt! - qts[Math.floor(qts.length / 2)]),
+    ).toBeLessThanOrEqual(30);
+  },
+);

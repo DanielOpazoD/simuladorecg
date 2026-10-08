@@ -55,6 +55,11 @@ for(const [engine,launcher] of Object.entries(engines)){
    });assert.equal(pending,false,'No stale exports during debounce');
    await ready();const delayed=await exported('delayed');assert.equal(delayed.B.case.qrs,190);
    assert.equal(delayed.B.case.activationModel,model);
+   if(preset==='lbbb'){
+    const qrs=delayed.metrics.find(r=>r.key==='qrs'),qt=delayed.metrics.find(r=>r.key==='qt');
+    assert.ok(qrs.b!==null&&Math.abs(qrs.b-190)<=20,'Visible 190 ms LBBB control must retain a full measured QRS');
+    assert.notEqual(qrs.statusB,'unavailable');assert.ok(qt.b!==null,'Visible QT must not disappear after the QRS change');
+   }
    assert.deepEqual(delayed.A.leads,original.A.leads);assert.notDeepEqual(delayed.B.leads,regional.B.leads);
    await page.locator('[data-panel="conduction"]').click();
    assert.match(await page.locator('#regional-activation-controls svg').textContent(),/190/);

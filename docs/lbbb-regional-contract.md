@@ -1,7 +1,7 @@
 # Proposed regional LBBB surrogate: decision before implementation
 
-**Current release status: candidate awaiting final integration checks.** The
-complete-complex repair passes the full 256-case paired domain, including actual
+**Release scope: experimental, explicit opt-in, with mandatory exact-source CI.**
+The complete-complex repair passes the expanded 304-case paired domain, including actual
 QRS identity and duration gates, without changing the source model. See
 [complete-complex boundaries](complete-complex-boundaries.md) for the numerical
 repair, coverage costs, unresolved debt, and required release evidence.
