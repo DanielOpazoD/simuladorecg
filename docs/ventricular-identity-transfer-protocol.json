@@ -1,0 +1,1241 @@
+{
+  "schemaVersion": 1,
+  "frozenAt": "2026-10-08T11:26:39Z",
+  "status": "registered-before-evaluation",
+  "baselineCommit": "179a128bf70509b0f1c85fa2a6a9ba7cfa4f478b",
+  "algorithmSha256": {
+    "src/engine/analysis/ventricular-candidates.ts": "60269e4274bddebd442ee8fbf85fb5cdb9629d929fffbecb42f98a600666c6a2",
+    "src/engine/measure.ts": "3cecac4689a10987120934ba8e8812a0d8d385f77248033b7c6fea2d7fbf943f"
+  },
+  "scope": "Neighboring synthetic parameters and new fixed seeds, after exposed 2372-case development; not independent clinical validation. Fixed before inspecting these outputs.",
+  "cases": [
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 83,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 83,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 97,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 97,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 83,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 83,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 97,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 97,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 83,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 83,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 97,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 97,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 185,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 83,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 83,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 97,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 97,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 83,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 83,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 97,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 97,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 83,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 83,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 97,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 97,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 205,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 83,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 83,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 97,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 97,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 175,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 83,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 83,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 97,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 97,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 205,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 83,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 83,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 97,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0,
+        "seed": 97,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "off"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vt",
+      "changes": {
+        "hr": 245,
+        "qrs": 225,
+        "qtc": 350,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "diagnostic"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vvi",
+      "changes": {
+        "hr": 50,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "off",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vvi",
+      "changes": {
+        "hr": 50,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "diagnostic",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vvi",
+      "changes": {
+        "hr": 50,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "off",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vvi",
+      "changes": {
+        "hr": 50,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "diagnostic",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vvi",
+      "changes": {
+        "hr": 50,
+        "noise": 0.08,
+        "seed": 83,
+        "filter": "off",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vvi",
+      "changes": {
+        "hr": 50,
+        "noise": 0.08,
+        "seed": 83,
+        "filter": "diagnostic",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vvi",
+      "changes": {
+        "hr": 50,
+        "noise": 0.08,
+        "seed": 97,
+        "filter": "off",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vvi",
+      "changes": {
+        "hr": 50,
+        "noise": 0.08,
+        "seed": 97,
+        "filter": "diagnostic",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vvi",
+      "changes": {
+        "hr": 60,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "off",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vvi",
+      "changes": {
+        "hr": 60,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "diagnostic",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vvi",
+      "changes": {
+        "hr": 60,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "off",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vvi",
+      "changes": {
+        "hr": 60,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "diagnostic",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vvi",
+      "changes": {
+        "hr": 60,
+        "noise": 0.08,
+        "seed": 83,
+        "filter": "off",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vvi",
+      "changes": {
+        "hr": 60,
+        "noise": 0.08,
+        "seed": 83,
+        "filter": "diagnostic",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vvi",
+      "changes": {
+        "hr": 60,
+        "noise": 0.08,
+        "seed": 97,
+        "filter": "off",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "vvi",
+      "changes": {
+        "hr": 60,
+        "noise": 0.08,
+        "seed": 97,
+        "filter": "diagnostic",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "lbbb",
+      "changes": {
+        "hr": 50,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "off",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "lbbb",
+      "changes": {
+        "hr": 50,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "diagnostic",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "lbbb",
+      "changes": {
+        "hr": 50,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "off",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "lbbb",
+      "changes": {
+        "hr": 50,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "diagnostic",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "lbbb",
+      "changes": {
+        "hr": 50,
+        "noise": 0.08,
+        "seed": 83,
+        "filter": "off",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "lbbb",
+      "changes": {
+        "hr": 50,
+        "noise": 0.08,
+        "seed": 83,
+        "filter": "diagnostic",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "lbbb",
+      "changes": {
+        "hr": 50,
+        "noise": 0.08,
+        "seed": 97,
+        "filter": "off",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "lbbb",
+      "changes": {
+        "hr": 50,
+        "noise": 0.08,
+        "seed": 97,
+        "filter": "diagnostic",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "lbbb",
+      "changes": {
+        "hr": 60,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "off",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "lbbb",
+      "changes": {
+        "hr": 60,
+        "noise": 0.04,
+        "seed": 83,
+        "filter": "diagnostic",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "lbbb",
+      "changes": {
+        "hr": 60,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "off",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "lbbb",
+      "changes": {
+        "hr": 60,
+        "noise": 0.04,
+        "seed": 97,
+        "filter": "diagnostic",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "lbbb",
+      "changes": {
+        "hr": 60,
+        "noise": 0.08,
+        "seed": 83,
+        "filter": "off",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "lbbb",
+      "changes": {
+        "hr": 60,
+        "noise": 0.08,
+        "seed": 83,
+        "filter": "diagnostic",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "lbbb",
+      "changes": {
+        "hr": 60,
+        "noise": 0.08,
+        "seed": 97,
+        "filter": "off",
+        "electrolyte": "lowvoltage"
+      }
+    },
+    {
+      "label": "identity-transfer",
+      "id": "lbbb",
+      "changes": {
+        "hr": 60,
+        "noise": 0.08,
+        "seed": 97,
+        "filter": "diagnostic",
+        "electrolyte": "lowvoltage"
+      }
+    }
+  ],
+  "acceptance": {
+    "maxNewFalseDetections": 0,
+    "maxNewMissedQrs": 0,
+    "maxNewPhaseMisses": 0,
+    "maxNewFalselyUsableHr": 0,
+    "maxNewUsableQrsErrors": 0,
+    "maxNewUsableQtErrors": 0,
+    "hrReviewBpm": 5,
+    "qrsReviewMs": 20,
+    "qtReviewMs": 30,
+    "unsupported": "Report every explicitly rejected model configuration; never omit a failed accepted configuration."
+  }
+}

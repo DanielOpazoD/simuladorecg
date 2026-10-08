@@ -88,7 +88,9 @@ jobs:
     runs-on: ubuntu-latest
     # The complete 1,892-case matrix takes about eight minutes before artifact
     # upload and cleanup. This is an execution budget, not a numerical waiver.
-    timeout-minutes: 12
+    # Headroom for complete-component matching, all 2,476 native scenarios and
+    # artifact finalization. Numerical limits and required coverage are unchanged.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
         with:
@@ -127,7 +129,7 @@ jobs:
     defaults:
       run:
         shell: bash
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
         with:

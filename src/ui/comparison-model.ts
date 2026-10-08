@@ -52,6 +52,7 @@ export function captureTrace(c: ECGCase, s: Signal, m: Measurement): SyntheticCo
   }
   return { sourceKind:'synthetic', capturedWith:buildProvenance(), case:structuredClone(c), measurement:structuredClone(m), signal:{
     fs:s.fs, duration:10, leads, truth:structuredClone(s.truth), warnings:[...s.warnings],
+    leadingQrs:structuredClone(s.leadingQrs??[]),
     events:{
       beats:s.events.beats.filter(b => b.time >= 0 && b.time < 10).map(b => ({...b})),
       atria:s.events.atria.filter(a => a.time >= 0 && a.time < 10).map(a => ({...a})),
@@ -193,7 +194,7 @@ function exportAnyComparison(a:ComparisonTrace,b:ComparisonTrace,view:Comparison
        acquisition:structuredClone(x.external.provenance),assessment:structuredClone(x.external.assessment),
        measurementMethod:'sample-only; no model audit',measurementTimeBase:'relative to captured ten-second segment'}
     : {sourceKind:'synthetic',...physical(x),capturedWith:structuredClone(x.capturedWith),
-       case:structuredClone(x.case),events:structuredClone(x.signal.events),warnings:[...x.signal.warnings],
+       case:structuredClone(x.case),events:structuredClone(x.signal.events),leadingQrs:structuredClone(x.signal.leadingQrs??[]),warnings:[...x.signal.warnings],
        measurementMethod:'sample analysis with synthetic model audit',measurementTimeBase:'relative to first ten seconds'};
   return {kind:'ecg-lab-comparison',schemaVersion:2,appVersion:version,syntheticOnly:false,clinicalValidation:false,exportedWith:buildProvenance(),
     window,view:{...view},alignmentSource,alignmentSamples:manualOrigin,
@@ -207,7 +208,7 @@ function exportAnyComparison(a:ComparisonTrace,b:ComparisonTrace,view:Comparison
 function exportSyntheticComparison(a:SyntheticComparisonTrace,b:SyntheticComparisonTrace,view:ComparisonView,version:string) {
   const window=comparisonWindow(a,b,view);
   const serialize=(x:SyntheticComparisonTrace)=>({case:structuredClone(x.case),fs:x.signal.fs,duration:10,units:'mV',
-    leads:Object.fromEntries(LEADS.map(l=>[l,Array.from(x.signal.leads[l])])),events:structuredClone(x.signal.events),
+    leads:Object.fromEntries(LEADS.map(l=>[l,Array.from(x.signal.leads[l])])),events:structuredClone(x.signal.events),leadingQrs:structuredClone(x.signal.leadingQrs??[]),
     measurement:structuredClone(x.measurement),warnings:[...x.signal.warnings]});
   return {kind:'ecg-lab-comparison',schemaVersion:1,appVersion:version,syntheticOnly:true,clinicalValidation:false,
     window,view:{...view},alignmentSource:view.alignment==='beat'?'synthetic QRS onset rounded to nearest sample; not clinical delineation':

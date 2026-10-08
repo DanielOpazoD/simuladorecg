@@ -1,0 +1,86 @@
+# Complete ventricular identity across competing waveform components
+
+Scope: complete ventricular identity and consistent downstream audit, compared with released PR152, `179a128bf70509b0f1c85fa2a6a9ba7cfa4f478b`. The first registered transfer failure remains preserved separately.
+
+## Defect and intended closure
+The released 2,372-case screen retains 81 falsely usable rates: 57 in the original grid and 24 in the additional rapid-VT transfer grid. The latter include residual 190/210/250-min wide-complex cases, not only low-amplitude P/T ambiguity. Candidate detection, ventricular identity, interval boundaries and confidence remain distinct responsibilities. Improving a mean rate alone cannot establish identity.
+
+One observed mechanism is incomplete morphology evidence: the detector judges a prior QRS from its selected slope while another qualified slope of the same continuous deflection is hidden by the 180 ms suppression window. In a low-voltage 95/min VT, the hidden terminal slope supports the existing strict T-wave discriminator, but the selected early slope does not. Another hypothesis is that opposite slopes of the same repeating rapid QRS prevent the initial signed-contour coherence screen from recognizing a coherent train.
+
+## Candidate approach, not an acceptance claim
+Reuse existing observed maxima, multilead morphology and continuity evidence. Make complete-complex evidence available consistently to detection and delineation. Any recovery after a terminal-wave rejection must identify an actual recorded maximum with independently repeated QRS support; no beat is inserted from an expected RR or the generator clock. Do not silently relabel a two-family ambiguous waveform as a known rhythm, and do not remove genuine ectopy merely because it alternates.
+
+## Invariants, refutation and release conditions
+No waveform-generation, visible event-calendar, diagnosis-dependent detector, sample-export or acquisition changes. Boundary provenance may be added explicitly without inventing events or moving them. No relaxed numerical acceptance limits. Preserve all adverse outcomes and unavailable estimates. A confidence-only downgrade does not close the numerical detection mechanism. Require complete targeted before/after beat identity, false-positive and false-negative accounting and honest interval uncertainty. Reject new ventricular omissions, false detections, falsely usable values and newly usable interval errors; additionally report per-case rate-error changes rather than hiding deterioration in an aggregate.
+
+Run the existing complete 2,372-case matrix, 304 regional cases, strict noise comparison, exposed real-data parity and actual browser flows. Add independent analytical controls for opposite slopes and true distinct alternating beats. Any remaining ambiguity must be bounded explicitly against the educational module it could affect. No universal clinical accuracy or educational efficacy is claimed.
+
+## Candidate implementation and causal checks
+
+The candidate keeps waveform generation, acquired/exported samples, clocks and terminal estimator unchanged; additive boundary metadata is described below. The sample-only change is in `ventricular-candidates.ts`. The downstream simulator reference matcher also repairs ownership of a marker inside one actual QRS when uncertainty padding reaches its neighbor. No new dependency, control or diagnosis-dependent detector branch is introduced.
+
+- Rapid-train admission uses membership in one repeated signed contour, rather than counting adjacent agreements. One displaced marker previously counted as two disagreements. Existing complete-frame count, 80% support, 0.9 contour correlation, 180 ms separation and new-maximum support requirements remain.
+- Continuous opposing slopes are removed from the competition pool before maximum-score selection. A fixed four-channel histogram bin could split one noisy return level: at an exposed 190/min trace it held 159/5,000 samples. Recentering the same-width window on its observed mean restores sufficient observed support without lowering the existing 4% density threshold. Each iteration must strictly increase membership. This refinement is confined to the repeated-contour recovery path and denoised boundary support, not enabled globally for all delineation.
+- Qualified hidden slopes on either side of a selected marker contribute complete-complex morphology. They are not extra beats.
+- If individual noisy descriptors remain inconclusive, at least four distinct observed support groups can provide an averaged descriptor, with the existing 0.98 match and bounded 30 ms alignment. Each group contributes at most one aligned contour, including hidden slopes, and a candidate with a repeated non-collinear component is protected. The ensemble distinguishes the low-dimensional late trajectory from a complete rotating QRS without requiring a wide QRS to be sharper than T. The original individual-contour rank/roughness rules are unchanged. Original samples and candidate timestamps never change.
+- Noise reduction used for that distinction must also support the preceding QRS boundaries. The same continuous-support check, including return-level recentering, is used on the analysis-only smoothed copy. Three matching disambiguated anchors can support another complex. This repairs a terminal-limb QRS of about 42 ms to approximately 164–165 ms, and prevents a newly regular rate from exposing a spuriously short QT. Existing stimulus-adjacent uncertainty remains.
+
+Averaging establishes an engineering descriptor, not a probability or clinical wave classification. Current polarity tests require exact ventricular markers and complete-complex support; an exploratory full-pipeline test found a 1 ms variation in the unchanged per-lead terminal estimator, so this revision makes no exact QT-polarity-invariance claim.
+
+## Registered transfer attempt and repair
+
+`ventricular-identity-transfer-protocol.json` records 104 neighboring configurations and previously unused fixed seeds before inspection, at 2026-10-08 11:26:39 UTC. It pins candidate detector SHA-256 `60269e4274bddebd442ee8fbf85fb5cdb9629d929fffbecb42f98a600666c6a2` and the unchanged measurement primitive. Registration was local, not a public preregistration or clinical validation.
+
+The first run failed: two 60/min noisy low-voltage VVI cases acquired newly usable but incorrect QTs after rate recovery. The complete first report is preserved in `ventricular-identity-transfer-first-evaluation.json`, including all 104 rows, source hashes and the dirty-tree flag. Its commit field names the checkout anchor, not the modified implementation; use its dependency hashes to identify the evaluated bytes. Do not relabel this first run as passed.
+
+The repair consistently applies the same return-level recentering to the denoised boundary-support path. A focused replay changes the affected QRS from 42 to 165 ms and QT from about 300 to 421.5 ms, with the existing review status for stimulus-adjacent onset. The 104 cases are now exposed regression data. There is no fresh clinical validation reserve implied by the replay.
+
+## Refuted alternatives retained in the investigation
+
+- Broad voltage-apex recentering introduced missed activations and new falsely usable rates; discarded.
+- A second detector pass after suppressing terminal-wave neighborhoods introduced additional false detections and interval errors; discarded.
+- Blanket interval review after ensemble discrimination reduced correct noise-stratum coverage. The final candidate repairs the observed boundary support instead; no new confidence-policy module remains.
+- Enabling return-level recentering globally removed previously available interval estimates. It remains bounded to repeated-contour recovery and independently supported noisy-complex delineation.
+
+## Evidence snapshots and mandatory release gates
+
+- The first reviewed candidate passed 146 focused tests, including 39 new identity tests, existing independent analytical opposing-slope/true-complex controls, source-based one-to-one QRS identity and unchanged sample arrays. Six paced-noise cases exercise complete QRS/available QT; unresolved T-end coverage remains unavailable under the existing rule.
+- The first repaired 104-case exposed replay has no new false detections, missed QRS, phase misses, falsely usable HR or newly usable erroneous QRS/QT. Falsely usable HR changes 11 → 9; this does not imply the remaining nine are resolved.
+- Strict 920-case calibrated-noise comparison passed against the released predecessor.
+- The first complete candidate (detector `2640a3aec04498e80045d2da2e55a57215eb662084b601a88224215a6a3cac63`) passed the 2,476-case local comparison: 2,396 admitted configurations and 80 explicit model-domain rejections. Falsely usable HR changes 92 → 56; 31 cases receive numerically corrected rates and five remaining inaccurate rates move to review. Usable HR coverage changes 1,823 → 1,835. There are zero additional false detections, omissions, phase misses, falsely usable rates or usable interval errors. The original 2,372 and added 104 cases remain separately identifiable in every row.
+- The complete 2,158-test suite passed with local worker concurrency limited to two; no timeout or assertion was relaxed. Six additional audit-ownership tests pass. The final build passes after removing an unused binding from the new test. Exact-head CI and actual three-engine desktop/mobile browser evidence remain mandatory release gates.
+- The 152 LUDB plus 300 INCART windows remain exactly unchanged; the 304-case regional screen passes. Neither synthetic model truth nor exact parity on previously exposed records establishes clinical accuracy.
+
+The existing unresolved slow/low-amplitude P/QRS/T ambiguities remain open. This work must not be described as eliminating all electrophysiological debt or making every automatic interval reliable.
+
+## Downstream audit and historical noise contracts
+
+The first actual-browser run exposed a separate identity bug in simulator QA: at 250/min and 230 ms QRS, a valid terminal marker lay inside one real QRS and inside the following beat's 25 ms padding. The audit called every such marker ambiguous and withdrew the otherwise correct rate. Actual support now takes precedence over padding; true overlap and padded-gap ambiguity still reject. A used identity cannot be reassigned to a neighboring padded event. Audit still never supplies a numerical measurement, and the inaccurate 92 ms QRS estimate in that rapid case remains withdrawn. Six dedicated tests cover actual ownership, duplicates, real overlap, ambiguous gaps, unchanged isolated tolerance and unmodified measured values.
+
+The first noise CI failed an older confidence-only transition assertion, `114 !== 116`: that historical rule required numerical QRS summaries to remain exact. Rather than relax it, CI now reproduces the original PR150 → PR152 transition using immutable PR152 code, then applies every unchanged strict numerical gate from PR152 to the current candidate. No historical acceptance file or numeric tolerance is rewritten. The initial failed CI artifacts remain associated with PR #153.
+
+## Complete-component consistency after the first CI
+
+The unchanged 540-case secondary-ST contract exposed additional false late-wave candidates in an idioventricular-source configuration. These were addressed in the same block, without changing that experiment or its acceptance limits:
+
+- A hidden slope has one nearest unambiguous continuous-support owner. It cannot supply contradictory ventricular evidence to both the QRS and the following T.
+- The same-contour safeguard examines the prior complex's entire observed support, rather than just an early slope that can resemble T. A candidate carrying its own repeated non-collinear component cannot be removed by the ensemble rule.
+- Candidate formation still starts at 150 ms. Earlier fully observed energy maxima may supply morphology support only; classification delay refers to the earliest owned component. This avoids treating a first QRS's late fiducial as its beginning.
+- Complete-component groups, including groups linked by shared observed support, contribute one vote each to an ensemble. Several noise maxima from one deflection cannot satisfy the three-other-group requirement.
+- Broad field recentering, a second NMS pass, an unconditional relaxed late-wave shape rule, and phase-only fixes that produced the right rate with the wrong QRS identities were rejected. Removing a shape guard without protecting all components removed real QRS; that trial is not part of the release.
+
+The focused contract now contains 49 identity tests, including eight first-QRS/noisy-source controls with two seeds and two filters. Six audit-ownership controls supplement them. The final source hash is pinned in the normal numerical-revision contract. The earlier complete-matrix numbers above are historical evidence, not a substitute for running every required gate against the final candidate.
+
+Final-candidate local checks (detector SHA-256 `3a95c555cf19bf9e0200b100470e63a13a9f8704b3add7b790d4d76fe2d11c64`) pass the unchanged 540-case secondary-ST experiment, 304 regional configurations, every strict 920-case noise gate, and exact parity on all 452 exposed real-data windows. Build and 54 gate-control tests pass. The 2,476-case run is still pending at this documentation snapshot. A concurrent full local unit run passed 2,174 of 2,175 tests; the remaining rapid-VT case exceeded the unchanged 5-second test budget under concurrent validation load. It must pass a complete final-head run before release; targeted success does not waive it.
+
+The final local 2,476-case matrix subsequently passed on the pinned detector above: 2,396 admitted and 80 explicitly unsupported; falsely usable HR 92 → 50, including 33 numerically corrected rates and nine remaining inaccurate rates moved to review. Usable HR coverage is 1,823 → 1,844, with no new false detections, QRS omissions, phase misses, falsely usable rates, or newly usable QRS/QT errors. All 24 rapid-VT residual cases from PR152 are resolved in this exposed screen. The remaining 50 cases are explicitly retained. The first exact-head CI unit runs passed every numerical test but rejected a stale workflow test expecting a 15-minute job budget after the complete core job was allotted 25 minutes; that textual contract now pins 25 for core and retains 15 for browser jobs. No per-test timeout changes.
+
+## Recording-origin ownership: preserve the real clipped QRS
+
+The next browser run refuted the first ownership repair at 240/min with a 240 ms QRS. The first detected maximum at 0.186 s belongs to an actual QRS beginning at −0.05 s and ending at 0.19 s. Warm-up generated its visible tail, but the returned event list omitted every negative-onset beat. The old greedy padding matcher assigned the tail to the next QRS, hiding this provenance gap; actual-support ownership correctly exposed the conflict.
+
+`Signal.leadingQrs` now retains only generated QRS events starting before the recording origin whose QRS support crosses it. It is copied from the existing warm-up calendar, not extrapolated from RR or obtained from detector output. The original visible event list, truth summaries and every voltage sample remain unchanged. The independent analyzer still receives only frequency and leads. Downstream audit can match the real boundary component while continuing to reject false or duplicate markers and inaccurate intervals. A/B capture and both synthetic export paths preserve this separate metadata; it is not offered as a complete visible beat for alignment.
+
+The added controls verify the known −0.05/0.19 s event, immutable raw measurement, preserved rate and withdrawn incorrect QRS; removal of the provenance must reproduce the failed audit. Additional controls reject T-only boundary provenance and verify independent copies and export. Frozen-source regression predictions add only the same provenance from each historical generator's own warm-up events; exact sample, visible-calendar, truth and warning comparisons remain intact. No tolerance or skipped comparison is introduced.
+
+The full local suite then passed all 2,179 tests with the clipped-QRS repair. The production source-browser run at `88d45f374869f11ee1025548ec57f420c4c93043` passed all 42 original/identity scenarios across Chromium, Firefox and WebKit at desktop and mobile widths, with exact roundtrip and rollback. Its archive SHA-256 is `21f5c30825a4b04359cf3aecda22e06c6a3a0d66762d38ce02eb18d474795d23`. Desktop paced and mobile rapid-VT screenshots were inspected. The historical LPFB unchanged-catalog check initially rejected absent-versus-empty boundary metadata; its frozen generator now receives the same explicit additive provenance prediction as the other historical gates. The unmodified full-signal equality then passes all 240 unrelated configurations, and its 96 LPFB configurations retain zero new falsely usable rates and zero missed QRS. The final commit still requires all exact-head CI checks, including core browser/pixel checks that the preceding failed metadata assertion prevented from running.

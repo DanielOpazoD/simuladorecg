@@ -33,6 +33,8 @@ jobs:
           git worktree add --detach "$RUNNER_TEMP/noise-st-release" 10e3f39764ca3bf83f2fc9b543d4960ee12c1080
           git worktree add --detach "$RUNNER_TEMP/noise-qt-release" d208370f883b9f1d3a22c34db62d97daacb279c6
           (cd "$RUNNER_TEMP/noise-qt-release" && npm ci)
+          git worktree add --detach "$RUNNER_TEMP/noise-identity-before" 179a128bf70509b0f1c85fa2a6a9ba7cfa4f478b
+          (cd "$RUNNER_TEMP/noise-identity-before" && npm ci)
       - name: Discriminative reader, calibration, morphology and abstention tests
         run: |
           (cd "$RUNNER_TEMP/noise-acquisition" && python -m unittest discover -s tests -p test_noise_stress.py -v)
@@ -73,8 +75,13 @@ jobs:
           cd "$RUNNER_TEMP/noise-qt-release"
           node scripts/benchmark-noise-stress.mjs "$RUNNER_TEMP/noise-stress/qt-release" --noise-dir "$RUNNER_TEMP/noise-stress" --analyzer worker
           node scripts/check-noise-regression.mjs "$RUNNER_TEMP/noise-stress/before/noise-results.json" "$RUNNER_TEMP/noise-stress/qt-release/noise-results.json" "$RUNNER_TEMP/noise-stress/terminal-acceptance-results.json" --terminal-consensus
-      - name: Compare current product with its published predecessor and preserve strict adverse outcomes
-        run: node scripts/check-released-noise.mjs "$RUNNER_TEMP/noise-stress/qt-release/noise-results.json" "$RUNNER_TEMP/noise-stress/after/noise-results.json" "$RUNNER_TEMP/noise-stress/acceptance-results.json"
+      - name: Preserve the immutable PR150 to PR152 confidence transition
+        run: |
+          cd "$RUNNER_TEMP/noise-identity-before"
+          node scripts/benchmark-noise-stress.mjs "$RUNNER_TEMP/noise-stress/identity-before" --noise-dir "$RUNNER_TEMP/noise-stress" --analyzer worker
+          node scripts/check-released-noise.mjs "$RUNNER_TEMP/noise-stress/qt-release/noise-results.json" "$RUNNER_TEMP/noise-stress/identity-before/noise-results.json" "$RUNNER_TEMP/noise-stress/repeated-terminal-transition.json"
+      - name: Strict current numerical comparison with immutable PR152
+        run: node scripts/check-released-noise.mjs "$RUNNER_TEMP/noise-stress/identity-before/noise-results.json" "$RUNNER_TEMP/noise-stress/after/noise-results.json" "$RUNNER_TEMP/noise-stress/acceptance-results.json" --strict-released
       - name: Characterize the full WPW source change under the same exposed noise windows
         run: |
           node scripts/benchmark-noise-stress.mjs "$RUNNER_TEMP/noise-stress/wpw-before" --noise-dir "$RUNNER_TEMP/noise-stress" --source-root "$RUNNER_TEMP/noise-qt-release" --analyzer worker --supplement-preset wpw

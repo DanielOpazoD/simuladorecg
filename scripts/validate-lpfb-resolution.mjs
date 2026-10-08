@@ -1,3 +1,4 @@
+import {predictLeadingQrs} from './lib/leading-qrs-prediction.mjs';
 import {predictWpwRepolarization} from './lib/wpw-repolarization-prediction.mjs';
 import {predictSecondaryST} from './lib/secondary-st-prediction.mjs';
 import {matchQrsEvents} from '../tests/reference/ludb/load-ludb.mjs';
@@ -6,7 +7,7 @@ import {qrsMidpointSeconds} from './lib/qrs-event-reference.mjs';
  * in lpfb-resolution.test.ts; detector receives samples only. */
 import {build} from 'esbuild';
 import {execFileSync} from 'node:child_process';
-import {mkdtemp,mkdir,rm,writeFile} from 'node:fs/promises';
+import {mkdtemp,mkdir,rm,writeFile,readFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
@@ -20,6 +21,8 @@ try{
  async function load(root,name){const file=path.join(temp,name+'.mjs');await build({stdin:{contents:"export {synthesize} from './src/engine/signal';export {fromPreset,presetById,PRESETS} from './src/presets/catalog';export {analyzeSamples} from './src/engine/sample-analysis';",resolveDir:root},bundle:true,platform:'node',format:'esm',outfile:file});return import(pathToFileURL(file));}
  await predictSecondaryST(root);
  await predictWpwRepolarization(root);
+ const sourceFile=path.join(root,'src/engine/signal.ts');
+ await writeFile(sourceFile,predictLeadingQrs(await readFile(sourceFile,'utf8')));
  const before=await load(root,'old'),after=await load(process.cwd(),'new');const rows=[];
  for(const p of after.PRESETS.filter(p=>p.strategy!=='pending'&&p.id!=='lpfb'))for(const filter of ['off','diagnostic','monitor','aggressive']){
   const c={...after.fromPreset(p),filter},a=before.synthesize(c,10),b=after.synthesize(c,10);
@@ -45,5 +48,5 @@ try{
   sourceRows.push({conduction,hr,filter,noise,newFalseUsable,resolvedFalseUsable,before:{hr:ma.hr,peaks:ma.detectedPeaks.length,...oldMatch},after:{hr:mb.hr,peaks:mb.detectedPeaks.length,...newMatch}});
  }
  const detectionSummary={newFalseUsable:sourceRows.filter(r=>r.newFalseUsable).length,resolvedFalseUsable:sourceRows.filter(r=>r.resolvedFalseUsable).length,fpBefore:sourceRows.reduce((a,r)=>a+r.before.fp,0),fpAfter:sourceRows.reduce((a,r)=>a+r.after.fp,0),fnBefore:sourceRows.reduce((a,r)=>a+r.before.fn,0),fnAfter:sourceRows.reduce((a,r)=>a+r.after.fn,0)};
- const report={baseline,detectionSummary,commit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),unchanged:rows.length,evaluatedSourceCases:sourceRows.length,clinicalValidation:false,rows,sourceRows};await mkdir(path.dirname(path.resolve(output)),{recursive:true});await writeFile(output,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({unchanged:rows.length,evaluatedSourceCases:sourceRows.length,detectionSummary}));
+ const report={baseline,referencePreparation:'Frozen source with previously reviewed secondary-ST/WPW predictions and additive leading-QRS provenance from its own warm-up calendar; full unrelated signals remain exact',detectionSummary,commit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),unchanged:rows.length,evaluatedSourceCases:sourceRows.length,clinicalValidation:false,rows,sourceRows};await mkdir(path.dirname(path.resolve(output)),{recursive:true});await writeFile(output,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({unchanged:rows.length,evaluatedSourceCases:sourceRows.length,detectionSummary}));
 }finally{await rm(temp,{recursive:true,force:true});}

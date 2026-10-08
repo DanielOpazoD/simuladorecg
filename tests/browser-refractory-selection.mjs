@@ -53,6 +53,39 @@ for(const engine of [chromium,firefox,webkit]){
     assert.deepEqual(again.B.leads,result.B.leads);assert.deepEqual(again.B.measurement.detectedPeaks,m.detectedPeaks);
     results.push({engine:engine.name(),width,requestedHr:hr,acceptedHr,qrs,measuredHR:m.hr,candidates:m.detectedPeaks.length,identity,actualWorker:true,exactRoundtrip:true});
    }
+   // Exercise the new identity repair through the real importer and worker.
+   const assertIdentity=(result)=>{
+    const m=result.B.measurement,used=new Set();
+    for(const b of result.B.events.beats.filter(b=>b.time>.3&&b.time+b.qrs<9.7)){
+     const i=m.detectedPeaks.findIndex((p,i)=>!used.has(i)&&p>=b.time-.01&&p<=b.time+b.qrs+.03);
+     assert.ok(i>=0,'A correct mean must not conceal a different omitted QRS');used.add(i);
+    }
+    for(const p of m.detectedPeaks.filter(p=>p>.3&&p<9.7))assert.ok(result.B.events.beats.some(b=>p>=b.time-.01&&p<=b.time+b.qrs+.03),'An observed T must not count as ventricular activation');
+   };
+   const verifyIdentity=async(c,name)=>{
+    const result=await imported(c,name),m=result.B.measurement;
+    assert.equal(result.B.case.hr,c.hr);
+    assert.ok(m.hr!==null&&Math.abs(m.hr-c.hr)<=1);
+    assert.equal(result.metrics.find(row=>row.key==='hr').b,m.hr);
+    assertIdentity(result);
+    await page.locator('#comparison-lab').screenshot({path:resolve(out,`${tag}-${name}-measurements.png`)});
+    await page.locator('#ecg').screenshot({path:resolve(out,`${tag}-${name}-trace.png`)});
+    const again=await imported(result.B.case,name+'-roundtrip');
+    assert.deepEqual(again.B.leads,result.B.leads);assert.deepEqual(again.B.measurement,m);
+    results.push({engine:engine.name(),width,scenario:name,measuredHR:m.hr,qrs:m.qrs,qt:m.qt,rejected:m.rejected,evidence:m.evidence,candidates:m.detectedPeaks.length,identity,actualWorker:true,exactRoundtrip:true});
+    return result;
+   };
+   for(const [hr,qrs,seed]of [[190,210,19],[250,230,71]])await verifyIdentity({...original.B.case,hr,qrs,qtc:350,filter:'diagnostic',variability:0,seed,artifacts:{...original.B.case.artifacts,baseline:.03,muscle:.03,mains:.03}},`identity-vt-${hr}`);
+   await chooseCatalogPreset(page,'vvi');await ready();
+   const paced=await exported('paced-original');
+   for(const [hr,seed,noise,filter]of [[55,41,.075,'diagnostic'],[60,83,.08,'off']]){
+    const result=await verifyIdentity({...paced.B.case,hr,seed,filter,electrolyte:'lowvoltage',variability:0,artifacts:{...paced.B.case.artifacts,baseline:noise,muscle:noise,mains:noise}},`identity-vvi-${hr}`),m=result.B.measurement;
+    const width=m.qrs??m.rejected?.qrs;
+    assert.ok(width!==undefined&&width!==null&&Math.abs(width-165)<=20,'Report or explicitly withhold the complete QRS, not only its terminal limb');
+    assert.notEqual(m.evidence.qrs.status,'usable','Stimulus-adjacent onset uncertainty remains visible');
+    assert.notEqual(m.evidence.qt.status,'usable');
+    if(m.qt!==null){const qts=result.B.events.beats.map(b=>b.qt*1000).sort((a,b)=>a-b);assert.ok(Math.abs(m.qt-qts[Math.floor(qts.length/2)])<=30);}
+   }
    const restored=await imported(original.B.case,'restored');assert.deepEqual(restored.B.leads,original.B.leads);
    assert.deepEqual(restored.B.measurement,original.B.measurement);assert.deepEqual(errors,[]);
   }catch(error){await page.screenshot({path:resolve(out,tag+'-failure.png'),fullPage:true}).catch(()=>{});await writeFile(resolve(out,tag+'-failure.json'),JSON.stringify({error:String(error.stack),errors},null,2));throw error;}

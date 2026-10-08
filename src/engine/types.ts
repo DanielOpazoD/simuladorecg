@@ -146,6 +146,9 @@ export interface Signal {
   duration: number;
   leads: Record<Lead, Float64Array>;
   events: EventSeries;
+  /** QRS begun before the recording origin whose support still crosses it.
+   * Source provenance for boundary audit, never a complete visible beat. */
+  leadingQrs?: Beat[];
   truth: {
     hr: number;
     pr: number | null;

@@ -7,6 +7,11 @@ type Samples = Pick<Signal, "fs" | "leads">;
  * P/T suppression is intentionally conservative. Remaining ambiguity must stay unavailable.
  */
 const names = ["I", "II", "V1", "V5"] as const;
+function dot(first: readonly number[], second: readonly number[]) {
+  let sum = 0;
+  for (let k = 0; k < first.length; k++) sum += first[k] * second[k];
+  return sum;
+}
 const quant = (a: number[], p: number) =>
   a.slice().sort((x, y) => x - y)[Math.floor((a.length - 1) * p)] ?? 0;
 function shape(s: Samples, i: number) {
@@ -113,6 +118,7 @@ export function covarianceResidual(
 type MergeSink = (first: number, last: number) => void;
 function prepareContinuousGrouping(
   s: Samples,
+  recenterReturnLevel = false,
 ): (peaks: number[], merged?: MergeSink, minimumGap?: number) => number[] {
   const n = Math.min(s.leads.I.length, 10 * s.fs);
   if (n < 3 * s.fs) return (peaks) => peaks;
@@ -144,7 +150,25 @@ function prepareContinuousGrouping(
       bin!.sum[k] += value;
     });
   }
-  const mode = [...bins.values()].sort((a, b) => b.count - a.count)[0];
+  let mode = [...bins.values()].sort((a, b) => b.count - a.count)[0];
+  // A fixed bin edge can split one noisy recurrent return level. Recenter the
+  // same-width window on its observed mean, requiring strictly more samples
+  // at each step. Neither the density threshold nor its spatial width changes.
+  while (recenterReturnLevel && mode.count < n * 0.04) {
+    const center = mode.sum.map((value) => value / mode.count);
+    const next = { count: 0, sum: [0, 0, 0, 0] };
+    for (let i = 0; i < n; i++)
+      if (
+        names.every(
+          (lead, k) => Math.abs(s.leads[lead][i] - center[k]) <= step / 2,
+        )
+      ) {
+        next.count++;
+        names.forEach((lead, k) => (next.sum[k] += s.leads[lead][i]));
+      }
+    if (next.count <= mode.count) break;
+    mode = next;
+  }
   if (mode.count < n * 0.04) return (peaks) => peaks;
   const returnLevel = mode.sum.map((value) => value / mode.count);
   const magnitude = (i: number) =>
@@ -332,6 +356,30 @@ export function selectRefractoryMaxima(
   return selected.reverse();
 }
 
+function smoothAnalysisSamples(s: Samples): Samples {
+  const fs = s.fs;
+  const halfWindow = Math.max(1, Math.round(0.01 * fs));
+  return {
+    fs,
+    leads: Object.fromEntries(
+      names.map((name) => {
+        const a = s.leads[name],
+          out = new Float64Array(a.length);
+        let sum = 0,
+          left = 0,
+          right = -1;
+        for (let i = 0; i < a.length; i++) {
+          const end = Math.min(a.length - 1, i + halfWindow);
+          while (right < end) sum += a[++right];
+          while (left < Math.max(0, i - halfWindow)) sum -= a[left++];
+          out[i] = sum / (right - left + 1);
+        }
+        return [name, out];
+      }),
+    ),
+  } as Samples;
+}
+
 export function detectVentricularCandidates(
   s: Samples,
   { medianWidth = 0.014, candidateFraction = 0.35, tReject = true } = {},
@@ -399,6 +447,9 @@ export function detectVentricularCandidates(
     if (i >= win) sum -= slope[i - win];
     energy[i] = sum / win;
   }
+  let smoothedCache: Samples | undefined;
+  const smoothedForAnalysis = () =>
+    (smoothedCache ??= smoothAnalysisSamples(s));
   let grouper:
     | ((peaks: number[], merged?: MergeSink, minimumGap?: number) => number[])
     | undefined;
@@ -446,8 +497,9 @@ export function detectVentricularCandidates(
   };
   const threshold = Math.max(1.9, quant(Array.from(energy), 0.98) * 0.2),
     candidates: number[] = [],
-    allMaxima: number[] = [];
-  for (let i = Math.round(0.15 * fs); i < n - 1; i++) {
+    allMaxima: number[] = [],
+    supportMaxima: number[] = [];
+  for (let i = Math.max(1, win); i < n - 1; i++) {
     if (
       energy[i] <= threshold ||
       energy[i] < energy[i - 1] ||
@@ -464,6 +516,8 @@ export function detectVentricularCandidates(
       }
       if (f > 3.5 * b) continue;
     }
+    supportMaxima.push(i);
+    if (i < Math.round(0.15 * fs)) continue;
     allMaxima.push(i);
     let p = candidates.at(-1);
     if (p === undefined || i - p > 0.18 * fs) candidates.push(i);
@@ -492,15 +546,31 @@ export function detectVentricularCandidates(
   const recoverySimilarity = (first: number, second: number) => {
     const a = recoverySignature(first),
       b = recoverySignature(second);
-    return a && b ? a.reduce((sum, value, j) => sum + value * b[j], 0) : -1;
+    return a && b ? dot(a, b) : -1;
   };
-  const recurrentMorphology = (train: number[]) => {
+  const recurrentMorphology = (train: number[], opposingSlopes = false) => {
     const complete = train.filter((i) => recoverySignature(i) !== null);
     if (complete.length < 6) return false;
     let same = 0;
     for (let k = 1; k < complete.length; k++)
-      if (recoverySimilarity(complete[k], complete[k - 1]) > 0.9) same++;
+      if (
+        recoverySimilarity(complete[k], complete[k - 1]) > 0.9 ||
+        (opposingSlopes &&
+          recoverySimilarity(complete[k], complete[k - 1]) < -0.9)
+      )
+        same++;
     return same >= 0.8 * (complete.length - 1);
+  };
+  const dominantContour = (train: number[]) => {
+    const complete = train.filter((i) => recoverySignature(i) !== null);
+    return (
+      complete.length >= 6 &&
+      complete.some(
+        (anchor) =>
+          complete.filter((i) => recoverySimilarity(i, anchor) > 0.9).length >=
+          0.8 * complete.length,
+      )
+    );
   };
   // Experimental non-transitive selection: a stronger intermediate maximum
   // cannot erase two mutually compatible observed candidates merely by moving
@@ -513,18 +583,26 @@ export function detectVentricularCandidates(
       candidates.slice(1).map((p, k) => (p - candidates[k]) / fs),
       0.75,
     ) <= 0.36 &&
-    recurrentMorphology(candidates)
+    dominantContour(candidates)
   ) {
+    const groupedInitial = prepareContinuousGrouping(s, true)(candidates);
+    const duplicates = new Set(
+      candidates.filter((i) => !groupedInitial.includes(i)),
+    );
     const supported = allMaxima.filter(
       (i) =>
-        candidates.includes(i) ||
-        candidates.filter(
-          (p) =>
-            Math.abs(p - i) > 0.18 * fs && recoverySimilarity(i, p) > 0.9,
-        ).length >= 3,
+        !duplicates.has(i) &&
+        (candidates.includes(i) ||
+          candidates.filter(
+            (p) =>
+              Math.abs(p - i) > 0.18 * fs && recoverySimilarity(i, p) > 0.9,
+          ).length >= 3),
     );
     const selected = selectRefractoryMaxima(supported, energy, 0.18 * fs);
-    if (selected.length > candidates.length && recurrentMorphology(selected)) {
+    if (
+      groupContinuousCandidates(s, selected).length > groupedInitial.length &&
+      recurrentMorphology(selected)
+    ) {
       for (const i of selected)
         if (!candidates.includes(i)) restoredByRefractorySelection.add(i);
       candidates.splice(0, candidates.length, ...selected);
@@ -669,6 +747,48 @@ export function detectVentricularCandidates(
     if (tReject && groupContinuousCandidates(s, [p, i]).length === 1)
       components.set(i, [...(components.get(p) ?? [p]), i]);
   }
+  // A qualified second slope hidden inside NMS can still supply morphology
+  // evidence for the same continuous complex. Look in both time directions;
+  // this does not add a detected activation or use the generator's boundaries.
+  if (tReject) {
+    const ownership = new Map<
+      number,
+      { marker: number; distance: number; tied: boolean }
+    >();
+    for (const marker of peaks) {
+      const hidden = supportMaxima.filter(
+        (p) =>
+          Math.abs(p - marker) > 0.08 * fs &&
+          Math.abs(p - marker) < 0.18 * fs &&
+          energy[p] > Math.max(1.9, high * candidateFraction) &&
+          !peaks.some(
+            (q) =>
+              q !== marker &&
+              q >= Math.min(p, marker) &&
+              q <= Math.max(p, marker),
+          ) &&
+          groupContinuousCandidates(
+            s,
+            [Math.min(p, marker), Math.max(p, marker)],
+            undefined,
+            0.08,
+          ).length === 1,
+      );
+      for (const p of hidden) {
+        const distance = Math.abs(p - marker),
+          previous = ownership.get(p);
+        if (!previous || distance < previous.distance)
+          ownership.set(p, { marker, distance, tied: false });
+        else if (distance === previous.distance) previous.tied = true;
+      }
+    }
+    for (const [p, owner] of ownership)
+      if (!owner.tied) {
+        components.set(owner.marker, [
+          ...new Set([...(components.get(owner.marker) ?? [owner.marker]), p]),
+        ]);
+      }
+  }
   const complexShapes = (samples: Samples, i: number) =>
     (components.get(i) ?? [i]).map((p) => shape(samples, p));
   const complexEnergy = (i: number) =>
@@ -677,7 +797,10 @@ export function detectVentricularCandidates(
     const accepted: number[] = [];
     for (const i of peaks) {
       const p = accepted.at(-1),
-        d = p === undefined ? 9 : (i - p) / fs;
+        d =
+          p === undefined
+            ? 9
+            : (i - Math.min(...(components.get(p) ?? [p]))) / fs;
       if (
         p !== undefined &&
         d >= 0.2 &&
@@ -699,33 +822,122 @@ export function detectVentricularCandidates(
   if ((peaks.at(-1) ?? 0) > n - 0.18 * fs) peaks.pop();
   const boundaryCandidates = peaks;
   const mergedComponents = new Map<number, number[]>();
+  const ensembleDisambiguated = new Set<number>();
   if (tReject) {
     // Experimental analysis-only 20 ms moving average. Original samples and
     // exported candidate positions are never resampled or overwritten.
-    const halfWindow = Math.max(1, Math.round(0.01 * fs));
-    const smoothed = {
-      fs,
-      leads: Object.fromEntries(
-        names.map((name) => {
-          const a = s.leads[name],
-            out = new Float64Array(a.length);
-          let sum = 0,
-            left = 0,
-            right = -1;
-          for (let i = 0; i < a.length; i++) {
-            const end = Math.min(a.length - 1, i + halfWindow);
-            while (right < end) sum += a[++right];
-            while (left < Math.max(0, i - halfWindow)) sum -= a[left++];
-            out[i] = sum / (right - left + 1);
+    const smoothed = smoothedForAnalysis();
+    // Repeated, closely matching observed contours can supply a lower-noise
+    // descriptor without changing any recorded sample or candidate timestamp.
+    const ensembleCache = new Map<number, ReturnType<typeof shape> | null>();
+    const frameCache = new Map<string, number[] | null>();
+    const normCache = new WeakMap<number[], number>();
+    const frameNorm = (values: number[]) => {
+      let norm = normCache.get(values);
+      if (norm === undefined) {
+        norm = Math.hypot(...values);
+        normCache.set(values, norm);
+      }
+      return norm;
+    };
+    const alignment = Math.round(0.03 * fs),
+      alignmentStep = Math.max(1, Math.round(0.004 * fs));
+    const alignmentOffsets = [0];
+    for (let offset = -alignment; offset <= alignment; offset += alignmentStep)
+      if (offset !== 0) alignmentOffsets.push(offset);
+    const frameRadius =
+      Math.round(0.08 * fs) + Math.max(1, Math.round(0.004 * fs));
+    const frame = (at: number, left = frameRadius, right = frameRadius) => {
+      const key = `${at}:${left}:${right}`;
+      if (frameCache.has(key)) return frameCache.get(key)!;
+      if (at < left || at + right >= n) {
+        frameCache.set(key, null);
+        return null;
+      }
+      const out: number[] = [];
+      for (const lead of names) {
+        const row = Array.from(
+          smoothed.leads[lead].slice(at - left, at + right + 1),
+        );
+        const mean = row.reduce((sum, v) => sum + v, 0) / row.length;
+        out.push(...row.map((v) => v - mean));
+      }
+      frameCache.set(key, out);
+      return out;
+    };
+    // A complex can have several eligible slopes. Shared support belongs to
+    // one group and contributes at most one aligned observation, never several
+    // supposedly independent votes from the same physical deflection.
+    let ensembleGroups: Set<number>[] = [];
+    for (const peak of peaks) {
+      const support = components.get(peak) ?? [peak];
+      const shared = ensembleGroups.filter((group) =>
+        support.some((p) => group.has(p)),
+      );
+      const merged = new Set([
+        ...support,
+        ...shared.flatMap((group) => [...group]),
+      ]);
+      ensembleGroups = ensembleGroups.filter(
+        (group) => !shared.includes(group),
+      );
+      ensembleGroups.push(merged);
+    }
+    const ensembleShape = (at: number) => {
+      if (ensembleCache.has(at)) return ensembleCache.get(at)!;
+      const a = frame(at);
+      if (!a) {
+        ensembleCache.set(at, null);
+        return null;
+      }
+      const normA = frameNorm(a);
+      const matches: number[][] = [];
+      for (const group of ensembleGroups) {
+        if (group.has(at)) continue;
+        let best: number[] | null = null,
+          bestCorrelation = 0.98;
+        for (const p of group) {
+          if (Math.abs(p - at) <= 0.18 * fs) continue;
+          for (const offset of alignmentOffsets) {
+            const b = frame(p + offset);
+            if (!b) continue;
+            const normB = frameNorm(b);
+            const correlation =
+              normA > 0 && normB > 0 ? dot(a, b) / (normA * normB) : -1;
+            if (correlation >= bestCorrelation) {
+              bestCorrelation = correlation;
+              best = b;
+            }
           }
-          return [name, out];
-        }),
-      ),
-    } as Samples;
+        }
+        if (best) matches.push(best);
+      }
+      if (matches.length < 3) {
+        ensembleCache.set(at, null);
+        return null;
+      }
+      const frames = [a, ...matches],
+        length = 2 * frameRadius + 1;
+      const averaged = { ...smoothed.leads };
+      names.forEach((lead, k) => {
+        averaged[lead] = Float64Array.from(
+          { length },
+          (_, j) =>
+            frames.reduce((sum, v) => sum + v[k * length + j], 0) /
+            frames.length,
+        );
+      });
+      const result = shape({ fs, leads: averaged }, frameRadius);
+      ensembleCache.set(at, result);
+      return result;
+    };
     const refined: number[] = [];
     for (const i of peaks) {
       const p = refined.at(-1),
-        d = p === undefined ? 9 : (i - p) / fs;
+        d =
+          p === undefined
+            ? 9
+            : (i - Math.min(...(components.get(p) ?? [p]))) / fs;
       if (p !== undefined && d >= 0.2 && d <= 0.4) {
         // Strict clean-shape evidence does not require T energy below QRS.
         const raw = shape(s, i);
@@ -749,6 +961,35 @@ export function detectVentricularCandidates(
           )
         )
           continue;
+        // Compare the whole observed prior complex, not only its early slope.
+        // The latter can resemble a T wave even when its later trajectory does not.
+        const priorSupport = components.get(p) ?? [p];
+        const left = frameRadius + p - Math.min(...priorSupport);
+        const right = frameRadius + Math.max(...priorSupport) - p;
+        const currentFrame = frame(i, left, right),
+          priorFrame = frame(p, left, right);
+        const sameContour =
+          currentFrame &&
+          priorFrame &&
+          dot(currentFrame, priorFrame) /
+            (frameNorm(currentFrame) * frameNorm(priorFrame)) >=
+            0.9;
+        const ef = sameContour ? null : ensembleShape(i);
+        if (
+          ef &&
+          ef.rank < 0.003 &&
+          !(components.get(i) ?? [i]).some((component) => {
+            const candidate = ensembleShape(component);
+            return candidate && candidate.rank > 0.01;
+          }) &&
+          (components.get(p) ?? [p]).some((component) => {
+            const eg = ensembleShape(component);
+            return eg && eg.rank > 0.01 && ef.rank < 0.1 * eg.rank;
+          })
+        ) {
+          ensembleDisambiguated.add(p);
+          continue;
+        }
       }
       refined.push(i);
     }
@@ -761,12 +1002,52 @@ export function detectVentricularCandidates(
           last,
         ]),
     );
+    // The same analysis-only denoising that disambiguated terminal waves can
+    // establish continuous support obscured by noise in an individual beat.
+    // It contributes boundaries only; rate fiducials remain observed maxima.
+    const smoothGrouping = ensembleDisambiguated.size
+      ? prepareContinuousGrouping(smoothed, true)
+      : null;
+    if (smoothGrouping)
+      for (const marker of peaks) {
+        const markerFrame = frame(marker);
+        const repeatedSupport =
+          markerFrame &&
+          [...ensembleDisambiguated].filter((p) => {
+            if (Math.abs(p - marker) <= 0.18 * fs) return false;
+            const anchor = frame(p);
+            return (
+              anchor &&
+              dot(markerFrame, anchor) /
+                (frameNorm(markerFrame) * frameNorm(anchor)) >=
+                0.98
+            );
+          }).length >= 3;
+        if (
+          (!ensembleDisambiguated.has(marker) && !repeatedSupport) ||
+          mergedComponents.has(marker)
+        )
+          continue;
+        const earlier = supportMaxima
+          .filter(
+            (p) =>
+              marker - p > 0.08 * fs &&
+              marker - p < 0.28 * fs &&
+              energy[p] > Math.max(1.9, high * candidateFraction) &&
+              !peaks.some((q) => q !== marker && q >= p && q < marker),
+          )
+          .sort((a, b) => energy[b] - energy[a]);
+        const first = earlier.find(
+          (p) => smoothGrouping([p, marker], undefined, 0.08).length === 1,
+        );
+        if (first !== undefined) mergedComponents.set(marker, [first, marker]);
+      }
     // Raw slopes suppressed inside the 180 ms NMS interval can still support
     // delineation. This 80 ms contour query does not change event grouping,
     // whose original 180–280 ms limits and continuity safeguards stay intact.
     for (const marker of peaks) {
       if (mergedComponents.has(marker)) continue;
-      const earlier = allMaxima
+      const earlier = supportMaxima
         .filter(
           (p) =>
             marker - p > 0.08 * fs &&
