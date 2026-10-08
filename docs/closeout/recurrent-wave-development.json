@@ -1,0 +1,459 @@
+{
+  "schemaVersion": 1,
+  "clinicalValidation": false,
+  "role": "Prepublication local technical evidence on exposed synthetic cases; final CI must recompute on its identified commit",
+  "baselineCommit": "8f31167d3f7d0314ca6b1851efdeaffe6d3a551f",
+  "evaluator": "scripts/validate-qrs-t-discrimination.mjs",
+  "analyzerSourceSha256": {
+    "src/engine/analysis/alternating-confidence.ts": "04bda5d6055a539a10d64b88063c9fa22df21122d4575f5acfed189b32d24e23",
+    "src/engine/analysis/ventricular-candidates.ts": "4c81864f7305d67a58b549be247c9fc2665be4be6a97532aba77ea659136713b",
+    "src/engine/analysis/impulse-confidence.ts": "c6b5c4a06cf5c65bacf325e8c77517613ee4427af2075b10575898e03dcee62d",
+    "src/engine/lead-registry.ts": "7f4fe698cd38931a47d41b99e005ca30f642b05553e4137869bda5f99a8990e3",
+    "src/engine/measurement-support.ts": "dc5947112104ef130d0ade4eb500deb5be3bc1747dd055f14bef5a590e7bf2e4",
+    "src/engine/terminal-delineation.ts": "5b8f04b5d57a333cdeb4f1b1cd381f8bbc417584a75ba740bfa27543edff8c70",
+    "src/engine/analysis/statistics.ts": "bdc0b500a3a3883df095054ca9a8298b4c8ea7df7bb336fea01cf266d875e8a6",
+    "src/engine/analysis/impulses.ts": "4ed73f13c6b8dc7460c34b9dd37ad5c5561511ea0f6585d30c6b1585ea14ebe2",
+    "src/engine/leads.ts": "ab4a73f2345e133cbbe80757d08c1c64f4c54894f1ca521b82eff7041d386706",
+    "src/engine/analysis/evidence.ts": "c6e05ae78b0c08718b3cbe848b47d7431d2ad3a3d41bf73f83608c11f3dfefa3",
+    "src/engine/measure.ts": "bad7d132c8e9c272a7823a3af29cfede365af7e35fad7259748749a0e65a4023",
+    "src/engine/sample-analysis.ts": "845b22742cb314b61de97e7d538f2b1e267c955cf6f09aa7bff3a0eb70d9973a"
+  },
+  "reportSha256": "73ee1c8901545e9615e86d3ccf55f6949b8718c824076821a82682c9c8831e9a",
+  "summary": {
+    "lostReferenceIdentityCases": 0,
+    "newFalseQrsCases": 0,
+    "newWrongQrsCases": 0,
+    "newWrongQtCases": 0,
+    "cases": 2476,
+    "accepted": 2396,
+    "unsupported": 80,
+    "exposedCorrect": 12,
+    "exposedTotal": 12,
+    "newlyFalseUsable": 0,
+    "newMissedQrsCases": 0,
+    "newPhaseMissedCases": 0,
+    "falseUsableBefore": 50,
+    "falseUsableAfter": 32,
+    "usableBefore": 1844,
+    "usableAfter": 1836
+  },
+  "numericalCorrections": [
+    {
+      "cohort": "amplitude-transfer",
+      "preset": "sinus",
+      "configuration": {
+        "qrsAmp": 0.1,
+        "tAmp": 0,
+        "hr": 120,
+        "filter": "off",
+        "noise": 0,
+        "seed": 53
+      },
+      "before": {
+        "hr": 240,
+        "fp": 20,
+        "fn": 0
+      },
+      "after": {
+        "hr": 120,
+        "fp": 0,
+        "fn": 0,
+        "status": "usable"
+      }
+    },
+    {
+      "cohort": "amplitude-transfer",
+      "preset": "sinus",
+      "configuration": {
+        "qrsAmp": 0.1,
+        "tAmp": 0,
+        "hr": 120,
+        "filter": "diagnostic",
+        "noise": 0,
+        "seed": 53
+      },
+      "before": {
+        "hr": 240,
+        "fp": 20,
+        "fn": 0
+      },
+      "after": {
+        "hr": 120,
+        "fp": 0,
+        "fn": 0,
+        "status": "usable"
+      }
+    },
+    {
+      "cohort": "amplitude-transfer",
+      "preset": "sinus",
+      "configuration": {
+        "qrsAmp": 0.5,
+        "tAmp": 0.8,
+        "hr": 120,
+        "filter": "off",
+        "noise": 0,
+        "seed": 53
+      },
+      "before": {
+        "hr": 240,
+        "fp": 19,
+        "fn": 0
+      },
+      "after": {
+        "hr": 120,
+        "fp": 0,
+        "fn": 0,
+        "status": "usable"
+      }
+    },
+    {
+      "cohort": "amplitude-transfer",
+      "preset": "sinus",
+      "configuration": {
+        "qrsAmp": 0.5,
+        "tAmp": 0.8,
+        "hr": 120,
+        "filter": "diagnostic",
+        "noise": 0,
+        "seed": 53
+      },
+      "before": {
+        "hr": 240,
+        "fp": 19,
+        "fn": 0
+      },
+      "after": {
+        "hr": 120,
+        "fp": 0,
+        "fn": 0,
+        "status": "usable"
+      }
+    },
+    {
+      "cohort": "amplitude-transfer",
+      "preset": "lbbb",
+      "configuration": {
+        "qrsAmp": 0.1,
+        "tAmp": 0,
+        "hr": 60,
+        "filter": "off",
+        "noise": 0,
+        "seed": 53
+      },
+      "before": {
+        "hr": 122.79190004308487,
+        "fp": 10,
+        "fn": 0
+      },
+      "after": {
+        "hr": 60,
+        "fp": 0,
+        "fn": 0,
+        "status": "usable"
+      }
+    },
+    {
+      "cohort": "amplitude-transfer",
+      "preset": "lbbb",
+      "configuration": {
+        "qrsAmp": 0.1,
+        "tAmp": 0,
+        "hr": 60,
+        "filter": "diagnostic",
+        "noise": 0,
+        "seed": 53
+      },
+      "before": {
+        "hr": 122.79190004308487,
+        "fp": 10,
+        "fn": 0
+      },
+      "after": {
+        "hr": 60,
+        "fp": 0,
+        "fn": 0,
+        "status": "usable"
+      }
+    },
+    {
+      "cohort": "amplitude-transfer",
+      "preset": "lbbb",
+      "configuration": {
+        "qrsAmp": 0.1,
+        "tAmp": 0,
+        "hr": 120,
+        "filter": "off",
+        "noise": 0,
+        "seed": 53
+      },
+      "before": {
+        "hr": 240,
+        "fp": 20,
+        "fn": 0
+      },
+      "after": {
+        "hr": 120,
+        "fp": 0,
+        "fn": 0,
+        "status": "usable"
+      }
+    },
+    {
+      "cohort": "amplitude-transfer",
+      "preset": "lbbb",
+      "configuration": {
+        "qrsAmp": 0.1,
+        "tAmp": 0,
+        "hr": 120,
+        "filter": "diagnostic",
+        "noise": 0,
+        "seed": 53
+      },
+      "before": {
+        "hr": 240,
+        "fp": 20,
+        "fn": 0
+      },
+      "after": {
+        "hr": 120,
+        "fp": 0,
+        "fn": 0,
+        "status": "usable"
+      }
+    },
+    {
+      "cohort": "amplitude-transfer",
+      "preset": "pvc",
+      "configuration": {
+        "qrsAmp": 0.1,
+        "tAmp": 0,
+        "hr": 120,
+        "filter": "off",
+        "noise": 0,
+        "seed": 53
+      },
+      "before": {
+        "hr": 221.05263157894743,
+        "fp": 17,
+        "fn": 0
+      },
+      "after": {
+        "hr": 120,
+        "fp": 0,
+        "fn": 0,
+        "status": "review"
+      }
+    },
+    {
+      "cohort": "amplitude-transfer",
+      "preset": "pvc",
+      "configuration": {
+        "qrsAmp": 0.1,
+        "tAmp": 0,
+        "hr": 120,
+        "filter": "diagnostic",
+        "noise": 0,
+        "seed": 53
+      },
+      "before": {
+        "hr": 221.05263157894743,
+        "fp": 17,
+        "fn": 0
+      },
+      "after": {
+        "hr": 120,
+        "fp": 0,
+        "fn": 0,
+        "status": "review"
+      }
+    }
+  ],
+  "stillIncorrectReviewed": [
+    {
+      "cohort": "amplitude-transfer",
+      "preset": "pvc",
+      "configuration": {
+        "qrsAmp": 0.1,
+        "tAmp": 0,
+        "hr": 60,
+        "filter": "off",
+        "noise": 0,
+        "seed": 53
+      },
+      "before": {
+        "hr": 117.49347258485639,
+        "fp": 10,
+        "fn": 0
+      },
+      "after": {
+        "hr": 65.27415143603133,
+        "fp": 2,
+        "fn": 0,
+        "status": "review"
+      }
+    },
+    {
+      "cohort": "amplitude-transfer",
+      "preset": "pvc",
+      "configuration": {
+        "qrsAmp": 0.1,
+        "tAmp": 0,
+        "hr": 60,
+        "filter": "diagnostic",
+        "noise": 0,
+        "seed": 53
+      },
+      "before": {
+        "hr": 117.49347258485639,
+        "fp": 10,
+        "fn": 0
+      },
+      "after": {
+        "hr": 65.27415143603133,
+        "fp": 2,
+        "fn": 0,
+        "status": "review"
+      }
+    },
+    {
+      "cohort": "amplitude-transfer",
+      "preset": "pvc",
+      "configuration": {
+        "qrsAmp": 0.5,
+        "tAmp": 0.8,
+        "hr": 120,
+        "filter": "off",
+        "noise": 0,
+        "seed": 53
+      },
+      "before": {
+        "hr": 221.00610397810988,
+        "fp": 16,
+        "fn": 0
+      },
+      "after": {
+        "hr": 140.00000000000003,
+        "fp": 3,
+        "fn": 0,
+        "status": "review"
+      }
+    },
+    {
+      "cohort": "amplitude-transfer",
+      "preset": "pvc",
+      "configuration": {
+        "qrsAmp": 0.5,
+        "tAmp": 0.8,
+        "hr": 120,
+        "filter": "diagnostic",
+        "noise": 0,
+        "seed": 53
+      },
+      "before": {
+        "hr": 221.00610397810988,
+        "fp": 16,
+        "fn": 0
+      },
+      "after": {
+        "hr": 140.00000000000003,
+        "fp": 3,
+        "fn": 0,
+        "status": "review"
+      }
+    },
+    {
+      "cohort": "amplitude-transfer",
+      "preset": "vt",
+      "configuration": {
+        "qrsAmp": 0.1,
+        "tAmp": 0,
+        "hr": 120,
+        "filter": "off",
+        "noise": 0,
+        "seed": 53
+      },
+      "before": {
+        "hr": 131.25,
+        "fp": 7,
+        "fn": 5
+      },
+      "after": {
+        "hr": 106.24999999999999,
+        "fp": 3,
+        "fn": 5,
+        "status": "review"
+      }
+    },
+    {
+      "cohort": "amplitude-transfer",
+      "preset": "vt",
+      "configuration": {
+        "qrsAmp": 0.1,
+        "tAmp": 0,
+        "hr": 120,
+        "filter": "diagnostic",
+        "noise": 0,
+        "seed": 53
+      },
+      "before": {
+        "hr": 131.25,
+        "fp": 7,
+        "fn": 5
+      },
+      "after": {
+        "hr": 106.24999999999999,
+        "fp": 3,
+        "fn": 5,
+        "status": "review"
+      }
+    },
+    {
+      "cohort": "amplitude-transfer",
+      "preset": "vt",
+      "configuration": {
+        "qrsAmp": 0.5,
+        "tAmp": 0,
+        "hr": 60,
+        "filter": "off",
+        "noise": 0,
+        "seed": 53
+      },
+      "before": {
+        "hr": 109.44206008583689,
+        "fp": 7,
+        "fn": 0
+      },
+      "after": {
+        "hr": 93.33333333333333,
+        "fp": 5,
+        "fn": 0,
+        "status": "review"
+      }
+    },
+    {
+      "cohort": "amplitude-transfer",
+      "preset": "vt",
+      "configuration": {
+        "qrsAmp": 0.5,
+        "tAmp": 0,
+        "hr": 60,
+        "filter": "diagnostic",
+        "noise": 0,
+        "seed": 53
+      },
+      "before": {
+        "hr": 109.44206008583689,
+        "fp": 7,
+        "fn": 0
+      },
+      "after": {
+        "hr": 93.33333333333333,
+        "fp": 5,
+        "fn": 0,
+        "status": "review"
+      }
+    }
+  ],
+  "withdrawnPreviouslyCorrectVentricularCounts": []
+}

@@ -51,13 +51,24 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
   }
   // Preserve the rate fiducial. Opposing slopes proven to belong to one
   // continuous deflection share a morphology window, not a second beat.
-  const {
-    peaks: ratePeaks,
-    boundaryCandidates: originalLandmarks,
-    recovered,
-    mergedComponents,
-    restoredByRefractorySelection,
-  } = detectVentricularCandidates(input);
+  const { complexes, boundaryCandidates: originalLandmarks } =
+    detectVentricularCandidates(input);
+  const ratePeaks = complexes.map((complex) => complex.marker);
+  const recovered = new Set(
+    complexes
+      .filter((complex) => complex.recovered)
+      .map((complex) => complex.marker),
+  );
+  const restoredByRefractorySelection = new Set(
+    complexes
+      .filter((complex) => complex.refractoryRestored)
+      .map((complex) => complex.marker),
+  );
+  const mergedComponents = new Map(
+    complexes
+      .filter((complex) => complex.support.length > 1)
+      .map((complex) => [complex.marker, complex.support]),
+  );
   const mergedLandmarks = new Set(
     [...mergedComponents].flatMap(([root, values]) =>
       values.filter((p) => p !== root),
