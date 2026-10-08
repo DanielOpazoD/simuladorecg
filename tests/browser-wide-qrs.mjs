@@ -36,7 +36,7 @@ for(const engine of [chromium,webkit,firefox]){
    await page.locator('[data-external=load]').click();await page.locator('#external-metrics').waitFor({state:'visible'});
    const row=page.locator('#external-metrics tbody tr').first();
    assert.equal(await row.locator('td').nth(1).innerText(),hr.toFixed(1)+' lpm');
-   assert.equal(await row.locator('td').nth(2).innerText(),'Revisar');
+   assert.equal(await row.locator('td').nth(2).innerText(),fixture.name==='wide-qrs'?'Consistente*':'Revisar');
    if(fixture.name==='opposed-cycle')assert.match(await row.locator('td').nth(3).innerText(),/dirección opuesta/);
    if(width<=390){
     const readable=await page.locator('#external-metrics').evaluate(table=>{
@@ -56,7 +56,13 @@ for(const engine of [chromium,webkit,firefox]){
    const file=resolve(out,tag+'-report.json');await(await pending).saveAs(file);
    const report=JSON.parse(await readFile(file));assert.equal(report.kind,'ecg-external-analysis');
    assert.equal(report.modelAuditUsed,false);assert.equal(report.clinicalValidation,false);
-   assert.equal(report.measurement.evidence.hr.status,'review');if(fixture.name==='wide-qrs'){assert.deepEqual(report.measurement.beats,[]);assert.equal(report.measurement.qrs,null);assert.equal(report.measurement.qt,null);}
+   assert.equal(report.measurement.evidence.hr.status,fixture.name==='wide-qrs'?'usable':'review');
+   if(fixture.name==='wide-qrs'){
+    assert.equal(report.measurement.beats.length,14);
+    assert.ok(Math.abs(report.measurement.qrs-240)<=8);
+    for(const b of report.measurement.beats){assert.ok(Math.abs(b.qrs-240)<=8);assert.ok(Math.abs(b.axis-Math.atan2(1.6/Math.sqrt(3),1)*180/Math.PI)<.1);}
+    assert.equal(report.measurement.pr,null);assert.equal(report.measurement.qt,null);
+   }
    assert.ok(Math.abs(report.measurement.hr-hr)<1e-8,'No guessed rate halving');
    assert.equal(report.measurement.detectedPeaks.length,candidates);
    for(const [lead,values] of Object.entries(samples.leads))assert.deepEqual(report.leads[lead],Array.from(values));

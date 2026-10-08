@@ -1,7 +1,7 @@
 import type { Beat, ECGCase } from "./types";
 import type { Kernel } from "./morphology";
 
-export type ActivationRegion = "septal" | "lv-main" | "lv-terminal" | "rv-delayed";
+export type ActivationRegion = "septal" | "lv-main" | "lv-terminal" | "rv-delayed" | "rv-septal" | "lv-delayed";
 export interface RegionalSupport {
   region: ActivationRegion;
   /** Finite support in QRS phase coordinates, not a clinical activation map. */
@@ -15,19 +15,23 @@ export const REGIONAL_ACTIVATION_LIMIT =
 
 /** Retain an incompatible requested mode visibly; never silently label it active. */
 export function regionalActivationState(c: ECGCase) {
-  const requested = c.activationModel === "regional-rbbb-v1";
+  const requested = c.activationModel === "regional-rbbb-v1" || c.activationModel === "regional-lbbb-v1";
+  const left = c.activationModel === "regional-lbbb-v1" ||
+    (c.activationModel !== "regional-rbbb-v1" && c.conduction === "lbbb");
+  const model = left ? "regional-lbbb-v1" as const : "regional-rbbb-v1" as const;
+  const minimumQrsMs = left ? 130 : 100;
   let reason = "";
-  if (c.conduction !== "rbbb" && c.conduction !== "irbbb")
-    reason = "Solo disponible para BRD aislado completo o incompleto.";
+  if (left ? c.conduction !== "lbbb" : c.conduction !== "rbbb" && c.conduction !== "irbbb")
+    reason = left ? "El modo BRI requiere BRI aislado." : "Solo disponible para BRD aislado completo o incompleto.";
   else if (c.overload !== "none" || c.ischemia === "posterior")
     reason = "La combinación con sobrecarga o componente QRS posterior queda fuera de este modelo regional.";
   else if (["vt", "torsades", "idioventricular", "vf", "asystole"].includes(c.rhythm) ||
       (c.rhythm === "paced" && c.pacing !== "AAI") ||
       (c.rhythm === "sinus" && c.av === "complete" && c.escape === "ventricular"))
     reason = "Este modo actúa sobre latidos conducidos, no sobre fuentes ventriculares ni estimulación ventricular.";
-  else if (!Number.isFinite(c.qrs) || c.qrs < 100 || c.qrs > 240)
-    reason = "El dominio experimental requiere QRS de 100–240 ms; se conserva el valor solicitado.";
-  return { requested, available: !reason, active: requested && !reason, reason };
+  else if (!Number.isFinite(c.qrs) || c.qrs < minimumQrsMs || c.qrs > 240)
+    reason = `El dominio experimental requiere QRS de ${minimumQrsMs}–240 ms; se conserva el valor solicitado.`;
+  return { requested, available: !reason, active: requested && !reason, reason, model, minimumQrsMs };
 }
 export function usesRegionalActivation(c: ECGCase, b: Pick<Beat, "kind">): boolean {
   return b.kind === "normal" && regionalActivationState(c).active;
@@ -56,7 +60,14 @@ const windows = [
 
 // Simpson quadrature of four immutable basis shapes, once at module load.
 // Runtime widths transform these fixed areas analytically; no per-beat quadrature.
-const areas = windows.map(w => {
+type TemporalBasis = { region: ActivationRegion; start: number; end: number; mu: number; sigma: number };
+const leftWindows: readonly TemporalBasis[] = [
+  {region:"rv-septal",start:0,end:50,mu:21,sigma:12},
+  {region:"lv-main",start:20,end:100,mu:58.5,sigma:19.5},
+  {region:"lv-delayed",start:55,end:150,mu:103.5,sigma:22.5},
+  {region:"lv-terminal",start:90,end:150,mu:132,sigma:9},
+];
+const basisAreas = (basis: readonly TemporalBasis[]) => basis.map(w => {
   const width = w.end - w.start, mu = (w.mu - w.start) / width, sigma = w.sigma / width;
   const n = 2048;
   let sum = 0;
@@ -66,7 +77,8 @@ const areas = windows.map(w => {
     sum += y * (i % 2 ? 4 : 2);
   }
   return sum / (3 * n * Math.sqrt(2 * Math.PI));
-});
+ });
+const areas = basisAreas(windows), leftAreas = basisAreas(leftWindows);
 
 /** Regional surrogate, not a bidomain solver. Delayed RV activation broadens;
  * the early septal/LV clock is fixed. Preserving each basis' time integral is
@@ -90,7 +102,31 @@ export function regionalRbbbKernels(kernels: readonly Kernel[], qrsMs: number): 
 }
 
 /** Programmed basis support only; these are not measured patient activation times. */
-export function regionalActivationTimeline(qrsMs: number) {
+export function regionalActivationTimeline(qrsMs: number, model: "regional-rbbb-v1" | "regional-lbbb-v1" = "regional-rbbb-v1") {
+  if(model === "regional-lbbb-v1") return leftWindows.map((w,i)=>({region:w.region,
+    startMs:i===0?w.start:20+(w.start-20)*(qrsMs-20)/130,
+    endMs:i===0?w.end:20+(w.end-20)*(qrsMs-20)/130}));
   return windows.map((w, i) => ({ region: w.region, startMs: w.start,
     endMs: i === 3 ? qrsMs : w.end }));
+}
+
+/** Illustrative fixed RV/septal source with delayed LV bases; no patient map. */
+export function regionalLbbbKernels(kernels: readonly Kernel[], qrsMs: number): Kernel[] {
+  if(kernels.length!==4 || !Number.isFinite(qrsMs) || qrsMs<130 || qrsMs>240)
+    throw new Error("Activación regional BRI fuera de dominio: cuatro bases y QRS de 130–240 ms.");
+  const supports=regionalActivationTimeline(qrsMs,"regional-lbbb-v1");
+  return kernels.map((k,i)=>{
+    const w=leftWindows[i], start=supports[i].startMs, end=supports[i].endMs,
+      width=end-start, referenceWidth=w.end-w.start, gain=referenceWidth/width;
+    return {mu:(start+(w.mu-w.start)/referenceWidth*width)/qrsMs,
+      sigma:w.sigma/referenceWidth*width/qrsMs,
+      v:k.v.map(v=>v*gain) as [number,number,number],
+      regional:{region:w.region,start:start/qrsMs,end:end/qrsMs,weight:width/qrsMs*leftAreas[i]}};
+  });
+}
+
+export function regionalActivationLimit(c: ECGCase): string {
+  return regionalActivationState(c).model === "regional-lbbb-v1"
+    ? "Activación regional experimental de BRI: base inicial VD/septal y contribuciones VI diferidas. Tiempos y áreas de ingeniería, no mapa anatómico ni calibración clínica. ST y T secundarios aproximados siguen estas bases; no predice respuesta a resincronización."
+    : REGIONAL_ACTIVATION_LIMIT;
 }

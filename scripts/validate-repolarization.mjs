@@ -1,3 +1,4 @@
+import {COMPLETE_COMPLEX_REVISION,preCompleteComplexPlugin,assertCompleteComplexMeasurements} from './lib/complete-complex-revision.mjs';
 import {QRS_T_REVISION,assertReviewedQrsTFile,assertQrsTRefinement,preQrsTNumericsPlugin} from './lib/qrs-t-revision.mjs';
 import {predictWpwSupport} from './lib/wpw-support-prediction.mjs';
 import {predictAfClock,assertFrozenAfSampler} from './lib/af-clock-prediction.mjs';
@@ -55,10 +56,16 @@ try {
  await build({stdin:{contents:"export {measure} from './src/engine/measure';",resolveDir:root},bundle:true,platform:'node',format:'esm',outfile:legacyOut,
   plugins:[preQrsTNumericsPlugin(root)]});
  const {measure:preQrsTMeasure}=await import(pathToFileURL(legacyOut).href);
+ const releasedOut=path.join(temp,'pre-complete-complex.mjs');
+ await build({stdin:{contents:"export {measure} from './src/engine/measure';",resolveDir:root},bundle:true,platform:'node',format:'esm',outfile:releasedOut,plugins:[preCompleteComplexPlugin(root)]});
+ const {measure:releasedMeasure}=await import(pathToFileURL(releasedOut).href);
+ const completeComplexEvidence=[];
  const assertNumericalRevision=(samples,current)=>{
   const prior=preQrsTMeasure(samples);
   assertPeakOnlyChange(before.measure(samples),prior);
-  assertQrsTRefinement(prior,current,{terminalReplacement:true});
+  const released=releasedMeasure(samples);
+  assertQrsTRefinement(prior,released,{terminalReplacement:true});
+  completeComplexEvidence.push(assertCompleteComplexMeasurements(released,current,samples.events.beats));
  };
  const outfile = path.join(temp,'metrics.mjs');
  await build({entryPoints:[path.join(root,'tests/support/morphology-metrics.ts')],bundle:true,platform:'node',format:'esm',outfile});
@@ -151,6 +158,6 @@ try {
  }
  const output=options['--output'] || path.join(root,'.sites-runtime','repolarization-comparison.json');
  await mkdir(path.dirname(output),{recursive:true});
- await writeFile(output,JSON.stringify({schema:1,referencePreparation,base:BASE,runtime:process.version,measurementScope:'Whole signal in T window; ST can contribute. Not isolated cellular T, HATW score, or diagnostic accuracy.',windowSource:'generator events; not independent delineation',externalValidation:false,detector,tPeakEvidenceOnly:true,modelAudit,impulseConfidence,alternatingConfidence,defaultPresets:defaults,scenarios:rows},null,2));
+ await writeFile(output,JSON.stringify({schema:2,completeComplexRevision:COMPLETE_COMPLEX_REVISION,completeComplexEvidence,referencePreparation,base:BASE,runtime:process.version,measurementScope:'Whole signal in T window; ST can contribute. Not isolated cellular T, HATW score, or diagnostic accuracy.',windowSource:'generator events; not independent delineation',externalValidation:false,detector,tPeakEvidenceOnly:true,modelAudit,impulseConfidence,alternatingConfidence,defaultPresets:defaults,scenarios:rows},null,2));
  console.log(JSON.stringify({referencePreparation,output,scenarios:rows.length,unchangedDefaults:defaults.filter(x=>x.maxDifferenceMv===0).length,detectorFrozen:detector.every(x=>x.unchanged)}));
 } finally { await rm(temp,{recursive:true,force:true}); }

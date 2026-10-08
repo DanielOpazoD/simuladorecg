@@ -1,3 +1,4 @@
+import {scoreWindowedQrs} from './lib/windowed-qrs-score.mjs';
 /** Paired source change under the same current sample-only worker pipeline.
  * Synthetic event references remain confined to this evaluator. */
 import {build} from 'esbuild';import {execFileSync} from 'node:child_process';
@@ -26,15 +27,15 @@ try{
   const anchors=reference.map(x=>x.time+x.qrs/2);
   const referenceRate=reference.length>1?60*(reference.length-1)/(reference.at(-1).time-reference[0].time):null;
   const run=s=>{const m=current.applyAcquisitionScope(current.analyzeSamples({fs:s.fs,leads:s.leads}),filter);
-   const match=matchQrsEvents(anchors,m.detectedPeaks.filter(t=>t>=.2&&t<9.8),.15);
-   return{hr:m.hr,status:m.evidence.hr.status,tp:match.tp,fp:match.fp,fn:match.fn,qrs:m.qrs,qt:m.qt};};
+   const match=scoreWindowedQrs(reference,m.detectedPeaks);
+   return{hr:m.hr,status:m.evidence.hr.status,tp:match.tp,fp:match.fp,fn:match.fn,qrs:m.qrs,qt:m.qt,rawWindow:match.rawWindow,boundaryWitnesses:match.boundaryWitnesses};};
   rows.push({...context,referenceRate,before:run(a.signal),after:run(b.signal)});
  }
  const valid=rows.filter(x=>!x.unsupported),bad=(m,r)=>m.status==='usable'&&r.referenceRate!==null&&(m.hr===null||Math.abs(m.hr-r.referenceRate)>5);
  const introduced=valid.filter(r=>bad(r.after,r)&&!bad(r.before,r));
  const diagnostic=valid.filter(r=>r.filter==='off'||r.filter==='diagnostic');
  const missed=diagnostic.filter(r=>r.after.fn>r.before.fn),extra=diagnostic.filter(r=>r.after.fp>r.before.fp);
- const report={base,commit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),clinicalValidation:false,
+ const report={boundaryAccounting:'Reference midpoints remain in [0.2,9.8); outside-window fiducials may match only inside an included QRS support (-10/+30 ms) and within the unchanged 150 ms bound. Raw truncated scores and every edge witness remain visible.',legacyRawNewMissCases:diagnostic.filter(r=>r.after.rawWindow.fn>r.before.rawWindow.fn).length,base,commit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),clinicalValidation:false,
   summary:{scenarios:rows.length,accepted:valid.length,unsupported:rows.length-valid.length,newFalselyUsableHR:introduced.length,newDiagnosticMissCases:missed.length,newDiagnosticFalseCases:extra.length},
   scope:'Fixed exposed 540-case source sensitivity check. Same current analyzer on both sources. Detection regression required in off/diagnostic; monitor/aggressive raw results retained, with real acquisition-scope availability applied.',introduced,missed,extra,rows};
  await mkdir(path.dirname(path.resolve(output)),{recursive:true});await writeFile(output,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report.summary));

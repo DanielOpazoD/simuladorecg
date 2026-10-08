@@ -86,7 +86,9 @@ jobs:
   qrs-discrimination:
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    # The complete 1,892-case matrix takes about eight minutes before artifact
+    # upload and cleanup. This is an execution budget, not a numerical waiver.
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v5
         with:
@@ -144,6 +146,9 @@ jobs:
         run: node --test tests/noise-regression.node.mjs tests/t-peak-revision.node.mjs tests/qrs-event-reference.node.mjs > "$RUNNER_TEMP/noise-regression.tap"
       - name: Regional activation and reviewed default prediction
         run: node scripts/validate-regional-activation.mjs "$RUNNER_TEMP/regional-activation-results.json"
+      - name: Full exposed regional LBBB worker domain and noisy boundaries
+        run: node scripts/validate-lbbb-worker.mjs "$RUNNER_TEMP/lbbb-worker-results.json"
+
       - name: Paired representative AF clock and worker confidence
         run: node scripts/validate-af-clock.mjs "$RUNNER_TEMP/af-clock-results.json"
       - name: Paired native WPW support and worker confidence

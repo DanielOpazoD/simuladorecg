@@ -10,7 +10,7 @@ const names = ["I", "II", "V1", "V5"] as const;
 const quant = (a: number[], p: number) =>
   a.slice().sort((x, y) => x - y)[Math.floor((a.length - 1) * p)] ?? 0;
 function shape(s: Samples, i: number) {
-  const {I, II, V1, V5} = s.leads;
+  const { I, II, V1, V5 } = s.leads;
   const fs = s.fs,
     n = s.leads.I.length,
     mat = Array.from({ length: 4 }, () => Array(4).fill(0));
@@ -44,40 +44,62 @@ function shape(s: Samples, i: number) {
  * principal eigenspace. The stopping bound is floating-point precision, not a
  * physiological or classifier threshold. Never mutates the supplied matrix.
  */
-export function covarianceResidual(mat: readonly (readonly number[])[]): number {
-  if (mat.length !== 4 || mat.some(row => row.length !== 4))
+export function covarianceResidual(
+  mat: readonly (readonly number[])[],
+): number {
+  if (mat.length !== 4 || mat.some((row) => row.length !== 4))
     throw new Error("Expected four-channel covariance");
   let scale = 0;
-  for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) {
-    if (!Number.isFinite(mat[i][j]) || mat[i][j] !== mat[j][i])
-      throw new Error("Expected finite symmetric covariance");
-    scale = Math.max(scale, Math.abs(mat[i][j]));
-  }
+  for (let i = 0; i < 4; i++)
+    for (let j = 0; j < 4; j++) {
+      if (!Number.isFinite(mat[i][j]) || mat[i][j] !== mat[j][i])
+        throw new Error("Expected finite symmetric covariance");
+      scale = Math.max(scale, Math.abs(mat[i][j]));
+    }
   if (scale === 0) return 1;
-  const a = mat.map(row => row.map(value => value / scale));
+  const a = mat.map((row) => row.map((value) => value / scale));
   const trace = a.reduce((sum, row, i) => sum + row[i], 0);
   if (trace <= 0) throw new Error("Expected positive semidefinite covariance");
   for (const row of a) for (let j = 0; j < 4; j++) row[j] /= trace;
   const precision = 16 * Number.EPSILON;
   let converged = false;
   for (let rotation = 0; rotation < 64; rotation++) {
-    let p = 0, q = 1, largest = 0;
-    for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++)
-      if (Math.abs(a[i][j]) > largest) { p = i; q = j; largest = Math.abs(a[i][j]); }
-    if (largest <= precision) { converged = true; break; }
-    const off = a[p][q], tau = (a[q][q] - a[p][p]) / (2 * off);
-    const t = (tau < 0 ? -1 : 1) / (Math.abs(tau) + Math.hypot(1, tau));
-    const c = 1 / Math.hypot(1, t), s = t * c;
-    a[p][p] -= t * off; a[q][q] += t * off; a[p][q] = a[q][p] = 0;
-    for (let k = 0; k < 4; k++) if (k !== p && k !== q) {
-      const first = a[k][p], second = a[k][q];
-      a[k][p] = a[p][k] = c * first - s * second;
-      a[k][q] = a[q][k] = s * first + c * second;
+    let p = 0,
+      q = 1,
+      largest = 0;
+    for (let i = 0; i < 4; i++)
+      for (let j = i + 1; j < 4; j++)
+        if (Math.abs(a[i][j]) > largest) {
+          p = i;
+          q = j;
+          largest = Math.abs(a[i][j]);
+        }
+    if (largest <= precision) {
+      converged = true;
+      break;
     }
+    const off = a[p][q],
+      tau = (a[q][q] - a[p][p]) / (2 * off);
+    const t = (tau < 0 ? -1 : 1) / (Math.abs(tau) + Math.hypot(1, tau));
+    const c = 1 / Math.hypot(1, t),
+      s = t * c;
+    a[p][p] -= t * off;
+    a[q][q] += t * off;
+    a[p][q] = a[q][p] = 0;
+    for (let k = 0; k < 4; k++)
+      if (k !== p && k !== q) {
+        const first = a[k][p],
+          second = a[k][q];
+        a[k][p] = a[p][k] = c * first - s * second;
+        a[k][q] = a[q][k] = s * first + c * second;
+      }
   }
   if (!converged) throw new Error("Covariance eigensolver did not converge");
   const eigenvalues = a.map((row, i) => row[i]);
-  if (Math.min(...eigenvalues) < -precision || Math.max(...eigenvalues) > 1 + precision)
+  if (
+    Math.min(...eigenvalues) < -precision ||
+    Math.max(...eigenvalues) > 1 + precision
+  )
     throw new Error("Expected positive semidefinite covariance");
   return Math.max(0, Math.min(1, 1 - Math.max(...eigenvalues)));
 }
@@ -87,80 +109,130 @@ export function covarianceResidual(mat: readonly (readonly number[])[]): number 
  * engineering feature, not identification of a clinical isoelectric baseline.
  * Keeping similar repeating shapes separate protects genuine rapid QRS trains.
  */
-function groupContinuousCandidates(s: Samples, peaks: number[]): number[] {
-  const close = (distance: number) => distance > 0.18 && distance < 0.28;
-  if (!peaks.some((peak, i) => i > 0 && close((peak - peaks[i - 1]) / s.fs)))
-    return peaks;
+/** Delineation support metadata never adds or removes a detected beat. */
+type MergeSink = (first: number, last: number) => void;
+function prepareContinuousGrouping(
+  s: Samples,
+): (peaks: number[], merged?: MergeSink, minimumGap?: number) => number[] {
   const n = Math.min(s.leads.I.length, 10 * s.fs);
-  if (n < 3 * s.fs) return peaks;
-  const rows = names.map(lead => Array.from(s.leads[lead].slice(0, n)).sort((a, b) => a - b));
-  const middle = rows.map(row => row[Math.floor(n / 2)]);
-  const range = Math.max(...rows.map(row =>
-    row[Math.floor((n - 1) * 0.98)] - row[Math.floor((n - 1) * 0.02)]));
-  if (range <= 0) return peaks;
+  if (n < 3 * s.fs) return (peaks) => peaks;
+  const rows = names.map((lead) =>
+    Array.from(s.leads[lead].slice(0, n)).sort((a, b) => a - b),
+  );
+  const middle = rows.map((row) => row[Math.floor(n / 2)]);
+  const range = Math.max(
+    ...rows.map(
+      (row) =>
+        row[Math.floor((n - 1) * 0.98)] - row[Math.floor((n - 1) * 0.02)],
+    ),
+  );
+  if (range <= 0) return (peaks) => peaks;
   const step = range * 0.02;
   const bins = new Map<string, { count: number; sum: number[] }>();
   for (let i = 0; i < n; i++) {
-    const values = names.map(lead => s.leads[lead][i]);
-    const key = values.map((value, k) => Math.round((value - middle[k]) / step)).join(",");
+    const values = names.map((lead) => s.leads[lead][i]);
+    const key = values
+      .map((value, k) => Math.round((value - middle[k]) / step))
+      .join(",");
     let bin = bins.get(key);
-    if (!bin) { bin = { count: 0, sum: [0, 0, 0, 0] }; bins.set(key, bin); }
+    if (!bin) {
+      bin = { count: 0, sum: [0, 0, 0, 0] };
+      bins.set(key, bin);
+    }
     bin.count++;
-    values.forEach((value, k) => { bin!.sum[k] += value; });
+    values.forEach((value, k) => {
+      bin!.sum[k] += value;
+    });
   }
   const mode = [...bins.values()].sort((a, b) => b.count - a.count)[0];
-  if (mode.count < n * 0.04) return peaks;
-  const returnLevel = mode.sum.map(value => value / mode.count);
-  const magnitude = (i: number) => Math.hypot(...names.map((lead, k) => s.leads[lead][i] - returnLevel[k]));
-  const keep: number[] = [];
-  for (const candidate of peaks) {
-    const previous = keep.at(-1);
-    if (previous !== undefined && close((candidate - previous) / s.fs)) {
-      let maximum = 0, minimum = Infinity;
-      for (let i = previous; i <= candidate; i++) maximum = Math.max(maximum, magnitude(i));
-      const edge = Math.round(0.024 * s.fs);
-      for (let i = previous + edge; i <= candidate - edge; i++) minimum = Math.min(minimum, magnitude(i));
-      if (minimum > maximum * 0.12) {
-        // Candidate times can sit on opposite slopes of two separate QRS.
-        // The 280 ms grouping ceiling must also hold at their local apices;
-        // otherwise a late first-QRS candidate and early second-QRS candidate
-        // falsely resemble the two slopes of one broad deflection.
-        const apex = (at: number) => {
-          const search = Math.min(Math.round(0.12 * s.fs), Math.floor((candidate - previous) / 2));
-          let best = at, value = -Infinity;
-          for (let j = Math.max(0, at - search); j <= Math.min(n - 1, at + search); j++) {
-            const current = magnitude(j);
-            if (current > value) { value = current; best = j; }
+  if (mode.count < n * 0.04) return (peaks) => peaks;
+  const returnLevel = mode.sum.map((value) => value / mode.count);
+  const magnitude = (i: number) =>
+    Math.hypot(...names.map((lead, k) => s.leads[lead][i] - returnLevel[k]));
+  return (peaks: number[], merged?: MergeSink, minimumGap = 0.18) => {
+    const keep: number[] = [];
+    for (const candidate of peaks) {
+      const previous = keep.at(-1);
+      if (
+        previous !== undefined &&
+        (candidate - previous) / s.fs > minimumGap &&
+        (candidate - previous) / s.fs < 0.28
+      ) {
+        let maximum = 0,
+          minimum = Infinity;
+        for (let i = previous; i <= candidate; i++)
+          maximum = Math.max(maximum, magnitude(i));
+        const edge = Math.round(0.024 * s.fs);
+        for (let i = previous + edge; i <= candidate - edge; i++)
+          minimum = Math.min(minimum, magnitude(i));
+        if (minimum > maximum * 0.12) {
+          // Candidate times can sit on opposite slopes of two separate QRS.
+          // The 280 ms grouping ceiling must also hold at their local apices;
+          // otherwise a late first-QRS candidate and early second-QRS candidate
+          // falsely resemble the two slopes of one broad deflection.
+          const apex = (at: number) => {
+            const search = Math.min(
+              Math.round(0.12 * s.fs),
+              Math.floor((candidate - previous) / 2),
+            );
+            let best = at,
+              value = -Infinity;
+            for (
+              let j = Math.max(0, at - search);
+              j <= Math.min(n - 1, at + search);
+              j++
+            ) {
+              const current = magnitude(j);
+              if (current > value) {
+                value = current;
+                best = j;
+              }
+            }
+            return best;
+          };
+          const radius = Math.round(0.04 * s.fs);
+          const similarity = (firstAt: number, secondAt: number) => {
+            const a: number[] = [],
+              b: number[] = [];
+            for (const lead of names) {
+              const first = Array.from(
+                s.leads[lead].slice(firstAt - radius, firstAt + radius + 1),
+              );
+              const second = Array.from(
+                s.leads[lead].slice(secondAt - radius, secondAt + radius + 1),
+              );
+              const meanA =
+                first.reduce((sum, value) => sum + value, 0) / first.length;
+              const meanB =
+                second.reduce((sum, value) => sum + value, 0) / second.length;
+              a.push(...first.map((value) => value - meanA));
+              b.push(...second.map((value) => value - meanB));
+            }
+            const correlation =
+              a.reduce((sum, value, i) => sum + value * b[i], 0) /
+              (Math.hypot(...a) * Math.hypot(...b));
+            return correlation;
+          };
+          const firstApex = apex(previous),
+            secondApex = apex(candidate);
+          // Strong same-shape evidence prevents preserving unrelated artifact lobes.
+          if (
+            (secondApex - firstApex) / s.fs >= 0.28 &&
+            similarity(firstApex, secondApex) > 0.9
+          ) {
+            keep.push(candidate);
+            continue;
           }
-          return best;
-        };
-        const radius = Math.round(0.04 * s.fs);
-        const similarity = (firstAt: number, secondAt: number) => {
-          const a: number[] = [], b: number[] = [];
-          for (const lead of names) {
-            const first = Array.from(s.leads[lead].slice(firstAt - radius, firstAt + radius + 1));
-            const second = Array.from(s.leads[lead].slice(secondAt - radius, secondAt + radius + 1));
-            const meanA = first.reduce((sum, value) => sum + value, 0) / first.length;
-            const meanB = second.reduce((sum, value) => sum + value, 0) / second.length;
-            a.push(...first.map(value => value - meanA));
-            b.push(...second.map(value => value - meanB));
+          if (similarity(previous, candidate) < -0.5) {
+            merged?.(previous, candidate);
+            continue;
           }
-          const correlation = a.reduce((sum, value, i) => sum + value * b[i], 0) /
-            (Math.hypot(...a) * Math.hypot(...b));
-          return correlation;
-        };
-        const firstApex = apex(previous), secondApex = apex(candidate);
-        // Strong same-shape evidence prevents preserving unrelated artifact lobes.
-        if ((secondApex - firstApex) / s.fs >= 0.28 && similarity(firstApex, secondApex) > 0.9) {
-          keep.push(candidate);
-          continue;
         }
-        if (similarity(previous, candidate) < -0.5) continue;
       }
+      keep.push(candidate);
     }
-    keep.push(candidate);
-  }
-  return keep;
+    return keep;
+  };
 }
 
 /** Confirm repeated late-wave morphology using only waves already rejected by
@@ -238,7 +310,7 @@ export function detectVentricularCandidates(
   s: Samples,
   { medianWidth = 0.014, candidateFraction = 0.35, tReject = true } = {},
 ) {
-  const {I, II, V1, V5} = s.leads;
+  const { I, II, V1, V5 } = s.leads;
   const fs = s.fs,
     n = Math.min(s.leads.I.length, Math.round(10 * fs));
   let short = 0,
@@ -301,8 +373,54 @@ export function detectVentricularCandidates(
     if (i >= win) sum -= slope[i - win];
     energy[i] = sum / win;
   }
+  let grouper:
+    | ((peaks: number[], merged?: MergeSink, minimumGap?: number) => number[])
+    | undefined;
+  const groupContinuousCandidates = (
+    _s: Samples,
+    peaks: number[],
+    merged?: MergeSink,
+    minimumGap = 0.18,
+  ) => {
+    if (
+      !peaks.some(
+        (p, k) =>
+          k > 0 &&
+          (p - peaks[k - 1]) / fs > minimumGap &&
+          (p - peaks[k - 1]) / fs < 0.28,
+      )
+    )
+      return peaks;
+    return (grouper ??= prepareContinuousGrouping(s))(
+      peaks,
+      merged,
+      minimumGap,
+    );
+  };
+  const scoreCache = new Map<number, number>();
+  const excursionScore = (i: number) => {
+    let cached = scoreCache.get(i);
+    if (cached !== undefined) return cached;
+    const half = Math.round(0.08 * fs),
+      a = Math.max(0, i - half),
+      b = Math.min(n - 1, i + half);
+    let square = 0;
+    for (const name of names) {
+      let lo = Infinity,
+        hi = -Infinity;
+      for (let j = a; j <= b; j++) {
+        lo = Math.min(lo, leads[name][j]);
+        hi = Math.max(hi, leads[name][j]);
+      }
+      square += (hi - lo) ** 2;
+    }
+    cached = Math.sqrt(square);
+    scoreCache.set(i, cached);
+    return cached;
+  };
   const threshold = Math.max(1.9, quant(Array.from(energy), 0.98) * 0.2),
-    candidates: number[] = [];
+    candidates: number[] = [],
+    allMaxima: number[] = [];
   for (let i = Math.round(0.15 * fs); i < n - 1; i++) {
     if (
       energy[i] <= threshold ||
@@ -320,17 +438,154 @@ export function detectVentricularCandidates(
       }
       if (f > 3.5 * b) continue;
     }
+    allMaxima.push(i);
     let p = candidates.at(-1);
     if (p === undefined || i - p > 0.18 * fs) candidates.push(i);
     else if (energy[i] > energy[p]) candidates[candidates.length - 1] = i;
   }
+  const recovered = new Set<number>();
+  const selectionStrength = new Map<number, number>();
+  if (tReject) {
+    const proposed: number[] = [];
+    for (const i of allMaxima) {
+      const p = proposed.at(-1);
+      if (p === undefined || i - p > 0.18 * fs) proposed.push(i);
+      else if (
+        (i - p > 0.08 * fs ? excursionScore(i) : energy[i]) >
+        (i - p > 0.08 * fs ? excursionScore(p) : energy[p])
+      )
+        proposed[proposed.length - 1] = i;
+    }
+    const signatureCache = new Map<number, number[]>();
+    const signature = (i: number) => {
+      let v = signatureCache.get(i);
+      if (v) return v;
+      v = [];
+      const radius = Math.round(0.08 * fs);
+      for (const lead of names) {
+        const row = Array.from(
+            leads[lead].slice(
+              Math.max(0, i - radius),
+              Math.min(n, i + radius + 1),
+            ),
+          ),
+          mean = row.reduce((a, b) => a + b, 0) / row.length;
+        v.push(...row.map((x) => x - mean));
+      }
+      const norm = Math.hypot(...v);
+      if (norm) v = v.map((x) => x / norm);
+      signatureCache.set(i, v);
+      return v;
+    };
+    const similarity = (a: number, b: number) => {
+      const x = signature(a),
+        y = signature(b);
+      return x.length === y.length
+        ? x.reduce((sum, v, k) => sum + v * y[k], 0)
+        : -1;
+    };
+    const isolated = (old: number) => {
+      const k = candidates.indexOf(old),
+        lastSupported = n - 0.18 * fs;
+      return (
+        (k === 0 || old - candidates[k - 1] > 0.36 * fs) &&
+        (k === candidates.length - 1 ||
+          candidates[k + 1] > lastSupported ||
+          candidates[k + 1] - old > 0.36 * fs)
+      );
+    };
+    const pairs = proposed
+      .filter((i) => !candidates.includes(i))
+      .map((i) => ({
+        i,
+        old: candidates.reduce(
+          (best, p) => (Math.abs(p - i) < Math.abs(best - i) ? p : best),
+          Infinity,
+        ),
+      }))
+      .filter(
+        (p) =>
+          p.old - p.i > 0.08 * fs &&
+          p.old - p.i <= 0.18 * fs &&
+          p.i <= n - 0.18 * fs &&
+          isolated(p.old),
+      );
+    const confirmed = pairs.filter((p) => {
+      const compatible = pairs.filter(
+        (q) =>
+          Math.abs(p.i - p.old - (q.i - q.old)) <= 0.03 * fs &&
+          similarity(p.i, q.i) >= 0.98 &&
+          similarity(p.old, q.old) >= 0.98,
+      );
+      return new Set(compatible.map((q) => q.old)).size >= 3;
+    });
+    const substitutions = new Map(
+      confirmed
+        .filter((p) => confirmed.filter((q) => q.old === p.old).length === 1)
+        .map((p) => [p.old, p.i]),
+    );
+    // Opposite 160 ms contours with strong existing same-shape evidence can
+    // be two slopes of one QRS. Preserve its fiducial if moving only some
+    // instances would add RR dispersion beyond the existing 30 ms agreement.
+    const rrSpread = (train: number[]) => {
+      const rr = train.slice(1).map((p, k) => p - train[k]);
+      return quant(rr, 0.9) - quant(rr, 0.1);
+    };
+    if (
+      rrSpread(candidates.map((p) => substitutions.get(p) ?? p)) >
+      rrSpread(candidates) + 0.03 * fs
+    ) {
+      for (const [old, next] of substitutions)
+        if (
+          similarity(next, old) < -0.9 &&
+          groupContinuousCandidates(s, [next, old], undefined, 0.08).length ===
+            1
+        )
+          substitutions.delete(old);
+    }
+    let conflicts = true;
+    while (conflicts) {
+      conflicts = false;
+      for (let k = 1; k < candidates.length; k++) {
+        const a = candidates[k - 1],
+          b = candidates[k];
+        if (
+          (substitutions.get(b) ?? b) - (substitutions.get(a) ?? a) <=
+          0.18 * fs
+        ) {
+          conflicts = substitutions.delete(a) || conflicts;
+          conflicts = substitutions.delete(b) || conflicts;
+        }
+      }
+    }
+    for (let k = 0; k < candidates.length; k++) {
+      const old = candidates[k],
+        next = substitutions.get(old) ?? old;
+      selectionStrength.set(next, Math.max(energy[old], energy[next]));
+      if (next !== old) recovered.add(next);
+      candidates[k] = next;
+    }
+  }
   const high = quant(
-    candidates.map((i) => energy[i]),
+    candidates.map((i) => selectionStrength.get(i) ?? energy[i]),
     0.8,
   );
   let peaks = candidates.filter(
-    (i) => energy[i] > Math.max(1.9, high * candidateFraction),
+    (i) =>
+      (selectionStrength.get(i) ?? energy[i]) >
+      Math.max(1.9, high * candidateFraction),
   );
+  const components = new Map<number, number[]>();
+  for (let k = 1; k < peaks.length; k++) {
+    const p = peaks[k - 1],
+      i = peaks[k];
+    if (tReject && groupContinuousCandidates(s, [p, i]).length === 1)
+      components.set(i, [...(components.get(p) ?? [p]), i]);
+  }
+  const complexShapes = (samples: Samples, i: number) =>
+    (components.get(i) ?? [i]).map((p) => shape(samples, p));
+  const complexEnergy = (i: number) =>
+    Math.max(...(components.get(i) ?? [i]).map((p) => energy[p]));
   if (tReject) {
     const accepted: number[] = [];
     for (const i of peaks) {
@@ -340,11 +595,14 @@ export function detectVentricularCandidates(
         p !== undefined &&
         d >= 0.2 &&
         d <= 0.4 &&
-        energy[i] < 0.72 * energy[p]
+        energy[i] < 0.72 * complexEnergy(p)
       ) {
-        const f = shape(s, i),
-          g = shape(s, p);
-        if (f.rank < 0.001 && g.rank > 0.005 && f.rough < 0.7 * g.rough)
+        const f = shape(s, i);
+        if (
+          complexShapes(s, p).some(
+            (g) => f.rank < 0.001 && g.rank > 0.005 && f.rough < 0.7 * g.rough,
+          )
+        )
           continue;
       }
       accepted.push(i);
@@ -353,37 +611,102 @@ export function detectVentricularCandidates(
   }
   if ((peaks.at(-1) ?? 0) > n - 0.18 * fs) peaks.pop();
   const boundaryCandidates = peaks;
-  if(tReject) {
+  const mergedComponents = new Map<number, number[]>();
+  if (tReject) {
     // Experimental analysis-only 20 ms moving average. Original samples and
     // exported candidate positions are never resampled or overwritten.
     const halfWindow = Math.max(1, Math.round(0.01 * fs));
-    const smoothed = {fs, leads: Object.fromEntries(names.map(name => {
-      const a = s.leads[name], out = new Float64Array(a.length);
-      let sum = 0, left = 0, right = -1;
-      for (let i = 0; i < a.length; i++) {
-        const end = Math.min(a.length - 1, i + halfWindow);
-        while (right < end) sum += a[++right];
-        while (left < Math.max(0, i - halfWindow)) sum -= a[left++];
-        out[i] = sum / (right - left + 1);
-      }
-      return [name, out];
-    }))} as Samples;
+    const smoothed = {
+      fs,
+      leads: Object.fromEntries(
+        names.map((name) => {
+          const a = s.leads[name],
+            out = new Float64Array(a.length);
+          let sum = 0,
+            left = 0,
+            right = -1;
+          for (let i = 0; i < a.length; i++) {
+            const end = Math.min(a.length - 1, i + halfWindow);
+            while (right < end) sum += a[++right];
+            while (left < Math.max(0, i - halfWindow)) sum -= a[left++];
+            out[i] = sum / (right - left + 1);
+          }
+          return [name, out];
+        }),
+      ),
+    } as Samples;
     const refined: number[] = [];
-    for(const i of peaks) {
-      const p=refined.at(-1),d=p===undefined?9:(i-p)/fs;
+    for (const i of peaks) {
+      const p = refined.at(-1),
+        d = p === undefined ? 9 : (i - p) / fs;
       if (p !== undefined && d >= 0.2 && d <= 0.4) {
         // Strict clean-shape evidence does not require T energy below QRS.
-        const raw = shape(s, i), prior = shape(s, p);
-        if (raw.rank < 0.00001 && prior.rank > 0.005 && raw.rough < 0.7 * prior.rough) continue;
-        const f = shape(smoothed, i), g = shape(smoothed, p);
-        if (f.rank < 0.003 && g.rank > 0.01 && f.rank < 0.1 * g.rank && f.rough < 0.85 * g.rough)
+        const raw = shape(s, i);
+        if (
+          complexShapes(s, p).some(
+            (prior) =>
+              raw.rank < 0.00001 &&
+              prior.rank > 0.005 &&
+              raw.rough < 0.7 * prior.rough,
+          )
+        )
+          continue;
+        const f = shape(smoothed, i);
+        if (
+          complexShapes(smoothed, p).some(
+            (g) =>
+              f.rank < 0.003 &&
+              g.rank > 0.01 &&
+              f.rank < 0.1 * g.rank &&
+              f.rough < 0.85 * g.rough,
+          )
+        )
           continue;
       }
       refined.push(i);
     }
-    peaks = groupContinuousCandidates(s, rejectRepeatedTerminalWaves(smoothed, peaks, refined));
+    peaks = groupContinuousCandidates(
+      s,
+      rejectRepeatedTerminalWaves(smoothed, peaks, refined),
+      (first, last) =>
+        mergedComponents.set(first, [
+          ...(mergedComponents.get(first) ?? [first]),
+          last,
+        ]),
+    );
+    // Raw slopes suppressed inside the 180 ms NMS interval can still support
+    // delineation. This 80 ms contour query does not change event grouping,
+    // whose original 180–280 ms limits and continuity safeguards stay intact.
+    for (const marker of peaks) {
+      if (mergedComponents.has(marker)) continue;
+      const earlier = allMaxima
+        .filter(
+          (p) =>
+            marker - p > 0.08 * fs &&
+            marker - p < 0.28 * fs &&
+            energy[p] > Math.max(1.9, high * candidateFraction) &&
+            !peaks.some((q) => q !== marker && q >= p && q < marker),
+        )
+        .sort((a, b) => energy[b] - energy[a]);
+      const first = earlier.find(
+        (p) =>
+          groupContinuousCandidates(s, [p, marker], undefined, 0.08).length ===
+          1,
+      );
+      if (first !== undefined) mergedComponents.set(marker, [first, marker]);
+    }
   }
-  return { peaks, boundaryCandidates, leads, energy, threshold, high, candidates };
+  return {
+    peaks,
+    boundaryCandidates,
+    leads,
+    energy,
+    threshold,
+    high,
+    candidates,
+    recovered,
+    mergedComponents,
+  };
 }
 
 // Shared with the confidence screen; exporting this feature changes no detections.
