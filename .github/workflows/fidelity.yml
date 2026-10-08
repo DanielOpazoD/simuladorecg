@@ -299,6 +299,7 @@ jobs:
               node tests/browser-lpfb-resolution.mjs
               ECG_ACTIVATION_ENGINES=all node tests/browser-activation.mjs
               ECG_REGIONAL_ENGINES=all node tests/browser-regional-activation.mjs
+              node tests/browser-refractory-selection.mjs
               ;;
             navigation)
               ECG_GROUP_ENGINES=all node tests/browser-diagnosis-navigation.mjs

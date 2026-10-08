@@ -2,7 +2,7 @@ import {it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 const source=readFileSync('.github/workflows/fidelity.yml','utf8');
-const groups={source:['lpfb-resolution','activation','regional-activation'],navigation:['diagnosis-navigation'],interaction:['accessibility','vvi-noncapture','qrs-t-discrimination','wide-qrs']};
+const groups={source:['lpfb-resolution','activation','regional-activation','refractory-selection'],navigation:['diagnosis-navigation'],interaction:['accessibility','vvi-noncapture','qrs-t-discrimination','wide-qrs']};
 const job=(text,name)=>text.match(new RegExp('(?:^|\\n)  '+name+':\\n([\\s\\S]*?)(?=\\n  [a-z][a-z-]*:\\n|$)'))?.[1]??'';
 function validate(text){
  const matrix=job(text,'browser-contracts'),gate=job(text,'accessibility');
@@ -33,7 +33,7 @@ it('routes every required browser script exactly once across three independent g
   expect(paths).toEqual(scripts.map(s=>'tests/browser-'+s+'.mjs'));all.push(...paths);
   for(const line of lines)if(/activation|diagnosis-navigation/.test(line))expect(line.split('|').slice(1)).toContain('all');
  }
- expect(new Set(all).size).toBe(8);expect(all.length).toBe(8);expect(()=>execute(source,'unknown')).toThrow();
+ expect(new Set(all).size).toBe(9);expect(all.length).toBe(9);expect(()=>execute(source,'unknown')).toThrow();
 });
 it('propagates a failure from every routed browser command',()=>{
  for(const [group,scripts] of Object.entries(groups))for(const script of scripts)

@@ -56,6 +56,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     boundaryCandidates: originalLandmarks,
     recovered,
     mergedComponents,
+    restoredByRefractorySelection,
   } = detectVentricularCandidates(input);
   const mergedLandmarks = new Set(
     [...mergedComponents].flatMap(([root, values]) =>
@@ -700,6 +701,18 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     ev.axis.status = "review";
     ev.axis.reason =
       "Algunos QRS carecen de área frontal neta: el resumen usa solo direcciones observables; revisa los complejos individualmente.";
+  }
+  // Recurrent morphology can restore a missed complex without establishing
+  // its onset/offset. Do not present newly reconstructed interval boundaries
+  // as precise solely because more matching complexes now agree.
+  if (ratePeaks.some((p) => restoredByRefractorySelection.has(p))) {
+    for (const key of ["qrs", "pr", "qt", "axis"] as const) {
+      if (ev[key].status === "usable") {
+        ev[key].status = "review";
+        ev[key].reason =
+          "Complejos recuperados por morfología repetida; verifica sus límites y las medidas derivadas con calibres.";
+      }
+    }
   }
   // A removed impulse can hide the true activation onset; preserve that uncertainty.
   const nearImpulse = (t: number | null) =>
