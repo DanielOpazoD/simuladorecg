@@ -4,7 +4,7 @@ import { LEADS } from './lead-registry';
 import { attachMeasurementSupport } from './measurement-support';
 import type { Measurement, Signal } from './types';
 import { measure } from './measure';
-import { detectVentricularCandidates } from './analysis/ventricular-candidates';
+import { detectVentricularCandidates, candidateShape } from './analysis/ventricular-candidates';
 
 type Samples = Pick<Signal, 'fs' | 'leads'>;
 
@@ -18,6 +18,8 @@ export const HR_QUALITY_POLICY = Object.freeze({
   backgroundRatio: 0.1,
   unmatchedFraction: 0.075,
   minimumUnmatched: 2,
+  maximumRateDisagreementBpm: 5,
+  majorCandidateDisagreement: .4,
 });
 
 export function heartRateDetectionQuality(input: Samples, peaksSeconds: readonly number[]) {
@@ -39,10 +41,35 @@ export function heartRateDetectionQuality(input: Samples, peaksSeconds: readonly
   const largest = Math.max(peaksSeconds.length, challenged.length);
   const unmatched = largest - matched;
   const unmatchedFraction = largest ? unmatched / largest : 0;
-  const requiresReview = backgroundRatio !== null &&
-    backgroundRatio > HR_QUALITY_POLICY.backgroundRatio &&
-    unmatched >= HR_QUALITY_POLICY.minimumUnmatched &&
+  // A single extra candidate can change a 10-second rate by >5/min even when
+  // the count-fraction screen misses it. Compare two sample-only estimates.
+  const rate = (peaks: readonly number[]) => peaks.length >= 2 && peaks.at(-1)! > peaks[0]
+    ? 60 * (peaks.length - 1) / (peaks.at(-1)! - peaks[0]) : null;
+  const nominalRate = rate(peaksSeconds), challengedRate = rate(challenged.map(p=>p/input.fs));
+  const rateDisagreement = nominalRate !== null && challengedRate !== null &&
+    Math.abs(nominalRate - challengedRate) > HR_QUALITY_POLICY.maximumRateDisagreementBpm;
+  const countSensitive = unmatched >= HR_QUALITY_POLICY.minimumUnmatched &&
     unmatchedFraction >= HR_QUALITY_POLICY.unmatchedFraction;
+  const noisy = backgroundRatio !== null && backgroundRatio > HR_QUALITY_POLICY.backgroundRatio;
+  // Near-halving the candidate train is material ambiguity even on a quiet
+  // recording (e.g. broad QRS/T complexes). Background is not a safety veto.
+  const majorDisagreement = unmatched >= HR_QUALITY_POLICY.minimumUnmatched &&
+    unmatchedFraction >= HR_QUALITY_POLICY.majorCandidateDisagreement;
+  const unmatchedNominal = countSensitive && rateDisagreement
+    ? peaksSeconds.filter(t=>!challenged.some(p=>Math.abs(t-p/input.fs)<=HR_QUALITY_POLICY.matchSeconds)) : [];
+  // Rank-one unmatched deflections are compatible with a broad T; this is a
+  // review trigger, never proof of T or permission to remove a real complex.
+  // Reuse the detector's existing strict clean-direction threshold.
+  const singleDirectionAmbiguity = unmatchedNominal.length >= HR_QUALITY_POLICY.minimumUnmatched &&
+    unmatchedNominal.every(t=>candidateShape(input,Math.round(t*input.fs)).rank<.00001);
+  // Sparse extra/missing candidates still make the mean rate ambiguous on a
+  // quiet trace when they fall in the detector's existing post-QRS T window.
+  // A near-halved train needs directional evidence so genuine
+  // clean alternating QRS amplitudes are not flagged solely for that pattern.
+  const sparseDisagreement=countSensitive && rateDisagreement && !majorDisagreement &&
+    unmatchedNominal.every(t=>challenged.some(p=>t>p/input.fs && t-p/input.fs<=.4));
+  const requiresReview = (noisy && (countSensitive || (unmatched > 0 && rateDisagreement))) ||
+    (majorDisagreement && singleDirectionAmbiguity) || sparseDisagreement;
   return { requiresReview, backgroundRatio, unmatchedFraction, unmatched, matched,
     nominalCount: peaksSeconds.length, challengedCount: challenged.length, challengedPeaksSeconds: challenged.map(p=>p/input.fs) };
 }
@@ -59,7 +86,7 @@ export function analyzeSamples(input: Samples): Measurement {
   const next:Measurement = measurement.hr !== null && measurement.evidence.hr.status === 'usable' && quality?.requiresReview ?
     { ...measurement, evidence: { ...measurement.evidence,
       hr: { ...measurement.evidence.hr, status: 'review',
-        reason: 'Frecuencia sensible al umbral de detección y actividad de fondo elevada: pueden existir detecciones extra u omitidas. Verifica con calibres.' } } } : measurement;
+        reason: 'Frecuencia sensible al umbral de detección: pueden existir detecciones extra u omitidas. Verifica con calibres.' } } } : measurement;
   return reviewAlternatingCandidates(input, withholdImpulseDominatedMeasurements(input, retireUnsupportedFrontalAxis(input, attachMeasurementSupport(next, quality))));
 }
 
@@ -96,7 +123,24 @@ function retireUnsupportedFrontalAxis(input: Samples, m: Measurement): Measureme
     for(let i=1;i<n;i++)if(a[i]!==a[0])return false;
     return true;
   };
-  if (!flat('I') || !flat('II') || (m.axis===null && m.pAxis===null && m.tAxis===null)) return m;
+  if (!flat('I') || !flat('II')) {
+    // P/T activity elsewhere cannot supply the missing QRS direction. This is
+    // exact local constancy, not a clinical low-voltage or noise threshold.
+    const flatQrs = (onset: number, offset: number, lead: 'I' | 'II') => {
+      const a = input.leads[lead];
+      const start = Math.max(0, Math.round(onset * input.fs));
+      const end = Math.min(n, Math.round(offset * input.fs));
+      if (end - start < 2) return false;
+      for (let i = start + 1; i < end; i++) if (a[i] !== a[start]) return false;
+      return true;
+    };
+    if (m.axis === null || !m.beats.length || !m.beats.every(b =>
+      flatQrs(b.onset, b.offset, 'I') && flatQrs(b.onset, b.offset, 'II'))) return m;
+    return {...m, axis: null, rejected: {...m.rejected, axis: m.axis},
+      evidence: {...m.evidence, axis: {...m.evidence.axis, status: 'unavailable', count: 0, spread: null,
+        reason: 'I y II no contienen variación en los QRS delimitados: la actividad P/T fuera de ellos no permite estimar el eje QRS. No equivale a un eje de 0°.'}}};
+  }
+  if (m.axis===null && m.pAxis===null && m.tAxis===null) return m;
   return {...m, axis:null, pAxis:null, tAxis:null,
     rejected:m.axis===null?m.rejected:{...m.rejected,axis:m.axis},
     evidence:{...m.evidence,axis:{...m.evidence.axis,status:'unavailable',count:0,spread:null,

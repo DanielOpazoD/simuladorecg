@@ -16,6 +16,12 @@ export const LEAD_REGISTRY = {
   V5:  { group: "chest", source: "independent", projection: [1.125, 0.127, -0.086], cabreraRank: 10, cabreraPolarity: 1 },
   V6:  { group: "chest", source: "independent", projection: [0.831, 0.076, 0.230], cabreraRank: 11, cabreraPolarity: 1 },
 } as const;
+// These are versioned model coefficients, never case-specific mutable state.
+for (const row of Object.values(LEAD_REGISTRY)) {
+  Object.freeze('projection' in row ? row.projection : row.from);
+  Object.freeze(row);
+}
+Object.freeze(LEAD_REGISTRY);
 export type Lead = keyof typeof LEAD_REGISTRY;
 export type IndependentLead = {
   [L in Lead]: typeof LEAD_REGISTRY[L]["source"] extends "independent" ? L : never

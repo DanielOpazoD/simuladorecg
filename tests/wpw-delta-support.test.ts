@@ -15,10 +15,10 @@ it('preserves every interior coefficient instead of moving events to the sample 
 
 import {synthesize} from '../src/engine/signal';
 import {wpwNativeLeadII} from './support/wpw-native-pulse';
-it.each([90,100,100.3,101.7])('matches independently bounded native delta through acquisition at PR %s ms',pr=>{
+it.each([90,100,100.3,101.7])('matches independently bounded native delta and secondary ST through acquisition at PR %s ms',pr=>{
  for(const filter of ['off','diagnostic','monitor','aggressive'] as const){
   const settings={...c,pr,filter,hr:73,variability:0,pAmp:0,tAmp:0,st:0},actual=synthesize(settings,10),without=synthesize({...settings,conduction:'normal'},10);
-  const expected=wpwNativeLeadII(settings);let error=0;
+  const expected=wpwNativeLeadII(settings,10,false,true);let error=0;
   for(let i=0;i<expected.length;i++)error=Math.max(error,Math.abs(actual.leads.II[i]-without.leads.II[i]-expected[i]));
   expect(error).toBeLessThan(1e-10);
  }

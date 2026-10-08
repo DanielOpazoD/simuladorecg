@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "candidateCommit": "f2b6825453c27cd4003139bcac93d2d3a830bf34",
+  "workflowRun": 37685303666,
+  "artifactId": 11511061552,
+  "protocolSha256": "bba93f90c55b086af806ba158c1513c4be887a069c67e95868788b74e3a65a69",
+  "status": "failed-prospective-targets",
+  "clinicalValidation": false,
+  "cohortNowExposed": true,
+  "targets": {
+    "maximumMaeMs": 25,
+    "maximumP95Ms": 60,
+    "maximumErrorMs": 100,
+    "minimumPaired": 5
+  },
+  "records": 40,
+  "qtBefore": {
+    "records": 40,
+    "referenceEligibleRecords": 39,
+    "numericWithReference": 10,
+    "coverageOfEligible": 0.2564102564102564,
+    "abstentionsWithReference": 29,
+    "numbersWithoutReference": 0,
+    "statuses": {
+      "usable": 1,
+      "review": 9,
+      "unavailable": 30
+    },
+    "statusPercent": {
+      "usable": 2.5,
+      "review": 22.5,
+      "unavailable": 75
+    },
+    "errors": {
+      "n": 10,
+      "biasMs": 41.29999999999998,
+      "maeMs": 74.29999999999995,
+      "medianAbsMs": 48.50000000000003,
+      "p95AbsMs": 239.9999999999999,
+      "maxAbsMs": 239.9999999999999
+    },
+    "usableErrors": {
+      "n": 1,
+      "biasMs": 3,
+      "maeMs": 3,
+      "medianAbsMs": 3,
+      "p95AbsMs": 3,
+      "maxAbsMs": 3
+    },
+    "reviewErrors": {
+      "n": 9,
+      "biasMs": 45.555555555555536,
+      "maeMs": 82.22222222222217,
+      "medianAbsMs": 77.00000000000045,
+      "p95AbsMs": 239.9999999999999,
+      "maxAbsMs": 239.9999999999999
+    }
+  },
+  "qtAfter": {
+    "records": 40,
+    "referenceEligibleRecords": 39,
+    "numericWithReference": 20,
+    "coverageOfEligible": 0.5128205128205128,
+    "abstentionsWithReference": 19,
+    "numbersWithoutReference": 0,
+    "statuses": {
+      "usable": 1,
+      "review": 19,
+      "unavailable": 20
+    },
+    "statusPercent": {
+      "usable": 2.5,
+      "review": 47.5,
+      "unavailable": 50
+    },
+    "errors": {
+      "n": 20,
+      "biasMs": -8.199999999999992,
+      "maeMs": 27.79999999999991,
+      "medianAbsMs": 8.999999999999773,
+      "p95AbsMs": 143.99999999999943,
+      "maxAbsMs": 149.00000000000023
+    },
+    "usableErrors": {
+      "n": 1,
+      "biasMs": 3,
+      "maeMs": 3,
+      "medianAbsMs": 3,
+      "p95AbsMs": 3,
+      "maxAbsMs": 3
+    },
+    "reviewErrors": {
+      "n": 19,
+      "biasMs": -8.789473684210517,
+      "maeMs": 29.10526315789464,
+      "medianAbsMs": 9.999999999999545,
+      "p95AbsMs": 149.00000000000023,
+      "maxAbsMs": 149.00000000000023
+    }
+  },
+  "comparison": {
+    "samePopulation": {
+      "before": {
+        "n": 10,
+        "biasMs": 41.29999999999998,
+        "maeMs": 74.29999999999995,
+        "medianAbsMs": 48.50000000000003,
+        "p95AbsMs": 239.9999999999999,
+        "maxAbsMs": 239.9999999999999
+      },
+      "after": {
+        "n": 10,
+        "biasMs": -4.800000000000011,
+        "maeMs": 36.599999999999895,
+        "medianAbsMs": 9.999999999999886,
+        "p95AbsMs": 149.00000000000023,
+        "maxAbsMs": 149.00000000000023
+      }
+    },
+    "newlyAvailable": {
+      "n": 10,
+      "biasMs": -11.599999999999971,
+      "maeMs": 18.999999999999915,
+      "medianAbsMs": 7.499999999999716,
+      "p95AbsMs": 88.00000000000028,
+      "maxAbsMs": 88.00000000000028
+    },
+    "worseRecords": [
+      {
+        "id": 61,
+        "cohort": "prospective40",
+        "before": -137.9999999999996,
+        "after": -143.99999999999943
+      }
+    ]
+  }
+}

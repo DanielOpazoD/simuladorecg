@@ -82,10 +82,10 @@ matriz de navegadores existente; no se añaden dependencias ni workflows.
 
 WPW ya se puede abrir y elegir como alternativa B. Antes se excluía porque su
 QRS incluye un pulso adicional a los kernels. `wpwDeltaVector()` y su duración
-viven ahora en `morphology.ts`; el sintetizador y el laboratorio usan la misma
+viven en `ventricular-components.ts` y se reexportan desde `morphology.ts`; el sintetizador y el laboratorio usan la misma
 función. La extracción conserva el orden aritmético anterior, los coeficientes,
-el soporte de 45 ms y la regla `conduction=wpw && beat.kind=normal`. No se cambia
-la señal del ECG principal. EV, escape y estimulación no reciben una delta.
+el soporte de 45 ms y la regla `conduction=wpw && beat.kind=normal`. La extracción original no cambió
+la señal del ECG principal; la posterior repolarización WPW sí añade ST-T acoplados. EV, escape y estimulación no reciben una delta.
 
 El laboratorio suma delta + kernels antes de integrar el eje, calcular la escala
 y proyectar a las doce derivaciones. Un nodo exacto a 45 ms y la interpolación
@@ -98,15 +98,16 @@ capturado, no una predicción del nuevo inicio de B; `timeReference` lo declara
 explícitamente en JSON. El nuevo metadato `timing.deltaDurationMs` es aditivo.
 
 La comparación con el ECG a 500 Hz usa un evento alineado a la rejilla nativa
-(PR 90 ms, HR 60, filtro off y P/T/ST apagados). No equivale a una extracción
+(PR 90 ms, HR 60, filtro off y P/T/ST primario apagados),
+sumando por separado el ST secundario reconstruido independientemente. No equivale a una extracción
 universal. El defecto histórico de extrapolación antes del inicio por
 `floor(start*fs)` se corrige ahora mediante soporte compacto en `wpwDeltaVector`.
 No se redondean los eventos; el FIR simétrico puede distribuir muestras alrededor
 del inicio. Véase [contrato y regresión independiente](wpw-delta-support.md).
 
-No se representa una vía accesoria anatómica ni una activación causal nueva. El
-aviso WPW de repolarización incompleta se reutiliza sin modificarlo: la delta no
-modula ST-T secundario. El SVG identifica la delta incluida en cada alternativa.
+No se representa una vía accesoria anatómica. En el ECG completo,
+[ST y T siguen ahora la activación integrada, incluida la delta](wpw-repolarization-resolution.md).
+El laboratorio conserva su vista de activación QRS aislada y declara los límites de amplitud y anatomía. El SVG identifica la delta incluida en cada alternativa.
 Los cambios de PR se anuncian sin afirmar que los eventos conservarán sus tiempos.
 
 Ocho pruebas nuevas contrastan la suma con la fórmula histórica independiente,
@@ -151,7 +152,7 @@ Un eje con magnitud frontal despreciable se declara indefinido.
   un bucle estático.
 - QRS posterior: incluye una corrección local por derivación sin XYZ único; no
   se oculta esa contribución.
-- WPW conducido: delta + kernels completos; se declara su repolarización secundaria incompleta, no una localización anatómica.
+- WPW conducido: delta + kernels completos; el ECG genera ST-T acoplados a esa activación. No localiza vías accesorias ni calibra amplitudes.
 
 La vista previa es de QRS. Al aplicar una alternativa, el motor existente vuelve
 a validar y sintetizar el ECG completo. La repolarización de ciertas

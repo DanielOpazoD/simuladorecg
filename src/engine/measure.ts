@@ -1,3 +1,5 @@
+import { constrainQtEvidence } from "./measurement-support";
+import { terminalConsensus } from "./terminal-delineation";
 import { type Signal, type Measurement, type DelineatedBeat } from "./types";
 import { suppressImpulses } from "./analysis/impulses";
 import { detectVentricularCandidates } from "./analysis/ventricular-candidates";
@@ -6,11 +8,21 @@ import {
   median,
   mad,
   spread,
-  circularMedian,
+  directionSummary,
   quantile,
   unwrapAngles,
 } from "./analysis/statistics";
 import { evidence, unavailable } from "./analysis/evidence";
+
+/** A zero vector has no direction; atan2(0, 0) is only a language convention.
+ * Exact zero only, with no voltage/area cutoff or clinical confidence claim.
+ */
+function observedFrontalDirection(
+  first: number,
+  second: number,
+): number | null {
+  return first === 0 && second === 0 ? null : axisFromLeads(first, second);
+}
 
 /**
  * Independent sample-domain analysis. No ECGCase, event calendar, or truth input.
@@ -37,9 +49,20 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     if (i >= win) running -= slope[i - win];
     energy[i] = running / win;
   }
-  // Morphology windows remain anchored to the original sample landmarks.
-  // Refining the ventricular train must not silently move existing boundaries.
-  const { peaks: ratePeaks, boundaryCandidates: peaks } = detectVentricularCandidates(input);
+  // Preserve the rate fiducial. Opposing slopes proven to belong to one
+  // continuous deflection share a morphology window, not a second beat.
+  const {
+    peaks: ratePeaks,
+    boundaryCandidates: originalLandmarks,
+    recovered,
+    mergedComponents,
+  } = detectVentricularCandidates(input);
+  const mergedLandmarks = new Set(
+    [...mergedComponents].flatMap(([root, values]) =>
+      values.filter((p) => p !== root),
+    ),
+  );
+  const peaks = originalLandmarks.filter((p) => !mergedLandmarks.has(p));
   const retained = new Set(ratePeaks);
   const nil: Measurement = {
     hr: null,
@@ -72,313 +95,450 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
   const intervals = ratePeaks.slice(1).map((p, i) => (p - ratePeaks[i]) / fs),
     rr = median(intervals);
   if (rr < 0.22 || rr > 3) return nil;
-  // Rate refinement cannot authorize morphology rejected by the original train.
-  // Keep rate-only recovery, but do not invent new interval delineations.
+  // Assess duration against distinct observed complexes, while retaining
+  // original windows as independent evidence of boundary ambiguity.
   const landmarkRr = median(peaks.slice(1).map((p, i) => (p - peaks[i]) / fs));
   const morphologyEligible = landmarkRr >= 0.22 && landmarkRr <= 3;
   const historicalWidths: number[] = [];
+  const originalWindowWidths: number[] = [];
+  const tangentEnds = new Map<number, number>();
+  const terminalFrames = new Map<
+    number,
+    {
+      magnitude: (j: number) => number;
+      baseAt: (j: number, l: number) => number;
+    }
+  >();
   const beats: DelineatedBeat[] = [],
-    paxes: number[] = [],
-    taxes: number[] = [];
-  for (let k = 1; morphologyEligible && k < peaks.length - 1; k++) {
-    const peak = peaks[k];
-    let baseIndex = Math.max(8, peak - Math.round(0.22 * fs));
-    for (let j = baseIndex; j < peak - Math.round(0.04 * fs); j++)
-      if (energy[j] < energy[baseIndex]) baseIndex = j;
-    const baseline = names.map((l) =>
-      median(
-        Array.from(
-          s.leads[l].slice(
-            Math.max(0, baseIndex - Math.round(0.016 * fs)),
-            baseIndex + 1,
-          ),
-        ),
-      ),
-    );
-    const postLo = Math.min(
-      n - 2,
-      peak + Math.round(Math.min(0.5, ((peaks[k + 1] - peak) / fs) * 0.5) * fs),
-    );
-    const postHi = Math.min(n - 1, peaks[k + 1] - Math.round(0.045 * fs));
-    let postIndex = postLo;
-    for (let j = postLo; j < postHi; j++)
-      if (energy[j] < energy[postIndex]) postIndex = j;
-    const postBaseline = names.map((l) =>
-      median(
-        Array.from(
-          s.leads[l].slice(
-            Math.max(0, postIndex - Math.round(0.008 * fs)),
-            postIndex + 1,
-          ),
-        ),
-      ),
-    );
-    const baseAt = (j: number, l: number) =>
-      baseline[l] +
-      (postBaseline[l] - baseline[l]) *
-        Math.max(
+    paxes: (number | null)[] = [],
+    taxes: (number | null)[] = [];
+  const recoveryBaseline =
+    recovered.size || mergedComponents.size
+      ? names.map((l) => median(Array.from(s.leads[l].slice(0, n))))
+      : [];
+  beatsLoop: for (
+    let k = 1;
+    morphologyEligible && k < originalLandmarks.length - 1;
+    k++
+  ) {
+    const marker = originalLandmarks[k],
+      complexIndex = peaks.indexOf(marker),
+      components = mergedComponents.get(marker);
+    let peak = marker;
+    const supportStart = components ? Math.min(...components) : null,
+      supportEnd = components ? Math.max(...components) : null;
+    if (retained.has(marker) && (recovered.has(marker) || components)) {
+      let largest = -Infinity;
+      const searchStart = components
+        ? supportStart! - Math.round(0.04 * fs)
+        : marker - Math.round(0.16 * fs);
+      const searchEnd = components
+        ? supportEnd! + Math.round(0.04 * fs)
+        : marker + Math.round(0.04 * fs);
+      const lo = Math.max(0, searchStart),
+        hi = Math.min(n - 1, searchEnd);
+      let best = marker;
+      for (let j = lo; j <= hi; j++) {
+        const size = names.reduce(
+          (sum, l, i) => sum + (s.leads[l][j] - recoveryBaseline[i]) ** 2,
           0,
-          Math.min(1, (j - baseIndex) / Math.max(1, postIndex - baseIndex)),
         );
-    const magnitude = (j: number) =>
-      Math.sqrt(
-        names.reduce(
-          (sum, l, k) => sum + (s.leads[l][j] - baseAt(j, k)) ** 2,
-          0,
-        ),
-      );
-    // Robust high-frequency noise floor from the second difference, outside this QRS.
-    const noiseSamples: number[] = [];
-    for (
-      let j = Math.max(2, peak - Math.round(0.3 * fs));
-      j < peak - Math.round(0.06 * fs);
-      j++
-    ) {
-      for (const lead of names)
-        noiseSamples.push(
-          Math.abs(
-            s.leads[lead][j] - 2 * s.leads[lead][j - 1] + s.leads[lead][j - 2],
-          ),
-        );
-    }
-    const noise = median(noiseSamples) / 1.65;
-    let amplitude = 0;
-    for (
-      let j = Math.max(0, peak - Math.round(0.16 * fs));
-      j < Math.min(n, peak + Math.round(0.08 * fs));
-      j++
-    )
-      amplitude = Math.max(amplitude, magnitude(j));
-    // A centered derivative supplies boundaries without hard-coded millisecond offsets.
-    // The quiet bridge keeps notches / plateaus inside a wide QRS together.
-    const half = Math.max(1, Math.round(0.004 * fs));
-    const derivative = (j: number) =>
-      Math.sqrt(
-        names.reduce((sum, lead) => {
-          const lo = Math.max(0, j - half),
-            hi = Math.min(n - 1, j + half);
-          return (
-            sum +
-            (((s.leads[lead][hi] - s.leads[lead][lo]) * fs) / (hi - lo)) ** 2
-          );
-        }, 0),
-      );
-    const localSlopes: number[] = [];
-    for (
-      let j = Math.max(half, peak - Math.round(0.16 * fs));
-      j < Math.min(n - half, peak + Math.round(0.18 * fs));
-      j++
-    )
-      localSlopes.push(derivative(j));
-    const maximumSlope = quantile(localSlopes, 0.9);
-    const derivativeThreshold = Math.max(
-      0.4,
-      maximumSlope * 0.028,
-      noise * fs * 0.9,
-      quantile(localSlopes, 0.2) * 2.5,
-    );
-    const active = (j: number) => derivative(j) > derivativeThreshold;
-    const left = Math.max(
-        1,
-        peak -
-          Math.round(Math.min(0.28, ((peak - peaks[k - 1]) / fs) * 0.8) * fs),
-      ),
-      right = Math.min(n - 1, peak + Math.round(0.21 * fs)),
-      quietSamples = Math.round(
-        Math.min(0.04, ((peak - peaks[k - 1]) / fs) * 0.075) * fs,
-      );
-    let on = peak,
-      off = peak,
-      quiet = 0,
-      neutral = 0;
-    const neutralSamples = Math.max(1, Math.round(0.006 * fs));
-    const atBaseline = (j: number) =>
-      magnitude(j) < Math.max(0.008, noise * 5, amplitude * 0.08) &&
-      derivative(j) < Math.max(derivativeThreshold, maximumSlope * 0.08);
-    for (let j = peak; j > left; j--) {
-      neutral = atBaseline(j) ? neutral + 1 : 0;
-      if (neutral >= neutralSamples) {
-        on = Math.max(on, j + neutral);
-        break;
-      }
-      if (active(j)) {
-        on = j;
-        quiet = 0;
-      } else if (++quiet >= quietSamples) break;
-    }
-    quiet = 0;
-    neutral = 0;
-    for (let j = peak; j < right; j++) {
-      neutral = atBaseline(j) ? neutral + 1 : 0;
-      if (neutral >= neutralSamples) {
-        off = Math.min(off, j - neutral);
-        break;
-      }
-      if (active(j)) {
-        off = j;
-        quiet = 0;
-      } else if (++quiet >= quietSamples) break;
-    }
-    if (on <= left + 1 || off >= right - 1) continue;
-    // Report the center of the derivative transition (sampling resolution applies).
-    const width = (off - on) / fs,
-      localRR = (peaks[k] - peaks[k - 1]) / fs;
-    if (
-      width < 0.04 ||
-      width > 0.28 ||
-      width > Math.min(localRR, (peaks[k + 1] - peak) / fs) * 0.75
-    )
-      continue;
-    historicalWidths.push(width * 1000);
-    if (!retained.has(peak)) continue;
-    let ai = 0,
-      aii = 0;
-    for (let j = on; j < off; j++) {
-      ai += s.leads.I[j] - baseAt(j, 0);
-      aii += s.leads.II[j] - baseAt(j, 1);
-    }
-    const beat: DelineatedBeat = {
-      peak: peak / fs,
-      onset: on / fs,
-      offset: off / fs,
-      pOnset: null,
-      pPeak: null,
-      tPeak: null,
-      tEnd: null,
-      tTangentEnd: null,
-      rr: (peak - ratePeaks[ratePeaks.indexOf(peak) - 1]) / fs,
-      pr: null,
-      qrs: width * 1000,
-      qt: null,
-      axis: axisFromLeads(ai, aii),
-      noise,
-    };
-    const pLo = Math.max(
-        0,
-        on - Math.round(Math.min(0.32, localRR * 0.4) * fs),
-      ),
-      pHi = on - Math.round(0.035 * fs);
-    let pp = pLo;
-    for (let j = pLo; j < pHi; j++) if (magnitude(j) > magnitude(pp)) pp = j;
-    const pAmplitude = magnitude(pp),
-      pThreshold = Math.max(pAmplitude * 0.04, noise * 4, 0.003);
-    if (
-      pAmplitude > Math.max(0.045, noise * 10) &&
-      pAmplitude < amplitude * 0.55
-    ) {
-      let po = pp;
-      while (po > pLo && magnitude(po) > pThreshold) po--;
-      if (po > pLo + 1 && pp - po > 0.012 * fs) {
-        beat.pOnset = po / fs;
-        beat.pPeak = pp / fs;
-        beat.pr = ((on - po) / fs) * 1000;
-        paxes.push(
-          axisFromLeads(
-            s.leads.I[pp] - baseline[0],
-            s.leads.II[pp] - baseline[1],
-          ),
-        );
-      }
-    }
-    const tLo = off + Math.round(0.04 * fs),
-      nextOn = peaks[k + 1] - Math.round(0.12 * fs);
-    const tHi = Math.min(
-      n - 1,
-      nextOn,
-      on + Math.round(Math.min(0.95, localRR * 0.82) * fs),
-    );
-    let tp = tLo,
-      te = tLo,
-      quietT = 0,
-      started = false,
-      lastActive = tLo;
-    const minimumT = Math.max(0.012, noise * 6),
-      quietTNeeded = Math.round(0.04 * fs);
-    for (let j = tLo; j < tHi; j++) {
-      const value = magnitude(j);
-      if (!started && value > minimumT) started = true;
-      if (!started) continue;
-      if (value > magnitude(tp)) tp = j;
-      const returnThreshold = Math.max(magnitude(tp) * 0.025, noise * 4, 0.004);
-      if (value > returnThreshold) {
-        lastActive = j;
-        quietT = 0;
-      } else quietT++;
-      if (quietT >= quietTNeeded) {
-        te = lastActive + 1;
-        break;
-      }
-    }
-    const tAmplitude = magnitude(tp);
-    // A visible peak is evidence, not a QT measurement. Preserve it even when
-    // the independent terminal-return condition below cannot close the wave.
-    if (started && tp > tLo + 3 && tAmplitude > Math.max(0.05, noise * 12))
-      beat.tPeak = tp / fs;
-    if (te > tp && tp > tLo + 3 && tAmplitude > Math.max(0.05, noise * 12)) {
-      beat.tPeak = tp / fs;
-      beat.tEnd = te / fs;
-      beat.qt = ((te - on) / fs) * 1000;
-      taxes.push(
-        axisFromLeads(
-          s.leads.I[tp] - baseline[0],
-          s.leads.II[tp] - baseline[1],
-        ),
-      );
-      // Tangent to the steepest terminal descent, after the last lobe's peak.
-      let terminalPeak = tp;
-      for (let j = tp + 1; j < te - 1; j++)
-        if (
-          magnitude(j) > tAmplitude * 0.15 &&
-          magnitude(j) >= magnitude(j - 1) &&
-          magnitude(j) > magnitude(j + 1)
-        )
-          terminalPeak = j;
-      const half = Math.max(1, Math.round(0.008 * fs));
-      let steepest = 0,
-        steepestIndex = terminalPeak,
-        tangent: number | null = null;
-      for (let j = terminalPeak + half; j < te - half; j++) {
-        const derivative =
-          (magnitude(j + half) - magnitude(j - half)) / ((2 * half) / fs);
-        if (derivative < steepest) {
-          steepest = derivative;
-          steepestIndex = j;
-          tangent = j / fs - magnitude(j) / derivative;
+        if (size > largest) {
+          largest = size;
+          best = j;
         }
       }
-      if (
-        tangent !== null &&
-        tangent > terminalPeak / fs &&
-        tangent <= te / fs + 0.04
-      )
-        beat.tTangentEnd = tangent;
-      // A causal high-pass can leave a slowly recovering offset after T. Do not
-      // call that tail repolarization: require terminal slope to remain quiet.
-      let slopeQuiet = 0;
+      if (best !== lo && best !== hi) peak = best;
+    }
+    const observedCentre = peak;
+    const originalIndex = originalLandmarks.indexOf(marker);
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const previousLandmark =
+        attempt === 0
+          ? originalLandmarks[originalIndex - 1]
+          : peaks[complexIndex - 1];
+      const nextLandmark =
+        attempt === 0
+          ? originalLandmarks[originalIndex + 1]
+          : peaks[complexIndex + 1];
+      peak = attempt === 0 ? marker : observedCentre;
+      // An internal voltage plateau is not a baseline. On the repair pass,
+      // search before the earliest supported slope rather than before the apex.
+      const baselineAnchor =
+        attempt === 1 && supportStart !== null ? supportStart : peak;
+      let baseIndex = Math.max(8, baselineAnchor - Math.round(0.22 * fs));
+      for (let j = baseIndex; j < baselineAnchor - Math.round(0.04 * fs); j++)
+        if (energy[j] < energy[baseIndex]) baseIndex = j;
+      const baseline = names.map((l) =>
+        median(
+          Array.from(
+            s.leads[l].slice(
+              Math.max(0, baseIndex - Math.round(0.016 * fs)),
+              baseIndex + 1,
+            ),
+          ),
+        ),
+      );
+      const postLo = Math.min(
+        n - 2,
+        marker +
+          Math.round(Math.min(0.5, ((nextLandmark - marker) / fs) * 0.5) * fs),
+      );
+      const postHi = Math.min(n - 1, nextLandmark - Math.round(0.045 * fs));
+      let postIndex = postLo;
+      for (let j = postLo; j < postHi; j++)
+        if (energy[j] < energy[postIndex]) postIndex = j;
+      const postBaseline = names.map((l) =>
+        median(
+          Array.from(
+            s.leads[l].slice(
+              Math.max(0, postIndex - Math.round(0.008 * fs)),
+              postIndex + 1,
+            ),
+          ),
+        ),
+      );
+      const baseAt = (j: number, l: number) =>
+        baseline[l] +
+        (postBaseline[l] - baseline[l]) *
+          Math.max(
+            0,
+            Math.min(1, (j - baseIndex) / Math.max(1, postIndex - baseIndex)),
+          );
+      const magnitude = (j: number) =>
+        Math.sqrt(
+          names.reduce(
+            (sum, l, k) => sum + (s.leads[l][j] - baseAt(j, k)) ** 2,
+            0,
+          ),
+        );
+      // Robust high-frequency noise floor from the second difference, outside this QRS.
+      const noiseSamples: number[] = [];
       for (
-        let j = steepestIndex + half;
-        j < Math.min(tHi - half, te + Math.round(0.04 * fs));
+        let j = Math.max(2, peak - Math.round(0.3 * fs));
+        j < peak - Math.round(0.06 * fs);
         j++
       ) {
-        const d =
-          (magnitude(j + half) - magnitude(j - half)) / ((2 * half) / fs);
-        if (
-          Math.abs(d) < Math.max(0.04, Math.abs(steepest) * 0.08) &&
-          magnitude(j) < tAmplitude * 0.15
+        for (const lead of names)
+          noiseSamples.push(
+            Math.abs(
+              s.leads[lead][j] -
+                2 * s.leads[lead][j - 1] +
+                s.leads[lead][j - 2],
+            ),
+          );
+      }
+      const noise = median(noiseSamples) / 1.65;
+      let amplitude = 0;
+      for (
+        let j = Math.max(0, peak - Math.round(0.16 * fs));
+        j < Math.min(n, peak + Math.round(0.08 * fs));
+        j++
+      )
+        amplitude = Math.max(amplitude, magnitude(j));
+      // A centered derivative supplies boundaries without hard-coded millisecond offsets.
+      // The quiet bridge keeps notches / plateaus inside a wide QRS together.
+      const half = Math.max(1, Math.round(0.004 * fs));
+      const derivative = (j: number) =>
+        Math.sqrt(
+          names.reduce((sum, lead) => {
+            const lo = Math.max(0, j - half),
+              hi = Math.min(n - 1, j + half);
+            return (
+              sum +
+              (((s.leads[lead][hi] - s.leads[lead][lo]) * fs) / (hi - lo)) ** 2
+            );
+          }, 0),
+        );
+      const localSlopes: number[] = [];
+      for (
+        let j = Math.max(half, peak - Math.round(0.16 * fs));
+        j < Math.min(n - half, peak + Math.round(0.18 * fs));
+        j++
+      )
+        localSlopes.push(derivative(j));
+      const maximumSlope = quantile(localSlopes, 0.9);
+      const derivativeThreshold = Math.max(
+        0.4,
+        maximumSlope * 0.028,
+        noise * fs * 0.9,
+        quantile(localSlopes, 0.2) * 2.5,
+      );
+      const active = (j: number) => derivative(j) > derivativeThreshold;
+      const left = Math.max(
+          1,
+          peak -
+            Math.round(
+              Math.min(0.28, ((peak - previousLandmark) / fs) * 0.8) * fs,
+            ),
+        ),
+        right = Math.min(n - 1, Math.max(peak, marker) + Math.round(0.21 * fs)),
+        quietSamples = Math.round(
+          Math.min(0.04, ((peak - previousLandmark) / fs) * 0.075) * fs,
+        );
+      let on = Math.min(peak, marker),
+        off = Math.max(peak, marker),
+        quiet = 0,
+        neutral = 0;
+      const neutralSamples = Math.max(1, Math.round(0.006 * fs));
+      const atBaseline = (j: number) =>
+        magnitude(j) < Math.max(0.008, noise * 5, amplitude * 0.08) &&
+        derivative(j) < Math.max(derivativeThreshold, maximumSlope * 0.08);
+      for (let j = peak; j > left; j--) {
+        const insideSupport =
+          attempt === 1 &&
+          supportStart !== null &&
+          supportEnd !== null &&
+          j >= supportStart &&
+          j <= supportEnd;
+        neutral = !insideSupport && atBaseline(j) ? neutral + 1 : 0;
+        if (neutral >= neutralSamples) {
+          on = Math.max(on, j + neutral);
+          break;
+        }
+        if (active(j)) {
+          on = Math.min(on, j);
+          quiet = 0;
+        } else if (insideSupport) quiet = 0;
+        else if (
+          ++quiet >= quietSamples &&
+          (attempt === 0 ||
+            !recovered.has(marker) ||
+            magnitude(j) <= Math.max(0.008, noise * 5, amplitude * 0.08))
         )
-          slopeQuiet++;
-        else slopeQuiet = 0;
-        if (slopeQuiet >= Math.round(0.024 * fs)) {
-          const slopeEnd = (j - slopeQuiet + 1) / fs;
-          if (slopeEnd > terminalPeak / fs && slopeEnd < beat.tEnd!) {
-            beat.tEnd = slopeEnd;
-            beat.qt = (slopeEnd - beat.onset) * 1000;
+          break;
+      }
+      quiet = 0;
+      neutral = 0;
+      for (let j = marker; j < right; j++) {
+        const insideSupport =
+          attempt === 1 &&
+          supportStart !== null &&
+          supportEnd !== null &&
+          j >= supportStart &&
+          j <= supportEnd;
+        neutral = !insideSupport && atBaseline(j) ? neutral + 1 : 0;
+        if (neutral >= neutralSamples) {
+          off = Math.min(off, j - neutral);
+          break;
+        }
+        if (active(j)) {
+          off = Math.max(off, j);
+          quiet = 0;
+        } else if (insideSupport) quiet = 0;
+        else if (++quiet >= quietSamples) break;
+      }
+      // A wider supported window can repair a truncated complex. It cannot, by
+      // itself, erase between-beat ambiguity in the original observed windows.
+      if (attempt === 0) {
+        const originalWidth = (off - on) / fs,
+          previousRR = (marker - previousLandmark) / fs;
+        if (
+          on > left + 1 &&
+          off < right - 1 &&
+          originalWidth >= 0.04 &&
+          originalWidth <= 0.28 &&
+          originalWidth <=
+            Math.min(previousRR, (nextLandmark - marker) / fs) * 0.75
+        )
+          originalWindowWidths.push(originalWidth * 1000);
+      }
+      if (
+        mergedLandmarks.has(marker) ||
+        complexIndex <= 0 ||
+        complexIndex >= peaks.length - 1
+      )
+        continue beatsLoop;
+      if (
+        attempt === 0 &&
+        retained.has(marker) &&
+        ((components && (on > supportStart! || off < supportEnd!)) ||
+          (recovered.has(marker) &&
+            (on > observedCentre || off < observedCentre)))
+      )
+        continue;
+      if (on <= left + 1 || off >= right - 1) continue beatsLoop;
+      // Report the center of the derivative transition (sampling resolution applies).
+      const width = (off - on) / fs,
+        localRR = (marker - previousLandmark) / fs;
+      if (
+        width < 0.04 ||
+        width > 0.28 ||
+        width > Math.min(localRR, (nextLandmark - peak) / fs) * 0.75
+      )
+        continue beatsLoop;
+      historicalWidths.push(width * 1000);
+      if (!retained.has(marker)) continue beatsLoop;
+      let ai = 0,
+        aii = 0;
+      for (let j = on; j < off; j++) {
+        ai += s.leads.I[j] - baseAt(j, 0);
+        aii += s.leads.II[j] - baseAt(j, 1);
+      }
+      const beat: DelineatedBeat = {
+        peak: marker / fs,
+        onset: on / fs,
+        offset: off / fs,
+        pOnset: null,
+        pPeak: null,
+        tPeak: null,
+        tEnd: null,
+        tTangentEnd: null,
+        rr: (marker - ratePeaks[ratePeaks.indexOf(marker) - 1]) / fs,
+        pr: null,
+        qrs: width * 1000,
+        qt: null,
+        axis: observedFrontalDirection(ai, aii),
+        noise,
+      };
+      const pLo = Math.max(
+          0,
+          on - Math.round(Math.min(0.32, localRR * 0.4) * fs),
+        ),
+        pHi = on - Math.round(0.035 * fs);
+      let pp = pLo;
+      for (let j = pLo; j < pHi; j++) if (magnitude(j) > magnitude(pp)) pp = j;
+      const pAmplitude = magnitude(pp),
+        pThreshold = Math.max(pAmplitude * 0.04, noise * 4, 0.003);
+      if (
+        pAmplitude > Math.max(0.045, noise * 10) &&
+        pAmplitude < amplitude * 0.55
+      ) {
+        let po = pp;
+        while (po > pLo && magnitude(po) > pThreshold) po--;
+        if (po > pLo + 1 && pp - po > 0.012 * fs) {
+          beat.pOnset = po / fs;
+          beat.pPeak = pp / fs;
+          beat.pr = ((on - po) / fs) * 1000;
+          paxes.push(
+            observedFrontalDirection(
+              s.leads.I[pp] - baseline[0],
+              s.leads.II[pp] - baseline[1],
+            ),
+          );
+        }
+      }
+      // A directly observed isoelectric return needs no extrapolated terminal
+      // estimator. Certify a quiet 40 ms plateau on the local four-lead baseline;
+      // noisy or drifting tails are left to the multiscale estimator below.
+      const lo = off + Math.round(0.04 * fs);
+      const hi = Math.min(
+        n - 1,
+        nextLandmark - Math.round(0.12 * fs),
+        on + Math.round(Math.min(0.95, localRR * 0.82) * fs),
+      );
+      let tp = lo,
+        last = lo,
+        terminalQuiet = 0,
+        started = false;
+      for (let j = lo; j < hi; j++) {
+        const value = magnitude(j);
+        if (value > Math.max(0.012, noise * 6)) started = true;
+        if (!started) continue;
+        if (value > magnitude(tp)) tp = j;
+        if (value > Math.max(0.004, magnitude(tp) * 0.025)) {
+          last = j;
+          terminalQuiet = 0;
+        } else terminalQuiet++;
+        if (terminalQuiet >= Math.round(0.04 * fs)) {
+          if (
+            tp > lo + 3 &&
+            magnitude(tp) > Math.max(0.05, noise * 12) &&
+            noise <= 0.001
+          ) {
+            beat.tPeak = tp / fs;
+            beat.tEnd = (last + 1) / fs;
+            beat.qt = (beat.tEnd - beat.onset) * 1000;
           }
           break;
         }
       }
+      // Retain an observed peak even when the terminal boundary is unresolved.
+      if (
+        beat.tPeak === null &&
+        started &&
+        tp > lo + 3 &&
+        magnitude(tp) > Math.max(0.05, noise * 12)
+      )
+        beat.tPeak = tp / fs;
+      if (beat.tPeak !== null && noise <= 0.001) {
+        const half = Math.max(1, Math.round(0.008 * fs));
+        let steepest = 0,
+          tangent: number | null = null;
+        for (
+          let j = tp + half;
+          j < Math.min(hi - half, tp + Math.round(0.3 * fs));
+          j++
+        ) {
+          const derivative =
+            ((magnitude(j + half) - magnitude(j - half)) * fs) / (2 * half);
+          if (derivative < steepest) {
+            steepest = derivative;
+            tangent = j / fs - magnitude(j) / derivative;
+          }
+        }
+        if (tangent !== null && tangent > beat.tPeak && tangent < hi / fs)
+          tangentEnds.set(beat.peak, tangent);
+      }
+      terminalFrames.set(beat.peak, { magnitude, baseAt });
+      beats.push(beat);
+      break;
     }
-    beats.push(beat);
+  }
+  const boundaries = new Map(
+    beats.map((b) => [Math.round(b.peak * fs), b.offset]),
+  );
+  const terminal = terminalConsensus(
+    input,
+    ratePeaks,
+    ratePeaks.map((p) => boundaries.get(p) ?? null),
+    ratePeaks.map((p) => {
+      const b = beats.find((b) => Math.round(b.peak * fs) === p);
+      if (!b || b.tPeak === null) return [];
+      const out = [];
+      if (b.tEnd !== null) out.push({ peak: b.tPeak, end: b.tEnd });
+      const tangent = tangentEnds.get(b.peak);
+      if (tangent !== undefined)
+        out.push({
+          peak: b.tPeak,
+          end: tangent,
+          requiresUnambiguousTail: true,
+        });
+      return out;
+    }),
+  );
+  for (const beat of beats) {
+    const t = terminal[ratePeaks.indexOf(Math.round(beat.peak * fs))];
+    beat.tEnd = null;
+    beat.qt = null;
+    if (t && t.peak > beat.offset && t.end > t.peak) {
+      beat.tPeak = t.peak;
+      beat.tEnd = t.end;
+      beat.qt = (t.end - beat.onset) * 1000;
+      const frame = terminalFrames.get(beat.peak)!;
+      const tp = Math.round(t.peak * fs),
+        te = Math.round(t.end * fs);
+      taxes.push(
+        observedFrontalDirection(
+          s.leads.I[tp] - frame.baseAt(tp, 0),
+          s.leads.II[tp] - frame.baseAt(tp, 1),
+        ),
+      );
+      const half = Math.max(1, Math.round(0.008 * fs));
+      let steepest = 0,
+        tangent: number | null = null;
+      for (let j = tp + half; j < te - half; j++) {
+        const derivative =
+          ((frame.magnitude(j + half) - frame.magnitude(j - half)) * fs) /
+          (2 * half);
+        if (derivative < steepest) {
+          steepest = derivative;
+          tangent = j / fs - frame.magnitude(j) / derivative;
+        }
+      }
+      if (tangent !== null && tangent > t.peak && tangent <= t.end + 0.04)
+        beat.tTangentEnd = tangent;
+    }
   }
   if (beats.length < 3 || beats.length < (ratePeaks.length - 2) * 0.45) {
     if (ratePeaks.length >= 4) {
@@ -409,6 +569,8 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
   const widths = beats.map((b) => b.qrs),
     prs = beats.flatMap((b) => (b.pr === null ? [] : [b.pr])),
     qts = beats.flatMap((b) => (b.qt === null ? [] : [b.qt]));
+  const axes = beats.flatMap((b) => (b.axis === null ? [] : [b.axis]));
+  const axis = directionSummary(axes);
   const pm = median(prs),
     consistent =
       prs.length >= Math.max(3, beats.length * 0.65) &&
@@ -427,7 +589,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
         : null;
   const pr = consistent && !noisy ? pm : null,
     q = qt === null ? null : qt / 1000;
-  const eligible = peaks.slice(1,-1).filter(p=>retained.has(p)).length;
+  const eligible = peaks.slice(1, -1).filter((p) => retained.has(p)).length;
   const ev = {
     hr: evidence(
       intervals,
@@ -459,15 +621,46 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
             qts,
             eligible,
             24,
-            "Retorno de amplitud o pendiente terminal; revisa T/U.",
+            "Final T contrastado entre estimadores sobre las muestras; revisa T/U.",
           ),
-    axis: evidence(
-      unwrapAngles(beats.map((b) => b.axis)),
-      eligible,
-      12,
-      "Eje de área neta entre límites QRS.",
-    ),
+    axis: axes.length
+      ? evidence(
+          unwrapAngles(axes),
+          eligible,
+          12,
+          "Eje de área neta entre límites QRS.",
+        )
+      : unavailable(
+          "Áreas QRS de I y II nulas: no definen dirección frontal. La actividad P/T no aporta un eje QRS ni equivale a 0°.",
+          eligible,
+        ),
   };
+  if (
+    ev.qrs.status === "usable" &&
+    originalWindowWidths.length >= 3 &&
+    spread(originalWindowWidths) > 16
+  ) {
+    ev.qrs = {
+      ...ev.qrs,
+      status: "review",
+      reason: "Ventanas QRS alternativas inconsistentes: revisa el trazado.",
+    };
+  }
+
+  if (axes.length > 0 && axis === null) {
+    ev.axis = {
+      ...unavailable(
+        "Direcciones QRS opuestas y equilibradas: no existe un eje global único. La actividad eléctrica permanece observable por latido.",
+        eligible,
+      ),
+      count: axes.length,
+    };
+  }
+  if (axis !== null && axes.length > 0 && axes.length < beats.length) {
+    ev.axis.status = "review";
+    ev.axis.reason =
+      "Algunos QRS carecen de área frontal neta: el resumen usa solo direcciones observables; revisa los complejos individualmente.";
+  }
   // A removed impulse can hide the true activation onset; preserve that uncertainty.
   const nearImpulse = (t: number | null) =>
     t !== null && masks.some((r) => t >= r.start - 0.008 && t <= r.end + 0.016);
@@ -492,23 +685,33 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
   }
   // Dropping candidate waves can shrink width dispersion without fixing the
   // underlying boundary estimator. Do not promote QRS precision for that reason.
-  const priorQrsSupport = evidence(historicalWidths, peaks.length - 2, 16, "Límites QRS reproducibles.");
+  const priorQrsSupport = evidence(
+    historicalWidths,
+    peaks.length - 2,
+    16,
+    "Límites QRS reproducibles.",
+  );
   if (ev.qrs.status === "usable" && priorQrsSupport.status !== "usable") {
     ev.qrs.status = "review";
-    ev.qrs.reason = "La selección QRS/T cambió el conjunto de límites; la precisión QRS previa aún requiere revisión.";
+    ev.qrs.reason =
+      "La selección QRS/T cambió el conjunto de límites; la precisión QRS previa aún requiere revisión.";
   }
-  // Removing some smooth post-complex candidates is not proof that every
-  // remaining short interval is a ventricular activation. Preserve ambiguity.
-  if (ratePeaks.length < peaks.length && intervals.some(value => value < rr * 0.75)) {
+  // Keep this check on the original train. Combining two morphology slopes
+  // must not erase evidence of unrelated short intervals in the rate train.
+  if (
+    ratePeaks.length < originalLandmarks.length &&
+    intervals.some((value) => value < rr * 0.75)
+  ) {
     ev.hr.status = "review";
-    ev.hr.reason = "Persisten intervalos cortos después de discriminar candidatos QRS/T; verifica el conteo con calibres.";
+    ev.hr.reason =
+      "Persisten intervalos cortos después de discriminar candidatos QRS/T; verifica el conteo con calibres.";
   }
   if (noisy) {
     ev.qrs.status = "review";
     ev.qrs.reason = "Ruido elevado: revisa manualmente los límites.";
     ev.hr.status = "review";
     ev.hr.reason = "El ruido puede producir detecciones falsas.";
-    ev.axis.status = "review";
+    if (ev.axis.status !== "unavailable") ev.axis.status = "review";
   }
   return {
     hr,
@@ -517,9 +720,15 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     pr,
     qrs,
     qt,
-    axis: circularMedian(beats.map((b) => b.axis)),
-    pAxis: pr !== null && paxes.length ? circularMedian(paxes) : null,
-    tAxis: qt !== null && taxes.length ? circularMedian(taxes) : null,
+    axis,
+    pAxis:
+      pr !== null && paxes.length && paxes.every((a) => a !== null)
+        ? directionSummary(paxes)
+        : null,
+    tAxis:
+      qt !== null && taxes.length && taxes.every((a) => a !== null)
+        ? directionSummary(taxes)
+        : null,
     qtc: {
       bazett: q === null ? null : (q / Math.sqrt(rr)) * 1000,
       fridericia: q === null ? null : (q / Math.cbrt(rr)) * 1000,
@@ -529,7 +738,7 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     quality:
       "Análisis de muestras · primeros 10 s · los límites y las cifras comparten el mismo delineador.",
     beats,
-    evidence: ev,
+    evidence: constrainQtEvidence(ev),
     window: { start: 0, end: n / fs },
     detectedPeaks: ratePeaks.map((p) => p / fs),
   };

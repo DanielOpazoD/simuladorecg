@@ -11,10 +11,11 @@
     "check": "npm test && npm run build"
   },
   "devDependencies": {
-    "vite": "^6.1.0",
+    "@types/node": "^22.13.1",
+    "playwright": "1.63.0",
     "typescript": "^5.7.3",
-    "vitest": "^4.1.11",
-    "@types/node": "^22.13.1"
+    "vite": "^6.1.0",
+    "vitest": "^4.1.11"
   },
   "license": "UNLICENSED"
 }

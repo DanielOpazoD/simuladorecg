@@ -1,3 +1,4 @@
+import {secondaryRepolarization,secondarySTEnvelope} from './secondary-repolarization';
 import { torsadesFrame } from './torsades-frame';
 import { ventricularSource } from "./ventricular-source";
 import { PRECORDIAL_LEADS } from "./lead-registry";
@@ -127,6 +128,14 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
       if (c.stShape === "convex") shape = 1 + 0.3 * Math.sin(Math.PI * u);
       return scale(lv, Math.max(0, envelope) * shape);
     });
+    const secondaryST=secondaryRepolarization(c,b,ks).st;
+    if(secondaryST){
+      const j=b.time+dur, start=j-.040, end=tStart+tLen*.5;
+      add(start,end-start,(_u,t)=>{
+        const envelope=secondarySTEnvelope(t,j,tStart,tLen);
+        return scale(tors?torsadesFrame(secondaryST,t,c.hr):secondaryST,envelope);
+      });
+    }
     add(tStart, tLen, (u, t) =>
       scale(tors ? torsadesFrame(tv, t, c.hr) : tv, tWave(u, c.electrolyte === "hyperkalemia")),
     );
@@ -239,7 +248,9 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
     let muscle = 0;
     for (let i = 0; i < n; i++) {
       const t = i / FS;
-      muscle = 0.3 * muscle + 0.7 * normal(r);
+      // This RNG is private to this lead and only feeds the muscle artifact.
+      // At exactly zero amplitude no variate can affect any emitted sample.
+      if (c.artifacts.muscle !== 0) muscle = 0.3 * muscle + 0.7 * normal(r);
       arr[i] =
         xyz[0][i] * row[0] +
         xyz[1][i] * row[1] +

@@ -19,7 +19,7 @@ export function attachMeasurementSupport(m: Measurement, challenge: Challenge | 
     if(Math.abs(delta)<=MEASUREMENT_SUPPORT_POLICY.matchSeconds){matched.add(nominal[i]);i++;j++;}
     else if(delta<0)i++;else j++;
   }
-  const select=(key:MetricKey):DelineatedBeat[]=>m.beats.filter(b=>key==='pr'?b.pr!==null&&b.pOnset!==null:key==='qt'?b.qt!==null&&b.tEnd!==null:true);
+  const select=(key:MetricKey):DelineatedBeat[]=>m.beats.filter(b=>key==='pr'?b.pr!==null&&b.pOnset!==null:key==='qt'?b.qt!==null&&b.tEnd!==null:key==='axis'?b.axis!==null:true);
   const support={} as Record<MetricKey, SampleSupport>;
   for(const key of ['hr','pr','qrs','qt','axis'] as const) {
     const candidates=key==='hr'?nominal.slice(1).map((peak,k)=>({peak,start:nominal[k],end:peak,stableDetection:matched.has(peak)&&matched.has(nominal[k])})):
@@ -37,10 +37,19 @@ export function attachMeasurementSupport(m: Measurement, challenge: Challenge | 
     result={...result,evidence:{...result.evidence,[key]:{...result.evidence[key],
       status:remove?'unavailable':'review',count:remove?0:result.evidence[key].count,reason:remove?
         'No quedan suficientes latidos con detección estable para sostener este resumen; se retira la cifra. Los límites candidatos se conservan para revisión.':
-        'Parte de los latidos que aportan esta medida cambia con el umbral de detección y el fondo es elevado; revisa los candidatos indicados.'}}};
+        'Parte de los latidos que aportan esta medida cambia con el umbral de detección; revisa los candidatos indicados.'}}};
     if(remove){result={...result,[key]:null,rejected:{...result.rejected,[key]:m[key]!}};
       if(key==='pr')result.pAxis=null;
       if(key==='qt'){result.tAxis=null;result.qtc={bazett:null,fridericia:null,framingham:null,hodges:null};}}
   }
-  return result;
+  const evidence=constrainQtEvidence(result.evidence);
+  return evidence===result.evidence?result:{...result,evidence};
+}
+
+/** A QT interval includes the ventricular onset. Agreement at T-end cannot
+ * promote the whole interval above the confidence of its QRS boundaries. */
+export function constrainQtEvidence(evidence: Measurement['evidence']): Measurement['evidence'] {
+  if(evidence.qt.status!=='usable'||evidence.qrs.status==='usable')return evidence;
+  return {...evidence,qt:{...evidence.qt,status:'review',
+    reason:'El final T es concordante, pero los límites QRS requieren revisión; verifica el inicio y el final del QT con calibres.'}};
 }

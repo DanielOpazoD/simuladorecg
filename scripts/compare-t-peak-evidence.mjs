@@ -1,5 +1,6 @@
+import {COMPLETE_COMPLEX_REVISION,preCompleteComplexPlugin,assertCompleteComplexMeasurements} from './lib/complete-complex-revision.mjs';
 import {QRS_T_REVISION,assertReviewedQrsTFile,assertQrsTRefinement,preQrsTNumericsPlugin} from './lib/qrs-t-revision.mjs';
-import {assertReviewedSampleEntry,assertReviewedAlternatingConfidence,assertReviewedImpulseConfidence,assertReviewedSampleDependencies} from './lib/sample-entry-contract.mjs';
+import {restoreHistoricalRateScreen,assertReviewedSampleEntry,assertReviewedAlternatingConfidence,assertReviewedImpulseConfidence,assertReviewedSampleDependencies} from './lib/sample-entry-contract.mjs';
 /** Paired evidence-only revision: fixed, already observed LUDB cohorts; no holdout. */
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
@@ -39,13 +40,18 @@ assertReviewedAlternatingConfidence(readFileSync('src/engine/analysis/alternatin
 const analyzers=[];
 for(const [i,root] of [base,candidate].entries()){
  const bundle=resolve(out,'analyzer-'+i+'.mjs');
- const r=await build({absWorkingDir:root,entryPoints:[p.analysisEntry],bundle:true,platform:'node',format:'esm',metafile:true,outfile:bundle,plugins:i===1?[preQrsTNumericsPlugin(candidate)]:[]});
+ const r=await build({absWorkingDir:root,entryPoints:[p.analysisEntry],bundle:true,platform:'node',format:'esm',metafile:true,outfile:bundle,plugins:i===1?[{name:'restore-frozen-rate-screen',setup(b){b.onLoad({filter:/\/sample-analysis\.ts$/},args=>({contents:restoreHistoricalRateScreen(readFileSync(args.path,'utf8')),loader:'ts'}));}},preQrsTNumericsPlugin(candidate)]:[]});
  assertReviewedSampleDependencies(Object.keys(r.metafile.inputs),analyzedFiles,i===1);
  analyzers.push((await import(pathToFileURL(bundle))).analyzeSamples);
 }
 const actualBundle=resolve(out,'actual-revised-analyzer.mjs');
 await build({entryPoints:[p.analysisEntry],bundle:true,platform:'node',format:'esm',outfile:actualBundle});
 const actualAnalyzer=(await import(pathToFileURL(actualBundle))).analyzeSamples;
+const releasedBundle=resolve(out,'pre-complete-complex.mjs');
+await build({entryPoints:[resolve(candidate,'src/engine/sample-analysis.ts')],bundle:true,platform:'node',format:'esm',outfile:releasedBundle,plugins:[preCompleteComplexPlugin(candidate)]});
+const releasedAnalyzer=(await import(pathToFileURL(releasedBundle))).analyzeSamples;
+const completeComplexEvidence=[];
+
 const revisedCohorts={};
 const sampleHash=s=>hash(Buffer.concat(Object.keys(s.leads).sort().map(k=>Buffer.from(s.leads[k].buffer,s.leads[k].byteOffset,s.leads[k].byteLength))));
 const cohorts={};
@@ -70,7 +76,7 @@ for(const [name,fixture,ids,split,protocolHash] of [
   }
   added+=assertPeakOnlyChange(measurements[0],measurements[1]);
   const actual=actualAnalyzer({fs:signal.fs,leads:signal.leads});
-  assertQrsTRefinement(measurements[1],actual);
+  assertQrsTRefinement(measurements[1],releasedAnalyzer({fs:signal.fs,leads:signal.leads}),{terminalReplacement:true});
   const evaluated=assessRecord(signal,references,()=>actual,p);
   revised.push({id,physicalSamplesSha256:samples,measurement:actual,...evaluated});
  }
@@ -96,10 +102,12 @@ for(const preset of PRESETS.filter(p=>p.strategy!=='pending'))for(const filter o
  const c=fromPreset(preset);c.filter=filter;const signal=synthesize(c,10),before=sampleHash(signal);
  const historical=analyzers.map(f=>f({fs:signal.fs,leads:signal.leads}));
  presetAdded+=assertPeakOnlyChange(...historical);
- assertQrsTRefinement(historical[1],actualAnalyzer({fs:signal.fs,leads:signal.leads}));
+ const released=releasedAnalyzer({fs:signal.fs,leads:signal.leads});
+ assertQrsTRefinement(historical[1],released,{terminalReplacement:true});
+ completeComplexEvidence.push(assertCompleteComplexMeasurements(released,actualAnalyzer({fs:signal.fs,leads:signal.leads}),signal.events.beats));
  assert.equal(sampleHash(signal),before);scenarios++;
 }
-const report={schemaVersion:1,baselineCommit:T_PEAK_REVISION.baselineCommit,candidateCommit:git(candidate,'rev-parse','HEAD'),
+const report={schemaVersion:2,completeComplexRevision:COMPLETE_COMPLEX_REVISION,completeComplexEvidence,baselineCommit:T_PEAK_REVISION.baselineCommit,candidateCommit:git(candidate,'rev-parse','HEAD'),
  historicalEvidenceOnlyAmendment:T_PEAK_REVISION,numericalRevision:QRS_T_REVISION,revisedCohorts,analyzerFiles:Object.fromEntries(analyzedFiles.map(f=>[f,hash(readFileSync(f))])),
  evaluationFiles:Object.fromEntries(evaluationFiles.map(f=>[f,hash(readFileSync(f))])),cohorts,
  presets:{count:PRESETS.filter(p=>p.strategy!=='pending').length,scenarios,addedTPeakCandidates:presetAdded,sameNumericMeasurementsAndQuality:true},

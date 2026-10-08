@@ -7,7 +7,7 @@ import { caseContext, caseReading, normalizeImportedCase } from "../src/presets/
 import { repolarizationLimitations, WPW_REPOLARIZATION_LIMIT, SECONDARY_ST_RATIO_LIMIT } from "../src/presets/teaching-limits";
 const load = (id: string) => fromPreset(presetById(id)!);
 
-describe("Specific teaching limits, not repaired physiology", () => {
+describe("Specific teaching limits reflect the implemented source", () => {
   it.each(["wpw", "lbbb", "sgarbossa", "vvi", "ddd"])("%s retains every sample and exposes its specific limit", (id) => {
     const c=load(id), original=structuredClone(c), before=synthesize(c,10);
     const restored=normalizeImportedCase(c), context=caseContext(restored);
@@ -40,7 +40,7 @@ describe("Specific teaching limits, not repaired physiology", () => {
       for(let i=Math.ceil((b.time+.210)*preexcited.fs);i<Math.floor((b.time+b.qt!)*preexcited.fs);i++)
         tChange=Math.max(tChange,Math.abs(preexcited.leads[lead][i]-control.leads[lead][i]));
     }
-    expect(qrsChange).toBeGreaterThan(.02);expect(tChange).toBe(0);
+    expect(qrsChange).toBeGreaterThan(.02);expect(tChange).toBeGreaterThan(.05);
     expect(caseContext(c).warnings).toContain(WPW_REPOLARIZATION_LIMIT);
   });
   it.each(['lbbb','vvi','ddd'])("%s preserves QRS gain while keeping Sgarbossa ratios explicitly unvalidated",id=>{

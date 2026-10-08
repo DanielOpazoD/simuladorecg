@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "role": "exposed development reference only; not clinical calibration or held-out validation",
+  "dataset": "PTB-XL",
+  "version": "1.0.3",
+  "releaseManifestSha256": "b7224b92b341511ec3ceb13dc6652079b2c36a06504bcb49506f157f51dc695d",
+  "metadataSha256": "7600de9c1b27d181d850b3c6038a35d7c3ddb6bb33b702e3a20252a6859d216b",
+  "seed": "ecg-foundation-isolated-phenotypes-v1",
+  "groups": ["NORM", "LAFB", "LPFB", "CLBBB", "WPW", "PACE"],
+  "maximumPatientsPerGroup": 20,
+  "minimumAgeYears": 18,
+  "allowedAdditionalLabels": ["SR"],
+  "requiredTargetLikelihood": 100,
+  "developmentFolds": [1, 2, 3, 4, 5, 6, 7, 8],
+  "excludeWholePatientIfAnyHeldoutRecord": true,
+  "excludePatientsWithMultipleEligibleGroups": true,
+  "recordPerPatient": "lowest ECG ID among eligible records",
+  "ordering": "SHA256(seed:patient_id), then ECG ID",
+  "scarcityPolicy": "retain actual N; no replacement with overlapping diagnoses and no automatic calibration eligibility",
+  "waveforms": "original records500 only; WFDB16, 500 Hz, 5000 samples, 1000 counts/mV, zero offset",
+  "noRescaling": true,
+  "noAutomaticBoundaryTruth": true,
+  "limitations": [
+    "An isolated metadata label is not an independently adjudicated isolated disease.",
+    "NORM is a database ECG label, not proof of a healthy patient.",
+    "Likelihood 100 is a database annotation value, not certainty or diagnostic accuracy.",
+    "No future test-fold waveform is acquired by this protocol.",
+    "Sparse LPFB or WPW cohorts do not establish population amplitude ranges.",
+    "No demographic data or free-text clinical reports are exported."
+  ]
+}

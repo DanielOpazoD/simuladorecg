@@ -93,7 +93,7 @@ export class ExternalLab {
             ? 'Archivo leído. Análisis exploratorio permitido por el control técnico; no implica precisión clínica.'
             : 'Archivo válido para visualizar y revisar manualmente. No se ejecutó el analizador en esta ventana.';
           this.render(); this.cancel();
-        } catch { fail('Respuesta del worker inválida o ajena a la ventana. No se aceptan medidas incompletas.'); }
+        } catch { fail('Respuesta del worker inválida o ajena a la ventana. No se aceptan medidas incompletas o inconsistentes.'); }
       };
       this.worker.onerror = e => { e.preventDefault(); fail('Error del worker local. Vuelve a abrir el archivo; no se muestra un análisis anterior.'); };
       this.worker.onmessageerror = () => fail('Respuesta del worker no legible. No se acepta un resultado incompleto.');

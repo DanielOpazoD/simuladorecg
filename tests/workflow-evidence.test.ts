@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 const workflow=readFileSync(new URL('../.github/workflows/fidelity.yml',import.meta.url),'utf8');
 const build=workflow.split('  build:')[1].split('  portability:')[0];
-const verify=workflow.split('  verify:')[1].split('  accessibility:')[0];
-const accessibility=workflow.split('  accessibility:')[1];
+const verify=workflow.split('  verify-core:')[1].split('  verify:')[0];
+const accessibility=workflow.split('  browser-contracts:')[1].split('  accessibility:')[0];
 describe('CI evidence reuse without coverage removal',()=>{
   it.each([
     ['activation','ECG_ACTIVATION_ENGINES'],
@@ -33,7 +33,8 @@ describe('CI evidence reuse without coverage removal',()=>{
     for(const command of ['npm test','validate-regional-activation.mjs','validate-repolarization-scope.mjs','validate-repolarization.mjs','validate-posterior-amplitude.mjs']) expect(verify).toContain(command);
     expect(accessibility).toContain('needs: build');
     expect(verify).toContain('needs: build');
-    expect(accessibility).toContain('chromium webkit firefox');
+    expect(accessibility).toContain('node scripts/verify-browser-runtime.mjs');
+    expect(readFileSync('scripts/verify-browser-runtime.mjs','utf8')).toContain('[chromium,firefox,webkit]');
     expect(accessibility).toContain('node tests/browser-accessibility.mjs');
     expect(accessibility).not.toContain('continue-on-error');
   });

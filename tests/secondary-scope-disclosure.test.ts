@@ -8,12 +8,12 @@ import {renderPaper} from '../src/render/ecg';
 import {cloneCase,DEFAULT_CASE,type ECGCase,type Signal} from '../src/engine/types';
 import {makeArrays} from '../src/engine/leads';
 /** Characterize the current omission; replace this disclosure when independently validated ST exists. */
-it.each(['lbbb','sgarbossa','vvi','ddd'])('%s disclosure distinguishes absent ST from approximate T',id=>{
+it.each(['lbbb','sgarbossa','vvi','ddd'])('%s disclosure distinguishes approximate ST/T from calibrated diagnostic ratios',id=>{
  const c=fromPreset(presetById(id)!),s=synthesize(c,10),b=s.events.beats.find(b=>b.time>3)!;
  const secondary=secondaryRepolarization(c,b,qrsKernels(c,b));
- expect(secondary.t).not.toBeNull();expect(secondary.st).toBeNull();
- expect(SECONDARY_ST_RATIO_LIMIT).toContain('el ST secundario no está representado');
- expect(SECONDARY_ST_RATIO_LIMIT).toContain('Un ST plano no demuestra repolarización normal');
+ expect(secondary.t).not.toBeNull();expect(secondary.st).not.toBeNull();
+ expect(SECONDARY_ST_RATIO_LIMIT).toContain('ST y T secundarios aproximados');
+ expect(SECONDARY_ST_RATIO_LIMIT).toContain('no están calibradas clínicamente');
 });
 it.each(['3x4','3x4+1','3x4+3','6x2','12x1'] as ECGCase['view']['format'][])('paper %s carries the clinical limit without moving trace geometry or revealing quiz name',format=>{
  const c=cloneCase(DEFAULT_CASE);c.view.format=format;c.name='SECRET DIAGNOSIS';

@@ -13,7 +13,9 @@ describe('Per-metric support and selective abstention',()=>{
   const m=analyzeSamples(sample());const b=m.beats[0];
   expect(m.support!.pr.candidates[0]).toMatchObject({start:b.pOnset,end:b.onset});
   expect(m.support!.qrs.candidates[0]).toMatchObject({start:b.onset,end:b.offset});
-  expect(m.support!.qt.candidates[0]).toMatchObject({start:b.onset,end:b.tEnd});
+  const qtBeat=m.beats.find(beat=>beat.qt!==null)!;
+  expect(qtBeat).toBeDefined();
+  expect(m.support!.qt.candidates[0]).toMatchObject({start:qtBeat.onset,end:qtBeat.tEnd});
   expect(m.support!.axis.leads).toEqual(['I','II']);
  });
  it('different missing waves give different candidate populations',()=>{

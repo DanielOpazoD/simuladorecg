@@ -57,11 +57,18 @@ it('preserves candidate grouping under lead polarity reversal',()=>{
 });
 
 import {analyzeSamples} from '../src/engine/sample-analysis';
-it('does not authorize new morphology when the original candidate train was too close',()=>{
+it('measures the whole supported complex after opposing slopes are grouped',()=>{
  const s=train(500,.24,.833),raw=detectVentricularCandidates(s,{tReject:false});
  const rr=raw.peaks.slice(1).map((p,i)=>(p-raw.peaks[i])/s.fs).sort((a,b)=>a-b);
  expect(rr[Math.floor(rr.length/2)]).toBeLessThan(.22);
  const m=analyzeSamples(s);
- expect(m.beats).toEqual([]);expect(m.qrs).toBeNull();expect(m.pr).toBeNull();expect(m.qt).toBeNull();
- expect(m.evidence.hr.status).not.toBe('usable');
+ expect(m.beats.length).toBeGreaterThanOrEqual(8);
+ expect(Math.abs(m.qrs!-240)).toBeLessThanOrEqual(8);
+ for(const b of m.beats){
+  expect(Math.abs(b.qrs-240)).toBeLessThanOrEqual(8);
+  expect(b.onset).toBeLessThan(b.peak);expect(b.offset).toBeGreaterThan(b.peak);
+  expect(Math.abs(b.axis!-Math.atan2(1.6/Math.sqrt(3),1)*180/Math.PI)).toBeLessThan(.1);
+ }
+ expect(m.pr).toBeNull();expect(m.qt).toBeNull();
+ expect(m.hr).toBeCloseTo(60/.833,1);
 });

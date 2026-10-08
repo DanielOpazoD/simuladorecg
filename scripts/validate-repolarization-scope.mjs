@@ -1,5 +1,8 @@
+import {predictWpwRepolarization} from './lib/wpw-repolarization-prediction.mjs';
+import {predictSecondaryST} from './lib/secondary-st-prediction.mjs';
+import {predictLpfbSource} from './lib/lpfb-source-prediction.mjs';
 import {assertTeachingCatalogSource,assertTeachingCatalogRevision} from './lib/teaching-scope-revision.mjs';
-import {QRS_T_REVISION,assertReviewedQrsTFile} from './lib/qrs-t-revision.mjs';
+import {TERMINAL_SOURCE_REVISION,QRS_T_REVISION,assertReviewedQrsTFile} from './lib/qrs-t-revision.mjs';
 import {predictWpwSupport} from './lib/wpw-support-prediction.mjs';
 import {assertNoncaptureTeachingScope} from './lib/noncapture-teaching-contract.mjs';
 import {predictAfClock,assertFrozenAfSampler} from './lib/af-clock-prediction.mjs';
@@ -47,8 +50,9 @@ try {
   assertReviewedAlternatingConfidence(await readFile('src/engine/analysis/alternating-confidence.ts'));
   reviewedSourceContracts.push('src/engine/analysis/alternating-confidence.ts');
   for(const file of Object.keys(QRS_T_REVISION.files)){assertReviewedQrsTFile(file,await readFile(file));reviewedSourceContracts.push(file);}
+  reviewedSourceContracts.push(...Object.keys(TERMINAL_SOURCE_REVISION));
   // Reviewed calendar integrity: all valid historical samples still compared below.
-  for(const file of ['src/engine/rhythm.ts','src/engine/event-calendar.ts','src/engine/flutter-conduction.ts','src/engine/vvi-demand.ts']) {
+  for(const file of ['src/engine/constraints.ts','src/engine/rhythm.ts','src/engine/event-calendar.ts','src/engine/flutter-conduction.ts','src/engine/vvi-demand.ts']) {
     assertReviewedEventCalendar(file,await readFile(file));
     reviewedSourceContracts.push(file);
   }
@@ -62,7 +66,7 @@ try {
   // Opt-in regional model: every historical trace below still has to be exact.
   // The experimental branch has its own mandatory, paired source/sample gate.
   const optInRegionalFiles=['src/engine/types.ts','src/engine/regional-activation.ts'];
-  assert.ok(changedFiles.every(f=>f===qtHistoryRevision || reviewedSourceContracts.includes(f) || (coherence && optInRegionalFiles.includes(f)) || (coherence && ['src/engine/signal.ts','src/engine/morphology.ts','src/engine/secondary-repolarization.ts','src/engine/torsades-frame.ts'].includes(f))), 'Unexpected generator/analyzer/catalog/dependency change');
+  assert.ok(changedFiles.every(f=>f===qtHistoryRevision || reviewedSourceContracts.includes(f) || (coherence && optInRegionalFiles.includes(f)) || (coherence && ['src/engine/signal.ts','src/engine/morphology.ts','src/engine/secondary-repolarization.ts','src/engine/torsades-frame.ts','src/engine/ventricular-components.ts'].includes(f))), 'Unexpected generator/analyzer/catalog/dependency change');
   async function load(dir,name){
     const outfile=path.join(temp,name+'.mjs');
     await build({stdin:{contents:"export {synthesize} from './src/engine/signal'; export {fromPreset,PRESETS} from './src/presets/catalog';",resolveDir:dir},bundle:true,platform:'node',format:'esm',outfile});
@@ -79,6 +83,10 @@ try {
     await writeFile(qtFile,predictQTInitialization(await readFile(qtFile,'utf8')));
     const rhythmFile=path.join(predicted,'src/engine/rhythm.ts');
     await writeFile(rhythmFile,predictAfClock(await readFile(rhythmFile,'utf8')));
+    const morphologyFile=path.join(predicted,'src/engine/morphology.ts');
+    await writeFile(morphologyFile,predictLpfbSource(await readFile(morphologyFile,'utf8')));
+    await predictSecondaryST(predicted);
+    await predictWpwRepolarization(predicted);
     expected=await load(predicted,'expected');
   }
   assertTeachingCatalogRevision(before.PRESETS,after.PRESETS);
@@ -97,7 +105,8 @@ try {
       {
         const c={...before.fromPreset(preset),filter},label=`${preset.id}/${filter}`;
         // Default phenotypes are outside this repair's numerical delta: exact, not tolerance-based.
-        if(coherence && c.conduction!=='wpw' && c.rhythm!=='torsades' && c.rhythm!=='af' && !(c.rhythm==='sinus' && ['mobitz1','mobitz2','two_one','high'].includes(c.av)))
+        const hasSecondaryST=c.rhythm!=='torsades' && (c.conduction==='lbbb'||c.conduction.includes('rbbb')||before.synthesize(c,10).events.beats.some(b=>b.kind!=='normal'));
+        if(coherence && !hasSecondaryST && c.conduction!=='lpfb' && c.conduction!=='wpw' && c.rhythm!=='torsades' && c.rhythm!=='af' && !(c.rhythm==='sinus' && ['mobitz1','mobitz2','two_one','high'].includes(c.av)))
           assertTraceContract(before.synthesize(c,10),after.synthesize(c,10),label+'/default-frozen');
         if(coherence && c.rhythm==='torsades') {
           // The complete QRS/acquisition chain must remain bit-identical when T is removed.
@@ -121,7 +130,10 @@ try {
   const report={schemaVersion:2,stage:coherence?'A02-A03-independent-prediction':'A01-characterization-only',baselineCommit:BASE,
     eventCalendarRevision:'Strict bounded events and causal RR/PR assertions; optional programmed flutter sequences. Historical default samples remain exact.',
     torsadesFrameRevision:'Secondary T shares the historical time-varying QRS frame. Non-torsades defaults and QRS-only traces remain exact.',
+    secondarySTRevision:'Independent mean/terminal-QRS source, C1 40 ms rise to J, return in the ascending T limb; torsades excluded.',
+    lpfbSourceRevision:'Early left-superior activation with kernel-weighted area conservation in isolated and combined LPFB. Full frozen-source prediction.',
     wpwSupportRevision:'Independent compact-support correction; no negative-phase delta before native onset.',
+    wpwRepolarizationRevision:'Independent compact QRS plus analytic delta area predicts opposed secondary ST/T; unchanged activation primitives and event clock.',
     afClockRevision:'Representative gamma renewal CV0.22; frozen candidate and independent source prediction, not universal AF physiology.',
     qtInitializationRevision:'First event retains nominal ventricular RR; adaptation starts at second event. Separate from A02/A03 morphology.',
     candidateCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),changedFiles,

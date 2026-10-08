@@ -1,0 +1,719 @@
+{
+  "schemaVersion": 1,
+  "role": "exposed development reference only; not clinical calibration or held-out validation",
+  "metadataRecords": 21799,
+  "recordExclusions": {
+    "age-ineligible": 133,
+    "not-isolated-target-label": 14611
+  },
+  "heldoutPatientsExcluded": 1300,
+  "multiGroupPatientsExcluded": 8,
+  "groups": {
+    "NORM": {
+      "eligiblePatients": 4773,
+      "selectedPatients": 20,
+      "requestedMaximum": 20,
+      "belowRequestedMaximum": false,
+      "clinicalCalibrationEligible": false
+    },
+    "LAFB": {
+      "eligiblePatients": 205,
+      "selectedPatients": 20,
+      "requestedMaximum": 20,
+      "belowRequestedMaximum": false,
+      "clinicalCalibrationEligible": false
+    },
+    "LPFB": {
+      "eligiblePatients": 1,
+      "selectedPatients": 1,
+      "requestedMaximum": 20,
+      "belowRequestedMaximum": true,
+      "clinicalCalibrationEligible": false
+    },
+    "CLBBB": {
+      "eligiblePatients": 159,
+      "selectedPatients": 20,
+      "requestedMaximum": 20,
+      "belowRequestedMaximum": false,
+      "clinicalCalibrationEligible": false
+    },
+    "WPW": {
+      "eligiblePatients": 13,
+      "selectedPatients": 13,
+      "requestedMaximum": 20,
+      "belowRequestedMaximum": true,
+      "clinicalCalibrationEligible": false
+    },
+    "PACE": {
+      "eligiblePatients": 174,
+      "selectedPatients": 20,
+      "requestedMaximum": 20,
+      "belowRequestedMaximum": false,
+      "clinicalCalibrationEligible": false
+    }
+  },
+  "records": [
+    {
+      "ecg_id": 15733,
+      "patient_id": 2366,
+      "fold": 1,
+      "group": "NORM",
+      "sourcePath": "records500/15000/15733_hr"
+    },
+    {
+      "ecg_id": 14164,
+      "patient_id": 15834,
+      "fold": 5,
+      "group": "NORM",
+      "sourcePath": "records500/14000/14164_hr"
+    },
+    {
+      "ecg_id": 14488,
+      "patient_id": 2742,
+      "fold": 6,
+      "group": "NORM",
+      "sourcePath": "records500/14000/14488_hr"
+    },
+    {
+      "ecg_id": 16443,
+      "patient_id": 4771,
+      "fold": 3,
+      "group": "NORM",
+      "sourcePath": "records500/16000/16443_hr"
+    },
+    {
+      "ecg_id": 17109,
+      "patient_id": 8943,
+      "fold": 1,
+      "group": "NORM",
+      "sourcePath": "records500/17000/17109_hr"
+    },
+    {
+      "ecg_id": 8034,
+      "patient_id": 2838,
+      "fold": 7,
+      "group": "NORM",
+      "sourcePath": "records500/08000/08034_hr"
+    },
+    {
+      "ecg_id": 6501,
+      "patient_id": 4702,
+      "fold": 6,
+      "group": "NORM",
+      "sourcePath": "records500/06000/06501_hr"
+    },
+    {
+      "ecg_id": 11721,
+      "patient_id": 18784,
+      "fold": 3,
+      "group": "NORM",
+      "sourcePath": "records500/11000/11721_hr"
+    },
+    {
+      "ecg_id": 18897,
+      "patient_id": 20412,
+      "fold": 1,
+      "group": "NORM",
+      "sourcePath": "records500/18000/18897_hr"
+    },
+    {
+      "ecg_id": 10351,
+      "patient_id": 3910,
+      "fold": 5,
+      "group": "NORM",
+      "sourcePath": "records500/10000/10351_hr"
+    },
+    {
+      "ecg_id": 21198,
+      "patient_id": 18790,
+      "fold": 8,
+      "group": "NORM",
+      "sourcePath": "records500/21000/21198_hr"
+    },
+    {
+      "ecg_id": 2212,
+      "patient_id": 7795,
+      "fold": 7,
+      "group": "NORM",
+      "sourcePath": "records500/02000/02212_hr"
+    },
+    {
+      "ecg_id": 18743,
+      "patient_id": 11421,
+      "fold": 5,
+      "group": "NORM",
+      "sourcePath": "records500/18000/18743_hr"
+    },
+    {
+      "ecg_id": 12574,
+      "patient_id": 21094,
+      "fold": 8,
+      "group": "NORM",
+      "sourcePath": "records500/12000/12574_hr"
+    },
+    {
+      "ecg_id": 16068,
+      "patient_id": 5075,
+      "fold": 5,
+      "group": "NORM",
+      "sourcePath": "records500/16000/16068_hr"
+    },
+    {
+      "ecg_id": 1555,
+      "patient_id": 7141,
+      "fold": 8,
+      "group": "NORM",
+      "sourcePath": "records500/01000/01555_hr"
+    },
+    {
+      "ecg_id": 6139,
+      "patient_id": 7020,
+      "fold": 4,
+      "group": "NORM",
+      "sourcePath": "records500/06000/06139_hr"
+    },
+    {
+      "ecg_id": 19634,
+      "patient_id": 16215,
+      "fold": 7,
+      "group": "NORM",
+      "sourcePath": "records500/19000/19634_hr"
+    },
+    {
+      "ecg_id": 11765,
+      "patient_id": 16129,
+      "fold": 3,
+      "group": "NORM",
+      "sourcePath": "records500/11000/11765_hr"
+    },
+    {
+      "ecg_id": 3552,
+      "patient_id": 18493,
+      "fold": 7,
+      "group": "NORM",
+      "sourcePath": "records500/03000/03552_hr"
+    },
+    {
+      "ecg_id": 13461,
+      "patient_id": 18665,
+      "fold": 6,
+      "group": "LAFB",
+      "sourcePath": "records500/13000/13461_hr"
+    },
+    {
+      "ecg_id": 9384,
+      "patient_id": 15676,
+      "fold": 1,
+      "group": "LAFB",
+      "sourcePath": "records500/09000/09384_hr"
+    },
+    {
+      "ecg_id": 11952,
+      "patient_id": 11185,
+      "fold": 6,
+      "group": "LAFB",
+      "sourcePath": "records500/11000/11952_hr"
+    },
+    {
+      "ecg_id": 1665,
+      "patient_id": 11283,
+      "fold": 5,
+      "group": "LAFB",
+      "sourcePath": "records500/01000/01665_hr"
+    },
+    {
+      "ecg_id": 13872,
+      "patient_id": 20050,
+      "fold": 3,
+      "group": "LAFB",
+      "sourcePath": "records500/13000/13872_hr"
+    },
+    {
+      "ecg_id": 5832,
+      "patient_id": 2595,
+      "fold": 6,
+      "group": "LAFB",
+      "sourcePath": "records500/05000/05832_hr"
+    },
+    {
+      "ecg_id": 11383,
+      "patient_id": 13577,
+      "fold": 6,
+      "group": "LAFB",
+      "sourcePath": "records500/11000/11383_hr"
+    },
+    {
+      "ecg_id": 7319,
+      "patient_id": 20297,
+      "fold": 4,
+      "group": "LAFB",
+      "sourcePath": "records500/07000/07319_hr"
+    },
+    {
+      "ecg_id": 18842,
+      "patient_id": 16909,
+      "fold": 3,
+      "group": "LAFB",
+      "sourcePath": "records500/18000/18842_hr"
+    },
+    {
+      "ecg_id": 16984,
+      "patient_id": 5710,
+      "fold": 7,
+      "group": "LAFB",
+      "sourcePath": "records500/16000/16984_hr"
+    },
+    {
+      "ecg_id": 21636,
+      "patient_id": 17435,
+      "fold": 5,
+      "group": "LAFB",
+      "sourcePath": "records500/21000/21636_hr"
+    },
+    {
+      "ecg_id": 11945,
+      "patient_id": 14456,
+      "fold": 6,
+      "group": "LAFB",
+      "sourcePath": "records500/11000/11945_hr"
+    },
+    {
+      "ecg_id": 2717,
+      "patient_id": 7640,
+      "fold": 1,
+      "group": "LAFB",
+      "sourcePath": "records500/02000/02717_hr"
+    },
+    {
+      "ecg_id": 11567,
+      "patient_id": 15699,
+      "fold": 4,
+      "group": "LAFB",
+      "sourcePath": "records500/11000/11567_hr"
+    },
+    {
+      "ecg_id": 12165,
+      "patient_id": 8374,
+      "fold": 5,
+      "group": "LAFB",
+      "sourcePath": "records500/12000/12165_hr"
+    },
+    {
+      "ecg_id": 2164,
+      "patient_id": 11482,
+      "fold": 1,
+      "group": "LAFB",
+      "sourcePath": "records500/02000/02164_hr"
+    },
+    {
+      "ecg_id": 5148,
+      "patient_id": 20823,
+      "fold": 3,
+      "group": "LAFB",
+      "sourcePath": "records500/05000/05148_hr"
+    },
+    {
+      "ecg_id": 15675,
+      "patient_id": 786,
+      "fold": 5,
+      "group": "LAFB",
+      "sourcePath": "records500/15000/15675_hr"
+    },
+    {
+      "ecg_id": 4280,
+      "patient_id": 5097,
+      "fold": 4,
+      "group": "LAFB",
+      "sourcePath": "records500/04000/04280_hr"
+    },
+    {
+      "ecg_id": 2541,
+      "patient_id": 2206,
+      "fold": 6,
+      "group": "LAFB",
+      "sourcePath": "records500/02000/02541_hr"
+    },
+    {
+      "ecg_id": 32,
+      "patient_id": 11154,
+      "fold": 1,
+      "group": "LPFB",
+      "sourcePath": "records500/00000/00032_hr"
+    },
+    {
+      "ecg_id": 15701,
+      "patient_id": 12224,
+      "fold": 1,
+      "group": "CLBBB",
+      "sourcePath": "records500/15000/15701_hr"
+    },
+    {
+      "ecg_id": 18258,
+      "patient_id": 19009,
+      "fold": 5,
+      "group": "CLBBB",
+      "sourcePath": "records500/18000/18258_hr"
+    },
+    {
+      "ecg_id": 18396,
+      "patient_id": 21786,
+      "fold": 6,
+      "group": "CLBBB",
+      "sourcePath": "records500/18000/18396_hr"
+    },
+    {
+      "ecg_id": 19555,
+      "patient_id": 11226,
+      "fold": 2,
+      "group": "CLBBB",
+      "sourcePath": "records500/19000/19555_hr"
+    },
+    {
+      "ecg_id": 11387,
+      "patient_id": 8988,
+      "fold": 7,
+      "group": "CLBBB",
+      "sourcePath": "records500/11000/11387_hr"
+    },
+    {
+      "ecg_id": 15219,
+      "patient_id": 13599,
+      "fold": 1,
+      "group": "CLBBB",
+      "sourcePath": "records500/15000/15219_hr"
+    },
+    {
+      "ecg_id": 5913,
+      "patient_id": 12172,
+      "fold": 2,
+      "group": "CLBBB",
+      "sourcePath": "records500/05000/05913_hr"
+    },
+    {
+      "ecg_id": 21484,
+      "patient_id": 18825,
+      "fold": 1,
+      "group": "CLBBB",
+      "sourcePath": "records500/21000/21484_hr"
+    },
+    {
+      "ecg_id": 3096,
+      "patient_id": 6296,
+      "fold": 5,
+      "group": "CLBBB",
+      "sourcePath": "records500/03000/03096_hr"
+    },
+    {
+      "ecg_id": 19995,
+      "patient_id": 21595,
+      "fold": 4,
+      "group": "CLBBB",
+      "sourcePath": "records500/19000/19995_hr"
+    },
+    {
+      "ecg_id": 8316,
+      "patient_id": 6072,
+      "fold": 2,
+      "group": "CLBBB",
+      "sourcePath": "records500/08000/08316_hr"
+    },
+    {
+      "ecg_id": 6895,
+      "patient_id": 19426,
+      "fold": 6,
+      "group": "CLBBB",
+      "sourcePath": "records500/06000/06895_hr"
+    },
+    {
+      "ecg_id": 6447,
+      "patient_id": 8067,
+      "fold": 2,
+      "group": "CLBBB",
+      "sourcePath": "records500/06000/06447_hr"
+    },
+    {
+      "ecg_id": 1800,
+      "patient_id": 4397,
+      "fold": 8,
+      "group": "CLBBB",
+      "sourcePath": "records500/01000/01800_hr"
+    },
+    {
+      "ecg_id": 11095,
+      "patient_id": 11331,
+      "fold": 1,
+      "group": "CLBBB",
+      "sourcePath": "records500/11000/11095_hr"
+    },
+    {
+      "ecg_id": 5084,
+      "patient_id": 3492,
+      "fold": 8,
+      "group": "CLBBB",
+      "sourcePath": "records500/05000/05084_hr"
+    },
+    {
+      "ecg_id": 17332,
+      "patient_id": 8102,
+      "fold": 7,
+      "group": "CLBBB",
+      "sourcePath": "records500/17000/17332_hr"
+    },
+    {
+      "ecg_id": 9122,
+      "patient_id": 1466,
+      "fold": 3,
+      "group": "CLBBB",
+      "sourcePath": "records500/09000/09122_hr"
+    },
+    {
+      "ecg_id": 9284,
+      "patient_id": 19844,
+      "fold": 6,
+      "group": "CLBBB",
+      "sourcePath": "records500/09000/09284_hr"
+    },
+    {
+      "ecg_id": 7539,
+      "patient_id": 13262,
+      "fold": 8,
+      "group": "CLBBB",
+      "sourcePath": "records500/07000/07539_hr"
+    },
+    {
+      "ecg_id": 12559,
+      "patient_id": 5952,
+      "fold": 4,
+      "group": "WPW",
+      "sourcePath": "records500/12000/12559_hr"
+    },
+    {
+      "ecg_id": 17591,
+      "patient_id": 11205,
+      "fold": 2,
+      "group": "WPW",
+      "sourcePath": "records500/17000/17591_hr"
+    },
+    {
+      "ecg_id": 14411,
+      "patient_id": 20513,
+      "fold": 7,
+      "group": "WPW",
+      "sourcePath": "records500/14000/14411_hr"
+    },
+    {
+      "ecg_id": 10053,
+      "patient_id": 6082,
+      "fold": 2,
+      "group": "WPW",
+      "sourcePath": "records500/10000/10053_hr"
+    },
+    {
+      "ecg_id": 11190,
+      "patient_id": 13811,
+      "fold": 1,
+      "group": "WPW",
+      "sourcePath": "records500/11000/11190_hr"
+    },
+    {
+      "ecg_id": 14390,
+      "patient_id": 2639,
+      "fold": 3,
+      "group": "WPW",
+      "sourcePath": "records500/14000/14390_hr"
+    },
+    {
+      "ecg_id": 21362,
+      "patient_id": 10124,
+      "fold": 3,
+      "group": "WPW",
+      "sourcePath": "records500/21000/21362_hr"
+    },
+    {
+      "ecg_id": 20416,
+      "patient_id": 19909,
+      "fold": 5,
+      "group": "WPW",
+      "sourcePath": "records500/20000/20416_hr"
+    },
+    {
+      "ecg_id": 7046,
+      "patient_id": 2035,
+      "fold": 7,
+      "group": "WPW",
+      "sourcePath": "records500/07000/07046_hr"
+    },
+    {
+      "ecg_id": 17557,
+      "patient_id": 12679,
+      "fold": 7,
+      "group": "WPW",
+      "sourcePath": "records500/17000/17557_hr"
+    },
+    {
+      "ecg_id": 9795,
+      "patient_id": 10161,
+      "fold": 3,
+      "group": "WPW",
+      "sourcePath": "records500/09000/09795_hr"
+    },
+    {
+      "ecg_id": 2145,
+      "patient_id": 5974,
+      "fold": 1,
+      "group": "WPW",
+      "sourcePath": "records500/02000/02145_hr"
+    },
+    {
+      "ecg_id": 5303,
+      "patient_id": 8678,
+      "fold": 7,
+      "group": "WPW",
+      "sourcePath": "records500/05000/05303_hr"
+    },
+    {
+      "ecg_id": 20807,
+      "patient_id": 19119,
+      "fold": 1,
+      "group": "PACE",
+      "sourcePath": "records500/20000/20807_hr"
+    },
+    {
+      "ecg_id": 14609,
+      "patient_id": 3149,
+      "fold": 8,
+      "group": "PACE",
+      "sourcePath": "records500/14000/14609_hr"
+    },
+    {
+      "ecg_id": 2218,
+      "patient_id": 4012,
+      "fold": 6,
+      "group": "PACE",
+      "sourcePath": "records500/02000/02218_hr"
+    },
+    {
+      "ecg_id": 4054,
+      "patient_id": 5727,
+      "fold": 1,
+      "group": "PACE",
+      "sourcePath": "records500/04000/04054_hr"
+    },
+    {
+      "ecg_id": 5068,
+      "patient_id": 9049,
+      "fold": 7,
+      "group": "PACE",
+      "sourcePath": "records500/05000/05068_hr"
+    },
+    {
+      "ecg_id": 17391,
+      "patient_id": 11914,
+      "fold": 5,
+      "group": "PACE",
+      "sourcePath": "records500/17000/17391_hr"
+    },
+    {
+      "ecg_id": 21578,
+      "patient_id": 11798,
+      "fold": 8,
+      "group": "PACE",
+      "sourcePath": "records500/21000/21578_hr"
+    },
+    {
+      "ecg_id": 16431,
+      "patient_id": 11592,
+      "fold": 7,
+      "group": "PACE",
+      "sourcePath": "records500/16000/16431_hr"
+    },
+    {
+      "ecg_id": 16312,
+      "patient_id": 973,
+      "fold": 5,
+      "group": "PACE",
+      "sourcePath": "records500/16000/16312_hr"
+    },
+    {
+      "ecg_id": 20693,
+      "patient_id": 12947,
+      "fold": 4,
+      "group": "PACE",
+      "sourcePath": "records500/20000/20693_hr"
+    },
+    {
+      "ecg_id": 8060,
+      "patient_id": 5196,
+      "fold": 5,
+      "group": "PACE",
+      "sourcePath": "records500/08000/08060_hr"
+    },
+    {
+      "ecg_id": 16874,
+      "patient_id": 10513,
+      "fold": 7,
+      "group": "PACE",
+      "sourcePath": "records500/16000/16874_hr"
+    },
+    {
+      "ecg_id": 4846,
+      "patient_id": 17860,
+      "fold": 8,
+      "group": "PACE",
+      "sourcePath": "records500/04000/04846_hr"
+    },
+    {
+      "ecg_id": 20051,
+      "patient_id": 8713,
+      "fold": 1,
+      "group": "PACE",
+      "sourcePath": "records500/20000/20051_hr"
+    },
+    {
+      "ecg_id": 8530,
+      "patient_id": 18200,
+      "fold": 1,
+      "group": "PACE",
+      "sourcePath": "records500/08000/08530_hr"
+    },
+    {
+      "ecg_id": 21160,
+      "patient_id": 10099,
+      "fold": 2,
+      "group": "PACE",
+      "sourcePath": "records500/21000/21160_hr"
+    },
+    {
+      "ecg_id": 20013,
+      "patient_id": 12136,
+      "fold": 1,
+      "group": "PACE",
+      "sourcePath": "records500/20000/20013_hr"
+    },
+    {
+      "ecg_id": 14854,
+      "patient_id": 18624,
+      "fold": 3,
+      "group": "PACE",
+      "sourcePath": "records500/14000/14854_hr"
+    },
+    {
+      "ecg_id": 18714,
+      "patient_id": 14260,
+      "fold": 3,
+      "group": "PACE",
+      "sourcePath": "records500/18000/18714_hr"
+    },
+    {
+      "ecg_id": 19513,
+      "patient_id": 18935,
+      "fold": 6,
+      "group": "PACE",
+      "sourcePath": "records500/19000/19513_hr"
+    }
+  ],
+  "clinicalValidation": false,
+  "generatorTuned": false,
+  "metadataSha256": "7600de9c1b27d181d850b3c6038a35d7c3ddb6bb33b702e3a20252a6859d216b",
+  "protocolSha256": "f58d1cb13c37415d788b13748e9f1c97ac0afbdfd166aed668f330d145f60d36"
+}

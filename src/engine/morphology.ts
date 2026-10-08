@@ -1,4 +1,6 @@
-import { kernelWeight, regionalRbbbKernels, regionalLbbbKernels, regionalWindow, usesRegionalActivation, type RegionalSupport } from "./regional-activation";
+import { qrsAmplitudeScale } from "./ventricular-components";
+export { gaussian, compact, qrsAmplitudeScale, WPW_DELTA_SECONDS, wpwDeltaVector, qrsKernelValue } from "./ventricular-components";
+import { kernelWeight, regionalRbbbKernels, regionalLbbbKernels, usesRegionalActivation, type RegionalSupport } from "./regional-activation";
 import type { ECGCase, Beat } from "./types";
 import { ventricularSource } from "./ventricular-source";
 import { secondaryRepolarization } from "./secondary-repolarization";
@@ -25,13 +27,6 @@ const lbbb: Kernel[] = [
   { mu: 0.69, sigma: 0.15, v: [1.03, 0.57, 0.59] },
   { mu: 0.88, sigma: 0.06, v: [0.2, 0.04, 0.16] },
 ];
-export function gaussian(u: number, mu: number, sigma: number) {
-  return Math.exp(-0.5 * ((u - mu) / sigma) ** 2);
-}
-export function compact(u: number) {
-  if (u <= 0 || u >= 1) return 0;
-  return Math.min(1, u / 0.035, (1 - u) / 0.035);
-}
 export function bump(u: number) {
   if (u <= 0 || u >= 1) return 0;
   const g = Math.exp(-0.5 * ((u - 0.5) / 0.18) ** 2);
@@ -39,20 +34,6 @@ export function bump(u: number) {
     (g - Math.exp(-0.5 * (0.5 / 0.18) ** 2)) /
     (1 - Math.exp(-0.5 * (0.5 / 0.18) ** 2))
   );
-}
-/** Existing QRS gain and low-voltage factor, shared by vector and local components. */
-export function qrsAmplitudeScale(c: Pick<ECGCase, "qrsAmp" | "electrolyte">): number {
-  return c.qrsAmp * (c.electrolyte === "lowvoltage" ? 0.38 : 1);
-}
-/** Illustrative delta pulse with explicit compact support; beat eligibility is owned by the caller.
- * Keep arithmetic order identical to the synthesizer; this is not an accessory-pathway model.
- */
-export const WPW_DELTA_SECONDS = 0.045;
-export function wpwDeltaVector(c: ECGCase, phase: number): Vec {
-  if (phase <= 0 || phase >= 1) return [0, 0, 0];
-  const v = frontal(c.axis, 0.25, 0.03),
-    gain = qrsAmplitudeScale(c) * Math.sin(Math.PI * phase);
-  return [v[0] * gain, v[1] * gain, v[2] * gain];
 }
 export function qrsKernels(c: ECGCase, beat: Beat): Kernel[] {
   const source = ventricularSource(c, beat);
@@ -119,11 +100,18 @@ export function qrsKernels(c: ECGCase, beat: Beat): Kernel[] {
       k.v = frontal(a, amp, k.v[2]);
     }
   }
+  // In the combined source retain the established main/terminal RV bases.
+  // Redistribute early LV direction against the intermediate basis so the
+  // integrated axis, delayed RV activity and secondary T reference stay intact.
+  if (block === "lpfb" || block === "rbbb_lpfb") {
+    const previous = ks[0].v;
+    const pr = project(previous);
+    const amplitude = Math.hypot(pr.I, (2 * pr.II - pr.I) / Math.sqrt(3));
+    ks[0].v = frontal(-60, amplitude, previous[2]);
+    for (let j = 0; j < 3; j++) ks[2].v[j] +=
+      (previous[j] - ks[0].v[j]) * kernelWeight(ks[0]) / kernelWeight(ks[2]);
+  }
   return ks;
-}
-/** Shared shape evaluation; the legacy arithmetic remains bit-for-bit intact. */
-export function qrsKernelValue(k: Kernel, u: number): number {
-  return gaussian(u, k.mu, k.sigma) * (k.regional ? regionalWindow(u, k.regional) : compact(u));
 }
 export function qrsDuration(c: ECGCase, b: Beat) {
   const source = ventricularSource(c, b);

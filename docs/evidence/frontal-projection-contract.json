@@ -1,0 +1,18 @@
+{
+  "baseline": "0246a47e253fc9b49daf5d47f80257d16e6d9db6",
+  "sourceSha256": {
+    "src/engine/leads.ts": "ab4a73f2345e133cbbe80757d08c1c64f4c54894f1ca521b82eff7041d386706",
+    "src/engine/lead-registry.ts": "7f4fe698cd38931a47d41b99e005ca30f642b05553e4137869bda5f99a8990e3"
+  },
+  "clinicalValidation": false,
+  "cases": 244,
+  "allLeadSamplesExactlyPreserved": true,
+  "eventsExactlyPreserved": true,
+  "reportSha256": "9d37f4d6b05bbec59dd8ca0684a54b4e329fe0dde146abe2f6312d553e5c6f28",
+  "inverseCombinations": 3025,
+  "predecessorFailedContracts": 2,
+  "annotatedRecords": 80,
+  "annotatedNumericalAndQualityUnchanged": true,
+  "developmentQualityRows": 920,
+  "developmentQualityRowsAndAggregatesIdentical": true
+}

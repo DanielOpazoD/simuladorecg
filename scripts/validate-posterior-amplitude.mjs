@@ -1,3 +1,4 @@
+import {withoutSecondarySTPlugin} from './lib/secondary-st-counterfactual.mjs';
 import {predictWpwSupport} from './lib/wpw-support-prediction.mjs';
 import {predictAfClock,assertFrozenAfSampler} from './lib/af-clock-prediction.mjs';
 import {predictQTInitialization,assertReviewedQTInitialization} from './lib/qt-initialization-revision.mjs';
@@ -31,7 +32,7 @@ try {
       await writeFile(rhythmFile,predictAfClock(await readFile(rhythmFile,'utf8')));
     }
     const outfile = path.join(temp, name + '.mjs');
-    await build({stdin: {contents: "export {synthesize} from './src/engine/signal'; export {PRESETS,fromPreset,presetById} from './src/presets/catalog'; export {qrsKernels} from './src/engine/morphology'; export {DOWER} from './src/engine/leads';", resolveDir: dir}, bundle: true, platform: 'node', format: 'esm', outfile});
+    await build({stdin: {contents: "export {synthesize} from './src/engine/signal'; export {PRESETS,fromPreset,presetById} from './src/presets/catalog'; export {qrsKernels} from './src/engine/morphology'; export {DOWER} from './src/engine/leads';", resolveDir: dir}, bundle: true, platform: 'node', format: 'esm', outfile,plugins:dir===process.cwd()?[withoutSecondarySTPlugin()]:[]});
     return import(pathToFileURL(outfile));
   }
   const after = await load(process.cwd(), 'after');
@@ -56,7 +57,7 @@ try {
       ? assertRvAmplitudeChange(before.synthesize, a, reviewed, c)
       : (assertExactSignal(a, reviewed, `historical/default/${preset.id}/${filter}`), null);
     const intendedSecondaryChange = coupledSecondaryPresets.has(preset.id);
-    let finalAxis = null, secondary = null, reviewedMainExact = true;
+    let finalAxis = null, secondary = null, lpfbSource = null, reviewedMainExact = true;
     if (preset.id === 'rv_chronic') {
       finalAxis = assertFinalQrsAxisChange(axisBase, reviewed, b, c);
       reviewedMainExact = false;
@@ -82,6 +83,14 @@ try {
       assert.equal(b.truth.axis, null, 'Current torsades must not publish a global axis');
       finalAxis = {kind:'torsades-global-axis-withdrawal', from:reviewed.truth.axis, to:null};
       reviewedMainExact = false;
+    } else if (preset.id === 'lpfb') {
+      // The complete source migration has its own frozen paired acceptance gate.
+      // Preserve this historical comparison rather than rewriting old samples.
+      lpfbSource = compareSignalContract(reviewed, b, {exact:false,label:`lpfb-source-v2/${filter}`});
+      assert.ok(lpfbSource.maxDifferenceMv > 1e-6, 'Missing LPFB morphology repair');
+      assert.deepEqual(reviewed.events, b.events, 'LPFB clocks changed');
+      assert.deepEqual(reviewed.truth, b.truth, 'LPFB programmed truth changed');
+      reviewedMainExact = false;
     } else if (intendedSecondaryChange) {
       secondary = compareSignalContract(reviewed, b, {exact:false,label:`current/default/${preset.id}/${filter}`});
       assert.ok(secondary.maxDifferenceMv > 1e-6, `missing coupled-secondary change ${preset.id}/${filter}`);
@@ -92,7 +101,7 @@ try {
       assertExactSignal(reviewed, b, `current/default/${preset.id}/${filter}`);
     }
     defaults.push({preset: preset.id, filter, historicalExact: historical === null,
-      exact: historical === null && reviewedMainExact, reviewedMainExact,
+      exact: historical === null && reviewedMainExact, reviewedMainExact, lpfbSource,
       intendedSecondaryChange, historical, finalAxis, secondary});
   }
   if (scope === 'all' || scope === 'defaults') {
@@ -113,13 +122,13 @@ try {
     const unexpected = defaults.filter(r =>
       !r.reviewedMainExact &&
       !coupledSecondaryPresets.has(r.preset) &&
-      r.preset !== 'rv_chronic'
+      r.preset !== 'rv_chronic' && r.preset !== 'lpfb'
     );
     assert.deepEqual(new Set(rvChanges), expectedRv, 'All and only the eight reviewed RV traces must satisfy the dedicated axis oracle');
     assert.deepEqual(new Set(torsadesChanges), expectedTorsades, 'All and only four torsades filters may withdraw truth.axis');
     assert.deepEqual(new Set(secondaryChanges), expectedSecondary, 'All and only the explicit PR43 presets may change secondary repolarization');
     assert.deepEqual(unexpected, [], 'No other preset/filter may change after the reviewed main baseline');
-    assert.equal(defaults.filter(r => r.reviewedMainExact).length, 164, 'All unaffected preset/filter traces must remain exact');
+    assert.equal(defaults.filter(r => r.reviewedMainExact).length, 160, 'All unaffected preset/filter traces must remain exact');
   }
   const rows = [];
   const historical = before;
@@ -232,8 +241,8 @@ try {
   };
   assert.deepEqual([defaults.length, rows.length, lowVoltageScenarios.length, wpwLowVoltageScenarios.length, rvScenarios.length],
     expectedCounts[scope], 'Incomplete scope: do not silently omit validation');
-  const referencePreparation = 'Historical morphology with the independently predicted QT initialization, compact WPW support and representative AF clock revisions; exact/default counts compare these explicitly transformed references, not raw historical QT';
-  const report = {scope, baseline, axisBaseline, referencePreparation, commit: execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim(),
+  const referencePreparation = 'Historical morphology with the independently predicted QT initialization, compact WPW support and representative AF clock revisions; exact/default counts compare these explicitly transformed references, not raw historical QT; candidate is the no-secondary-ST depolarization counterfactual, with actual ST required in separate source gates';
+  const report = {sourceScope:'Historical QRS amplitude counterfactual without new secondary ST; full ST separately checked',scope, baseline, axisBaseline, referencePreparation, commit: execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim(),
     defaults, gainScenarios: rows, lowVoltageBaseline, lowVoltageScenarios, wpwLowVoltageBaseline, wpwLowVoltageScenarios, rvBaseline, rvScenarios, nativeActivationTimingsUnchanged: true, clinicalValidation: false};
   const output = process.argv[2]; assert.ok(output, 'Provide result JSON path');
   await mkdir(path.dirname(path.resolve(output)), {recursive: true});

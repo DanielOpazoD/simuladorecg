@@ -253,7 +253,7 @@
     "categoria": "Conducción intraventricular",
     "estado": "aproximado",
     "estrategia": "vectorial",
-    "limitacion": "La T secundaria es aproximada; el ST secundario no está representado. Un ST plano no demuestra repolarización normal. La relación ST/QRS no está calibrada y no permite validar criterios proporcionales de Sgarbossa."
+    "limitacion": "ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa."
   },
   {
     "id": "lafb",
@@ -293,7 +293,7 @@
     "categoria": "Conducción intraventricular",
     "estado": "aproximado",
     "estrategia": "vectorial",
-    "limitacion": "Delta aproximada; sin vías accesorias anatómicas ni circuito AVRT. Preexcitación aproximada: la delta no modifica el ST-T secundario en este modelo. No uses esta T para aprender la repolarización típica de WPW."
+    "limitacion": "Delta aproximada; sin vías accesorias anatómicas ni circuito AVRT. Preexcitación aproximada: en los latidos preexcitados, ST y T siguen la activación QRS incluida la onda delta. Amplitudes no calibradas; no localiza vías accesorias ni reproduce AVRT o memoria cardíaca."
   },
   {
     "id": "inferior",
@@ -389,7 +389,7 @@
     "categoria": "Isquemia y ST",
     "estado": "aproximado",
     "estrategia": "vectorial",
-    "limitacion": "Caso ilustrativo; sin cálculo automático de score. La T secundaria es aproximada; el ST secundario no está representado. Un ST plano no demuestra repolarización normal. La relación ST/QRS no está calibrada y no permite validar criterios proporcionales de Sgarbossa."
+    "limitacion": "Caso ilustrativo; sin cálculo automático de score. ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa."
   },
   {
     "id": "pericarditis",
@@ -437,7 +437,7 @@
     "categoria": "Marcapasos",
     "estado": "aproximado",
     "estrategia": "vectorial",
-    "limitacion": "Por defecto, estimulación fija capturada. VVI ofrece demanda idealizada y una variante sin captura total sin escape; no simula fusión ni fallos intermitentes. La T secundaria es aproximada; el ST secundario no está representado. Un ST plano no demuestra repolarización normal. La relación ST/QRS no está calibrada y no permite validar criterios proporcionales de Sgarbossa."
+    "limitacion": "Por defecto, estimulación fija capturada. VVI ofrece demanda idealizada y una variante sin captura total sin escape; no simula fusión ni fallos intermitentes. ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa."
   },
   {
     "id": "ddd",
@@ -445,7 +445,7 @@
     "categoria": "Marcapasos",
     "estado": "aproximado",
     "estrategia": "vectorial",
-    "limitacion": "Secuencia fija; no simula demanda, PVARP, seguimiento ni límite superior. La T secundaria es aproximada; el ST secundario no está representado. Un ST plano no demuestra repolarización normal. La relación ST/QRS no está calibrada y no permite validar criterios proporcionales de Sgarbossa."
+    "limitacion": "Secuencia fija; no simula demanda, PVARP, seguimiento ni límite superior. ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa."
   },
   {
     "id": "hyperk",

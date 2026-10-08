@@ -52,3 +52,8 @@ it('pins the review-only alternating helper and rejects bypassing it',()=>{
  const bypass=source.replace('reviewAlternatingCandidates(input, withholdImpulseDominatedMeasurements(input, retireUnsupportedFrontalAxis(input, attachMeasurementSupport(next, quality))))','withholdImpulseDominatedMeasurements(input, retireUnsupportedFrontalAxis(input, attachMeasurementSupport(next, quality)))');
  expect(bypass).not.toBe(source);expect(()=>assertReviewedSampleEntry(bypass)).toThrow(/Unreviewed/);
 });
+
+it('rejects removing the wave-specific QRS observability check',()=>{
+ const bypass=source.replace("flatQrs(b.onset, b.offset, 'I') && flatQrs(b.onset, b.offset, 'II')",'false');
+ expect(bypass).not.toBe(source);expect(()=>assertReviewedSampleEntry(bypass)).toThrow(/Unreviewed/);
+});

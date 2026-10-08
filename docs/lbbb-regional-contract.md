@@ -1,9 +1,12 @@
 # Proposed regional LBBB surrogate: decision before implementation
 
-**Current release status: BLOCKED.** The corrected evaluator finds 15 additional
-missed-QRS scenarios. Historical preliminary claims below are retained with their
-correction; they are not release evidence. PR120 is integrated, but does not resolve
-this event-matching failure.
+**Current release status: candidate awaiting final integration checks.** The
+complete-complex repair passes the full 256-case paired domain, including actual
+QRS identity and duration gates, without changing the source model. See
+[complete-complex boundaries](complete-complex-boundaries.md) for the numerical
+repair, coverage costs, unresolved debt, and required release evidence.
+Historical failures and invalid preliminary claims below are retained as such;
+they are not current acceptance evidence.
 
 Defect: changing QRS duration in the existing LBBB template stretches all four
 vector bases, including the early right-ventricular/septal contribution. Explore

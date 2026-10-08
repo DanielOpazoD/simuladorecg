@@ -1,7 +1,7 @@
 import { chooseCatalogPreset } from './support/catalog-navigation.mjs';
 /** Real Chromium checks. Run against the built dist (vite preview): ECG_TEST_URL=http://127.0.0.1:5173.
  * Outputs outside source by default; no patient data, diagnostic labels or network AI.
- * npm install --no-save --package-lock=false --legacy-peer-deps playwright@1.63.0
+ * npm ci
  */
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
@@ -85,11 +85,11 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  for(const id of ['wpw','lbbb','vvi','ddd']) {
   await select(id);
   const message=await page.locator('#warnings').innerText();
-  assert.match(message,id==='wpw'?/delta no modifica el ST-T secundario/:/relación ST\/QRS no está calibrada/);
-  assert.match(await page.locator('#limitation').innerText(),id==='wpw'?/delta no modifica/:/no está calibrada/);
+  assert.match(message,id==='wpw'?/ST y T siguen la activación QRS incluida la onda delta/:/relación ST\/QRS no están calibradas clínicamente/);
+  assert.match(await page.locator('#limitation').innerText(),id==='wpw'?/Amplitudes no calibradas/:/no están calibradas clínicamente/);
  }
  await page.screenshot({path:path.join(out,'secondary-repolarization-limit.png')});
- await select('aai');assert.doesNotMatch(await page.locator('#warnings').innerText(),/ST\/QRS no está calibrada/);
+ await select('aai');assert.doesNotMatch(await page.locator('#warnings').innerText(),/ST\/QRS/);
  checks.push('P2: WPW / LBBB / VVI / DDD warnings visible; AAI alone excluded');
  // P6: invalidate synchronously during a real slider input; no stale export window.
  await select('sinus');await page.locator('[data-mode="monitor"]').click();

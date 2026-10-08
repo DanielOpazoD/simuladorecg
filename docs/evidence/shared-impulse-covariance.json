@@ -1,0 +1,44 @@
+{
+  "clinicalValidation": false,
+  "counterexample": {
+    "oldResidual": 0.6428571428571428,
+    "analyticResidual": 0.35714285714285715,
+    "scope": "Numerical counterexample only; both values exceed present impulse thresholds"
+  },
+  "baselineCommit": "553856f24608a3971c4d49a292cd316709ad2348",
+  "native": {
+    "cases": 1712,
+    "accepted": 1656,
+    "unsupported": 56,
+    "exposedCorrect": 12,
+    "exposedTotal": 12,
+    "newlyFalseUsable": 0,
+    "newMissedQrsCases": 0,
+    "falseUsableBefore": 86,
+    "falseUsableAfter": 86,
+    "usableBefore": 1375,
+    "usableAfter": 1375,
+    "pairedOutputsIdentical": 1656
+  },
+  "annotated": {
+    "records": 80,
+    "numericallyIdentical": 80,
+    "changedRecords": 0,
+    "usableBefore": 75,
+    "usableAfter": 75
+  },
+  "noise": {
+    "rowsIdentical": 920,
+    "nativeIdentical": 20,
+    "strictFailures": 0
+  },
+  "reportSha256": {
+    "shared-impulse-native1712.json": "266074f6db08f6c627177c3ba92e2244fb4a8e73dc61d1ee5f7dfb89411f4548",
+    "shared-impulse-annotated80.json": "46c3b0a8b7926d013e61a11fb4bb31062d6ad1bc9aebf8e0cd4093a913ff9be9"
+  },
+  "developmentQuality": {
+    "rowsIdentical": 920,
+    "aggregatesIdentical": true,
+    "historicalAssertionsPassed": true
+  }
+}

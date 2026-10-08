@@ -1,3 +1,4 @@
+import {COMPLETE_COMPLEX_REVISION,preCompleteComplexPlugin,assertCompleteComplexMeasurements} from './lib/complete-complex-revision.mjs';
 import {QRS_T_REVISION,assertReviewedQrsTFile,assertQrsTRefinement,preQrsTNumericsPlugin} from './lib/qrs-t-revision.mjs';
 import {predictWpwSupport} from './lib/wpw-support-prediction.mjs';
 import {predictAfClock,assertFrozenAfSampler} from './lib/af-clock-prediction.mjs';
@@ -55,10 +56,16 @@ try {
  await build({stdin:{contents:"export {measure} from './src/engine/measure';",resolveDir:root},bundle:true,platform:'node',format:'esm',outfile:legacyOut,
   plugins:[preQrsTNumericsPlugin(root)]});
  const {measure:preQrsTMeasure}=await import(pathToFileURL(legacyOut).href);
+ const releasedOut=path.join(temp,'pre-complete-complex.mjs');
+ await build({stdin:{contents:"export {measure} from './src/engine/measure';",resolveDir:root},bundle:true,platform:'node',format:'esm',outfile:releasedOut,plugins:[preCompleteComplexPlugin(root)]});
+ const {measure:releasedMeasure}=await import(pathToFileURL(releasedOut).href);
+ const completeComplexEvidence=[];
  const assertNumericalRevision=(samples,current)=>{
   const prior=preQrsTMeasure(samples);
   assertPeakOnlyChange(before.measure(samples),prior);
-  assertQrsTRefinement(prior,current);
+  const released=releasedMeasure(samples);
+  assertQrsTRefinement(prior,released,{terminalReplacement:true});
+  completeComplexEvidence.push(assertCompleteComplexMeasurements(released,current,samples.events.beats));
  };
  const outfile = path.join(temp,'metrics.mjs');
  await build({entryPoints:[path.join(root,'tests/support/morphology-metrics.ts')],bundle:true,platform:'node',format:'esm',outfile});
@@ -87,7 +94,7 @@ try {
    return {path:p,unchanged:a.equals(b),sha256:createHash('sha256').update(b).digest('hex')};
  }));
  for(const f of detector.filter(f=>!f.unchanged)) {
-   if(f.path==='src/engine/analysis/ventricular-candidates.ts'){assertReviewedQrsTFile(f.path,await readFile(path.join(root,f.path)));continue;}
+   if(f.path!=='src/engine/measure.ts'&&Object.hasOwn(QRS_T_REVISION.files,f.path)){assertReviewedQrsTFile(f.path,await readFile(path.join(root,f.path)));continue;}
    if(f.path!=='src/engine/measure.ts')throw new Error('Detector freeze violated: '+f.path);
    assertReviewedMeasure(await readFile(path.join(baseDir,f.path)),await readFile(path.join(root,f.path)));
  }
@@ -126,8 +133,9 @@ try {
    const intendedSourceChange=changedSources.has(p.id), intendedRvGainChange=p.id==='rv_chronic',
      intendedFinalAxisChange=p.id==='rv_acute'||p.id==='rv_chronic',
      intendedSecondaryChange=b.events.beats.some(beat=>beat.kind!=='normal') ||
-       c.conduction==='lbbb' || c.conduction.includes('rbbb'),
-     reviewedMainChange=intendedFinalAxisChange||intendedSecondaryChange;
+       c.conduction==='lbbb' || c.conduction.includes('rbbb') || c.conduction==='wpw',
+     intendedLpfbSourceChange=p.id==='lpfb',
+     reviewedMainChange=intendedFinalAxisChange||intendedSecondaryChange||intendedLpfbSourceChange;
    const historicalContract=intendedRvGainChange ? assertRvAmplitudeChange(before.synthesize,a,r,c)
      : compareSignalContract(a,r,{exact:!intendedSourceChange,label:`historical/default/${p.id}`});
    const contract=compareSignalContract(r,b,{exact:!reviewedMainChange,label:`axis/default/${p.id}`});
@@ -144,12 +152,12 @@ try {
    if(intendedSourceChange) assert.ok(historicalContract.maxDifferenceMv>.03,`missing source change ${p.id}`);
    if(intendedSecondaryChange&&!intendedFinalAxisChange)
      assert.ok(contract.maxDifferenceMv>1e-6,`missing coupled-secondary change ${p.id}`);
-   defaults.push({id:p.id,intendedSourceChange,intendedRvGainChange,intendedFinalAxisChange,intendedSecondaryChange,
+   defaults.push({id:p.id,intendedLpfbSourceChange,intendedSourceChange,intendedRvGainChange,intendedFinalAxisChange,intendedSecondaryChange,
      reviewedMainExact:!reviewedMainChange,legacySourceExact:legacyContract.maxDifferenceMv===0,
      historicalMaxDifferenceMv:historicalContract.maxDifferenceMv,...contract});
  }
  const output=options['--output'] || path.join(root,'.sites-runtime','repolarization-comparison.json');
  await mkdir(path.dirname(output),{recursive:true});
- await writeFile(output,JSON.stringify({schema:1,referencePreparation,base:BASE,runtime:process.version,measurementScope:'Whole signal in T window; ST can contribute. Not isolated cellular T, HATW score, or diagnostic accuracy.',windowSource:'generator events; not independent delineation',externalValidation:false,detector,tPeakEvidenceOnly:true,modelAudit,impulseConfidence,alternatingConfidence,defaultPresets:defaults,scenarios:rows},null,2));
+ await writeFile(output,JSON.stringify({schema:2,completeComplexRevision:COMPLETE_COMPLEX_REVISION,completeComplexEvidence,referencePreparation,base:BASE,runtime:process.version,measurementScope:'Whole signal in T window; ST can contribute. Not isolated cellular T, HATW score, or diagnostic accuracy.',windowSource:'generator events; not independent delineation',externalValidation:false,detector,tPeakEvidenceOnly:true,modelAudit,impulseConfidence,alternatingConfidence,defaultPresets:defaults,scenarios:rows},null,2));
  console.log(JSON.stringify({referencePreparation,output,scenarios:rows.length,unchangedDefaults:defaults.filter(x=>x.maxDifferenceMv===0).length,detectorFrozen:detector.every(x=>x.unchanged)}));
 } finally { await rm(temp,{recursive:true,force:true}); }

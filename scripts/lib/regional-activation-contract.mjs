@@ -3,14 +3,23 @@ import assert from 'node:assert/strict';
 const leads=['I','II','III','aVR','aVL','aVF','V1','V2','V3','V4','V5','V6'];
 export function assertRegionalSampleContract(mod) {
   const c={...mod.fromPreset(mod.presetById('rbbb')),hr:60,variability:0,filter:'off',
-    pAmp:0,tAmp:0,st:0,ischemia:'none',electrolyte:'none'};
+    pAmp:0,tAmp:0,st:0,qtc:600,ischemia:'none',electrolyte:'none'};
   const widths=[115,150,190,230], rows=[], signals=widths.map(qrs=>
     mod.synthesize({...c,qrs,activationModel:'regional-rbbb-v1'},10));
   const window=(s,l,lo,hi)=>{
     const b=s.events.beats.find(b=>b.time>3);
     return Array.from(s.leads[l].slice(Math.ceil((b.time+lo/1000)*s.fs),Math.floor((b.time+hi/1000)*s.fs)+1));
   };
-  const area=(s,l,d)=>window(s,l,0,d).reduce((a,b)=>a+b,0);
+  // Separate the represented late ST rise from depolarization area. With QTc
+  // 600 ms and T=0, J+60 is on its plateau and outside the FIR's 40 ms QRS
+  // support. The declared 40 ms cubic rise has area plateau * 20 ms.
+  // Include the rectangular-sum half-sample endpoint term explicitly.
+  const area=(s,l,d)=>{
+    const beat=s.events.beats.find(b=>b.time>3);
+    const plateau=s.leads[l][Math.round((beat.time+d/1000+.060)*s.fs)];
+    const last=(beat.time+d/1000)*s.fs, fraction=last-Math.floor(last);
+    return window(s,l,0,d).reduce((a,b)=>a+b,0)/s.fs-plateau*(.020+(.5-fraction)/s.fs);
+  };
   let previousPeak=0;
   for(let k=0;k<widths.length;k++) {
     const s=signals[k], duration=widths[k];
@@ -30,7 +39,7 @@ export function assertRegionalSampleContract(mod) {
     assert.ok(peakTimeMs>previousPeak,'Delayed V1 maximum must move later, not stretch early LV');previousPeak=peakTimeMs;
     const i=area(s,'I',duration),ii=area(s,'II',duration);
     const axisDeg=Math.atan2((2*ii-i)/Math.sqrt(3),i)*180/Math.PI;
-    assert.ok(Math.abs(axisDeg-35)<.1,'Sample-integrated frontal axis must close');
+    assert.ok(Math.abs(axisDeg-35)<.1,`Depolarization area after independently measured ST-rise subtraction must close: ${duration} ms, ${axisDeg} degrees`);
     for(let j=0;j<s.leads.I.length;j+=17){const i=s.leads.I[j],ii=s.leads.II[j];
       assert.ok(Math.abs(s.leads.III[j]-(ii-i))<1e-9);
       assert.ok(Math.abs(s.leads.aVR[j]+(i+ii)/2)<1e-9);

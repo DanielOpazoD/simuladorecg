@@ -15,17 +15,20 @@ const args=parseArgs({allowPositionals:true,options:{
   'source-root':{type:'string',default:process.cwd()},
   'analyzer':{type:'string',default:'primitive'},
   'noise-dir':{type:'string'},
+  'supplement-preset':{type:'string'},
 }});
 const evaluatorRoot=process.cwd(),root=path.resolve(args.values['source-root']);
 const output=args.positionals[0],noiseDir=args.values['noise-dir']??output;
 if(!output||args.positionals.length!==1||!['primitive','worker'].includes(args.values.analyzer))
   throw new Error('Usage: benchmark-noise-stress.mjs OUTPUT [--noise-dir INPUT] [--source-root DIR] [--analyzer primitive|worker]');
 const analyzerEntry=args.values.analyzer==='worker'?'src/engine/sample-analysis.ts':'src/engine/measure.ts';
-const protocolBytes=await readFile('benchmarks/noise-stress/protocol.json');
+const frozenProtocolBytes=await readFile('benchmarks/noise-stress/protocol.json');
+const supplement=args.values['supplement-preset'];assert.ok(!supplement||supplement==='wpw','Only explicit WPW supplement is supported');
+const protocolBytes=supplement?Buffer.from(JSON.stringify({...JSON.parse(frozenProtocolBytes),presets:[supplement]})):frozenProtocolBytes;
 const p=JSON.parse(protocolBytes), hash=x=>createHash('sha256').update(x).digest('hex');
 const source=JSON.parse(await readFile(path.join(noiseDir,'noise-segments.json')));
 const provenance=JSON.parse(await readFile(path.join(noiseDir,'noise-provenance.json')));
-assert.equal(provenance.protocolSha256,hash(protocolBytes),'Prepared data belongs to a different protocol');
+assert.equal(provenance.protocolSha256,hash(frozenProtocolBytes),'Prepared data belongs to a different protocol');
 const expected=p.records.flatMap(r=>p.segmentStartsSeconds.map(t=>`${r}:${t}`));
 assert.deepEqual(source.segments.map(s=>`${s.record}:${s.startSeconds}`),expected,'No omissions/replacement of snippets');
 await mkdir(output,{recursive:true});
@@ -117,11 +120,12 @@ try{
     sourceCommit:execFileSync('git',['rev-parse','HEAD'],{cwd:root}).toString().trim(),
     noiseSha256:hash(await readFile(path.join(noiseDir,'noise-segments.json'))),
     protocol:p,rows,groups,native,
-    interpretation:'Engineering stress outcomes, not clinical validation. Global analyzer status is not per-beat reliability. No tuning after viewing this protocol.',
+    supplement:supplement?{preset:supplement,derivedFromProtocolSha256:hash(frozenProtocolBytes),role:'Exposed WPW source-change stress supplement; not the frozen five-preset acceptance matrix'}:null,
+    interpretation:'Engineering stress outcomes, not clinical validation. Global analyzer status is not per-beat reliability. Exposed development/regression data. This evaluates the sample-analysis entry before acquisition-scope availability, not the final UI status.',
     analyzerReceivesOnlySamples:true,modelAuditUsed:false});
   await write('evaluation-provenance.json',{commit:execFileSync('git',['rev-parse','HEAD'],{cwd:root}).toString().trim(),analyzerEntry,evaluatedSources,
     preparedNoiseSha256:hash(await readFile(path.join(noiseDir,'noise-segments.json'))),protocolSha256:hash(protocolBytes),
-    clinicalValidation:false,generatorChanged:false,analyzerTuned:false});
-  console.log(JSON.stringify({scenarios:rows.length,nativeComparisons:native.length,groups:groups.length,analyzerTuned:false}));
+    clinicalValidation:false,evaluationAdaptsAlgorithm:false,workingTreeDirty:!!execFileSync('git',['status','--porcelain'],{cwd:root,encoding:'utf8'}).trim()});
+  console.log(JSON.stringify({scenarios:rows.length,nativeComparisons:native.length,groups:groups.length,evaluationAdaptsAlgorithm:false}));
 }catch(e){await write('evaluation-failure.json',{error:String(e.stack)});throw e;}
 finally{await rm(temp,{recursive:true,force:true});}

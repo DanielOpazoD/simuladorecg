@@ -1,5 +1,7 @@
 # P2 · Límites visibles de repolarización secundaria
 
+> Registro histórico anterior a los cambios de fuente de los PR149 y PR151. La ausencia de ST secundario y el desacoplamiento de WPW descritos abajo ya no representan el código actual. Véanse [ST secundario implementado](secondary-st-resolution.md) y [repolarización WPW implementada](wpw-repolarization-resolution.md). Se conserva el texto para identificar lo que las pruebas antiguas demostraban; no acredita validación clínica.
+
 ## Contrato docente
 
 WPW añade delta pero no modifica la T secundaria. BRI, VVI y DDD incluyen

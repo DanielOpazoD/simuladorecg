@@ -61,7 +61,8 @@ export const range = (
   value: number,
   unit: string,
   disabled = false,
+  describedBy = "",
 ) =>
-  `<label class="range-field"><span>${label}<output data-output="${key}" aria-label="${esc(label)}">${value} <small>${unit}</small></output></span><input type="range" data-key="${key}" min="${min}" max="${max}" step="${step}" value="${value}" aria-label="${label}" ${disabled ? "disabled" : ""}/></label>`;
+  `<label class="range-field"><span>${label}<output data-output="${key}" aria-label="${esc(label)}">${value} <small>${unit}</small></output></span><input type="range" data-key="${key}" min="${min}" max="${max}" step="${step}" value="${value}" aria-label="${label}" ${disabled ? "disabled" : ""}${describedBy ? ` aria-describedby="${esc(describedBy)}"` : ""}/></label>`;
 export const toggle = (key: string, label: string, value: boolean) =>
   `<label class="toggle"><input type="checkbox" data-key="${key}" ${value ? "checked" : ""}/><span>${label}</span></label>`;

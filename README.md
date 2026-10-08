@@ -16,6 +16,15 @@ Ocho presets cambian su QRS y la orientación secundaria; 53 conservan exactamen
 sus muestras. La fuente histórica `rv_apical_pacing` permite reproducir todos los
 presets v1.4. No hay calibración anatómica o clínica de esos perfiles.
 
+## ST secundario acoplado al QRS
+
+El ST secundario se representa en BRI, BRD/BRD incompleto y fuentes ventriculares
+regulares, con dirección derivada de su activación. Es independiente de la lesión
+primaria y del control de amplitud de T. El [contrato y evaluación](docs/secondary-st-resolution.md)
+detalla la predicción, los cambios de medición, el nuevo origen de comparación y
+los resultados adversos conservados. No valida amplitudes clínicas ni Sgarbossa.
+WPW y el ST separable de torsades quedan fuera de esta implementación.
+
 ## Laboratorio de activación QRS
 
 **Activación QRS** abre un [experimento A/B interactivo](docs/activation-lab.md)
@@ -49,7 +58,7 @@ node scripts/validate-repolarization.mjs --output .sites-runtime/repolarization.
 node scripts/validate-analysis.mjs --split=all --output .sites-runtime/analysis-current.json
 
 # Después de npm run build, desde un commit limpio:
-npm install --no-save --package-lock=false --legacy-peer-deps playwright@1.63.0
+npm ci
 npx playwright install chromium
 npx vite preview --host 127.0.0.1 --port 5173 --strictPort
 # En otra terminal:
@@ -77,7 +86,7 @@ Se conservan **61 presets activos y cinco pendientes**, sin nuevas derivaciones 
 
 La [matriz vigente de alcance por fase](docs/alcance-actual.md) distingue base vectorial, correcciones por derivación y funciones pendientes. [Estado de cada preset](docs/estado-presets.md) conserva sus límites. En inferior/anterior/lateral, las fases hiperaguda/evolutiva añaden T regional solo en el dominio admitido; no son campos anatómicos calibrados ni propagación celular. Selección: **ST y morfología → Hiperaguda/Evolutiva**.
 
-Los [avisos de adquisición P1](docs/p1-acquisition-contract.md) distinguen la inversión de brazos de la fisiología basal. Los [avisos P2](docs/p2-secondary-repolarization-limits.md) declaran la repolarización secundaria incompleta de WPW y la proporcionalidad ST/QRS no calibrada en BRI/VVI/DDD. Esas limitaciones no se han corregido cambiando las ondas.
+Los [avisos de adquisición P1](docs/p1-acquisition-contract.md) distinguen la inversión de brazos de la fisiología basal. El [ST secundario](docs/secondary-st-resolution.md) y la [repolarización de WPW](docs/wpw-repolarization-resolution.md) ya se generan desde la activación ventricular representada. La amplitud y proporcionalidad ST/QRS siguen sin calibración clínica; no validan Sgarbossa ni localizan vías accesorias. El [contrato P2](docs/p2-secondary-repolarization-limits.md) se conserva como antecedente histórico.
 
 ## Documentación de entrada
 

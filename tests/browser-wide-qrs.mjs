@@ -21,13 +21,22 @@ for(const engine of [chromium,webkit,firefox]){
    await page.goto(url);await page.locator('#signal-loading').waitFor({state:'hidden'});
    const identity=await(await page.request.get(new URL('build-info.json',url).href)).json();
    assert.equal(identity.dirty,false);if(process.env.ECG_EXPECT_COMMIT)assert.equal(identity.commit,process.env.ECG_EXPECT_COMMIT);
+   // Worker completion precedes the 90 ms ResizeObserver redraw. Capture only
+   // a settled canvas; otherwise modal duration gets blamed for startup paint.
+   await page.evaluate(()=>document.fonts.ready);
+   await page.waitForFunction(()=>{
+    const canvas=document.querySelector('#ecg'),image=canvas.toDataURL(),now=performance.now();
+    const state=window.__wideQrsCanvasSettling;
+    if(!state||state.image!==image){window.__wideQrsCanvasSettling={image,since:now};return false;}
+    return now-state.since>=200;
+   },null,{polling:50,timeout:5000});
    const original=await page.locator('#ecg').evaluate(c=>c.toDataURL());
    await page.locator('[data-action=external]').click();const dialog=page.locator('#external-lab');await dialog.waitFor({state:'visible'});
    await page.locator('#external-files').setInputFiles({name:`analytical-${fixture.name}.csv`,mimeType:'text/csv',buffer:Buffer.from(csv)});
    await page.locator('[data-external=load]').click();await page.locator('#external-metrics').waitFor({state:'visible'});
    const row=page.locator('#external-metrics tbody tr').first();
    assert.equal(await row.locator('td').nth(1).innerText(),hr.toFixed(1)+' lpm');
-   assert.equal(await row.locator('td').nth(2).innerText(),'Revisar');
+   assert.equal(await row.locator('td').nth(2).innerText(),fixture.name==='wide-qrs'?'Consistente*':'Revisar');
    if(fixture.name==='opposed-cycle')assert.match(await row.locator('td').nth(3).innerText(),/dirección opuesta/);
    if(width<=390){
     const readable=await page.locator('#external-metrics').evaluate(table=>{
@@ -47,11 +56,18 @@ for(const engine of [chromium,webkit,firefox]){
    const file=resolve(out,tag+'-report.json');await(await pending).saveAs(file);
    const report=JSON.parse(await readFile(file));assert.equal(report.kind,'ecg-external-analysis');
    assert.equal(report.modelAuditUsed,false);assert.equal(report.clinicalValidation,false);
-   assert.equal(report.measurement.evidence.hr.status,'review');if(fixture.name==='wide-qrs'){assert.deepEqual(report.measurement.beats,[]);assert.equal(report.measurement.qrs,null);assert.equal(report.measurement.qt,null);}
+   assert.equal(report.measurement.evidence.hr.status,fixture.name==='wide-qrs'?'usable':'review');
+   if(fixture.name==='wide-qrs'){
+    assert.equal(report.measurement.beats.length,14);
+    assert.ok(Math.abs(report.measurement.qrs-240)<=8);
+    for(const b of report.measurement.beats){assert.ok(Math.abs(b.qrs-240)<=8);assert.ok(Math.abs(b.axis-Math.atan2(1.6/Math.sqrt(3),1)*180/Math.PI)<.1);}
+    assert.equal(report.measurement.pr,null);assert.equal(report.measurement.qt,null);
+   }
    assert.ok(Math.abs(report.measurement.hr-hr)<1e-8,'No guessed rate halving');
    assert.equal(report.measurement.detectedPeaks.length,candidates);
    for(const [lead,values] of Object.entries(samples.leads))assert.deepEqual(report.leads[lead],Array.from(values));
    await page.locator('[data-external=close]').click();await dialog.waitFor({state:'hidden'});
+   await page.waitForFunction(image=>document.querySelector('#ecg').toDataURL()===image,original,{timeout:5000});
    assert.equal(await page.locator('#ecg').evaluate(c=>c.toDataURL()),original);
    assert.deepEqual(errors,[]);results.push({engine:engine.name(),width,identity,fixture:fixture.name,hr:report.measurement.hr,candidates,samplesUnchanged:true,modelAuditUsed:false});
   }catch(error){await page.screenshot({path:resolve(out,tag+'-failure.png')}).catch(()=>{});await writeFile(resolve(out,tag+'-failure.json'),JSON.stringify({error:String(error.stack),errors},null,2));throw error;}

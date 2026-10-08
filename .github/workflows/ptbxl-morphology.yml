@@ -1,10 +1,10 @@
 name: PTB-XL+ morphology reference
 on:
   pull_request:
-    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/ptbxl-plus/**', 'scripts/*ptbxl*', 'scripts/secondary-stt-reference.py', 'tests/test_secondary_stt_reference.py', 'scripts/lib/ptbxl-morphology.mjs', 'tests/*ptbxl*', '.github/workflows/ptbxl-morphology.yml', '.github/workflows/generator-ptbxl-gap.yml']
+    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/ptbxl-plus/**', 'scripts/*ptbxl*', 'scripts/secondary-stt-reference.py', 'scripts/isolated-phenotype-reference.py', 'tests/test_isolated_phenotype_reference.py', 'docs/reference-protocols/isolated-phenotypes-v1.json', 'docs/evidence/isolated-phenotypes-selection.json', 'tests/test_secondary_stt_reference.py', 'scripts/lib/ptbxl-morphology.mjs', 'tests/*ptbxl*', '.github/workflows/ptbxl-morphology.yml', '.github/workflows/generator-ptbxl-gap.yml']
   push:
     branches: ['main']
-    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/ptbxl-plus/**', 'scripts/*ptbxl*', 'scripts/secondary-stt-reference.py', 'tests/test_secondary_stt_reference.py', 'scripts/lib/ptbxl-morphology.mjs', 'tests/*ptbxl*', '.github/workflows/ptbxl-morphology.yml', '.github/workflows/generator-ptbxl-gap.yml']
+    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/ptbxl-plus/**', 'scripts/*ptbxl*', 'scripts/secondary-stt-reference.py', 'scripts/isolated-phenotype-reference.py', 'tests/test_isolated_phenotype_reference.py', 'docs/reference-protocols/isolated-phenotypes-v1.json', 'docs/evidence/isolated-phenotypes-selection.json', 'tests/test_secondary_stt_reference.py', 'scripts/lib/ptbxl-morphology.mjs', 'tests/*ptbxl*', '.github/workflows/ptbxl-morphology.yml', '.github/workflows/generator-ptbxl-gap.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -37,8 +37,14 @@ jobs:
         run: python -m unittest discover -s tests -p test_ptbxl_original_reference.py -v
       - name: Secondary ST-T reference contracts
         run: python -m unittest discover -s tests -p test_secondary_stt_reference.py -v
+      - name: Isolated phenotype selection contracts without downloads
+        run: python -m unittest discover -s tests -p test_isolated_phenotype_reference.py -v
       - name: Select patients before feature acquisition and verify sources
         run: python "$RUNNER_TEMP/ptbxl-acquisition/scripts/ptbxl-benchmark.py" --output "$RUNNER_TEMP/ptbxl-reference"
+      - name: Select isolated development labels before original waveform acquisition
+        run: |
+          python scripts/isolated-phenotype-reference.py --metadata "$RUNNER_TEMP/ptbxl-reference/raw/ptb-xl/ptbxl_database.csv" --selection "$RUNNER_TEMP/ptbxl-reference/isolated-selection.json"
+          python scripts/isolated-phenotype-reference.py --metadata "$RUNNER_TEMP/ptbxl-reference/raw/ptb-xl/ptbxl_database.csv" --selection "$RUNNER_TEMP/ptbxl-reference/isolated-selection.json" --raw-root "$RUNNER_TEMP/ptbxl-reference/raw" --output "$RUNNER_TEMP/ptbxl-reference/isolated-phenotypes"
       - name: Verify original physical calibration without reinterpreting vendor medians
         run: python scripts/ptbxl-original-reference.py --reference "$RUNNER_TEMP/ptbxl-reference" --output "$RUNNER_TEMP/ptbxl-reference/original-waveforms"
       - name: Recheck original voltage against raw counts and limb identity

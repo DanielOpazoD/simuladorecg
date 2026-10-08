@@ -1,5 +1,7 @@
+import {COMPLETE_COMPLEX_REVISION,preCompleteComplexPlugin,assertCompleteComplexMeasurements} from './lib/complete-complex-revision.mjs';
+import {restoreHistoricalRateScreen} from './lib/sample-entry-contract.mjs';
 import {qrsMidpointSeconds} from './lib/qrs-event-reference.mjs';
-import {QRS_T_REVISION,assertReviewedQrsTFile,assertQrsTRefinement,summarizeRateRevision,preQrsTNumericsPlugin} from './lib/qrs-t-revision.mjs';
+import {TERMINAL_SOURCE_REVISION,QRS_T_REVISION,assertReviewedQrsTFile,assertQrsTRefinement,summarizeRateRevision,preQrsTNumericsPlugin} from './lib/qrs-t-revision.mjs';
 import {assertReviewedAlternatingConfidence,assertReviewedImpulseConfidence,assertReviewedSampleEntry} from './lib/sample-entry-contract.mjs';
 /** Paired quality assessment. Evaluator has references; analyzeSamples does not. */
 import { build } from 'esbuild';
@@ -28,17 +30,21 @@ try {
   assert.ok(!Object.keys(next.metafile.inputs).some(p => /\/(signal|rhythm|reference|model-audit)\.ts$/.test(p)), 'Synthetic reference leaked into sample analysis');
   const B = await import(pathToFileURL(path.join(temp,'before.mjs')));
   const C = await import(pathToFileURL(path.join(temp,'after.mjs')));
+  await build({entryPoints:['src/engine/sample-analysis.ts'],bundle:true,platform:'node',format:'esm',outfile:path.join(temp,'pre-complete.mjs'),plugins:[preCompleteComplexPlugin(process.cwd())]});
+  const R=await import(pathToFileURL(path.join(temp,'pre-complete.mjs')));
+
   // Preserve every historical quality-only assertion on exact pre-revision
   // primitives; evaluate actual revised numerical results separately below.
   await build({entryPoints:['src/engine/sample-analysis.ts'],bundle:true,platform:'node',format:'esm',outfile:path.join(temp,'pre-revision.mjs'),
-    plugins:[preQrsTNumericsPlugin(process.cwd())]});
+    plugins:[{name:'restore-frozen-hr-screen',setup(b){b.onLoad({filter:/\/sample-analysis\.ts$/},async args=>({contents:restoreHistoricalRateScreen(await readFile(args.path,'utf8')),loader:'ts'}));}},preQrsTNumericsPlugin(process.cwd())]});
   const A = await import(pathToFileURL(path.join(temp,'pre-revision.mjs')));
   assert.deepEqual(A.HR_QUALITY_POLICY, policy.qualityPolicy, 'Policy changed after replication protocol');
   assertReviewedSampleEntry(await readFile('src/engine/sample-analysis.ts'));
   for (const file of Object.keys(next.metafile.inputs).filter(f => !f.endsWith('/sample-analysis.ts') && !f.endsWith('/measurement-support.ts'))) {
     if(file==='src/engine/analysis/alternating-confidence.ts') assertReviewedAlternatingConfidence(await readFile(file));
     else if(file==='src/engine/analysis/impulse-confidence.ts') assertReviewedImpulseConfidence(await readFile(file));
-    else if(file==='src/engine/analysis/ventricular-candidates.ts') assertReviewedQrsTFile(file,await readFile(file));
+    else if(QRS_T_REVISION.files[file] && file!=='src/engine/measure.ts') assertReviewedQrsTFile(file,await readFile(file));
+    else if(TERMINAL_SOURCE_REVISION[file])assert.equal(hash(await readFile(file)),TERMINAL_SOURCE_REVISION[file],'Unreviewed terminal dependency');
     else if(file==='src/engine/measure.ts') assertReviewedMeasure(await readFile(path.join(base,file)),await readFile(file));
     else assert.equal(hash(await readFile(file)),hash(await readFile(path.join(base,file))),`Unreviewed primitive change: ${file}`);
   }
@@ -66,12 +72,14 @@ try {
       before:before.evidence.hr.status,after:after.evidence.hr.status,quality,
       intervalChanges:Object.fromEntries(['pr','qrs','qt','axis'].filter(k=>before[k]!==after[k]||before.evidence[k].status!==after.evidence[k].status).map(k=>[k,{before:before[k],after:after[k],statusBefore:before.evidence[k].status,statusAfter:after.evidence[k].status}]))}};
   };
-  const compare=(samples,reference,context)=>{
+  const compare=(samples,reference,context,events)=>{
     const {row,measurement:prior}=compareHistorical(samples,reference,context);historicalRows.push(row);
-    const next=C.analyzeSamples(samples);assertQrsTRefinement(prior,next);
+    const next=C.analyzeSamples(samples),released=R.analyzeSamples(samples);
+    assertQrsTRefinement(prior,released,{terminalReplacement:true});
+    const completeComplexComparison=assertCompleteComplexMeasurements(released,next,events);
     const error=(value)=>value===null||reference===null?null:value-reference;
     const beforeError=error(prior.hr),afterError=error(next.hr);
-    return {...context,referenceBpm:reference,beforeHr:prior.hr,hr:next.hr,beforeErrorBpm:beforeError,errorBpm:afterError,
+    return {...context,completeComplexComparison,referenceBpm:reference,beforeHr:prior.hr,hr:next.hr,beforeErrorBpm:beforeError,errorBpm:afterError,
       beforeBeyondReview:beforeError===null?null:Math.abs(beforeError)>policy.heartRateErrorReviewBpm,
       beyondReview:afterError===null?null:Math.abs(afterError)>policy.heartRateErrorReviewBpm,
       before:prior.evidence.hr.status,after:next.evidence.hr.status,
@@ -80,7 +88,7 @@ try {
   const cleanDefaults=[];
   for(const preset of B.PRESETS.filter(p=>p.strategy!=='pending')) {
     const signal=B.synthesize(B.fromPreset(preset),10);
-    cleanDefaults.push(compare({fs:signal.fs,leads:signal.leads},null,{preset:preset.id}));
+    cleanDefaults.push(compare({fs:signal.fs,leads:signal.leads},null,{preset:preset.id},signal.events.beats));
   }
   for(const id of p.presets) {
     const c=B.fromPreset(B.presetById(id));Object.assign(c,{filter:'off',notch:0,variability:0});
@@ -93,7 +101,7 @@ try {
       const mixed=B.injectNoise(signal,channels,p.mapping,snrDb,p.cropSeconds);
       for(const filter of p.filters) {
         const samples=B.cropSamples(B.filterSamples(mixed.signal,filter),p.cropSeconds);
-        rows.push(compare(samples,reference,{preset:id,noise:segment?.record??'clean',startSeconds:segment?.startSeconds??null,snrDb,filter}));
+        rows.push(compare(samples,reference,{preset:id,noise:segment?.record??'clean',startSeconds:segment?.startSeconds??null,snrDb,filter},events.map(b=>({...b,time:b.time-p.cropSeconds[0]}))));
       }
     }
   }
@@ -102,7 +110,7 @@ try {
   for(const noise of ['clean',...p.records]) for(const snrDb of noise==='clean'?[null]:p.snrDb) for(const filter of p.filters)
     groups.push({noise,snrDb,filter,...summarize(rows.filter(r=>r.noise===noise&&r.snrDb===snrDb&&r.filter===filter))});
   const newlyFalse=rows.filter(r=>r.after==='usable'&&r.beyondReview&&!(r.before==='usable'&&r.beforeBeyondReview));
-  const report={schemaVersion:2,role,clinicalValidation:false,policy,numericalRevision:QRS_T_REVISION,newlyFalseUsable:newlyFalse,
+  const report={schemaVersion:3,completeComplexRevision:COMPLETE_COMPLEX_REVISION,role,clinicalValidation:false,policy,actualQualityPolicy:C.HR_QUALITY_POLICY,qualityRevision:"single-candidate-rate-sensitivity; historical policy restored only in reference bundle",numericalRevision:QRS_T_REVISION,newlyFalseUsable:newlyFalse,
     historicalQualityContract:{scope:'Exact pre-QRS/T numerical primitives; all historical equality assertions preserved',unchangedNonTpeakPrimitiveOutputs:identical,addedTPeakCandidates:addedTPeaks,rows:historicalRows},
     overall:summarize(rows),groups,cleanDefaults,rows,limitations:policy.limitations,
     provenance:{commit:execFileSync('git',['rev-parse','HEAD']).toString().trim(),baselineCommit:policy.baselineCommit,

@@ -83,9 +83,48 @@ jobs:
           name: qrs-amplitude-${{ matrix.scope }}-${{ github.sha }}
           path: ${{ runner.temp }}/amplitude-evidence/
           retention-days: 14
-  verify:
+  qrs-discrimination:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22.16.0'
+          cache: npm
+      - run: npm ci
+      - name: Complete native QRS-T, transfer and ectopy matrix
+        run: node scripts/validate-qrs-t-discrimination.mjs "${{ runner.temp }}/qrs-t-discrimination-results.json"
+      - name: Require the generated report
+        run: test -s "$RUNNER_TEMP/qrs-t-discrimination-results.json"
+      - name: Archive exact native evidence
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/qrs-discrimination-evidence"
+          git archive HEAD | gzip > "$RUNNER_TEMP/qrs-discrimination-evidence/source.tar.gz"
+          git rev-parse HEAD > "$RUNNER_TEMP/qrs-discrimination-evidence/source-commit.txt"
+          node -p 'JSON.stringify(process.versions,null,2)' > "$RUNNER_TEMP/qrs-discrimination-evidence/runtime.json"
+          cp "$RUNNER_TEMP/qrs-t-discrimination-results.json" "$RUNNER_TEMP/qrs-discrimination-evidence/" 2>/dev/null || true
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: qrs-discrimination-${{ github.sha }}
+          path: ${{ runner.temp }}/qrs-discrimination-evidence/
+          if-no-files-found: error
+          retention-days: 14
+  verify-core:
+    needs: build
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --user 1001
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
@@ -98,36 +137,41 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Unit and signal contracts
-        run: npm test -- --reporter=default --reporter=json --outputFile=${{ runner.temp }}/unit-results.json
+        run: npm test -- --reporter=default --reporter=json --outputFile="$RUNNER_TEMP/unit-results.json"
+      - name: Record fascicular source gaps (not clinical readiness approval)
+        run: node scripts/audit-fascicular-source.mjs "$RUNNER_TEMP/fascicular-source-results.json"
       - name: Discriminative noise-regression contracts
-        run: node --test tests/noise-regression.node.mjs tests/t-peak-revision.node.mjs tests/qrs-event-reference.node.mjs > "${{ runner.temp }}/noise-regression.tap"
+        run: node --test tests/noise-regression.node.mjs tests/t-peak-revision.node.mjs tests/qrs-event-reference.node.mjs > "$RUNNER_TEMP/noise-regression.tap"
       - name: Regional activation and reviewed default prediction
-        run: node scripts/validate-regional-activation.mjs "${{ runner.temp }}/regional-activation-results.json"
+        run: node scripts/validate-regional-activation.mjs "$RUNNER_TEMP/regional-activation-results.json"
       - name: Full exposed regional LBBB worker domain and noisy boundaries
-        run: node scripts/validate-lbbb-worker.mjs "${{ runner.temp }}/lbbb-worker-results.json"
+        run: node scripts/validate-lbbb-worker.mjs "$RUNNER_TEMP/lbbb-worker-results.json"
+
       - name: Paired representative AF clock and worker confidence
-        run: node scripts/validate-af-clock.mjs "${{ runner.temp }}/af-clock-results.json"
+        run: node scripts/validate-af-clock.mjs "$RUNNER_TEMP/af-clock-results.json"
       - name: Paired native WPW support and worker confidence
-        run: node scripts/validate-wpw-support.mjs "${{ runner.temp }}/wpw-support-results.json"
+        run: node scripts/validate-wpw-support.mjs "$RUNNER_TEMP/wpw-support-results.json"
       - name: Total VVI noncapture sample-only uncertainty
-        run: node scripts/validate-vvi-noncapture.mjs "${{ runner.temp }}/vvi-noncapture-results.json"
-      - name: Paired QRS-T discrimination, transfer and ectopy
-        run: node scripts/validate-qrs-t-discrimination.mjs "${{ runner.temp }}/qrs-t-discrimination-results.json"
+        run: node scripts/validate-vvi-noncapture.mjs "$RUNNER_TEMP/vvi-noncapture-results.json"
       - name: Use the exact production build
         uses: actions/download-artifact@v7
         with:
           name: ecg-browser-build-${{ github.sha }}
           path: dist
       - name: Independent QRS/ST/T prediction against frozen source
-        run: node scripts/validate-repolarization-scope.mjs "${{ runner.temp }}/repolarization-scope-results.json" --coherence
+        run: node scripts/validate-repolarization-scope.mjs "$RUNNER_TEMP/repolarization-scope-results.json" --coherence
+      - name: Verify complete WPW source change and exact unaffected traces
+        run: node scripts/validate-wpw-source.mjs "$RUNNER_TEMP/wpw-source-results.json"
       - name: Matched repolarization comparison and detector freeze
-        run: node scripts/validate-repolarization.mjs --output "${{ runner.temp }}/repolarization-comparison.json"
+        run: node scripts/validate-repolarization.mjs --output "$RUNNER_TEMP/repolarization-comparison.json"
       - name: Complete historical and current 61-preset by four-filter comparison
-        run: node scripts/validate-posterior-amplitude.mjs "${{ runner.temp }}/qrs-default-results.json" --scope defaults
-      - name: Install isolated browser test dependency
-        run: |
-          npm install --no-save --package-lock=false --legacy-peer-deps playwright@1.63.0
-          npx playwright install --with-deps chromium
+        run: node scripts/validate-posterior-amplitude.mjs "$RUNNER_TEMP/qrs-default-results.json" --scope defaults
+      - name: Complete LPFB repair and unchanged catalog
+        run: node scripts/validate-lpfb-resolution.mjs "$RUNNER_TEMP/lpfb-resolution-results.json"
+      - name: Complete secondary ST source and worker contract
+        run: node scripts/validate-secondary-st.mjs "$RUNNER_TEMP/secondary-st-source-results.json"
+      - name: Verify pinned browser runtime
+        run: node scripts/verify-browser-runtime.mjs
       - name: Production identity, browser flows and PNG pixel metrology
         env:
           ECG_TEST_URL: http://127.0.0.1:5173/
@@ -151,6 +195,19 @@ jobs:
           node tests/browser-external-review.mjs
           node tests/browser-repolarization-coherence.mjs
           node tests/browser-visual-workspace.mjs
+      - name: Stage focused secondary ST visual evidence
+        if: always()
+        run: |
+          mkdir -p .sites-runtime/secondary-st-visual
+          find "$RUNNER_TEMP/ecg-evidence/browser" -maxdepth 1 -type f \( -name 'coherence-view-*.png' -o -name 'coherence-trace-*.png' -o -name 't-axis-controls-*.png' -o -name 'wpw-*.png' \) -exec cp {} .sites-runtime/secondary-st-visual/ \;
+      - name: Archive focused secondary ST visual evidence
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: secondary-st-visual-${{ github.sha }}
+          path: .sites-runtime/secondary-st-visual/
+          if-no-files-found: error
+          retention-days: 14
       - name: Archive exact reviewed source and reports
         if: always()
         run: |
@@ -169,10 +226,45 @@ jobs:
           name: ecg-evidence-${{ github.sha }}
           path: ${{ runner.temp }}/ecg-evidence/
           retention-days: 14
-  accessibility:
+  verify:
+    # Preserve the existing merge-check name and fail closed on every prerequisite.
+    if: ${{ always() }}
+    needs: [build, verify-core, qrs-discrimination, accessibility, browser-contracts, portability, amplitude-regression]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require the complete fidelity workflow
+        env:
+          RESULT_BUILD: ${{ needs['build'].result }}
+          RESULT_CORE: ${{ needs['verify-core'].result }}
+          RESULT_NATIVE: ${{ needs['qrs-discrimination'].result }}
+          RESULT_BROWSER: ${{ needs['accessibility'].result }}
+          RESULT_BROWSER_GROUPS: ${{ needs['browser-contracts'].result }}
+          RESULT_PORTABILITY: ${{ needs['portability'].result }}
+          RESULT_AMPLITUDE: ${{ needs['amplitude-regression'].result }}
+        run: |
+          test "$RESULT_BUILD" = "success"
+          test "$RESULT_CORE" = "success"
+          test "$RESULT_NATIVE" = "success"
+          test "$RESULT_BROWSER" = "success"
+          test "$RESULT_BROWSER_GROUPS" = "success"
+          test "$RESULT_PORTABILITY" = "success"
+          test "$RESULT_AMPLITUDE" = "success"
+  browser-contracts:
     needs: build
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --user 1001
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        group: [source, navigation, interaction]
     steps:
       - uses: actions/checkout@v5
         with:
@@ -186,12 +278,11 @@ jobs:
         with:
           name: ecg-browser-build-${{ github.sha }}
           path: dist
-      - name: Install only browser test tooling
-        run: |
-          npm install --no-save --package-lock=false --legacy-peer-deps playwright@1.63.0
-          npx playwright install --with-deps chromium webkit firefox
-      - name: Keyboard, reflow and critical flows on three browser engines
+      - name: Verify pinned browser runtime
+        run: node scripts/verify-browser-runtime.mjs
+      - name: Complete assigned flows on all original browser engines
         env:
+          ECG_BROWSER_GROUP: ${{ matrix.group }}
           ECG_TEST_URL: http://127.0.0.1:5173/
           ECG_EXPECT_COMMIT: ${{ github.sha }}
           ECG_EVIDENCE_DIR: ${{ runner.temp }}/accessibility-evidence
@@ -201,17 +292,49 @@ jobs:
           trap 'kill $PID 2>/dev/null || true' EXIT
           for n in {1..40}; do curl --silent --fail "$ECG_TEST_URL" > /dev/null && break; sleep 1; done
           node scripts/verify-production.mjs
-          ECG_ACTIVATION_ENGINES=all node tests/browser-activation.mjs
-          node tests/browser-accessibility.mjs
-          node tests/browser-vvi-noncapture.mjs
-          node tests/browser-qrs-t-discrimination.mjs
-          node tests/browser-wide-qrs.mjs
-          ECG_GROUP_ENGINES=all node tests/browser-diagnosis-navigation.mjs
-          ECG_REGIONAL_ENGINES=all node tests/browser-regional-activation.mjs
+          case "$ECG_BROWSER_GROUP" in
+            source)
+              node tests/browser-lpfb-resolution.mjs
+              ECG_ACTIVATION_ENGINES=all node tests/browser-activation.mjs
+              ECG_REGIONAL_ENGINES=all node tests/browser-regional-activation.mjs
+              ;;
+            navigation)
+              ECG_GROUP_ENGINES=all node tests/browser-diagnosis-navigation.mjs
+              ;;
+            interaction)
+              node tests/browser-accessibility.mjs
+              node tests/browser-vvi-noncapture.mjs
+              node tests/browser-qrs-t-discrimination.mjs
+              node tests/browser-wide-qrs.mjs
+              ;;
+            *) echo "Unknown browser group: $ECG_BROWSER_GROUP" >&2; exit 1 ;;
+          esac
+      - name: Archive focused LPFB visual evidence
+        uses: actions/upload-artifact@v6
+        if: ${{ always() && matrix.group == 'source' }}
+        with:
+          name: lpfb-visual-${{ github.sha }}
+          path: ${{ runner.temp }}/accessibility-evidence/lpfb-*
+          if-no-files-found: error
+          retention-days: 14
       - uses: actions/upload-artifact@v6
         if: always()
         with:
-          name: ecg-accessibility-${{ github.sha }}
+          name: ecg-accessibility-${{ matrix.group }}-${{ github.sha }}
           path: ${{ runner.temp }}/accessibility-evidence/
           if-no-files-found: error
           retention-days: 14
+  accessibility:
+    # Keep the existing check name; any failed/skipped matrix member blocks it.
+    if: ${{ always() }}
+    needs: [build, browser-contracts]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require all browser groups
+        env:
+          RESULT_BUILD: ${{ needs.build.result }}
+          RESULT_BROWSER_GROUPS: ${{ needs['browser-contracts'].result }}
+        run: |
+          test "$RESULT_BUILD" = "success"
+          test "$RESULT_BROWSER_GROUPS" = "success"

@@ -1,0 +1,67 @@
+{
+  "clinicalValidation": false,
+  "baselineCommit": "7ae90c36b6c75ecd1c849e32735af8e0f03d5eee",
+  "candidateSourceSha256": "dcd405a514640570768eba5b5790cba1122d9ee1d240290fd89cd2e0c00d1fc3",
+  "predecessorSourceSha256": "fbffdab87df041f5b8d0d89cf37533e085bb21d7e4a2f4bce3a6d1310b332501",
+  "analytic": {
+    "predecessorFailures": 12,
+    "candidatePasses": 15,
+    "samplingRatesHz": [
+      250,
+      500,
+      1000
+    ],
+    "offsetsMv": [
+      [
+        0,
+        0
+      ],
+      [
+        0.75,
+        -0.5
+      ]
+    ],
+    "polarities": [
+      1,
+      -1
+    ]
+  },
+  "native": {
+    "cases": 1712,
+    "accepted": 1656,
+    "unsupported": 56,
+    "exposedCorrect": 12,
+    "exposedTotal": 12,
+    "newlyFalseUsable": 0,
+    "newMissedQrsCases": 0,
+    "falseUsableBefore": 86,
+    "falseUsableAfter": 86,
+    "usableBefore": 1375,
+    "usableAfter": 1375,
+    "pairedRowsIdentical": 1656
+  },
+  "annotated": {
+    "records": 80,
+    "numericallyIdentical": 80,
+    "changedRecords": 0,
+    "usableBefore": 75,
+    "usableAfter": 75
+  },
+  "noise": {
+    "rowsIdentical": 920,
+    "nativeIdentical": 20,
+    "strictGateFailures": 0
+  },
+  "reportsSha256": {
+    "axis-native1712.json": "97fed6fa3bba1616f1bc8a6852efbafe9c0787aa9c79d81feb6e978c724d3977",
+    "axis-annotated80.json": "955e2aaccb3897094721d5113b48ba0fd7ce528434a6d8e006159ae6f0b2ef02",
+    "noise-results.json": "4deb7447bd5ed75dc80290c84c023659d1e7feb4702858a2293969a19e6a4985",
+    "acceptance.json": "ff2b473886cfd797b58ee0cde70587c131f3e4e4dcacc813311d3093c9e1c5b8"
+  },
+  "limitations": [
+    "Exact local constancy only; no clinical low-voltage threshold",
+    "Mixed valid/constant QRS windows retain the existing aggregate policy",
+    "Exposed regression cohorts are not independent clinical validation",
+    "Candidate axes remain unvalidated review data"
+  ]
+}

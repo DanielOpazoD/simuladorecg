@@ -1,3 +1,6 @@
+import {predictWpwRepolarization} from './lib/wpw-repolarization-prediction.mjs';
+import {predictSecondaryST} from './lib/secondary-st-prediction.mjs';
+import {predictLpfbSource} from './lib/lpfb-source-prediction.mjs';
 import {assertTeachingCatalogRevision} from './lib/teaching-scope-revision.mjs';
 import {predictWpwSupport} from './lib/wpw-support-prediction.mjs';
 import {predictAfClock,assertFrozenAfSampler} from './lib/af-clock-prediction.mjs';
@@ -33,7 +36,11 @@ try {
   await writeFile(signalFile,predictWpwSupport(predictTorsadesFrame(await readFile(signalFile,'utf8'))));
   const rhythmFile=path.join(base,'src/engine/rhythm.ts');
   await writeFile(rhythmFile,predictAfClock(await readFile(rhythmFile,'utf8')));
-  const referencePreparation='PR55 with independent QT initialization plus torsades-frame, compact WPW support and representative AF-clock predictions; unrelated defaults remain exact';
+  const morphologyFile=path.join(base,'src/engine/morphology.ts');
+  await writeFile(morphologyFile,predictLpfbSource(await readFile(morphologyFile,'utf8')));
+  await predictSecondaryST(base);
+  await predictWpwRepolarization(base);
+  const referencePreparation='PR55 with independent QT initialization plus torsades-frame, compact WPW support and representative AF-clock, LPFB, secondary-ST and complete WPW repolarization source predictions; unrelated defaults remain exact';
   const before=await load(base,'before'),after=await load(process.cwd(),'after'),defaults=[];
   assertTeachingCatalogRevision(before.PRESETS,after.PRESETS);
   for(const p of before.PRESETS.filter(p=>p.strategy!=='pending'))for(const filter of ['off','diagnostic','monitor','aggressive']){
@@ -41,13 +48,14 @@ try {
     const a=before.synthesize(c,10),b=after.synthesize(c,10);
     if(c.rhythm==='torsades') assertTraceContract(a,b,`${p.id}/${filter}: independently predicted T frame`,1e-12);
     else assertExactSignal(a,b,`${p.id}/${filter}: legacy samples, events, truth and warnings must remain exact`);
-    defaults.push({preset:p.id,filter,exact:c.conduction!=='wpw'&&c.rhythm!=='torsades'&&c.rhythm!=='af',predictedWpwSupport:c.conduction==='wpw',predictedAfClock:c.rhythm==='af',predictedTorsadesFrame:c.rhythm==='torsades'});
+    defaults.push({preset:p.id,filter,exact:c.conduction!=='wpw'&&c.rhythm!=='torsades'&&c.rhythm!=='af',predictedWpwSupport:c.conduction==='wpw',predictedWpwRepolarization:c.conduction==='wpw',predictedAfClock:c.rhythm==='af',predictedTorsadesFrame:c.rhythm==='torsades'});
   }
   assert.equal(defaults.length,244);
   assert.throws(()=>assertLbbbRegionalSamples(before),/Source-area drift/,'Historical global stretching must fail the regional integral contract');
   const regional=assertRegionalSampleContract(after),lbbbRegional=assertLbbbRegionalSamples(after);
   const report={schemaVersion:1,referencePreparation,baselineCommit:BASE,candidateCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),
-    clinicalValidation:false,defaults,regional,lbbbRegional,limitations:['Experimental temporal bases, not clinical calibration or anatomical activation mapping.','Default samples remain exact against the QT-initialization prediction; detector unchanged.']};
+    clinicalValidation:false,defaults,regional,lbbbRegional,limitations:['Experimental temporal bases, not clinical calibration or anatomical activation mapping.','Default samples remain exact against the QT-initialization prediction; This source-only comparison does not assess the separately revised detector.']};
+
   await mkdir(path.dirname(path.resolve(output)),{recursive:true});await writeFile(output,JSON.stringify(report,null,2)+'\n');
   console.log(JSON.stringify({referencePreparation,defaultsExact:defaults.filter(r=>r.exact).length,predictedAfClock:defaults.filter(r=>r.predictedAfClock).length,predictedTorsades:defaults.filter(r=>r.predictedTorsadesFrame).length,...regional,lbbbRegional}));
 } finally {await rm(temp,{recursive:true,force:true});}

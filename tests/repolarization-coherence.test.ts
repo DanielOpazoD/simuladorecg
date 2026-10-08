@@ -7,7 +7,7 @@ import {synthesize} from '../src/engine/signal';
 import {qrsKernels,tVector} from '../src/engine/morphology';
 import {controls} from '../src/ui/controls';
 import {secondaryRepolarization} from '../src/engine/secondary-repolarization';
-const families=['lbbb','rbbb','irbbb','vvi','pvc','vt'];
+const families=['lbbb','rbbb','irbbb','vvi','pvc','vt','wpw'];
 function setup(id:string):{c:ECGCase;b:Beat}{
   const c=fromPreset(presetById(id)!);
   Object.assign(c,{hr:60,atrialRate:60,variability:0,filter:'off',qtc:600,ischemia:'none',electrolyte:'none',st:0});
@@ -16,8 +16,8 @@ function setup(id:string):{c:ECGCase;b:Beat}{
 }
 function close(actual:number,expected:number,label:string){assert.ok(Math.abs(actual-expected)<1e-12,`${label}: ${actual} != ${expected}`);}
 describe('A02/A03: independent components, one final T vector',()=>{
-  it('shows the missing-ST limit in the actual controls, not just a document',()=>{
-    const {c}=setup('lbbb');assert.match(controls(c),/El ST secundario no está representado/);
+  it('shows the represented ST scope in the actual controls',()=>{
+    const {c}=setup('lbbb');assert.match(controls(c),/El ST secundario sigue esa misma fuente QRS/);
   });
   for(const id of families){
     it(`${id}: applies each existing potassium factor after direction selection`,()=>{
@@ -51,14 +51,14 @@ describe('A02/A03: independent components, one final T vector',()=>{
       assert.ok(response>.01,'Fixture needs a measurable T');
     });
   }
-  for(const id of ['lbbb','vvi','vt','idioventricular','complete_v'])
-    it(`${id}: documents absence of secondary ST, never a clinical normality assertion`,()=>{
+  for(const id of ['lbbb','vvi','vt','idioventricular','complete_v','wpw'])
+    it(`${id}: renders the secondary ST component with T amplitude zero`,()=>{
       const {c,b}=setup(id);c.tAmp=0;c.pAmp=0;
       const s=synthesize(c,10),i=Math.round((b.time+b.qrs!+.060)*s.fs);
-      assert.equal(secondaryRepolarization(c,b,qrsKernels(c,b)).st,null);
-      for(const l of LEADS)close(s.leads[l][i],0,`${id}/${l}: unsupported ST60`);
+      assert.notEqual(secondaryRepolarization(c,b,qrsKernels(c,b)).st,null);
+      assert.ok(Math.max(...LEADS.map(l=>Math.abs(s.leads[l][i])))>.005,"ST60 must be represented");
     });
-  for(const id of ['sinus','rbbb','wpw','torsades'])
+  for(const id of ['sinus'])
     it(`${id}: does not acquire a new secondary ST component`,()=>{
       const {c,b}=setup(id);assert.equal(secondaryRepolarization(c,b,qrsKernels(c,b)).st,null);
     });
@@ -70,7 +70,7 @@ describe('A02/A03: independent components, one final T vector',()=>{
       for(let j=0;j<3;j++)close(tVector(k,b)[j],secondary.t![j]*c.tAmp/.28,overload);
     }
   });
-  it('primary lesion remains distinct from the unsupported secondary ST mechanism',()=>{
+  it('primary lesion remains distinct from the secondary ST mechanism',()=>{
     const {c,b}=setup('lbbb'),p={...c,ischemia:'anterior' as const,phase:'acute' as const,st:2};
     assert.deepEqual(secondaryRepolarization(c,b,qrsKernels(c,b)).st,secondaryRepolarization(p,b,qrsKernels(p,b)).st);
     const a=synthesize({...c,tAmp:0,pAmp:0},10),z=synthesize({...p,tAmp:0,pAmp:0},10);

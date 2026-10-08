@@ -1,3 +1,4 @@
+import {prepareConfidenceCounterfactual} from './lib/confidence-counterfactual.mjs';
 /** Paired quality-only audit on the two already exposed LUDB cohorts.
  * Header voltage scaling is not calibration; numerical outputs must remain exact. */
 import assert from 'node:assert/strict';
@@ -16,8 +17,8 @@ const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 const temp=await mkdtemp(path.join(tmpdir(),'opposed-reference-'));
 try{
  assertReviewedOpposedCycle(await readFile(revision.file));
- const baseline=path.join(temp,'baseline');await mkdir(baseline);
- execFileSync('tar',['-xf','-','-C',baseline],{input:execFileSync('git',['archive',revision.baselineCommit],{maxBuffer:100*1024*1024})});
+ const baseline=path.join(temp,'baseline');
+ const qualityCounterfactual=await prepareConfidenceCounterfactual(process.cwd(),baseline);
  const sourceHashes={};
  async function analyzer(root,label){
   const outfile=path.join(temp,label+'.mjs');
@@ -41,7 +42,7 @@ try{
   }
  }
  assert.equal(rows.length,80);
- const report={revision,sourceHashes,clinicalValidation:false,cohortRole:'Already exposed development/regression data, not independent patient validation',
+ const report={revision,qualityCounterfactual,sourceHashes,clinicalValidation:false,cohortRole:'Already exposed development/regression data, not independent patient validation',
   sourceScale:'Literal header conversion; LUDB absolute amplitude and cross-lead calibration remain quarantined',
   summary:{records:80,numericallyIdentical:rows.length,changedRecords:rows.filter(r=>r.changed.length).length,usableBefore:rows.filter(r=>r.before==='usable').length,usableAfter:rows.filter(r=>r.after==='usable').length},rows};
  await mkdir(path.dirname(output),{recursive:true});await writeFile(output,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report.summary));
