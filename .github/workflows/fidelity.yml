@@ -86,7 +86,9 @@ jobs:
   qrs-discrimination:
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    # The complete 1,892-case matrix takes about eight minutes before artifact
+    # upload and cleanup. This is an execution budget, not a numerical waiver.
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v5
         with:
