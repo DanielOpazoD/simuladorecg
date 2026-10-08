@@ -497,8 +497,9 @@ export function detectVentricularCandidates(
   };
   const threshold = Math.max(1.9, quant(Array.from(energy), 0.98) * 0.2),
     candidates: number[] = [],
-    allMaxima: number[] = [];
-  for (let i = Math.round(0.15 * fs); i < n - 1; i++) {
+    allMaxima: number[] = [],
+    supportMaxima: number[] = [];
+  for (let i = Math.max(1, win); i < n - 1; i++) {
     if (
       energy[i] <= threshold ||
       energy[i] < energy[i - 1] ||
@@ -515,6 +516,8 @@ export function detectVentricularCandidates(
       }
       if (f > 3.5 * b) continue;
     }
+    supportMaxima.push(i);
+    if (i < Math.round(0.15 * fs)) continue;
     allMaxima.push(i);
     let p = candidates.at(-1);
     if (p === undefined || i - p > 0.18 * fs) candidates.push(i);
@@ -747,9 +750,13 @@ export function detectVentricularCandidates(
   // A qualified second slope hidden inside NMS can still supply morphology
   // evidence for the same continuous complex. Look in both time directions;
   // this does not add a detected activation or use the generator's boundaries.
-  if (tReject)
+  if (tReject) {
+    const ownership = new Map<
+      number,
+      { marker: number; distance: number; tied: boolean }
+    >();
     for (const marker of peaks) {
-      const hidden = allMaxima.filter(
+      const hidden = supportMaxima.filter(
         (p) =>
           Math.abs(p - marker) > 0.08 * fs &&
           Math.abs(p - marker) < 0.18 * fs &&
@@ -767,11 +774,21 @@ export function detectVentricularCandidates(
             0.08,
           ).length === 1,
       );
-      if (hidden.length)
-        components.set(marker, [
-          ...new Set([...(components.get(marker) ?? [marker]), ...hidden]),
-        ]);
+      for (const p of hidden) {
+        const distance = Math.abs(p - marker),
+          previous = ownership.get(p);
+        if (!previous || distance < previous.distance)
+          ownership.set(p, { marker, distance, tied: false });
+        else if (distance === previous.distance) previous.tied = true;
+      }
     }
+    for (const [p, owner] of ownership)
+      if (!owner.tied) {
+        components.set(owner.marker, [
+          ...new Set([...(components.get(owner.marker) ?? [owner.marker]), p]),
+        ]);
+      }
+  }
   const complexShapes = (samples: Samples, i: number) =>
     (components.get(i) ?? [i]).map((p) => shape(samples, p));
   const complexEnergy = (i: number) =>
@@ -780,7 +797,10 @@ export function detectVentricularCandidates(
     const accepted: number[] = [];
     for (const i of peaks) {
       const p = accepted.at(-1),
-        d = p === undefined ? 9 : (i - p) / fs;
+        d =
+          p === undefined
+            ? 9
+            : (i - Math.min(...(components.get(p) ?? [p]))) / fs;
       if (
         p !== undefined &&
         d >= 0.2 &&
@@ -810,7 +830,7 @@ export function detectVentricularCandidates(
     // Repeated, closely matching observed contours can supply a lower-noise
     // descriptor without changing any recorded sample or candidate timestamp.
     const ensembleCache = new Map<number, ReturnType<typeof shape> | null>();
-    const frameCache = new Map<number, number[] | null>();
+    const frameCache = new Map<string, number[] | null>();
     const normCache = new WeakMap<number[], number>();
     const frameNorm = (values: number[]) => {
       let norm = normCache.get(values);
@@ -827,23 +847,42 @@ export function detectVentricularCandidates(
       if (offset !== 0) alignmentOffsets.push(offset);
     const frameRadius =
       Math.round(0.08 * fs) + Math.max(1, Math.round(0.004 * fs));
-    const frame = (at: number) => {
-      if (frameCache.has(at)) return frameCache.get(at)!;
-      if (at < frameRadius || at + frameRadius >= n) {
-        frameCache.set(at, null);
+    const frame = (at: number, left = frameRadius, right = frameRadius) => {
+      const key = `${at}:${left}:${right}`;
+      if (frameCache.has(key)) return frameCache.get(key)!;
+      if (at < left || at + right >= n) {
+        frameCache.set(key, null);
         return null;
       }
       const out: number[] = [];
       for (const lead of names) {
         const row = Array.from(
-          smoothed.leads[lead].slice(at - frameRadius, at + frameRadius + 1),
+          smoothed.leads[lead].slice(at - left, at + right + 1),
         );
         const mean = row.reduce((sum, v) => sum + v, 0) / row.length;
         out.push(...row.map((v) => v - mean));
       }
-      frameCache.set(at, out);
+      frameCache.set(key, out);
       return out;
     };
+    // A complex can have several eligible slopes. Shared support belongs to
+    // one group and contributes at most one aligned observation, never several
+    // supposedly independent votes from the same physical deflection.
+    let ensembleGroups: Set<number>[] = [];
+    for (const peak of peaks) {
+      const support = components.get(peak) ?? [peak];
+      const shared = ensembleGroups.filter((group) =>
+        support.some((p) => group.has(p)),
+      );
+      const merged = new Set([
+        ...support,
+        ...shared.flatMap((group) => [...group]),
+      ]);
+      ensembleGroups = ensembleGroups.filter(
+        (group) => !shared.includes(group),
+      );
+      ensembleGroups.push(merged);
+    }
     const ensembleShape = (at: number) => {
       if (ensembleCache.has(at)) return ensembleCache.get(at)!;
       const a = frame(at);
@@ -853,19 +892,22 @@ export function detectVentricularCandidates(
       }
       const normA = frameNorm(a);
       const matches: number[][] = [];
-      for (const p of peaks) {
-        if (Math.abs(p - at) <= 0.18 * fs) continue;
+      for (const group of ensembleGroups) {
+        if (group.has(at)) continue;
         let best: number[] | null = null,
           bestCorrelation = 0.98;
-        for (const offset of alignmentOffsets) {
-          const b = frame(p + offset);
-          if (!b) continue;
-          const normB = frameNorm(b);
-          const correlation =
-            normA > 0 && normB > 0 ? dot(a, b) / (normA * normB) : -1;
-          if (correlation >= bestCorrelation) {
-            bestCorrelation = correlation;
-            best = b;
+        for (const p of group) {
+          if (Math.abs(p - at) <= 0.18 * fs) continue;
+          for (const offset of alignmentOffsets) {
+            const b = frame(p + offset);
+            if (!b) continue;
+            const normB = frameNorm(b);
+            const correlation =
+              normA > 0 && normB > 0 ? dot(a, b) / (normA * normB) : -1;
+            if (correlation >= bestCorrelation) {
+              bestCorrelation = correlation;
+              best = b;
+            }
           }
         }
         if (best) matches.push(best);
@@ -892,7 +934,10 @@ export function detectVentricularCandidates(
     const refined: number[] = [];
     for (const i of peaks) {
       const p = refined.at(-1),
-        d = p === undefined ? 9 : (i - p) / fs;
+        d =
+          p === undefined
+            ? 9
+            : (i - Math.min(...(components.get(p) ?? [p]))) / fs;
       if (p !== undefined && d >= 0.2 && d <= 0.4) {
         // Strict clean-shape evidence does not require T energy below QRS.
         const raw = shape(s, i);
@@ -916,8 +961,13 @@ export function detectVentricularCandidates(
           )
         )
           continue;
-        const currentFrame = frame(i),
-          priorFrame = frame(p);
+        // Compare the whole observed prior complex, not only its early slope.
+        // The latter can resemble a T wave even when its later trajectory does not.
+        const priorSupport = components.get(p) ?? [p];
+        const left = frameRadius + p - Math.min(...priorSupport);
+        const right = frameRadius + Math.max(...priorSupport) - p;
+        const currentFrame = frame(i, left, right),
+          priorFrame = frame(p, left, right);
         const sameContour =
           currentFrame &&
           priorFrame &&
@@ -927,15 +977,14 @@ export function detectVentricularCandidates(
         const ef = sameContour ? null : ensembleShape(i);
         if (
           ef &&
+          ef.rank < 0.003 &&
+          !(components.get(i) ?? [i]).some((component) => {
+            const candidate = ensembleShape(component);
+            return candidate && candidate.rank > 0.01;
+          }) &&
           (components.get(p) ?? [p]).some((component) => {
             const eg = ensembleShape(component);
-            return (
-              eg &&
-              ef.rank < 0.003 &&
-              eg.rank > 0.01 &&
-              ef.rank < 0.1 * eg.rank &&
-              ef.rough < 0.85 * eg.rough
-            );
+            return eg && eg.rank > 0.01 && ef.rank < 0.1 * eg.rank;
           })
         ) {
           ensembleDisambiguated.add(p);
@@ -979,7 +1028,7 @@ export function detectVentricularCandidates(
           mergedComponents.has(marker)
         )
           continue;
-        const earlier = allMaxima
+        const earlier = supportMaxima
           .filter(
             (p) =>
               marker - p > 0.08 * fs &&
@@ -998,7 +1047,7 @@ export function detectVentricularCandidates(
     // whose original 180–280 ms limits and continuity safeguards stay intact.
     for (const marker of peaks) {
       if (mergedComponents.has(marker)) continue;
-      const earlier = allMaxima
+      const earlier = supportMaxima
         .filter(
           (p) =>
             marker - p > 0.08 * fs &&

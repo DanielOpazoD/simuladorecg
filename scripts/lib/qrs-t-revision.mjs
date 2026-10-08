@@ -22,7 +22,7 @@ export const QRS_T_REVISION=Object.freeze({
   'src/engine/leads.ts':Object.freeze({before:'d67c47738647a8aa47f98f01de045ab7381a842007c7d5fa3562f570dc711c16',after:'ab4a73f2345e133cbbe80757d08c1c64f4c54894f1ca521b82eff7041d386706'}),
   'src/engine/lead-registry.ts':Object.freeze({before:'21b9ad7996fc2813156e51d87488f48fae52085ea6935091396e7226589367d3',after:'7f4fe698cd38931a47d41b99e005ca30f642b05553e4137869bda5f99a8990e3'}),
   'src/engine/measure.ts':Object.freeze({before:'ceaeef83b459bbb114dc8a9457af7d43d804c14a8cb8107fc2b250faf391d61e',after:'3cecac4689a10987120934ba8e8812a0d8d385f77248033b7c6fea2d7fbf943f'}),
-  'src/engine/analysis/ventricular-candidates.ts':Object.freeze({before:'0c7d0abb1834fd9407ca9fdd85c735b7794bcaf933d911f13222039ab4c0bec4',after:'2640a3aec04498e80045d2da2e55a57215eb662084b601a88224215a6a3cac63'}),
+  'src/engine/analysis/ventricular-candidates.ts':Object.freeze({before:'0c7d0abb1834fd9407ca9fdd85c735b7794bcaf933d911f13222039ab4c0bec4',after:'3a95c555cf19bf9e0200b100470e63a13a9f8704b3add7b790d4d76fe2d11c64'}),
  }),
 });
 export const TERMINAL_SOURCE_REVISION=Object.freeze({'src/engine/terminal-delineation.ts':'5b8f04b5d57a333cdeb4f1b1cd381f8bbc417584a75ba740bfa27543edff8c70'});

@@ -39,14 +39,21 @@ export function referenceForMeasurement(signal: Signal, m: Measurement) {
   const used = new Set<Beat>();
   const identities = new Map<number, Beat>();
   for (const peak of m.detectedPeaks) {
-    const candidates = source.filter(
-      (b) =>
-        !used.has(b) &&
-        peak >= b.time - 0.025 &&
-        peak <= b.time + (b.qrs ?? 0) + 0.025,
+    // Actual source support owns an interior marker before uncertainty padding
+    // is considered. A late marker in a wide QRS must not become ambiguous just
+    // because the next QRS begins within the unchanged 25 ms tolerance.
+    const containing = source.filter(
+      (b) => peak >= b.time && peak <= b.time + (b.qrs ?? 0),
     );
-    // Overlapping plausible supports are ambiguous, not silently assigned.
-    if (candidates.length !== 1) continue;
+    const candidates = containing.length
+      ? containing
+      : source.filter(
+          (b) =>
+            peak >= b.time - 0.025 && peak <= b.time + (b.qrs ?? 0) + 0.025,
+        );
+    // True support overlap and padded gap overlap remain ambiguous. A duplicate
+    // cannot acquire a neighboring identity merely because its owner was used.
+    if (candidates.length !== 1 || used.has(candidates[0])) continue;
     used.add(candidates[0]);
     identities.set(peak, candidates[0]);
   }

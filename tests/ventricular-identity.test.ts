@@ -113,3 +113,32 @@ it("retains noisy complete-complex identity under independent lead polarity reve
     expect(next.mergedComponents).toEqual(expected.mergedComponents);
   }
 });
+
+it.each(["off", "diagnostic"] as const)(
+  "uses complete QRS support to reject repeated late waves with secondary ST (%s)",
+  (filter) => {
+    const { s, m } = evaluate(
+      "idioventricular",
+      { hr: 120, seed: 17, filter },
+      0,
+    );
+    // The first late wave belongs to a partly clipped preceding cycle; this
+    // contract concerns complete interior ventricular complexes, not that edge.
+    assertVentricularIdentity(s, m.detectedPeaks);
+    expect(m.detectedPeaks.filter((p) => p > 0.3 && p < 9.7)).toHaveLength(19);
+  },
+);
+
+for (const seed of [17, 2026])
+  for (const noise of [0, 0.025])
+    for (const filter of ["off", "diagnostic"] as const)
+      it(`retains noisy ventricular identity across the first QRS support: ${seed}/${noise}/${filter}`, () => {
+        const { s, m } = evaluate(
+          "idioventricular",
+          { hr: 100, seed, filter },
+          noise,
+        );
+        assertVentricularIdentity(s, m.detectedPeaks);
+        expect(m.hr).not.toBeNull();
+        expect(Math.abs(m.hr! - 100)).toBeLessThanOrEqual(2);
+      });

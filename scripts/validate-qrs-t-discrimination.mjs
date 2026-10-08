@@ -53,6 +53,7 @@ try{
   const sampleInput={fs:s.fs,leads:s.leads};
   const prior=qualityBefore(sampleInput),next=after(sampleInput);assertQualityOnlyRevision(prior,next);
   rows.push({label,id,changes,referenceHR,before:run(before(sampleInput)),qualityBefore:run(prior),after:run(next)});assert.equal(sampleHash(),frozen,'Analyzer mutated the ECG');
+  if(rows.length%100===0)console.log(JSON.stringify({progress:rows.length,cohort:label,preset:id}));
  }
  for(const hr of [73,120])for(const pr of [90,100.3,101.7])for(const filter of ['off','diagnostic'])
   evaluate('exposed','wpw',{hr,pr,filter,electrolyte:'lowvoltage',noise:.05,seed:17});

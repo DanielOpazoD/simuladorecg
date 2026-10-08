@@ -91,3 +91,59 @@ describe("Circular axis statistics", () => {
     expect(circularMedian([10, 20, 30])).toBe(20);
   });
 });
+
+describe("actual QRS ownership precedes uncertainty padding", () => {
+  function paired(peaks: number[], width = 0.23) {
+    const { signal, raw } = caseData("sinus");
+    const example = signal.events.beats[0];
+    signal.events.beats = [
+      { ...example, time: 1, qrs: width },
+      { ...example, time: 1.24, qrs: width },
+    ];
+    raw.detectedPeaks = peaks;
+    raw.beats = [];
+    return referenceForMeasurement(signal, raw);
+  }
+  it("matches terminal markers inside their actual wide QRS", () => {
+    const r = paired([1.228, 1.468]);
+    expect(r.falsePeaks).toBe(0);
+    expect(r.missedBeats).toBe(0);
+    expect(r.reference.hr).toBeCloseTo(250, 9);
+  });
+  it("does not assign a duplicate to the next padded QRS", () => {
+    expect(paired([1.228, 1.229, 1.468]).falsePeaks).toBe(1);
+  });
+  it("preserves ambiguity inside truly overlapping source supports", () => {
+    expect(paired([1.25], 0.3).falsePeaks).toBe(1);
+  });
+  it("preserves ambiguity in a gap covered by both tolerance windows", () => {
+    expect(paired([1.234]).falsePeaks).toBe(1);
+  });
+  it("keeps the existing isolated 25 ms tolerance and rejects points beyond it", () => {
+    expect(paired([1.48]).falsePeaks).toBe(0);
+    expect(paired([1.5]).falsePeaks).toBe(1);
+  });
+  it("retains correctly detected rapid broad-QRS rate without promoting bad intervals", () => {
+    const c = {
+      ...fromPreset(presetById("vt")!),
+      hr: 250,
+      qrs: 230,
+      qtc: 350,
+      variability: 0,
+      seed: 71,
+      filter: "diagnostic" as const,
+    };
+    c.artifacts = { ...c.artifacts, baseline: 0.03, muscle: 0.03, mains: 0.03 };
+    const signal = synthesize(c, 10),
+      raw = measure(signal),
+      frozen = structuredClone(raw);
+    const audited = auditMeasurement(signal, raw);
+    expect(Math.abs(raw.hr! - 250)).toBeLessThan(1);
+    expect(audited.hr).toBe(raw.hr);
+    expect(audited.detectedPeaks).toEqual(raw.detectedPeaks);
+    expect(audited.qrs).toBeNull();
+    expect(audited.qt).toBeNull();
+    expect(audited.rejected?.qrs).toBe(raw.qrs);
+    expect(raw).toEqual(frozen);
+  });
+});
