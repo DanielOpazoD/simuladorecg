@@ -87,17 +87,15 @@ export function covarianceResidual(mat: readonly (readonly number[])[]): number 
  * engineering feature, not identification of a clinical isoelectric baseline.
  * Keeping similar repeating shapes separate protects genuine rapid QRS trains.
  */
-function groupContinuousCandidates(s: Samples, peaks: number[]): number[] {
+function prepareContinuousGrouping(s: Samples): (peaks: number[]) => number[] {
   const close = (distance: number) => distance > 0.18 && distance < 0.28;
-  if (!peaks.some((peak, i) => i > 0 && close((peak - peaks[i - 1]) / s.fs)))
-    return peaks;
   const n = Math.min(s.leads.I.length, 10 * s.fs);
-  if (n < 3 * s.fs) return peaks;
+  if (n < 3 * s.fs) return peaks => peaks;
   const rows = names.map(lead => Array.from(s.leads[lead].slice(0, n)).sort((a, b) => a - b));
   const middle = rows.map(row => row[Math.floor(n / 2)]);
   const range = Math.max(...rows.map(row =>
     row[Math.floor((n - 1) * 0.98)] - row[Math.floor((n - 1) * 0.02)]));
-  if (range <= 0) return peaks;
+  if (range <= 0) return peaks => peaks;
   const step = range * 0.02;
   const bins = new Map<string, { count: number; sum: number[] }>();
   for (let i = 0; i < n; i++) {
@@ -109,9 +107,10 @@ function groupContinuousCandidates(s: Samples, peaks: number[]): number[] {
     values.forEach((value, k) => { bin!.sum[k] += value; });
   }
   const mode = [...bins.values()].sort((a, b) => b.count - a.count)[0];
-  if (mode.count < n * 0.04) return peaks;
+  if (mode.count < n * 0.04) return peaks => peaks;
   const returnLevel = mode.sum.map(value => value / mode.count);
   const magnitude = (i: number) => Math.hypot(...names.map((lead, k) => s.leads[lead][i] - returnLevel[k]));
+  return (peaks:number[]) => {
   const keep: number[] = [];
   for (const candidate of peaks) {
     const previous = keep.at(-1);
@@ -161,6 +160,7 @@ function groupContinuousCandidates(s: Samples, peaks: number[]): number[] {
     keep.push(candidate);
   }
   return keep;
+  };
 }
 
 /** Confirm repeated late-wave morphology using only waves already rejected by
@@ -301,8 +301,21 @@ export function detectVentricularCandidates(
     if (i >= win) sum -= slope[i - win];
     energy[i] = sum / win;
   }
+  let grouper: ((peaks:number[])=>number[])|undefined;
+  const groupContinuousCandidates=(_s:Samples,peaks:number[])=>{
+    if(!peaks.some((p,k)=>k>0&&(p-peaks[k-1])/fs>.18&&(p-peaks[k-1])/fs<.28))return peaks;
+    return (grouper??=prepareContinuousGrouping(s))(peaks);
+  };
+  const scoreCache=new Map<number,number>();
+  const excursionScore=(i:number)=>{
+    let cached=scoreCache.get(i);if(cached!==undefined)return cached;
+    const half=Math.round(.08*fs),a=Math.max(0,i-half),b=Math.min(n-1,i+half);
+    let square=0;
+    for(const name of names){let lo=Infinity,hi=-Infinity;for(let j=a;j<=b;j++){lo=Math.min(lo,leads[name][j]);hi=Math.max(hi,leads[name][j]);}square+=(hi-lo)**2;}
+    cached=Math.sqrt(square);scoreCache.set(i,cached);return cached;
+  };
   const threshold = Math.max(1.9, quant(Array.from(energy), 0.98) * 0.2),
-    candidates: number[] = [];
+    candidates: number[] = [], allMaxima: number[] = [];
   for (let i = Math.round(0.15 * fs); i < n - 1; i++) {
     if (
       energy[i] <= threshold ||
@@ -320,17 +333,53 @@ export function detectVentricularCandidates(
       }
       if (f > 3.5 * b) continue;
     }
+    allMaxima.push(i);
     let p = candidates.at(-1);
     if (p === undefined || i - p > 0.18 * fs) candidates.push(i);
-    else if (energy[i] > energy[p]) candidates[candidates.length - 1] = i;
+    else if(energy[i]>energy[p])candidates[candidates.length-1]=i;
+  }
+  const selectionStrength=new Map<number,number>();
+  if(tReject){
+    const proposed:number[]=[];
+    for(const i of allMaxima){const p=proposed.at(-1);if(p===undefined||i-p>.18*fs)proposed.push(i);
+      else if((i-p>.08*fs?excursionScore(i):energy[i])>(i-p>.08*fs?excursionScore(p):energy[p]))proposed[proposed.length-1]=i;
+    }
+    const signatureCache=new Map<number,number[]>();
+    const signature=(i:number)=>{
+      let v=signatureCache.get(i);if(v)return v;v=[];const radius=Math.round(.08*fs);
+      for(const lead of names){const row=Array.from(leads[lead].slice(Math.max(0,i-radius),Math.min(n,i+radius+1))),mean=row.reduce((a,b)=>a+b,0)/row.length;v.push(...row.map(x=>x-mean));}
+      const norm=Math.hypot(...v);if(norm)v=v.map(x=>x/norm);signatureCache.set(i,v);return v;
+    };
+    const similarity=(a:number,b:number)=>{const x=signature(a),y=signature(b);return x.length===y.length?x.reduce((sum,v,k)=>sum+v*y[k],0):-1;};
+    const isolated=(old:number)=>{const k=candidates.indexOf(old),lastSupported=n-.18*fs;return(k===0||old-candidates[k-1]>.36*fs)&&(k===candidates.length-1||candidates[k+1]>lastSupported||candidates[k+1]-old>.36*fs);};
+    const pairs=proposed.filter(i=>!candidates.includes(i)).map(i=>({i,old:candidates.reduce((best,p)=>Math.abs(p-i)<Math.abs(best-i)?p:best,Infinity)})).filter(p=>p.old-p.i>.08*fs&&p.old-p.i<=.18*fs&&p.i<=n-.18*fs&&isolated(p.old));
+    const confirmed=pairs.filter(p=>{
+      const compatible=pairs.filter(q=>Math.abs((p.i-p.old)-(q.i-q.old))<=.03*fs&&similarity(p.i,q.i)>=.98&&similarity(p.old,q.old)>=.98);
+      return new Set(compatible.map(q=>q.old)).size>=3;
+    });
+    const substitutions=new Map(confirmed.filter(p=>confirmed.filter(q=>q.old===p.old).length===1).map(p=>[p.old,p.i]));
+    let conflicts=true;
+    while(conflicts){conflicts=false;for(let k=1;k<candidates.length;k++){
+      const a=candidates[k-1],b=candidates[k];if((substitutions.get(b)??b)-(substitutions.get(a)??a)<=.18*fs){
+        conflicts=substitutions.delete(a)||conflicts;conflicts=substitutions.delete(b)||conflicts;
+      }
+    }}
+    for(let k=0;k<candidates.length;k++){const old=candidates[k],next=substitutions.get(old)??old;selectionStrength.set(next,Math.max(energy[old],energy[next]));candidates[k]=next;}
   }
   const high = quant(
-    candidates.map((i) => energy[i]),
+    candidates.map((i) => selectionStrength.get(i)??energy[i]),
     0.8,
   );
   let peaks = candidates.filter(
-    (i) => energy[i] > Math.max(1.9, high * candidateFraction),
+    (i) => (selectionStrength.get(i)??energy[i]) > Math.max(1.9, high * candidateFraction),
   );
+  const components=new Map<number,number[]>();
+  for(let k=1;k<peaks.length;k++){
+    const p=peaks[k-1],i=peaks[k];
+    if(tReject && groupContinuousCandidates(s,[p,i]).length===1)components.set(i,[...(components.get(p)??[p]),i]);
+  }
+  const complexShapes=(samples:Samples,i:number)=>(components.get(i)??[i]).map(p=>shape(samples,p));
+  const complexEnergy=(i:number)=>Math.max(...(components.get(i)??[i]).map(p=>energy[p]));
   if (tReject) {
     const accepted: number[] = [];
     for (const i of peaks) {
@@ -340,11 +389,10 @@ export function detectVentricularCandidates(
         p !== undefined &&
         d >= 0.2 &&
         d <= 0.4 &&
-        energy[i] < 0.72 * energy[p]
+        energy[i] < 0.72 * complexEnergy(p)
       ) {
-        const f = shape(s, i),
-          g = shape(s, p);
-        if (f.rank < 0.001 && g.rank > 0.005 && f.rough < 0.7 * g.rough)
+        const f = shape(s, i);
+        if (complexShapes(s,p).some(g=>f.rank < 0.001 && g.rank > 0.005 && f.rough < 0.7 * g.rough))
           continue;
       }
       accepted.push(i);
@@ -373,10 +421,10 @@ export function detectVentricularCandidates(
       const p=refined.at(-1),d=p===undefined?9:(i-p)/fs;
       if (p !== undefined && d >= 0.2 && d <= 0.4) {
         // Strict clean-shape evidence does not require T energy below QRS.
-        const raw = shape(s, i), prior = shape(s, p);
-        if (raw.rank < 0.00001 && prior.rank > 0.005 && raw.rough < 0.7 * prior.rough) continue;
-        const f = shape(smoothed, i), g = shape(smoothed, p);
-        if (f.rank < 0.003 && g.rank > 0.01 && f.rank < 0.1 * g.rank && f.rough < 0.85 * g.rough)
+        const raw = shape(s, i);
+        if (complexShapes(s,p).some(prior=>raw.rank < 0.00001 && prior.rank > 0.005 && raw.rough < 0.7 * prior.rough)) continue;
+        const f = shape(smoothed, i);
+        if (complexShapes(smoothed,p).some(g=>f.rank < 0.003 && g.rank > 0.01 && f.rank < 0.1 * g.rank && f.rough < 0.85 * g.rough))
           continue;
       }
       refined.push(i);
