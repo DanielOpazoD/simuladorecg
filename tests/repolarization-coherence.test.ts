@@ -7,7 +7,7 @@ import {synthesize} from '../src/engine/signal';
 import {qrsKernels,tVector} from '../src/engine/morphology';
 import {controls} from '../src/ui/controls';
 import {secondaryRepolarization} from '../src/engine/secondary-repolarization';
-const families=['lbbb','rbbb','irbbb','vvi','pvc','vt'];
+const families=['lbbb','rbbb','irbbb','vvi','pvc','vt','wpw'];
 function setup(id:string):{c:ECGCase;b:Beat}{
   const c=fromPreset(presetById(id)!);
   Object.assign(c,{hr:60,atrialRate:60,variability:0,filter:'off',qtc:600,ischemia:'none',electrolyte:'none',st:0});
@@ -51,14 +51,14 @@ describe('A02/A03: independent components, one final T vector',()=>{
       assert.ok(response>.01,'Fixture needs a measurable T');
     });
   }
-  for(const id of ['lbbb','vvi','vt','idioventricular','complete_v'])
+  for(const id of ['lbbb','vvi','vt','idioventricular','complete_v','wpw'])
     it(`${id}: renders the secondary ST component with T amplitude zero`,()=>{
       const {c,b}=setup(id);c.tAmp=0;c.pAmp=0;
       const s=synthesize(c,10),i=Math.round((b.time+b.qrs!+.060)*s.fs);
       assert.notEqual(secondaryRepolarization(c,b,qrsKernels(c,b)).st,null);
       assert.ok(Math.max(...LEADS.map(l=>Math.abs(s.leads[l][i])))>.005,"ST60 must be represented");
     });
-  for(const id of ['sinus','wpw'])
+  for(const id of ['sinus'])
     it(`${id}: does not acquire a new secondary ST component`,()=>{
       const {c,b}=setup(id);assert.equal(secondaryRepolarization(c,b,qrsKernels(c,b)).st,null);
     });

@@ -11,6 +11,7 @@ import { project, frontal, type Vec } from '../src/engine/leads';
 import { LEADS, cloneCase, type Beat, type ECGCase } from '../src/engine/types';
 import { VENTRICULAR_SOURCE_IDS, VENTRICULAR_SOURCES } from '../src/engine/ventricular-source';
 import { normalizeImportedCase, caseContext } from '../src/presets/case-context';
+import {wpwNativeLead} from './support/wpw-native-pulse';
 const load = (id: string) => fromPreset(presetById(id)!);
 const beat = (kind: Beat['kind'] = 'normal'): Beat => ({ time: 1, rr: 1, kind });
 const close = (a: number, b: number, tolerance = 1e-10) => assert.ok(Math.abs(a - b) <= tolerance, `${a} != ${b}`);
@@ -230,7 +231,7 @@ describe('WPW lab represents the entire existing vector QRS, without retuning it
       omittedMv = Math.max(omittedMv, Math.abs(t.leads.II[i] - project(basal).II));
     }
     assert.ok(omittedMv > .2, 'Kernels alone must fail to represent the delta');
-    assert.equal(t.timing.deltaDurationMs, 45); assert.match(t.timing.note, /no modifica el ST-T/);
+    assert.equal(t.timing.deltaDurationMs, 45); assert.match(t.timing.note, /ST y T siguen la activación QRS incluida la onda delta/);
     assert.equal(activationLimitation(c, b), null);
   });
   it('preserves a fixed 45 ms delta support at integer and fractional QRS durations', () => {
@@ -279,8 +280,12 @@ describe('WPW lab represents the entire existing vector QRS, without retuning it
       const raw = new Float64Array(1000);
       for (let ms = 0; ms <= 135; ms++) raw[200 + ms] = t.leads[l][ms];
       const filtered = antialias(raw, 1000);
+      // Independent native-lattice reconstruction isolates the newly represented
+      // secondary ST; the lab itself still previews ventricular activation only.
+      const withST = wpwNativeLead(c,l,10,false,true), deltaOnly = wpwNativeLead(c,l);
+      const secondaryST = (index:number) => withST[index]-deltaOnly[index];
       for (let ms = -50; ms <= 190; ms += 2)
-        close(signal.leads[l][Math.round((b.time + ms / 1000) * signal.fs)], filtered[200 + ms], 1e-9);
+        close(signal.leads[l][Math.round((b.time + ms / 1000) * signal.fs)], filtered[200 + ms] + secondaryST(Math.round((b.time + ms / 1000) * signal.fs)), 1e-9);
     }
   });
   it('never injects delta into a PVC, escape or paced event even inside a WPW case', () => {

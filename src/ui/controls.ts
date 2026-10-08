@@ -30,6 +30,8 @@ export function tAxisControlState(c: ECGCase) {
   if (c.tAmp === 0) return {disabled: true, reason: "Control inactivo: T anulada. El eje se conserva."};
   if (rhythm.qrsAxisDisabled || c.conduction === "lbbb" || c.conduction.includes("rbbb"))
     return {disabled: true, reason: "Control inactivo. Derivado del QRS; valor conservado para T primaria."};
+  if (c.conduction === "wpw")
+    return {disabled: true, reason: "Control inactivo. La T secundaria sigue la activación QRS con delta; el eje se conserva para T primaria."};
   if (c.overload !== "none")
     return {disabled: true, reason: "Control inactivo: dirección fijada por la sobrecarga."};
   // Probe the actual primary-vector rule instead of duplicating cancellation

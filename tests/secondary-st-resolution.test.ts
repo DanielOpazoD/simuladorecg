@@ -13,7 +13,7 @@ describe('Represented secondary ST source',()=>{
   expect(a.st).not.toBeNull();expect(Math.hypot(...a.st!)).toBeGreaterThan(.001);
   expect(secondaryDiscordanceDot(a.reference!,a.st!)).toBeLessThan(0);expect(t.st).toEqual(a.st);
  });
- it.each(['sinus','lafb','lpfb','wpw','torsades'])('%s does not acquire an unsupported secondary mechanism',id=>{
+ it.each(['sinus','lafb','lpfb','torsades'])('%s does not acquire an unsupported secondary mechanism',id=>{
   const{c,b}=setup(id);expect(secondaryRepolarization(c,b,qrsKernels(c,b)).st).toBeNull();
  });
  it('retains both true PVCs when ST connects a late/early pair of slope candidates',()=>{

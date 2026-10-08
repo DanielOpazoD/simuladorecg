@@ -22,29 +22,36 @@ jobs:
         with: {python-version: '3.11'}
       - run: npm ci
       - run: python -m pip install wfdb==4.3.1
-      - name: Restore the exact last released analyzer
-        run: git worktree add --detach "$RUNNER_TEMP/qt-before" 10e3f39764ca3bf83f2fc9b543d4960ee12c1080
+      - name: Restore immutable QT predecessors and released product
+        run: |
+          git worktree add --detach "$RUNNER_TEMP/qt-before" 10e3f39764ca3bf83f2fc9b543d4960ee12c1080
+          git worktree add --detach "$RUNNER_TEMP/qt-release" d208370f883b9f1d3a22c34db62d97daacb279c6
+          (cd "$RUNNER_TEMP/qt-release" && npm ci)
       - name: Verify endpoint, dependency and historical-source contracts
         run: npx vitest run tests/terminal-consensus.test.ts tests/delineation.test.ts tests/fidelity.test.ts tests/qrs-t-revision.test.mjs tests/terminal-evaluator-sampling.test.mjs
       - name: Reproduce every exposed comparison cohort
         run: |
+          cd "$RUNNER_TEMP/qt-release"
           python scripts/prepare-ludb-expansion.py --output "$RUNNER_TEMP/original40" --crosscheck
           python scripts/prepare-ludb-delineation.py --output "$RUNNER_TEMP/calibration40" --crosscheck
           python scripts/prepare-terminal-exposed.py --output "$RUNNER_TEMP/exposed-v1-40"
       - name: Compare actual numbers, boundaries and all preserved nonterminal measurements
-        run: node scripts/validate-terminal-consensus-v1a.mjs --baseline "$RUNNER_TEMP/qt-before" --original "$RUNNER_TEMP/original40/fixtures" --calibration "$RUNNER_TEMP/calibration40/fixtures" --exposed-v1 "$RUNNER_TEMP/exposed-v1-40/fixtures" --output "$RUNNER_TEMP/terminal-consensus/exposed"
+        run: cd "$RUNNER_TEMP/qt-release" && node scripts/validate-terminal-consensus-v1a.mjs --baseline "$RUNNER_TEMP/qt-before" --original "$RUNNER_TEMP/original40/fixtures" --calibration "$RUNNER_TEMP/calibration40/fixtures" --exposed-v1 "$RUNNER_TEMP/exposed-v1-40/fixtures" --output "$RUNNER_TEMP/terminal-consensus/exposed"
       - name: Acquire only the frozen remaining 32 records and independently verify their reader
-        run: python scripts/prepare-terminal-consensus.py --output "$RUNNER_TEMP/prospective32" --crosscheck
+        run: cd "$RUNNER_TEMP/qt-release" && python scripts/prepare-terminal-consensus.py --output "$RUNNER_TEMP/prospective32" --crosscheck
       - name: Evaluate frozen targets without retuning or hiding adverse outcomes
         id: frozen
         continue-on-error: true
-        run: node scripts/validate-terminal-consensus-v1a.mjs --baseline "$RUNNER_TEMP/qt-before" --prospective "$RUNNER_TEMP/prospective32/fixtures" --output "$RUNNER_TEMP/terminal-consensus/prospective"
+        run: cd "$RUNNER_TEMP/qt-release" && node scripts/validate-terminal-consensus-v1a.mjs --baseline "$RUNNER_TEMP/qt-before" --prospective "$RUNNER_TEMP/prospective32/fixtures" --output "$RUNNER_TEMP/terminal-consensus/prospective"
       - name: Enforce the explicit maintainer decision on the identical reported tradeoff
-        run: node scripts/accept-terminal-consensus-release.mjs "$RUNNER_TEMP/terminal-consensus/prospective/comparison.json" "$RUNNER_TEMP/terminal-consensus/prospective/release-decision.json"
+        run: cd "$RUNNER_TEMP/qt-release" && node scripts/accept-terminal-consensus-release.mjs "$RUNNER_TEMP/terminal-consensus/prospective/comparison.json" "$RUNNER_TEMP/terminal-consensus/prospective/release-decision.json"
+      - name: Require current product to preserve every released measurement on all 152 exposed records
+        run: node scripts/validate-released-analyzer.mjs --baseline "$RUNNER_TEMP/qt-release" --original "$RUNNER_TEMP/original40/fixtures" --calibration "$RUNNER_TEMP/calibration40/fixtures" --exposed-v1 "$RUNNER_TEMP/exposed-v1-40/fixtures" --consensus "$RUNNER_TEMP/prospective32/fixtures" --output "$RUNNER_TEMP/terminal-consensus/current-product"
       - name: Preserve source and complete evidence without demographic headers
         if: always()
         run: |
           mkdir -p "$RUNNER_TEMP/terminal-consensus"
+          git archive d208370f883b9f1d3a22c34db62d97daacb279c6 | gzip > "$RUNNER_TEMP/terminal-consensus/frozen-qt-source.tar.gz"
           git archive HEAD | gzip > "$RUNNER_TEMP/terminal-consensus/source.tar.gz"
           git rev-parse HEAD > "$RUNNER_TEMP/terminal-consensus/commit.txt"
           for name in original40 calibration40 exposed-v1-40 prospective32; do

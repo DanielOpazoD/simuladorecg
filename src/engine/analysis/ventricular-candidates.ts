@@ -163,6 +163,77 @@ function groupContinuousCandidates(s: Samples, peaks: number[]): number[] {
   return keep;
 }
 
+/** Confirm repeated late-wave morphology using only waves already rejected by
+ * the strict shape rule. Three separate preceding complexes must support the
+ * same contour and delay; a repeated QRS-like contour is protected. This makes
+ * an isolated noise fluctuation unable to turn the same T into another beat.
+ * This is an engineering discriminator, not a clinical wave classification. */
+export function rejectRepeatedTerminalWaves(
+  s: Samples,
+  all: readonly number[],
+  retained: number[],
+): number[] {
+  const rejected = all.filter((i) => !retained.includes(i));
+  if (rejected.length < 3) return retained;
+  const { fs } = s,
+    n = Math.min(s.leads.I.length, 10 * fs),
+    radius = Math.round(0.08 * fs);
+  const cache = new Map<number, number[]>();
+  const signature = (i: number) => {
+    let v = cache.get(i);
+    if (v) return v;
+    v = [];
+    for (const lead of names) {
+      const x = Array.from(
+          s.leads[lead].slice(
+            Math.max(0, i - radius),
+            Math.min(n, i + radius + 1),
+          ),
+        ),
+        mean = x.reduce((a, b) => a + b, 0) / x.length;
+      v.push(...x.map((y) => y - mean));
+    }
+    const norm = Math.hypot(...v);
+    if (norm) v = v.map((x) => x / norm);
+    cache.set(i, v);
+    return v;
+  };
+  const similarity = (a: number, b: number) => {
+    const x = signature(a),
+      y = signature(b);
+    return x.length === y.length
+      ? x.reduce((sum, v, i) => sum + v * y[i], 0)
+      : -1;
+  };
+  const templates = rejected
+    .map((i) => ({ i, prior: retained.filter((p) => p < i).at(-1) }))
+    .filter((t) => t.prior !== undefined);
+  const result: number[] = [];
+  for (const i of retained) {
+    const p = result.at(-1),
+      delay = p === undefined ? Infinity : (i - p) / fs;
+    if (
+      p !== undefined &&
+      delay >= 0.2 &&
+      delay <= 0.4 &&
+      similarity(i, p) < 0.9
+    ) {
+      const support = new Set(
+        templates
+          .filter(
+            (t) =>
+              Math.abs((t.i - t.prior!) / fs - delay) <= 0.03 &&
+              similarity(i, t.i) >= 0.98,
+          )
+          .map((t) => t.prior),
+      );
+      if (support.size >= 3) continue;
+    }
+    result.push(i);
+  }
+  return result;
+}
+
 export function detectVentricularCandidates(
   s: Samples,
   { medianWidth = 0.014, candidateFraction = 0.35, tReject = true } = {},
@@ -310,7 +381,7 @@ export function detectVentricularCandidates(
       }
       refined.push(i);
     }
-    peaks = groupContinuousCandidates(s, refined);
+    peaks = groupContinuousCandidates(s, rejectRepeatedTerminalWaves(smoothed, peaks, refined));
   }
   return { peaks, boundaryCandidates, leads, energy, threshold, high, candidates };
 }

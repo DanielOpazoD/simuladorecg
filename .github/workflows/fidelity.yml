@@ -157,6 +157,8 @@ jobs:
           path: dist
       - name: Independent QRS/ST/T prediction against frozen source
         run: node scripts/validate-repolarization-scope.mjs "$RUNNER_TEMP/repolarization-scope-results.json" --coherence
+      - name: Verify complete WPW source change and exact unaffected traces
+        run: node scripts/validate-wpw-source.mjs "$RUNNER_TEMP/wpw-source-results.json"
       - name: Matched repolarization comparison and detector freeze
         run: node scripts/validate-repolarization.mjs --output "$RUNNER_TEMP/repolarization-comparison.json"
       - name: Complete historical and current 61-preset by four-filter comparison
@@ -194,7 +196,7 @@ jobs:
         if: always()
         run: |
           mkdir -p .sites-runtime/secondary-st-visual
-          find "$RUNNER_TEMP/ecg-evidence/browser" -maxdepth 1 -type f \( -name 'coherence-view-*.png' -o -name 'coherence-trace-*.png' -o -name 't-axis-controls-*.png' \) -exec cp {} .sites-runtime/secondary-st-visual/ \;
+          find "$RUNNER_TEMP/ecg-evidence/browser" -maxdepth 1 -type f \( -name 'coherence-view-*.png' -o -name 'coherence-trace-*.png' -o -name 't-axis-controls-*.png' -o -name 'wpw-*.png' \) -exec cp {} .sites-runtime/secondary-st-visual/ \;
       - name: Archive focused secondary ST visual evidence
         uses: actions/upload-artifact@v6
         if: always()

@@ -13,7 +13,7 @@ it.each(['lbbb','rbbb','irbbb','bifascicular','vvi','ddd','vt','torsades','compl
  const a=synthesize({...c,tAxis:-40},6),b=synthesize({...c,tAxis:80},6);
  expect(a.leads).toEqual(b.leads);expect(c).toEqual(before);
 });
-it.each(['sinus','lafb','lpfb','wpw','pvc','bigeminy','af','flutter','junctional'])
+it.each(['sinus','lafb','lpfb','pvc','bigeminy','af','flutter','junctional'])
 ('%s retains a responsive primary T-axis control',id=>{
  const c=load(id);expect(input(controls(c))).not.toMatch(/\bdisabled\b/);
  const a=synthesize({...c,tAxis:-40},6),b=synthesize({...c,tAxis:80},6);

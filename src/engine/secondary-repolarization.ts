@@ -1,3 +1,4 @@
+import {preexcitedActivationReference} from "./ventricular-components";
 import { kernelWeight } from "./regional-activation";
 import type { Beat, ECGCase } from "./types";
 import type { Kernel } from "./morphology";
@@ -5,7 +6,7 @@ import { project, type Vec } from "./leads";
 import { ventricularSource } from "./ventricular-source";
 import { T_REFERENCE_AMPLITUDE } from "./regional-repolarization";
 
-export type SecondaryRepolarizationMode = "none" | "mean-qrs" | "terminal-qrs";
+export type SecondaryRepolarizationMode = "none" | "mean-qrs" | "terminal-qrs" | "preexcited-qrs";
 export interface SecondaryRepolarization { mode: SecondaryRepolarizationMode; t: Vec | null; st: Vec | null; reference: Vec | null; }
 
 function integrated(ks: readonly Kernel[], predicate: (k: Kernel) => boolean): Vec {
@@ -30,6 +31,9 @@ export function secondaryRepolarization(c: ECGCase,b: Beat,ks: readonly Kernel[]
     const regional=ks.some(k=>k.regional), delayed=integrated(ks,k=>
       regional ? k.regional?.region==="rv-delayed" : k.mu>=.55);
     reference=Math.hypot(...delayed)>1e-9?delayed:integrated(ks,()=>true);
+  }
+  if(!source&&c.conduction==="wpw"&&b.kind==="normal"){
+    mode="preexcited-qrs";reference=preexcitedActivationReference(c,ks,c.qrs/1000);
   }
   if(!reference)return{mode,t:null,st:null,reference:null};
   // Illustrative secondary ST scales with source strength, independently of T gain.

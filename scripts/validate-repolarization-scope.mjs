@@ -1,3 +1,4 @@
+import {predictWpwRepolarization} from './lib/wpw-repolarization-prediction.mjs';
 import {predictSecondaryST} from './lib/secondary-st-prediction.mjs';
 import {predictLpfbSource} from './lib/lpfb-source-prediction.mjs';
 import {assertTeachingCatalogSource,assertTeachingCatalogRevision} from './lib/teaching-scope-revision.mjs';
@@ -65,7 +66,7 @@ try {
   // Opt-in regional model: every historical trace below still has to be exact.
   // The experimental branch has its own mandatory, paired source/sample gate.
   const optInRegionalFiles=['src/engine/types.ts','src/engine/regional-activation.ts'];
-  assert.ok(changedFiles.every(f=>f===qtHistoryRevision || reviewedSourceContracts.includes(f) || (coherence && optInRegionalFiles.includes(f)) || (coherence && ['src/engine/signal.ts','src/engine/morphology.ts','src/engine/secondary-repolarization.ts','src/engine/torsades-frame.ts'].includes(f))), 'Unexpected generator/analyzer/catalog/dependency change');
+  assert.ok(changedFiles.every(f=>f===qtHistoryRevision || reviewedSourceContracts.includes(f) || (coherence && optInRegionalFiles.includes(f)) || (coherence && ['src/engine/signal.ts','src/engine/morphology.ts','src/engine/secondary-repolarization.ts','src/engine/torsades-frame.ts','src/engine/ventricular-components.ts'].includes(f))), 'Unexpected generator/analyzer/catalog/dependency change');
   async function load(dir,name){
     const outfile=path.join(temp,name+'.mjs');
     await build({stdin:{contents:"export {synthesize} from './src/engine/signal'; export {fromPreset,PRESETS} from './src/presets/catalog';",resolveDir:dir},bundle:true,platform:'node',format:'esm',outfile});
@@ -85,6 +86,7 @@ try {
     const morphologyFile=path.join(predicted,'src/engine/morphology.ts');
     await writeFile(morphologyFile,predictLpfbSource(await readFile(morphologyFile,'utf8')));
     await predictSecondaryST(predicted);
+    await predictWpwRepolarization(predicted);
     expected=await load(predicted,'expected');
   }
   assertTeachingCatalogRevision(before.PRESETS,after.PRESETS);
@@ -131,6 +133,7 @@ try {
     secondarySTRevision:'Independent mean/terminal-QRS source, C1 40 ms rise to J, return in the ascending T limb; torsades excluded.',
     lpfbSourceRevision:'Early left-superior activation with kernel-weighted area conservation in isolated and combined LPFB. Full frozen-source prediction.',
     wpwSupportRevision:'Independent compact-support correction; no negative-phase delta before native onset.',
+    wpwRepolarizationRevision:'Independent compact QRS plus analytic delta area predicts opposed secondary ST/T; unchanged activation primitives and event clock.',
     afClockRevision:'Representative gamma renewal CV0.22; frozen candidate and independent source prediction, not universal AF physiology.',
     qtInitializationRevision:'First event retains nominal ventricular RR; adaptation starts at second event. Separate from A02/A03 morphology.',
     candidateCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),changedFiles,
