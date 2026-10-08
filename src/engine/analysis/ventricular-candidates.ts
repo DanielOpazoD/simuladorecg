@@ -306,6 +306,32 @@ export function rejectRepeatedTerminalWaves(
   return result;
 }
 
+/** Maximum-score subset of observed maxima with a fixed minimum separation.
+ * Unlike a moving greedy anchor, an intermediate slope cannot transitively
+ * suppress two mutually compatible maxima. No interpolation or model clock. */
+export function selectRefractoryMaxima(
+  maxima: readonly number[],
+  energy: ArrayLike<number>,
+  separation: number,
+): number[] {
+  const best = new Float64Array(maxima.length + 1);
+  const previous = new Int32Array(maxima.length);
+  let left = -1;
+  for (let k = 0; k < maxima.length; k++) {
+    while (left + 1 < k && maxima[k] - maxima[left + 1] > separation) left++;
+    previous[k] = left;
+    best[k + 1] = Math.max(best[k], energy[maxima[k]] + best[left + 1]);
+  }
+  const selected: number[] = [];
+  for (let k = maxima.length - 1; k >= 0; ) {
+    if (energy[maxima[k]] + best[previous[k] + 1] > best[k]) {
+      selected.push(maxima[k]);
+      k = previous[k];
+    } else k--;
+  }
+  return selected.reverse();
+}
+
 export function detectVentricularCandidates(
   s: Samples,
   { medianWidth = 0.014, candidateFraction = 0.35, tReject = true } = {},
@@ -442,6 +468,67 @@ export function detectVentricularCandidates(
     let p = candidates.at(-1);
     if (p === undefined || i - p > 0.18 * fs) candidates.push(i);
     else if (energy[i] > energy[p]) candidates[candidates.length - 1] = i;
+  }
+  const restoredByRefractorySelection = new Set<number>();
+  const recoverySignatures = new Map<number, number[] | null>();
+  const recoverySignature = (i: number) => {
+    if (recoverySignatures.has(i)) return recoverySignatures.get(i)!;
+    const radius = Math.round(0.08 * fs);
+    if (i < radius || i + radius >= n) {
+      recoverySignatures.set(i, null);
+      return null;
+    }
+    const values: number[] = [];
+    for (const lead of names) {
+      const row = Array.from(leads[lead].slice(i - radius, i + radius + 1));
+      const mean = row.reduce((a, b) => a + b, 0) / row.length;
+      values.push(...row.map((value) => value - mean));
+    }
+    const norm = Math.hypot(...values);
+    const signature = norm ? values.map((value) => value / norm) : null;
+    recoverySignatures.set(i, signature);
+    return signature;
+  };
+  const recoverySimilarity = (first: number, second: number) => {
+    const a = recoverySignature(first),
+      b = recoverySignature(second);
+    return a && b ? a.reduce((sum, value, j) => sum + value * b[j], 0) : -1;
+  };
+  const recurrentMorphology = (train: number[]) => {
+    const complete = train.filter((i) => recoverySignature(i) !== null);
+    if (complete.length < 6) return false;
+    let same = 0;
+    for (let k = 1; k < complete.length; k++)
+      if (recoverySimilarity(complete[k], complete[k - 1]) > 0.9) same++;
+    return same >= 0.8 * (complete.length - 1);
+  };
+  // Experimental non-transitive selection: a stronger intermediate maximum
+  // cannot erase two mutually compatible observed candidates merely by moving
+  // the refractory anchor. Scores and the existing 180 ms separation are unchanged.
+  if (
+    tReject &&
+    allMaxima.length &&
+    candidates.length >= 6 &&
+    quant(
+      candidates.slice(1).map((p, k) => (p - candidates[k]) / fs),
+      0.75,
+    ) <= 0.36 &&
+    recurrentMorphology(candidates)
+  ) {
+    const supported = allMaxima.filter(
+      (i) =>
+        candidates.includes(i) ||
+        candidates.filter(
+          (p) =>
+            Math.abs(p - i) > 0.18 * fs && recoverySimilarity(i, p) > 0.9,
+        ).length >= 3,
+    );
+    const selected = selectRefractoryMaxima(supported, energy, 0.18 * fs);
+    if (selected.length > candidates.length && recurrentMorphology(selected)) {
+      for (const i of selected)
+        if (!candidates.includes(i)) restoredByRefractorySelection.add(i);
+      candidates.splice(0, candidates.length, ...selected);
+    }
   }
   const recovered = new Set<number>();
   const selectionStrength = new Map<number, number>();
@@ -706,6 +793,7 @@ export function detectVentricularCandidates(
     candidates,
     recovered,
     mergedComponents,
+    restoredByRefractorySelection,
   };
 }
 
