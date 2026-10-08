@@ -30,7 +30,7 @@ Visible/exported samples and retained candidate timestamps do not change. This d
 
 ## Development results, not release acceptance
 
-A freshly recomputed PR153-versus-candidate run passed all 2,476 cases (2,396 admitted, 80 existing source rejections), including zero newly lost reference identities and every unchanged numerical non-regression gate. The preliminary cached-baseline shortcut was not used for this final local pair. `benchmarks/closeout/recurrent-wave-development.json` records the exact analyzer hashes and distinguishes numerical corrections from remaining errors moved to review. Final CI must independently rerun on its identified commit.
+A freshly recomputed PR153-versus-candidate run passed all 2,476 cases (2,396 admitted, 80 existing source rejections), including zero newly lost reference identities and every unchanged numerical non-regression gate. The preliminary cached-baseline shortcut was not used for this final local pair. `docs/closeout/recurrent-wave-development.json` records the exact analyzer hashes and distinguishes numerical corrections from remaining errors moved to review. Final CI must independently rerun on its identified commit.
 
 Ten configurations had genuine numerical correction with all evaluated ventricular identities retained: five combinations across sinus rhythm, LBBB and PVCs, each in off/diagnostic acquisition. Eight additional previously wrong rates moved to review while remaining wrong; they are not corrections. The raw falsely usable HR count changed from 50 to 32. No previously correct complete ventricular count lost usability in that comparison. Some rates previously close to the expected mean already contained compensating FP/FN and are not examples of correct ventricular identity.
 
