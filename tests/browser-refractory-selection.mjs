@@ -32,11 +32,12 @@ for(const engine of [chromium,firefox,webkit]){
    await chooseCatalogPreset(page,'vt');await ready();
    await page.locator('[data-action="compare"]').click();await page.locator('#compare-pin').click();
    const original=await exported('original');
-   for(const[hr,qrs]of [[240,240],[260,200]]){
+   for(const[hr,qrs,acceptedHr]of [[240,240,240],[250,200,250],[260,200,250]]){
     const c={...original.B.case,hr,qrs,qtc:350,filter:'diagnostic',variability:0,seed:53,
      artifacts:{...original.B.case.artifacts,baseline:0,muscle:0,mains:0}};
     const result=await imported(c,String(hr)),m=result.B.measurement;
-    assert.ok(m.hr!==null&&Math.abs(m.hr-hr)<=1,'Actual worker must recover the rapid ventricular train');
+    assert.equal(result.B.case.hr,acceptedHr,'Preserve the existing 250/min import/control domain');
+    assert.ok(m.hr!==null&&Math.abs(m.hr-acceptedHr)<=1,'Actual worker must measure the accepted rapid ventricular train');
     const row=result.metrics.find(r=>r.key==='hr');assert.equal(row.b,m.hr);
     assert.notEqual(m.evidence.qrs.status,'usable','Recovered identity does not certify interval boundaries');
     assert.deepEqual(result.A.leads,original.A.leads,'Reference A must not change');
@@ -50,7 +51,7 @@ for(const engine of [chromium,firefox,webkit]){
     await page.locator('#ecg').screenshot({path:resolve(out,`${tag}-${hr}-trace.png`)});
     const again=await imported(result.B.case,`${hr}-roundtrip`);
     assert.deepEqual(again.B.leads,result.B.leads);assert.deepEqual(again.B.measurement.detectedPeaks,m.detectedPeaks);
-    results.push({engine:engine.name(),width,hr,qrs,measuredHR:m.hr,candidates:m.detectedPeaks.length,identity,actualWorker:true,exactRoundtrip:true});
+    results.push({engine:engine.name(),width,requestedHr:hr,acceptedHr,qrs,measuredHR:m.hr,candidates:m.detectedPeaks.length,identity,actualWorker:true,exactRoundtrip:true});
    }
    const restored=await imported(original.B.case,'restored');assert.deepEqual(restored.B.leads,original.B.leads);
    assert.deepEqual(restored.B.measurement,original.B.measurement);assert.deepEqual(errors,[]);
