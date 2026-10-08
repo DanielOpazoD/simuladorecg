@@ -99,7 +99,7 @@ describe("complete ventricular identity after released PR152", () => {
 });
 
 it("retains noisy complete-complex identity under independent lead polarity reversals", () => {
-  const { s, m } = evaluate(
+  const { s } = evaluate(
     "vvi",
     { hr: 55, seed: 41, filter: "off", electrolyte: "lowvoltage" },
     0.075,
