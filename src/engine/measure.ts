@@ -64,6 +64,11 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
       .filter((complex) => complex.refractoryRestored)
       .map((complex) => complex.marker),
   );
+  const displacedPredecessors = new Set(
+    complexes
+      .filter((c) => c.displacedPredecessor !== undefined)
+      .map((c) => c.marker),
+  );
   const mergedComponents = new Map(
     complexes
       .filter((complex) => complex.support.length > 1)
@@ -172,13 +177,19 @@ export function measure(input: Pick<Signal, "fs" | "leads">): Measurement {
     // can be rechecked with ventricular neighbors, without forcing the merger.
     for (let attempt = 0; attempt < 3; attempt++) {
       const repair = attempt === 1;
+      // A verified displaced predecessor remains geometric evidence, but is
+      // not a ventricular neighbor when recovering the complete QRS support.
+      const repairTrain = displacedPredecessors.has(marker) ? ratePeaks : peaks;
+      const repairIndex = displacedPredecessors.has(marker)
+        ? ratePeaks.indexOf(marker)
+        : complexIndex;
       const previousLandmark =
         attempt > 0
-          ? peaks[complexIndex - 1]
+          ? repairTrain[repairIndex - 1]
           : originalLandmarks[originalIndex - 1];
       const nextLandmark =
         attempt > 0
-          ? peaks[complexIndex + 1]
+          ? repairTrain[repairIndex + 1]
           : originalLandmarks[originalIndex + 1];
       peak = repair ? observedCentre : marker;
       // An internal plateau is not baseline: repair starts before the first slope.
