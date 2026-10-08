@@ -126,7 +126,7 @@ try {
    const intendedSourceChange=changedSources.has(p.id), intendedRvGainChange=p.id==='rv_chronic',
      intendedFinalAxisChange=p.id==='rv_acute'||p.id==='rv_chronic',
      intendedSecondaryChange=b.events.beats.some(beat=>beat.kind!=='normal') ||
-       c.conduction==='lbbb' || c.conduction.includes('rbbb'),
+       c.conduction==='lbbb' || c.conduction.includes('rbbb') || c.conduction==='wpw',
      intendedLpfbSourceChange=p.id==='lpfb',
      reviewedMainChange=intendedFinalAxisChange||intendedSecondaryChange||intendedLpfbSourceChange;
    const historicalContract=intendedRvGainChange ? assertRvAmplitudeChange(before.synthesize,a,r,c)

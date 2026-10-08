@@ -1,4 +1,3 @@
-import {wpwNativeLeadII} from './support/wpw-native-pulse';
 import {afInterval} from '../src/engine/af-rr';
 import {random} from '../src/engine/random';
 import {assertExactSamples} from './support/exact-samples';
@@ -182,10 +181,9 @@ describe("Determinismo y catálogo", () => {
         expect(a.events.beats.map(b=>b.time)).toEqual(times);
         expect(a.events.atria).toHaveLength(0);expect(a.events.spikes).toHaveLength(0);
       } else if (fromPreset(p).conduction === 'wpw') {
-        // Retain the original fingerprint: restore only the independently predicted
-        // pre-onset sine leakage removed by the compact-support repair.
-        const leak=wpwNativeLeadII(fromPreset(p),10,true);
-        expectCatalogFingerprint(p.id,Float64Array.from(a.leads.II,(value,i)=>value+leak[i]));
+        // The immutable predecessor fingerprint remains stored. A separate
+        // frozen-source prediction verifies the entire intentional ST/T delta.
+        expectCatalogFingerprint('wpw-source-v2',a.leads.II);
       } else if (!hasCoupledSecondary) expectCatalogFingerprint(p.id === "lpfb" ? "lpfb-source-v2" : p.id, a.leads.II);
     },
   );

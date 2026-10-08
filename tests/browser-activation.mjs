@@ -241,7 +241,7 @@ for (const [engine, launcher] of Object.entries(engines)) {
         assert.equal(await page.locator('[data-activation-plane]').count(), 4);
         assert.equal(await page.locator('[data-activation-lead]').count(), 12);
         assert.match(await page.locator('[data-activation-model="A"]').innerText(), /Delta sintética adicional: 0–45 ms/);
-        assert.match(await page.locator('[data-activation-model="A"]').innerText(), /no modifica el ST-T/);
+        assert.match(await page.locator('[data-activation-model="A"]').innerText(), /ST y T siguen la activación QRS incluida la onda delta/);
         await page.locator('#activation-choice').selectOption('normal'); await qrs.fill('135');
         await slider.focus(); await slider.press('Home');
         for (let n = 0; n < 20; n++) await slider.press('ArrowRight');

@@ -24,6 +24,7 @@ try{
    const previous=await page.locator('#ecg').evaluate(e=>e.toDataURL());
    await page.locator('#file-input').setInputFiles({name:'coherence.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(c))});
    if(kind==='scope'){await page.locator('#signal-loading.signal-unavailable').waitFor();return;}
+   if(kind==='unchanged')await page.waitForFunction(value=>Number(document.querySelector('[data-key="tAxis"]').value)===value,c.tAxis);
    if(kind==='changed')await page.waitForFunction(p=>document.querySelector('#ecg').toDataURL()!==p,previous);
    await ready();
   };
@@ -89,8 +90,30 @@ try{
   await page.locator('#signal-loading').screenshot({path:resolve(out,`wpw-clock-scope-${width}.png`)});
   await importCase(base,'recovery');const wpwRecovered=await exported('wpw-clock-recovered');
   assert.deepEqual(wpwRecovered.B.leads,normal.A.leads);
+  // Full WPW worker/render/export route, including the secondary ST that remains
+  // when T gain is zero and the inactive primary T-axis control.
+  const wpw={...base,conduction:'wpw',pr:100,qrs:135,axis:35};
+  await importCase(wpw);const wpwFull=await exported('wpw-full');
+  await page.locator('[data-panel="st"]').click();
+  assert.equal(await axisControl.isDisabled(),true);
+  assert.match(await page.locator('#t-axis-note').innerText(),/delta/);
+  await page.screenshot({path:resolve(out,`wpw-controls-${width}.png`)});
+  await importCase({...wpw,tAxis:-120},'unchanged');const wpwAxis=await exported('wpw-axis-inactive');
+  assert.deepEqual(wpwAxis.B.leads,wpwFull.B.leads);
+  await importCase({...wpw,tAmp:0});const wpwZero=await exported('wpw-zero');
+  const wb=wpwZero.B.events.beats.find(b=>b.time>2),wi=Math.round((wb.time+wb.qrs+.060)*wpwZero.B.fs);
+  assert.ok(wpwZero.B.leads.II[wi]<-.005,'Actual exported WPW has negative secondary ST');
+  await importCase({...wpw,tAmp:.56});const wpwDouble=await exported('wpw-double');
+  for(const lead of Object.keys(wpwFull.B.leads))for(let i=0;i<wpwFull.B.leads[lead].length;i++)
+    assert.ok(Math.abs((wpwDouble.B.leads[lead][i]-wpwZero.B.leads[lead][i])-2*(wpwFull.B.leads[lead][i]-wpwZero.B.leads[lead][i]))<1e-12);
+  await importCase(wpw);await page.locator('#comparison-lab').scrollIntoViewIfNeeded();
+  await page.screenshot({path:resolve(out,`wpw-repolarization-${width}.png`)});
+  const wpwPng=page.waitForEvent('download');await page.locator('#compare-png').click();
+  await(await wpwPng).saveAs(resolve(out,`wpw-repolarization-trace-${width}.png`));
+  await importCase({...wpw,axis:-60});const rotated=await exported('wpw-activation-rotated');
+  assert.notDeepEqual(rotated.B.leads,wpwFull.B.leads);
   assert.equal(await page.locator('vite-error-overlay').count(),0);
-  checks.push({width,checked,maxErrorMv,isolatedST60V2Mv:zero.B.leads.V2[index],scopeRejection:true,exactRecovery:true,wpwClockScopeAndRecovery:true,tAxisApplicabilityAndRestoration:true});
+  checks.push({width,checked,maxErrorMv,isolatedST60V2Mv:zero.B.leads.V2[index],scopeRejection:true,exactRecovery:true,wpwClockScopeAndRecovery:true,tAxisApplicabilityAndRestoration:true,wpwFullRepolarizationAndExports:true});
   await page.close();
  }
  assert.deepEqual(errors,[]);assert.deepEqual(warnings,[]);

@@ -293,7 +293,7 @@
     "categoria": "Conducción intraventricular",
     "estado": "aproximado",
     "estrategia": "vectorial",
-    "limitacion": "Delta aproximada; sin vías accesorias anatómicas ni circuito AVRT. Preexcitación aproximada: la delta no modifica el ST-T secundario en este modelo. No uses esta T para aprender la repolarización típica de WPW."
+    "limitacion": "Delta aproximada; sin vías accesorias anatómicas ni circuito AVRT. Preexcitación aproximada: en los latidos preexcitados, ST y T siguen la activación QRS incluida la onda delta. Amplitudes no calibradas; no localiza vías accesorias ni reproduce AVRT o memoria cardíaca."
   },
   {
     "id": "inferior",

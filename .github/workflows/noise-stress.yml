@@ -31,6 +31,8 @@ jobs:
           git worktree add --detach "$RUNNER_TEMP/noise-baseline" 9246093052b3171cca81fb77951fd8eb24523a7c
           git worktree add --detach "$RUNNER_TEMP/noise-transition-before" 3c10eacd5fa4382d232c368777bd9d5f3b7f3475
           git worktree add --detach "$RUNNER_TEMP/noise-st-release" 10e3f39764ca3bf83f2fc9b543d4960ee12c1080
+          git worktree add --detach "$RUNNER_TEMP/noise-qt-release" d208370f883b9f1d3a22c34db62d97daacb279c6
+          (cd "$RUNNER_TEMP/noise-qt-release" && npm ci)
       - name: Discriminative reader, calibration, morphology and abstention tests
         run: |
           (cd "$RUNNER_TEMP/noise-acquisition" && python -m unittest discover -s tests -p test_noise_stress.py -v)
@@ -66,12 +68,23 @@ jobs:
           node scripts/benchmark-noise-stress.mjs "$RUNNER_TEMP/noise-stress/transition-before" --noise-dir "$RUNNER_TEMP/noise-stress" --source-root "$RUNNER_TEMP/noise-transition-before" --analyzer worker
           node scripts/benchmark-noise-stress.mjs "$RUNNER_TEMP/noise-stress/st-release" --noise-dir "$RUNNER_TEMP/noise-stress" --source-root "$RUNNER_TEMP/noise-st-release" --analyzer worker
           node scripts/check-secondary-st-transition.mjs "$RUNNER_TEMP/noise-stress/transition-before/noise-results.json" "$RUNNER_TEMP/noise-stress/st-release/noise-results.json" "$RUNNER_TEMP/noise-stress/secondary-st-transition.json"
-      - name: Enforce unchanged morphology and the explicit terminal-quality transition
-        run: node scripts/check-noise-regression.mjs "$RUNNER_TEMP/noise-stress/before/noise-results.json" "$RUNNER_TEMP/noise-stress/after/noise-results.json" "$RUNNER_TEMP/noise-stress/acceptance-results.json" --terminal-consensus
+      - name: Reproduce the immutable published terminal-quality transition
+        run: |
+          cd "$RUNNER_TEMP/noise-qt-release"
+          node scripts/benchmark-noise-stress.mjs "$RUNNER_TEMP/noise-stress/qt-release" --noise-dir "$RUNNER_TEMP/noise-stress" --analyzer worker
+          node scripts/check-noise-regression.mjs "$RUNNER_TEMP/noise-stress/before/noise-results.json" "$RUNNER_TEMP/noise-stress/qt-release/noise-results.json" "$RUNNER_TEMP/noise-stress/terminal-acceptance-results.json" --terminal-consensus
+      - name: Compare current product with its published predecessor and preserve strict adverse outcomes
+        run: node scripts/check-released-noise.mjs "$RUNNER_TEMP/noise-stress/qt-release/noise-results.json" "$RUNNER_TEMP/noise-stress/after/noise-results.json" "$RUNNER_TEMP/noise-stress/acceptance-results.json"
+      - name: Characterize the full WPW source change under the same exposed noise windows
+        run: |
+          node scripts/benchmark-noise-stress.mjs "$RUNNER_TEMP/noise-stress/wpw-before" --noise-dir "$RUNNER_TEMP/noise-stress" --source-root "$RUNNER_TEMP/noise-qt-release" --analyzer worker --supplement-preset wpw
+          node scripts/benchmark-noise-stress.mjs "$RUNNER_TEMP/noise-stress/wpw-after" --noise-dir "$RUNNER_TEMP/noise-stress" --analyzer worker --supplement-preset wpw
+          node scripts/check-wpw-noise.mjs "$RUNNER_TEMP/noise-stress/wpw-before/noise-results.json" "$RUNNER_TEMP/noise-stress/wpw-after/noise-results.json" "$RUNNER_TEMP/noise-stress/wpw-source-transition.json"
       - name: Preserve exact code, limits and runtime
         if: always()
         run: |
           mkdir -p "$RUNNER_TEMP/noise-stress"
+          git archive d208370f883b9f1d3a22c34db62d97daacb279c6 | gzip > "$RUNNER_TEMP/noise-stress/frozen-qt-source.tar.gz"
           git archive HEAD | gzip > "$RUNNER_TEMP/noise-stress/source.tar.gz"
           git rev-parse HEAD > "$RUNNER_TEMP/noise-stress/commit.txt"
           python -m pip freeze > "$RUNNER_TEMP/noise-stress/python-packages.txt"
