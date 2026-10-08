@@ -90,6 +90,7 @@ for(const engine of [chromium,firefox,webkit]){
    // worker, model audit, comparison, export and exact roundtrip.
    for(const [id,qrsAmp,tAmp,hr] of [
     ['sinus',.1,0,120],['sinus',.5,.8,120],['lbbb',.1,0,60],['lbbb',.1,0,120],['pvc',.1,0,120],
+    ['lbbb',.1,.28,60],['wpw',.1,.28,60],['wpw',.12,.22,50],
    ]){
     await chooseCatalogPreset(page,id);await ready();
     const base=await exported(`recurrent-base-${id}-${qrsAmp}-${tAmp}-${hr}`);
@@ -99,6 +100,12 @@ for(const engine of [chromium,firefox,webkit]){
     assert.equal(result.B.case.filter,'diagnostic');
     assert.deepEqual(result.A.leads,original.A.leads,'Reference A remains immutable during identity repair');
     if(tAmp===0)assert.equal(result.B.measurement.qt,null,'Absent T cannot acquire a fabricated QT');
+    if(id==='lbbb'&&tAmp===.28){
+     const m=result.B.measurement,width=m.qrs??m.rejected?.qrs;
+     assert.ok(width!==undefined&&width!==null&&Math.abs(width-160)<=20,'Recovered weak QRS must include its observed late support');
+     assert.notEqual(m.evidence.qrs.status,'usable','Recovered support does not certify clinical boundaries');
+     if(m.qt!==null)assert.ok(Math.abs(m.qt-410)<=30);
+    }
    }
    const restored=await imported(original.B.case,'restored');assert.deepEqual(restored.B.leads,original.B.leads);
    assert.deepEqual(restored.B.measurement,original.B.measurement);assert.deepEqual(errors,[]);

@@ -7,6 +7,8 @@ export interface VentricularComplexObservation {
   readonly support: readonly number[];
   readonly recovered: boolean;
   readonly refractoryRestored: boolean;
+  /** Distinct preceding observed contour displaced during recovery; not a P-wave diagnosis. */
+  readonly displacedPredecessor?: number;
 }
 
 /** Ventricular candidate detector — sample-domain detector only. No events, case, labels, truth, or audit input.
@@ -317,6 +319,23 @@ export function rejectRepeatedTerminalWaves(
   for (const i of retained) {
     const p = result.at(-1),
       delay = p === undefined ? Infinity : (i - p) / fs;
+    // A leading observation has no preceding retained complex. It may still
+    // match terminal contours independently rejected after several later QRS.
+    // Do not invent the missing preceding activation or manufacture a delay.
+    if (p === undefined) {
+      const support = new Set(
+        templates
+          .filter(
+            (t) =>
+              (t.i - t.prior!) / fs >= 0.2 &&
+              (t.i - t.prior!) / fs <= 0.4 &&
+              similarity(i, t.i) >= 0.98 &&
+              similarity(i, t.prior!) < 0.9,
+          )
+          .map((t) => t.prior),
+      );
+      if (support.size >= 3) continue;
+    }
     if (
       p !== undefined &&
       delay >= 0.2 &&
@@ -770,6 +789,71 @@ export function detectVentricularCandidates(
     return result;
   };
 
+  // Recover a recurrent fast observation suppressed by a larger
+  // distinct slow contour. References are observed maxima, never a rhythm clock.
+  // A later candidate is recovered here; the existing terminal-wave recovery
+  // handles the opposite direction. Moving an earlier slope of a broad QRS
+  // under this contract would change its complete support and is excluded.
+  const displacedLandmarks: number[] = [];
+  const recoveredAfterSlowWave = new Map<number, number>();
+  const displacedWaveSupport = new Set<number>();
+  if (tReject) {
+    const proposals = candidates.flatMap((old) => {
+      if (bandwidth(old) >= 0.18) return [];
+      const choices = supportMaxima
+        .filter(
+          (next) =>
+            next - old > 0.08 * fs &&
+            next - old <= 0.18 * fs &&
+            bandwidth(next) > 0.18 &&
+            bandwidth(next) > 1.5 * bandwidth(old) &&
+            shape(s, old).rank > 2 * shape(s, next).rank &&
+            recoverySimilarity(old, next) < 0.9 &&
+            groupContinuousCandidates(
+              s,
+              [Math.min(old, next), Math.max(old, next)],
+              undefined,
+              0.08,
+            ).length === 2 &&
+            candidates.every(
+              (other) => other === old || Math.abs(other - next) > 0.18 * fs,
+            ),
+        )
+        .sort((a, b) => bandwidth(b) - bandwidth(a));
+      return choices.length ? [{ old, next: choices[0] }] : [];
+    });
+    const confirmed = proposals.filter((p) => {
+      const peers = proposals.filter(
+        (q) =>
+          Math.abs(p.next - p.old - (q.next - q.old)) <= 0.03 * fs &&
+          recoverySimilarity(p.old, q.old) >= 0.98 &&
+          recoverySimilarity(p.next, q.next) >= 0.98,
+      );
+      return new Set(peers.map((q) => q.old)).size >= 4;
+    });
+    const substitutions = new Map(confirmed.map((p) => [p.old, p.next]));
+    const simultaneous = candidates.map((old) => substitutions.get(old) ?? old);
+    if (
+      simultaneous.every(
+        (next, k) => k === 0 || next - simultaneous[k - 1] > 0.18 * fs,
+      )
+    ) {
+      for (let k = 0; k < candidates.length; k++) {
+        const old = candidates[k],
+          next = substitutions.get(old);
+        if (next === undefined) continue;
+        displacedLandmarks.push(old);
+        recoveredAfterSlowWave.set(next, old);
+        for (const point of supportMaxima)
+          if (Math.abs(point - old) <= 0.08 * fs && bandwidth(point) < 0.18)
+            displacedWaveSupport.add(point);
+        selectionStrength.set(next, Math.max(energy[old], energy[next]));
+        restoredByRefractorySelection.add(next);
+        candidates[k] = next;
+      }
+    }
+  }
+
   const high = quant(
     candidates.map((i) => selectionStrength.get(i) ?? energy[i]),
     0.8,
@@ -797,6 +881,7 @@ export function detectVentricularCandidates(
     for (const marker of peaks) {
       const hidden = supportMaxima.filter(
         (p) =>
+          !displacedWaveSupport.has(p) &&
           Math.abs(p - marker) > 0.08 * fs &&
           Math.abs(p - marker) < 0.18 * fs &&
           energy[p] > Math.max(1.9, high * candidateFraction) &&
@@ -859,7 +944,9 @@ export function detectVentricularCandidates(
     peaks = accepted;
   }
   if ((peaks.at(-1) ?? 0) > n - 0.18 * fs) peaks.pop();
-  const boundaryCandidates = peaks;
+  const boundaryCandidates = [
+    ...new Set([...peaks, ...displacedLandmarks]),
+  ].sort((a, b) => a - b);
   let waveformRejected = new Set<number>();
   // Classification changes activation identity, not the observed geometric
   // landmarks already used to delineate QRS. Keep that evidence immutable.
@@ -1115,6 +1202,7 @@ export function detectVentricularCandidates(
         const earlier = supportMaxima
           .filter(
             (p) =>
+              !displacedWaveSupport.has(p) &&
               marker - p > 0.08 * fs &&
               marker - p < 0.28 * fs &&
               energy[p] > Math.max(1.9, high * candidateFraction) &&
@@ -1134,6 +1222,7 @@ export function detectVentricularCandidates(
       const earlier = supportMaxima
         .filter(
           (p) =>
+            !displacedWaveSupport.has(p) &&
             marker - p > 0.08 * fs &&
             marker - p < 0.28 * fs &&
             energy[p] > Math.max(1.9, high * candidateFraction) &&
@@ -1147,6 +1236,15 @@ export function detectVentricularCandidates(
       );
       if (first !== undefined) mergedComponents.set(marker, [first, marker]);
     }
+  }
+  // Keep the verified complete support of a newly recovered observation.
+  // Its displaced slow contour remains geometry, never ventricular support.
+  for (const marker of peaks) {
+    if (!recoveredAfterSlowWave.has(marker)) continue;
+    const support = components
+      .get(marker)
+      ?.filter((p) => !displacedWaveSupport.has(p));
+    if (support && support.length > 1) mergedComponents.set(marker, support);
   }
   // Evaluate exclusions on the immutable observed population. Apply them only
   // after the existing support and template stages have finished, so removing a
@@ -1166,6 +1264,9 @@ export function detectVentricularCandidates(
     ),
     recovered: recovered.has(marker),
     refractoryRestored: restoredByRefractorySelection.has(marker),
+    ...(recoveredAfterSlowWave.has(marker)
+      ? { displacedPredecessor: recoveredAfterSlowWave.get(marker)! }
+      : {}),
   }));
   return {
     complexes,

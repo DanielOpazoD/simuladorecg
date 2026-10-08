@@ -41,3 +41,54 @@ describe('Repeated terminal contour confirmation',()=>{
     const f=fixture({sameShape:true});expect(rejectRepeatedTerminalWaves(f.samples,f.all,f.retained)).toEqual(f.retained);
   });
 });
+
+function withLeadingContour(
+  f: ReturnType<typeof fixture>,
+  { qrsLike = false, sign = 1 } = {},
+) {
+  const leading = 100,
+    source = qrsLike ? f.qrs[0] : f.last;
+  for (const lead of LEADS)
+    for (let offset = -80; offset <= 80; offset++)
+      f.samples.leads[lead][leading + offset] =
+        sign * f.samples.leads[lead][source + offset];
+  f.all.unshift(leading);
+  f.retained.unshift(leading);
+  return { ...f, leading };
+}
+describe("leading terminal contour with independently observed later support", () => {
+  it("removes a repeated leading terminal contour without creating a preceding QRS", () => {
+    const f = withLeadingContour(fixture()),
+      original = structuredClone(f.samples);
+    expect(rejectRepeatedTerminalWaves(f.samples, f.all, f.retained)).toEqual(
+      f.qrs,
+    );
+    expect(f.samples).toEqual(original);
+  });
+  it("keeps a leading contour when fewer than three distinct later complexes support it", () => {
+    const f = withLeadingContour(fixture({ count: 2 }));
+    expect(rejectRepeatedTerminalWaves(f.samples, f.all, f.retained)).toEqual(
+      f.retained,
+    );
+  });
+  it("preserves a leading QRS-shaped observation", () => {
+    const f = withLeadingContour(fixture(), { qrsLike: true });
+    expect(rejectRepeatedTerminalWaves(f.samples, f.all, f.retained)).toEqual([
+      f.leading,
+      ...f.qrs,
+    ]);
+  });
+  it("preserves an opposite-polarity leading observation", () => {
+    const f = withLeadingContour(fixture(), { sign: -1 });
+    expect(rejectRepeatedTerminalWaves(f.samples, f.all, f.retained)).toEqual([
+      f.leading,
+      ...f.qrs,
+    ]);
+  });
+  it("does not use later timing to relabel same-shaped QRS as terminal waves", () => {
+    const f = withLeadingContour(fixture({ sameShape: true }));
+    expect(rejectRepeatedTerminalWaves(f.samples, f.all, f.retained)).toEqual(
+      f.retained,
+    );
+  });
+});

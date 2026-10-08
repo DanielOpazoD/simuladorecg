@@ -14,13 +14,16 @@ it('preserves both frozen ST/QT migrations and separately evaluates the current 
  expect(prior).not.toContain('"$RUNNER_TEMP/noise-stress/after/noise-results.json"');
  expect(s).toContain('git worktree add --detach "$RUNNER_TEMP/noise-identity-before" 179a128bf70509b0f1c85fa2a6a9ba7cfa4f478b');
  const strict=s.split('\n').filter(l=>l.includes('node scripts/check-released-noise.mjs')&&l.includes('--strict-released'));
- expect(strict).toHaveLength(2);
+ expect(strict).toHaveLength(3);
  expect(strict[0]).toContain('\"$RUNNER_TEMP/noise-stress/identity-before/noise-results.json\"');
  expect(strict[0]).toContain('\"$RUNNER_TEMP/noise-stress/identity-release/noise-results.json\"');
  expect(strict[0]).not.toContain('\"$RUNNER_TEMP/noise-stress/after/noise-results.json\"');
  expect(s).toContain('8f31167d3f7d0314ca6b1851efdeaffe6d3a551f');
- const current=strict[1];
- expect(current).toContain('"$RUNNER_TEMP/noise-stress/identity-release/noise-results.json"');
+ expect(strict[1]).toContain('"$RUNNER_TEMP/noise-stress/identity-release/noise-results.json"');
+ expect(strict[1]).toContain('"$RUNNER_TEMP/noise-stress/wave-release/noise-results.json"');
+ expect(s).toContain('git worktree add --detach "$RUNNER_TEMP/noise-wave-release" e588cddbe54479d8157246cb784a6415bccde46f');
+ const current=strict[2];
+ expect(current).toContain('"$RUNNER_TEMP/noise-stress/wave-release/noise-results.json"');
  expect(current).toContain('"$RUNNER_TEMP/noise-stress/after/noise-results.json"');
  expect(s).toContain('d208370f883b9f1d3a22c34db62d97daacb279c6');
 });
@@ -37,7 +40,7 @@ it('replays frozen terminal science without changing its protocol and checks cur
 
 it('pins the current strict noise comparator to the same published source as its workflow',()=>{
  const checker=readFileSync('scripts/check-released-noise.mjs','utf8');
- expect(checker).toContain("strictReleased?'8f31167d3f7d0314ca6b1851efdeaffe6d3a551f'");
- expect(checker).toContain("strict against immutable PR153; no migration waiver");
+ expect(checker).toContain("strictReleased?'e588cddbe54479d8157246cb784a6415bccde46f'");
+ expect(checker).toContain("strict against immutable PR154; no migration waiver");
  expect(checker).toContain("assert.equal(strict.status,'pass'");
 });

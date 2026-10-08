@@ -57,3 +57,9 @@ A narrower terminal-search-only experiment preserved QRS and rate results in 272
 Further independent NeuroKit2 0.2.13 development comparisons retained every lead and method (neurokit, Pan–Tompkins, Hamilton, Engzee). Each introduced failures among diagnostic defaults. A subsequent exposed experiment with a 180 ms delay and a four-lead norm was also rejected as a replacement. No new runtime dependency was added.
 
 A separate sample-domain bandwidth prototype removed some amplitude-driven false P/T detections but lost three genuine PVC activations in each of two recordings. Its apparently corrected average HR therefore failed the prior identity criterion and was rejected. Work now examines the complete observed deflection rather than treating a short leading slope as the whole complex. No thresholds or test tolerances were relaxed to accept any of these variants.
+
+## Released progress and next acceptance
+
+PR154 (`e588cddbe54479d8157246cb784a6415bccde46f`) passed all 21 pre- and post-merge checks. Its recurrent-wave correction resolved ten numerical configurations; eight additional wrong rates moved to review and were not counted as corrections. The frozen original ledger remains unchanged.
+
+The next integrated observation/support repair is specified in `docs/observed-weak-qrs-contract.md`. It addresses weak QRS maxima suppressed by preceding waves, consistent ownership of their complete support, and leading terminal contours. Its completed local evidence is distinct from final CI acceptance; no whole-engine closeout is claimed here.

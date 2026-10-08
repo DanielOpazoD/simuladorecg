@@ -15,7 +15,7 @@ concurrency:
 jobs:
   noise:
     runs-on: ubuntu-latest
-    # Includes the additional immutable PR153 replay; all per-test and numerical gates are unchanged.
+    # Includes immutable release replays; all per-test and numerical gates are unchanged.
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
@@ -38,6 +38,8 @@ jobs:
           (cd "$RUNNER_TEMP/noise-identity-before" && npm ci)
           git worktree add --detach "$RUNNER_TEMP/noise-identity-release" 8f31167d3f7d0314ca6b1851efdeaffe6d3a551f
           (cd "$RUNNER_TEMP/noise-identity-release" && npm ci)
+          git worktree add --detach "$RUNNER_TEMP/noise-wave-release" e588cddbe54479d8157246cb784a6415bccde46f
+          (cd "$RUNNER_TEMP/noise-wave-release" && npm ci)
       - name: Discriminative reader, calibration, morphology and abstention tests
         run: |
           (cd "$RUNNER_TEMP/noise-acquisition" && python -m unittest discover -s tests -p test_noise_stress.py -v)
@@ -88,8 +90,13 @@ jobs:
           cd "$RUNNER_TEMP/noise-identity-release"
           node scripts/benchmark-noise-stress.mjs "$RUNNER_TEMP/noise-stress/identity-release" --noise-dir "$RUNNER_TEMP/noise-stress" --analyzer worker
           node scripts/check-released-noise.mjs "$RUNNER_TEMP/noise-stress/identity-before/noise-results.json" "$RUNNER_TEMP/noise-stress/identity-release/noise-results.json" "$RUNNER_TEMP/noise-stress/ventricular-identity-transition.json" --strict-released
-      - name: Strict current numerical comparison with immutable PR153
-        run: node scripts/check-released-noise.mjs "$RUNNER_TEMP/noise-stress/identity-release/noise-results.json" "$RUNNER_TEMP/noise-stress/after/noise-results.json" "$RUNNER_TEMP/noise-stress/acceptance-results.json" --strict-released
+      - name: Preserve the immutable PR153 to PR154 recurrent-wave transition
+        run: |
+          cd "$RUNNER_TEMP/noise-wave-release"
+          node scripts/benchmark-noise-stress.mjs "$RUNNER_TEMP/noise-stress/wave-release" --noise-dir "$RUNNER_TEMP/noise-stress" --analyzer worker
+          node scripts/check-released-noise.mjs "$RUNNER_TEMP/noise-stress/identity-release/noise-results.json" "$RUNNER_TEMP/noise-stress/wave-release/noise-results.json" "$RUNNER_TEMP/noise-stress/recurrent-wave-transition.json" --strict-released
+      - name: Strict current numerical comparison with immutable PR154
+        run: node scripts/check-released-noise.mjs "$RUNNER_TEMP/noise-stress/wave-release/noise-results.json" "$RUNNER_TEMP/noise-stress/after/noise-results.json" "$RUNNER_TEMP/noise-stress/acceptance-results.json" --strict-released
       - name: Characterize the full WPW source change under the same exposed noise windows
         run: |
           node scripts/benchmark-noise-stress.mjs "$RUNNER_TEMP/noise-stress/wpw-before" --noise-dir "$RUNNER_TEMP/noise-stress" --source-root "$RUNNER_TEMP/noise-qt-release" --analyzer worker --supplement-preset wpw

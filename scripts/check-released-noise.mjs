@@ -1,4 +1,4 @@
-/** Current strict product comparison uses the immutable PR153 release, while
+/** Current strict product comparison uses the immutable PR154 release, while
  * historical ST/QT migrations are reproduced separately from immutable sources. */
 import assert from 'node:assert/strict';
 import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
@@ -12,7 +12,7 @@ const strictReleased=mode==='--strict-released';
 const hash=x=>createHash('sha256').update(x).digest('hex');
 const a=readFileSync(beforeFile),b=readFileSync(afterFile),before=JSON.parse(a),after=JSON.parse(b);
 const policy=JSON.parse(readFileSync('benchmarks/noise-stress/acceptance.json'));
-assert.equal(before.sourceCommit,strictReleased?'8f31167d3f7d0314ca6b1851efdeaffe6d3a551f':'d208370f883b9f1d3a22c34db62d97daacb279c6','Wrong published predecessor');
+assert.equal(before.sourceCommit,strictReleased?'e588cddbe54479d8157246cb784a6415bccde46f':'d208370f883b9f1d3a22c34db62d97daacb279c6','Wrong published predecessor');
 assert.equal(before.noiseProtocolSha256,policy.noiseProtocolSha256);
 assert.equal(hash(readFileSync('benchmarks/noise-stress/protocol.json')),policy.noiseProtocolSha256);
 assert.deepEqual(before.protocol,JSON.parse(readFileSync('benchmarks/noise-stress/protocol.json')));
@@ -24,7 +24,7 @@ let report={...strict,reportSha256:{before:hash(a),after:hash(b)}};
 try{
  if(strictReleased){
   assert.equal(strict.status,'pass','Current numerical revision must pass every unchanged strict noise gate');
-  report={...report,strictStatus:strict.status,status:'pass',comparison:'strict against immutable PR153; no migration waiver'};
+  report={...report,strictStatus:strict.status,status:'pass',comparison:'strict against immutable PR154; no migration waiver'};
  }else{
   const review=reviewRepeatedTerminalTransition(before,after,strict);
   report={...report,strictStatus:strict.status,status:'pass',reviewedConfidenceConsequence:review};
