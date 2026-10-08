@@ -13,7 +13,7 @@ import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 import {matchQrsEvents} from '../tests/reference/ludb/load-ludb.mjs';
 import {QRS_T_REVISION,assertReviewedQrsTFile} from './lib/qrs-t-revision.mjs';
-const baselineCommit='89baa207e2676cedb25bf108c6dac4d00208a16d';
+const baselineCommit='179a128bf70509b0f1c85fa2a6a9ba7cfa4f478b';
 const output=process.argv[2];assert.ok(output,'Usage: validate-qrs-t-discrimination.mjs OUTPUT');
 const temp=await mkdtemp(path.join(tmpdir(),'qrs-t-pair-'));
 try{
@@ -65,6 +65,14 @@ try{
  for(const preset of model.PRESETS.filter(p=>p.strategy!=='pending'))for(const filter of ['off','diagnostic','monitor','aggressive'])evaluate('catalog-default',preset.id,{filter,variability:model.fromPreset(preset).variability});
  for(const id of ['sinus','lbbb','wpw','pvc','vt'])for(const qrsAmp of [.1,.5,1])for(const tAmp of [0,.28,.8])for(const hr of [60,120])for(const filter of ['off','diagnostic'])evaluate('amplitude-transfer',id,{qrsAmp,tAmp,hr,filter,noise:0,seed:53});
  for(const id of ['lbbb','rbbb','vt'])for(const hr of [190,210,230,250,270])for(const qrs of [150,180,210,230])for(const noise of [0,.03])for(const seed of [19,71])for(const filter of ['off','diagnostic'])evaluate('refractory-transfer',id,{hr,qrs,qtc:350,noise,seed,filter});
+ // This 104-case registration failed on its first candidate (two newly usable
+ // wrong QTs). Preserve that result; the current rerun is now exposed regression.
+ const identityProtocol=JSON.parse(await readFile('docs/ventricular-identity-transfer-protocol.json'));
+ const identityFirst=JSON.parse(await readFile('docs/ventricular-identity-transfer-first-evaluation.json'));
+ assert.equal(identityProtocol.cases.length,104);
+ assert.equal(identityFirst.summary.cases,104);assert.equal(identityFirst.summary.newWrongQtCases,2);
+ for(const [file,sha]of Object.entries(identityProtocol.algorithmSha256))assert.equal(identityFirst.sourceHashes.after[file],sha);
+ for(const row of identityProtocol.cases)evaluate(row.label,row.id,row.changes);
  const valid=rows.filter(r=>!r.unsupported),bad=(m,r)=>m.status==='usable'&&r.referenceHR!==null&&(m.hr===null||Math.abs(m.hr-r.referenceHR)>5);
  const newFalseQrs=valid.filter(r=>r.after.fp>r.before.fp);
  const phaseLost=valid.filter(r=>r.after.phaseFn>r.before.phaseFn);
@@ -75,6 +83,6 @@ try{
  const qualityRevision={...OPPOSED_CYCLE_REVISION,...qualityCounterfactual,numericallyIdentical:valid.length,usableBefore:valid.filter(r=>r.qualityBefore.status==='usable').length,usableAfter:summary.usableAfter,
   falseUsableBefore:valid.filter(r=>bad(r.qualityBefore,r)).length,falseUsableAfter:summary.falseUsableAfter,
   accurateNewReviews:valid.filter(r=>r.qualityBefore.status==='usable'&&r.after.status==='review'&&!bad(r.qualityBefore,r)).length};
- await mkdir(path.dirname(path.resolve(output)),{recursive:true});await writeFile(output,JSON.stringify({baselineCommit,candidateCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),sourceHashes,modelSourceHashes,candidateTreeDirty:execFileSync('git',['status','--porcelain','--untracked-files=no'],{encoding:'utf8'}).trim()!=='',qualityRevision,clinicalValidation:false,scope:'Paired against released PR121 on the original 1712 cases plus 180 amplitude transfer and 480 additional rapid-morphology transfer cases. References stay in the evaluator. Exposed deterministic regression, not independent clinical validation. Existing review screens: 5 bpm HR, 20 ms QRS, 30 ms QT; -10/+30 ms QRS-support identity.',summary,rows,newFalseQrs,newlyFalse,lost,phaseLost,failedKnown,newWrongQrs,newWrongQt},null,2)+'\n');
- console.log(JSON.stringify({summary,qualityRevision:{numericallyIdentical:qualityRevision.numericallyIdentical,accurateNewReviews:qualityRevision.accurateNewReviews}}));assert.equal(newFalseQrs.length,0,'New extra ventricular detections');assert.equal(newWrongQrs.length,0,'New usable QRS errors beyond existing 20 ms review flag');assert.equal(newWrongQt.length,0,'New usable QT errors beyond existing 30 ms review flag');assert.equal(rows.length,2372);assert.equal(rows.filter(r=>r.label==='refractory-transfer').length,480);assert.equal(known.length,12,'All known examples must actually execute');assert.equal(failedKnown.length,0);assert.equal(newlyFalse.length,0,'New confidently incorrect rate');assert.equal(lost.length,0,'New missed ventricular activations');assert.equal(phaseLost.length,0,'New missed actual QRS support using the existing -10/+30 ms analytic identity contract');
+ await mkdir(path.dirname(path.resolve(output)),{recursive:true});await writeFile(output,JSON.stringify({baselineCommit,candidateCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),sourceHashes,modelSourceHashes,candidateTreeDirty:execFileSync('git',['status','--porcelain','--untracked-files=no'],{encoding:'utf8'}).trim()!=='',qualityRevision,clinicalValidation:false,scope:'Paired against released PR152 on the original 1712 cases plus 180 amplitude transfer, 480 rapid-morphology transfer cases and 104 now-exposed identity-transfer cases. The initial registered identity candidate failed two QT rows and is preserved separately. References stay in the evaluator. Exposed deterministic regression, not independent clinical validation. Existing review screens: 5 bpm HR, 20 ms QRS, 30 ms QT; -10/+30 ms QRS-support identity.',summary,rows,newFalseQrs,newlyFalse,lost,phaseLost,failedKnown,newWrongQrs,newWrongQt},null,2)+'\n');
+ console.log(JSON.stringify({summary,qualityRevision:{numericallyIdentical:qualityRevision.numericallyIdentical,accurateNewReviews:qualityRevision.accurateNewReviews}}));assert.equal(newFalseQrs.length,0,'New extra ventricular detections');assert.equal(newWrongQrs.length,0,'New usable QRS errors beyond existing 20 ms review flag');assert.equal(newWrongQt.length,0,'New usable QT errors beyond existing 30 ms review flag');assert.equal(rows.length,2476);assert.equal(rows.filter(r=>r.label==='identity-transfer').length,104);assert.equal(rows.filter(r=>r.label==='refractory-transfer').length,480);assert.equal(known.length,12,'All known examples must actually execute');assert.equal(failedKnown.length,0);assert.equal(newlyFalse.length,0,'New confidently incorrect rate');assert.equal(lost.length,0,'New missed ventricular activations');assert.equal(phaseLost.length,0,'New missed actual QRS support using the existing -10/+30 ms analytic identity contract');
 }finally{await rm(temp,{recursive:true,force:true});}
