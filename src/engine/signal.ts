@@ -323,6 +323,11 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
     duration,
     leads: output,
     events: visible,
+    // Keep the original visible calendar and truth unchanged. The leading tail
+    // was generated during warm-up and is physically present in output samples.
+    leadingQrs: events.beats
+      .filter((b) => b.time < WARM && b.time + (b.qrs ?? 0) > WARM)
+      .map((b) => ({ ...b, time: b.time - WARM })),
     truth: {
       hr: bs.length > 1 ? 60 / meanRR : 0,
       pr: hasPR && c.av !== "mobitz1" ? c.pr : null,

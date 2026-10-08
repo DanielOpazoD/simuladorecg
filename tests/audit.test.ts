@@ -147,3 +147,45 @@ describe("actual QRS ownership precedes uncertainty padding", () => {
     expect(raw).toEqual(frozen);
   });
 });
+
+describe("recording-origin QRS provenance", () => {
+  it("retains the generated clipped leading QRS without moving visible events or inventing a beat", () => {
+    const c = {
+      ...fromPreset(presetById("vt")!),
+      hr: 240,
+      qrs: 240,
+      qtc: 350,
+      variability: 0,
+      seed: 53,
+      filter: "diagnostic" as const,
+    };
+    c.artifacts = { ...c.artifacts, baseline: 0, muscle: 0, mains: 0 };
+    const signal = synthesize(c, 10),
+      raw = measure(signal),
+      frozen = structuredClone(raw);
+    expect(signal.events.beats[0].time).toBeCloseTo(0.2, 12);
+    expect(signal.leadingQrs).toHaveLength(1);
+    expect(signal.leadingQrs![0].time).toBeCloseTo(-0.05, 12);
+    expect(signal.leadingQrs![0].qrs).toBe(0.24);
+    const audited = auditMeasurement(signal, raw);
+    expect(audited.hr).toBe(raw.hr);
+    expect(Math.abs(audited.hr! - 240)).toBeLessThan(1);
+    expect(audited.qrs).toBeNull();
+    expect(raw).toEqual(frozen);
+    const without = structuredClone(signal);
+    delete without.leadingQrs;
+    expect(auditMeasurement(without, raw).hr).toBeNull();
+  });
+  it("does not manufacture leading QRS provenance when only repolarization crosses the origin", () => {
+    const signal = synthesize(
+      { ...fromPreset(presetById("sinus")!), hr: 60, variability: 0 },
+      10,
+    );
+    expect(signal.leadingQrs).toHaveLength(0);
+    for (const b of signal.leadingQrs ?? []) {
+      expect(b.time).toBeLessThan(0);
+      expect(b.time + b.qrs!).toBeGreaterThan(0);
+    }
+    expect(signal.events.beats.every((b) => b.time >= 0)).toBe(true);
+  });
+});

@@ -33,7 +33,7 @@ export function referenceInWindow(
 
 /** Compare the population actually measured; the detector never receives this data. */
 export function referenceForMeasurement(signal: Signal, m: Measurement) {
-  const source = signal.events.beats.filter(
+  const source = [...(signal.leadingQrs ?? []), ...signal.events.beats].filter(
     (b) => b.time < m.window.end && b.time + (b.qrs ?? 0) >= m.window.start,
   );
   const used = new Set<Beat>();

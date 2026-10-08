@@ -14,7 +14,7 @@ function check(text,version=pkg.devDependencies.playwright){
   expect(body).toContain('run: npm ci');
   expect(body).toContain('run: node scripts/verify-browser-runtime.mjs');
   expect(body).not.toMatch(/npm install|playwright install|continue-on-error|--privileged|--ipc=host|--network=host/);
-  expect(body).toContain('timeout-minutes: 15');
+  expect(body).toContain(`timeout-minutes: ${name==='verify-core'?25:15}`);
  }
 }
 it('uses the exact lockfile browser version and preinstalled binaries on both browser jobs',()=>{

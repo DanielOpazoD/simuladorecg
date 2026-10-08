@@ -91,3 +91,14 @@ describe('A/B comparison copies existing samples without another model or detect
     assert.deepEqual(JSON.parse(JSON.stringify(x)).B.leads,b.signal.leads && Object.fromEntries(LEADS.map(l=>[l,Array.from(b.signal.leads[l])])));
   });
 });
+
+
+it('copies and exports clipped leading-QRS provenance without treating it as a visible beat',()=>{
+ const x=input();x.s.leadingQrs=[{time:-.05,qrs:.24,qt:.36,kind:'ventricular',rr:.25}];
+ const a=captureTrace(x.c,x.s,x.m),saved=structuredClone(x.s.leadingQrs);
+ x.s.leadingQrs[0].time=-9;
+ assert.deepEqual(a.signal.leadingQrs,saved);
+ assert.equal(a.signal.events.beats.length,2);
+ const out=comparisonExport(a,a,DEFAULT_COMPARISON_VIEW,'test');
+ assert.deepEqual(out.A.leadingQrs,saved);assert.deepEqual(out.B.leadingQrs,saved);
+});

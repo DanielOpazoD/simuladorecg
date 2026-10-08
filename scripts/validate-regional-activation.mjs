@@ -1,3 +1,4 @@
+import {predictLeadingQrs} from './lib/leading-qrs-prediction.mjs';
 import {predictWpwRepolarization} from './lib/wpw-repolarization-prediction.mjs';
 import {predictSecondaryST} from './lib/secondary-st-prediction.mjs';
 import {predictLpfbSource} from './lib/lpfb-source-prediction.mjs';
@@ -33,19 +34,20 @@ try {
   const qtFile=path.join(base,'src/engine/repolarization.ts');
   await writeFile(qtFile,predictQTInitialization(await readFile(qtFile,'utf8')));
   const signalFile=path.join(base,'src/engine/signal.ts');
-  await writeFile(signalFile,predictWpwSupport(predictTorsadesFrame(await readFile(signalFile,'utf8'))));
+  await writeFile(signalFile,predictLeadingQrs(predictWpwSupport(predictTorsadesFrame(await readFile(signalFile,'utf8')))));
   const rhythmFile=path.join(base,'src/engine/rhythm.ts');
   await writeFile(rhythmFile,predictAfClock(await readFile(rhythmFile,'utf8')));
   const morphologyFile=path.join(base,'src/engine/morphology.ts');
   await writeFile(morphologyFile,predictLpfbSource(await readFile(morphologyFile,'utf8')));
   await predictSecondaryST(base);
   await predictWpwRepolarization(base);
-  const referencePreparation='PR55 with independent QT initialization plus torsades-frame, compact WPW support and representative AF-clock, LPFB, secondary-ST and complete WPW repolarization source predictions; unrelated defaults remain exact';
+  const referencePreparation='PR55 with independent QT initialization plus torsades-frame, compact WPW support and representative AF-clock, LPFB, secondary-ST and complete WPW repolarization source predictions, plus additive clipped-QRS provenance; unrelated defaults remain exact';
   const before=await load(base,'before'),after=await load(process.cwd(),'after'),defaults=[];
   assertTeachingCatalogRevision(before.PRESETS,after.PRESETS);
   for(const p of before.PRESETS.filter(p=>p.strategy!=='pending'))for(const filter of ['off','diagnostic','monitor','aggressive']){
     const c={...before.fromPreset(p),filter};
     const a=before.synthesize(c,10),b=after.synthesize(c,10);
+    assert.deepEqual(b.leadingQrs,a.leadingQrs,'Clipped QRS provenance must match the frozen warm-up calendar');
     if(c.rhythm==='torsades') assertTraceContract(a,b,`${p.id}/${filter}: independently predicted T frame`,1e-12);
     else assertExactSignal(a,b,`${p.id}/${filter}: legacy samples, events, truth and warnings must remain exact`);
     defaults.push({preset:p.id,filter,exact:c.conduction!=='wpw'&&c.rhythm!=='torsades'&&c.rhythm!=='af',predictedWpwSupport:c.conduction==='wpw',predictedWpwRepolarization:c.conduction==='wpw',predictedAfClock:c.rhythm==='af',predictedTorsadesFrame:c.rhythm==='torsades'});
