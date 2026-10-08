@@ -10,7 +10,7 @@ import {readFileSync} from 'node:fs';
 export const QRS_T_REVISION=Object.freeze({
  baselineCommit:'ca2aa852d2fe5c6affdfdc31db2b9160211944f9',
  evaluationBaselineCommit:'63f32b03921158337052e7068abcb6e72ec72f79',
- iteration:'direction-invariant-covariance-v3-terminal-consensus-v1-complete-complex-windows-v1-refractory-selection-v1-ventricular-identity-v1',
+ iteration:'direction-invariant-covariance-v3-terminal-consensus-v1-complete-complex-windows-v1-refractory-selection-v1-ventricular-identity-v1-recurrent-wave-identity-v1',
  files:Object.freeze({
   'src/engine/analysis/statistics.ts':Object.freeze({before:'c8c20531ca3eb5483529d426357360ac1381ac934a3c3ef3d5d3cd21023e5a4b',after:'bdc0b500a3a3883df095054ca9a8298b4c8ea7df7bb336fea01cf266d875e8a6'}),
   'src/engine/analysis/impulses.ts':Object.freeze({before:'362814239fb6dcae06025cb065c6f6dfef08bb5341cabaef01c58d8227222cb1',after:'4ed73f13c6b8dc7460c34b9dd37ad5c5561511ea0f6585d30c6b1585ea14ebe2'}),
@@ -21,8 +21,8 @@ export const QRS_T_REVISION=Object.freeze({
   // exact predecessors too; see docs/frontal-projection-contract.md for paired evidence.
   'src/engine/leads.ts':Object.freeze({before:'d67c47738647a8aa47f98f01de045ab7381a842007c7d5fa3562f570dc711c16',after:'ab4a73f2345e133cbbe80757d08c1c64f4c54894f1ca521b82eff7041d386706'}),
   'src/engine/lead-registry.ts':Object.freeze({before:'21b9ad7996fc2813156e51d87488f48fae52085ea6935091396e7226589367d3',after:'7f4fe698cd38931a47d41b99e005ca30f642b05553e4137869bda5f99a8990e3'}),
-  'src/engine/measure.ts':Object.freeze({before:'ceaeef83b459bbb114dc8a9457af7d43d804c14a8cb8107fc2b250faf391d61e',after:'3cecac4689a10987120934ba8e8812a0d8d385f77248033b7c6fea2d7fbf943f'}),
-  'src/engine/analysis/ventricular-candidates.ts':Object.freeze({before:'0c7d0abb1834fd9407ca9fdd85c735b7794bcaf933d911f13222039ab4c0bec4',after:'3a95c555cf19bf9e0200b100470e63a13a9f8704b3add7b790d4d76fe2d11c64'}),
+  'src/engine/measure.ts':Object.freeze({before:'ceaeef83b459bbb114dc8a9457af7d43d804c14a8cb8107fc2b250faf391d61e',after:'bad7d132c8e9c272a7823a3af29cfede365af7e35fad7259748749a0e65a4023'}),
+  'src/engine/analysis/ventricular-candidates.ts':Object.freeze({before:'0c7d0abb1834fd9407ca9fdd85c735b7794bcaf933d911f13222039ab4c0bec4',after:'4c81864f7305d67a58b549be247c9fc2665be4be6a97532aba77ea659136713b'}),
  }),
 });
 export const TERMINAL_SOURCE_REVISION=Object.freeze({'src/engine/terminal-delineation.ts':'5b8f04b5d57a333cdeb4f1b1cd381f8bbc417584a75ba740bfa27543edff8c70'});

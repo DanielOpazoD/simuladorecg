@@ -15,7 +15,8 @@ for(const name of ['hr-quality','noise-stress'])it(`${name} reuses raw authentic
   expect(workflow).toContain('3c10eacd5fa4382d232c368777bd9d5f3b7f3475');
   expect(workflow).toContain('node scripts/check-secondary-st-transition.mjs');
   expect(workflow).toContain('node scripts/check-noise-regression.mjs');
-  expect(workflow).toContain('timeout-minutes: 15');
+  // The extra immutable PR153 replay has its own cost; numerical gates stay strict.
+  expect(workflow).toContain('timeout-minutes: 20');
  }else{
   expect(workflow).toContain('replication-results.json');
   expect(workflow).toContain('known-results.json');

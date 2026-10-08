@@ -86,6 +86,20 @@ for(const engine of [chromium,firefox,webkit]){
     assert.notEqual(m.evidence.qt.status,'usable');
     if(m.qt!==null){const qts=result.B.events.beats.map(b=>b.qt*1000).sort((a,b)=>a-b);assert.ok(Math.abs(m.qt-qts[Math.floor(qts.length/2)])<=30);}
    }
+   // Recurrent P/T dominance must be corrected through the actual importer,
+   // worker, model audit, comparison, export and exact roundtrip.
+   for(const [id,qrsAmp,tAmp,hr] of [
+    ['sinus',.1,0,120],['sinus',.5,.8,120],['lbbb',.1,0,60],['lbbb',.1,0,120],['pvc',.1,0,120],
+   ]){
+    await chooseCatalogPreset(page,id);await ready();
+    const base=await exported(`recurrent-base-${id}-${qrsAmp}-${tAmp}-${hr}`);
+    const result=await verifyIdentity({...base.B.case,hr,qrsAmp,tAmp,filter:'diagnostic',variability:0,seed:53,
+     artifacts:{...base.B.case.artifacts,baseline:0,muscle:0,mains:0}},`recurrent-${id}-${qrsAmp}-${tAmp}-${hr}`);
+    assert.equal(result.B.case.qrsAmp,qrsAmp);assert.equal(result.B.case.tAmp,tAmp);
+    assert.equal(result.B.case.filter,'diagnostic');
+    assert.deepEqual(result.A.leads,original.A.leads,'Reference A remains immutable during identity repair');
+    if(tAmp===0)assert.equal(result.B.measurement.qt,null,'Absent T cannot acquire a fabricated QT');
+   }
    const restored=await imported(original.B.case,'restored');assert.deepEqual(restored.B.leads,original.B.leads);
    assert.deepEqual(restored.B.measurement,original.B.measurement);assert.deepEqual(errors,[]);
   }catch(error){await page.screenshot({path:resolve(out,tag+'-failure.png'),fullPage:true}).catch(()=>{});await writeFile(resolve(out,tag+'-failure.json'),JSON.stringify({error:String(error.stack),errors},null,2));throw error;}

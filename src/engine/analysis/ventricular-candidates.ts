@@ -1,5 +1,14 @@
 import type { Signal } from "../types";
 type Samples = Pick<Signal, "fs" | "leads">;
+/** One accepted ventricular observation, in sample coordinates. Support points
+ * are observed slopes of this complex, not extra activations or true boundaries. */
+export interface VentricularComplexObservation {
+  readonly marker: number;
+  readonly support: readonly number[];
+  readonly recovered: boolean;
+  readonly refractoryRestored: boolean;
+}
+
 /** Ventricular candidate detector — sample-domain detector only. No events, case, labels, truth, or audit input.
  * Internal constants are conservative engineering parameters, not clinical validation limits.
  * Return peaks are sample indices. Detection energy is NOT a calibrated onset/offset signal.
@@ -731,6 +740,36 @@ export function detectVentricularCandidates(
       candidates[k] = next;
     }
   }
+  // Development prototype: temporal bandwidth is normalized by the observed
+  // deflection energy, so a larger atrial/repolarization wave cannot win by
+  // amplitude alone. Constants are exposed engineering choices, not validation.
+  const bandwidthCache = new Map<number, number>();
+  const bandwidth = (at: number) => {
+    const cached = bandwidthCache.get(at);
+    if (cached !== undefined) return cached;
+    const h = Math.max(1, Math.round(0.004 * fs));
+    const radius = Math.round(0.08 * fs);
+    let first = 0,
+      third = 0;
+    for (
+      let j = Math.max(2 * h, at - radius);
+      j < Math.min(n - 2 * h, at + radius);
+      j++
+    ) {
+      for (const lead of names) {
+        const row = leads[lead];
+        const v = row[j + h] - row[j - h];
+        const t =
+          row[j + 2 * h] - 2 * row[j + h] + 2 * row[j - h] - row[j - 2 * h];
+        first += v * v;
+        third += t * t;
+      }
+    }
+    const result = first > 0 ? Math.sqrt(third / first) : Infinity;
+    bandwidthCache.set(at, result);
+    return result;
+  };
+
   const high = quant(
     candidates.map((i) => selectionStrength.get(i) ?? energy[i]),
     0.8,
@@ -821,6 +860,51 @@ export function detectVentricularCandidates(
   }
   if ((peaks.at(-1) ?? 0) > n - 0.18 * fs) peaks.pop();
   const boundaryCandidates = peaks;
+  let waveformRejected = new Set<number>();
+  // Classification changes activation identity, not the observed geometric
+  // landmarks already used to delineate QRS. Keep that evidence immutable.
+  if (tReject) {
+    const recurrentCache = new Map<number, boolean>();
+    const recurrent = (at: number) => {
+      if (recurrentCache.has(at)) return recurrentCache.get(at)!;
+      const result =
+        peaks.filter(
+          (other) =>
+            Math.abs(other - at) > 0.4 * fs &&
+            recoverySimilarity(at, other) >= 0.9,
+        ).length >= 3;
+      recurrentCache.set(at, result);
+      return result;
+    };
+    const completeBandwidth = (at: number) =>
+      Math.max(...(components.get(at) ?? [at]).map(bandwidth));
+    const completeRank = (at: number) =>
+      Math.max(...complexShapes(s, at).map((observation) => observation.rank));
+    waveformRejected = new Set(
+      peaks.filter(
+        (at) =>
+          completeBandwidth(at) < 0.18 &&
+          recurrent(at) &&
+          peaks.some(
+            (other) =>
+              Math.abs(other - at) > 0.08 * fs &&
+              Math.abs(other - at) < 0.4 * fs &&
+              recoverySimilarity(at, other) < 0.9 &&
+              recurrent(other) &&
+              ((completeRank(at) < 0.01 &&
+                (completeBandwidth(other) > 0.25 ||
+                  (completeRank(other) > 0.01 &&
+                    completeRank(at) < 0.1 * completeRank(other)))) ||
+                (components.get(other) ?? [other]).some(
+                  (component) =>
+                    completeRank(at) > 5 * shape(s, component).rank &&
+                    completeBandwidth(at) < 0.6 * bandwidth(component),
+                )),
+          ),
+      ),
+    );
+  }
+
   const mergedComponents = new Map<number, number[]>();
   const ensembleDisambiguated = new Set<number>();
   if (tReject) {
@@ -1064,7 +1148,27 @@ export function detectVentricularCandidates(
       if (first !== undefined) mergedComponents.set(marker, [first, marker]);
     }
   }
+  // Evaluate exclusions on the immutable observed population. Apply them only
+  // after the existing support and template stages have finished, so removing a
+  // wave cannot change another candidate's classification context.
+  if (waveformRejected.size)
+    peaks = peaks.filter(
+      (marker) =>
+        !waveformRejected.has(marker) ||
+        (mergedComponents.get(marker) ?? [marker]).some(
+          (component) => bandwidth(component) >= 0.18,
+        ),
+    );
+  const complexes: VentricularComplexObservation[] = peaks.map((marker) => ({
+    marker,
+    support: [...new Set(mergedComponents.get(marker) ?? [marker])].sort(
+      (a, b) => a - b,
+    ),
+    recovered: recovered.has(marker),
+    refractoryRestored: restoredByRefractorySelection.has(marker),
+  }));
   return {
+    complexes,
     peaks,
     boundaryCandidates,
     leads,

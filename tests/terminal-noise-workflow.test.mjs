@@ -13,8 +13,14 @@ it('preserves both frozen ST/QT migrations and separately evaluates the current 
  expect(prior).toContain('"$RUNNER_TEMP/noise-stress/identity-before/noise-results.json"');
  expect(prior).not.toContain('"$RUNNER_TEMP/noise-stress/after/noise-results.json"');
  expect(s).toContain('git worktree add --detach "$RUNNER_TEMP/noise-identity-before" 179a128bf70509b0f1c85fa2a6a9ba7cfa4f478b');
- const current=s.split('\n').find(l=>l.includes('node scripts/check-released-noise.mjs')&&l.includes('--strict-released'));
- expect(current).toContain('"$RUNNER_TEMP/noise-stress/identity-before/noise-results.json"');
+ const strict=s.split('\n').filter(l=>l.includes('node scripts/check-released-noise.mjs')&&l.includes('--strict-released'));
+ expect(strict).toHaveLength(2);
+ expect(strict[0]).toContain('\"$RUNNER_TEMP/noise-stress/identity-before/noise-results.json\"');
+ expect(strict[0]).toContain('\"$RUNNER_TEMP/noise-stress/identity-release/noise-results.json\"');
+ expect(strict[0]).not.toContain('\"$RUNNER_TEMP/noise-stress/after/noise-results.json\"');
+ expect(s).toContain('8f31167d3f7d0314ca6b1851efdeaffe6d3a551f');
+ const current=strict[1];
+ expect(current).toContain('"$RUNNER_TEMP/noise-stress/identity-release/noise-results.json"');
  expect(current).toContain('"$RUNNER_TEMP/noise-stress/after/noise-results.json"');
  expect(s).toContain('d208370f883b9f1d3a22c34db62d97daacb279c6');
 });
