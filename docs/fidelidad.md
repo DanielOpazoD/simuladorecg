@@ -129,9 +129,10 @@ Un paciente cuya curva de área no rodea el origen con margen (eje indeterminado
 ≈30 % de los sorteos) se descarta y la semilla pasa de forma determinista al
 siguiente candidato; la elección no depende del eje pedido, así que mover el eje
 rota a la misma persona. La verdad del eje se mide sobre el componente generado
-sin ruido, así que la tarjeta dice el eje que muestra el trazado (≤ 3° frente a la
-medición en las muestras). Error frente al eje pedido en 30 semillas: mediana
-1–2°; máximo 10° entre −30° y 90°, 22° en 180°/−150°. El latido conducido se une
+sin ruido, así que la tarjeta dice el eje que muestra el trazado: frente a la
+medición en las muestras (150 semillas, revisión independiente) ≤ 3° entre −90° y
+90° y ≤ 10° en ejes extremos (150°–180°). Error frente al eje pedido: mediana
+1–3°; máximo 8° entre −90° y 90°, 25° en 180°/−150° (lectura clínica ±15°). El latido conducido se une
 sin costura: el PQ termina en el nivel de inicio del QRS aprendido y la Ta se
 escala con la P. En J,
 el operador del QRS cede al de la repolarización de forma gradual (4 + 12 puntos),
