@@ -33,8 +33,14 @@ await rm(tmp, { recursive: true, force: true });
 // Población "normal" para dar al motor su mejor oportunidad: los intervalos, el eje
 // y las amplitudes recorren rangos de adultos sanos. Determinista por índice.
 function rng(seed) {
-  let s = seed >>> 0;
-  return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+  // mulberry32 sobre una semilla mezclada: semillas consecutivas no correlacionan.
+  let a = Math.imul(seed ^ 0x9e3779b9, 0x85ebca6b) >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
 }
 const preset = PRESETS.find((p) => p.id === presetId);
 if (!preset) throw new Error(`Preset desconocido: ${presetId}`);
@@ -56,7 +62,7 @@ for (let i = 0; i < n; i++) {
   const len = s.leads.I.length;
   const data = new Float32Array(len * LEADS.length);
   for (let k = 0; k < len; k++)
-    for (let j = 0; j < LEADS.length; j++) data[k * LEADS.length + j] = s.leads[LEADS[j]][k];
+    for (let j = 0; j < LEADS.length; j++) data[k * LEADS.length + j] = Math.round(s.leads[LEADS[j]][k] * 1000) / 1000; // 1 µV, como PTB-XL
   const file = `syn_${String(i).padStart(4, "0")}.f32`;
   await writeFile(path.join(outDir, file), Buffer.from(data.buffer));
   index.push({ file, fs: s.fs, samples: len, leads: LEADS, preset: presetId, params: { hr: c.hr, axis: c.axis, qrs: c.qrs } });

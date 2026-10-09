@@ -15,7 +15,7 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(__file__))
 from wfdb import read
 from features import features, group, LEADS
-from scipy.stats import ks_2samp
+from scipy.stats import ks_2samp, wasserstein_distance
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
@@ -63,29 +63,37 @@ def main():
     ap.add_argument('--label', default='')
     a = ap.parse_args()
 
-    real_rows, syn_rows = [], []
+    real_rows, syn_rows, dropped = [], [], {'real': [], 'sintetico': []}
     for rel in [l.strip() for l in open(a.real_list) if l.strip()]:
         f = features(load_real(a.real_root, rel))
-        if f:
-            real_rows.append(f)
+        (real_rows.append(f) if f else dropped['real'].append(rel))
+    n_syn = 0
     for name, x in load_synthetic(a.synthetic):
+        n_syn += 1
         f = features(x)
-        if f:
-            syn_rows.append(f)
+        (syn_rows.append(f) if f else dropped['sintetico'].append(name))
+    # Un sintético que no se puede medir no puede "desaparecer" de la muestra:
+    # por encima del 2 % el banco se niega a dar un resultado.
+    if len(dropped['sintetico']) > 0.02 * n_syn:
+        sys.exit(f"{len(dropped['sintetico'])}/{n_syn} sintéticos no medibles (> 2 %): {dropped['sintetico'][:10]}")
     keys, R = table(real_rows)
     _, S = table([{k: r.get(k, np.nan) for k in keys} for r in syn_rows])
     X = np.vstack([R, S])
     y = np.r_[np.zeros(len(R)), np.ones(len(S))]
 
-    per = []
+    per, empty = [], []
     for j, k in enumerate(keys):
         r, s = R[:, j], S[:, j]
+        if np.isnan(r).mean() > 0.1 or np.isnan(s).mean() > 0.1:
+            empty.append({'rasgo': k, 'nan_real': round(float(np.isnan(r).mean()), 3), 'nan_sint': round(float(np.isnan(s).mean()), 3)})
         r, s = r[np.isfinite(r)], s[np.isfinite(s)]
         if len(r) < 10 or len(s) < 10:
             continue
         ks = ks_2samp(r, s).statistic
+        iqr = np.subtract(*np.percentile(r, [75, 25])) or 1e-9
+        w1 = wasserstein_distance(r, s) / iqr
         pct = float((r < np.median(s)).mean() * 100)
-        per.append({'rasgo': k, 'grupo': group(k), 'ks': round(float(ks), 3),
+        per.append({'rasgo': k, 'grupo': group(k), 'ks': round(float(ks), 3), 'w1_iqr': round(float(w1), 3),
                     'real_p50': round(float(np.median(r)), 4), 'real_p05': round(float(np.percentile(r, 5)), 4),
                     'real_p95': round(float(np.percentile(r, 95)), 4), 'sint_p50': round(float(np.median(s)), 4),
                     'percentil_mediana_sint': round(pct, 1)})
@@ -102,14 +110,18 @@ def main():
         'auc_global_gb': round(gb, 3), 'auc_global_lr': round(lr, 3),
         'auc_por_grupo': groups,
         'ks_mediana_por_grupo': {g: round(float(np.median([d['ks'] for d in per if d['grupo'] == g])), 3) for g in groups},
+        # Distancia continua (Wasserstein / IQR real), útil cuando el AUC está saturado.
+        'w1_mediana_por_grupo': {g: round(float(np.median([d['w1_iqr'] for d in per if d['grupo'] == g])), 3) for g in groups},
+        'descartados': {k: len(v) for k, v in dropped.items()},
+        'rasgos_con_mas_de_10pct_nan': empty,
         'rasgos_mas_delatores': per[:25],
         'rasgos': per,
     }
     json.dump(report, open(a.out, 'w'), indent=1, ensure_ascii=False)
-    print(json.dumps({k: report[k] for k in ['etiqueta', 'n_real', 'n_sintetico', 'auc_global_gb', 'auc_global_lr', 'auc_por_grupo', 'ks_mediana_por_grupo']}, ensure_ascii=False, indent=1))
+    print(json.dumps({k: report[k] for k in ['etiqueta', 'n_real', 'n_sintetico', 'descartados', 'auc_global_gb', 'auc_global_lr', 'auc_por_grupo', 'ks_mediana_por_grupo', 'w1_mediana_por_grupo', 'rasgos_con_mas_de_10pct_nan']}, ensure_ascii=False, indent=1))
     print('Más delatores:')
     for d in per[:15]:
-        print(f"  {d['rasgo']:<22} KS {d['ks']:.2f}  real p50 {d['real_p50']:>8} [{d['real_p05']}, {d['real_p95']}]  sint p50 {d['sint_p50']:>8}")
+        print(f"  {d['rasgo']:<22} KS {d['ks']:.2f} W1 {d['w1_iqr']:.2f}  real p50 {d['real_p50']:>8} [{d['real_p05']}, {d['real_p95']}]  sint p50 {d['sint_p50']:>8}")
 
 
 if __name__ == '__main__':

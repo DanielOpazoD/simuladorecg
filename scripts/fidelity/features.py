@@ -76,8 +76,10 @@ def features(x):
     hp = _bp(x, 25, 249)
     tp = []
     for p, q in zip(pk[:-1], pk[1:]):
-        lo, hi = p + ms(480), q - ms(300)
-        if hi - lo > ms(60):
+        # Entre el final de T y el inicio de P, escalado con el RR.
+        rr = q - p
+        lo, hi = p + int(0.55 * rr), q - max(int(0.25 * rr), ms(220))
+        if hi - lo >= ms(30):
             tp.append(hp[lo:hi])
     for j, L in enumerate(LEADS):
         out[f'noise_hf_{L}'] = float(np.median([np.sqrt(np.mean(s[:, j] ** 2)) for s in tp])) * 1000 if tp else np.nan
@@ -132,10 +134,6 @@ def features(x):
     seg = env[a:a + ms(140)]
     off = a + int(np.where(seg > 0.08 * pkv)[0].max()) if (seg > 0.08 * pkv).any() else a + ms(50)
     out['g_qrs_ms'] = (off - on) * 1000 / FS
-    tm = np.sqrt((m[a + ms(120):a + ms(540), :][:, INDEP] ** 2).sum(1))
-    tk = int(np.argmax(tm))
-    tail = np.where(tm[tk:] < 0.15 * tm[tk])[0]
-    out['g_qt_ms'] = (a + ms(120) + tk + (tail[0] if len(tail) else len(tm) - tk) - on) * 1000 / FS
     # Eje frontal por área neta del QRS (I, aVF).
     ai, af = m[on:off + 1, 0].sum(), m[on:off + 1, 5].sum()
     ang = np.degrees(np.arctan2(af, ai))

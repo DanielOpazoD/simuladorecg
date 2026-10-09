@@ -3,15 +3,16 @@
 Uso: python scripts/fidelity/prepare_data.py --dest ~/datos/ecg-referencia [--medians]
 
 - PTB-XL 1.0.3 (CC BY 4.0): metadatos y la reserva de evaluación: hasta 600
-  pacientes distintos de los pliegues 9–10 con NORM=100, ritmo sinusal y sin
-  marcas de ruido, electrodos ni marcapasos. Esos pliegues NO se usan para
-  entrenar el modelo de forma.
+  pacientes adultos distintos de los pliegues 9–10, NORM=100, ritmo sinusal, sin
+  marcas de ruido, deriva, latidos extra, electrodos ni marcapasos; muestra
+  aleatoria fija. Ningún paciente aparece en más de un pliegue de PTB-XL, y los
+  pliegues 9–10 completos quedan fuera del entrenamiento del modelo de forma.
 - Con --medians: latidos medianos 12SL y rasgos de PTB-XL+ 1.0.1 (CC BY 4.0),
   usados para entrenar. Sus muestras están en µV aunque el encabezado diga mV
   (comprobado contra los registros crudos: factor 1,02 ± 0,03, r = 0,998).
 Cada archivo se verifica contra el SHA256SUMS oficial de su versión.
 """
-import argparse, ast, csv, hashlib, os, urllib.request
+import argparse, ast, csv, hashlib, os, random, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
 MIRROR = 'https://physionet-open.s3.amazonaws.com/{}/{}/{}'
@@ -63,11 +64,13 @@ def main():
     seen, hold = set(), []
     for r in rows:
         scp = ast.literal_eval(r['scp_codes'])
-        clean = all(r[k] == '' for k in ['pacemaker', 'electrodes_problems', 'burst_noise', 'static_noise'])
-        if r['strat_fold'] in ('9', '10') and scp.get('NORM', 0) >= 100 and 'SR' in scp and clean and r['patient_id'] not in seen:
+        clean = all(r[k] == '' for k in ['pacemaker', 'electrodes_problems', 'burst_noise', 'static_noise', 'baseline_drift', 'extra_beats'])
+        adult = r['age'] != '' and 18 <= float(r['age']) <= 89
+        if r['strat_fold'] in ('9', '10') and scp.get('NORM', 0) >= 100 and 'SR' in scp and clean and adult and r['patient_id'] not in seen:
             seen.add(r['patient_id'])
             hold.append(r['filename_hr'])
-    hold = hold[:600]
+    # Muestra aleatoria fija (no los primeros por ecg_id).
+    hold = sorted(random.Random(20261008).sample(hold, min(600, len(hold))))
     with open(os.path.join(dest, 'ptb-xl', 'holdout_norm600.txt'), 'w') as f:
         f.write('\n'.join(hold))
     jobs = [rel + ext for rel in hold for ext in ('.hea', '.dat')]
