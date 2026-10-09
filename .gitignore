@@ -2,3 +2,4 @@ node_modules/
 dist/
 .sites-runtime/
 *.log
+__pycache__/
