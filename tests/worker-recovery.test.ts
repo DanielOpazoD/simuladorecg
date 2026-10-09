@@ -24,8 +24,8 @@ class FakeWorker {
     this.sent.push(request);
   }
   terminate() { this.terminated = true; }
-  reply(id: number, error?: string) {
-    const data: SignalResponse = error ? { id, error } : { id, signal: { duration: id } as Signal, measurement: {} as Measurement };
+  reply(id: number, error?: string, infrastructure?: true) {
+    const data: SignalResponse = error ? { id, error, ...(infrastructure ? { infrastructure } : {}) } : { id, signal: { duration: id } as Signal, measurement: {} as Measurement };
     this.onmessage?.({ data } as MessageEvent<SignalResponse>);
   }
   crash() { this.onerror?.({ preventDefault() {} } as ErrorEvent); }
@@ -40,6 +40,18 @@ beforeEach(() => { FakeWorker.all=[]; FakeWorker.constructionFailures=0; FakeWor
 afterEach(() => { vi.clearAllTimers(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 describe('Bounded worker recovery, latest request wins', () => {
+  it('restarts the worker once when a learned model chunk fails to download', () => {
+    const {controller,result,error}=setup(), id=controller.request(cloneCase(DEFAULT_CASE)), first=current();
+    first.reply(id,'No se pudo descargar el modelo aprendido de este caso',true);
+    expect(first.terminated).toBe(true); expect(current()).not.toBe(first); expect(current().sent[0].id).toBe(id);
+    current().reply(id,'No se pudo descargar el modelo aprendido de este caso',true);
+    expect(result).not.toHaveBeenCalled(); expect(error).toHaveBeenCalledOnce();
+    expect(String(error.mock.calls[0][0])).toMatch(/modelo aprendido.*único reintento/);
+  });
+  it('does not retry a domain error', () => {
+    const {controller,error}=setup(), id=controller.request(cloneCase(DEFAULT_CASE)), first=current();
+    first.reply(id,'Fuera del alcance'); expect(first.terminated).toBe(false); expect(error).toHaveBeenCalledOnce();
+  });
   it('recreates once after an engine crash using the exact request snapshot and ID', () => {
     const {controller,result,error}=setup(), c=cloneCase(DEFAULT_CASE);
     const id=controller.request(c); c.hr=111; const original=current(); original.crash();

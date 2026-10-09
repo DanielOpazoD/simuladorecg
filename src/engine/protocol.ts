@@ -6,4 +6,4 @@ export interface SignalRequest {
 }
 export type SignalResponse =
   | { id: number; signal: Signal; measurement: Measurement }
-  | { id: number; error: string };
+  | { id: number; error: string; infrastructure?: true };

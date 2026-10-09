@@ -1,7 +1,6 @@
 import './activation.css';
 import { cloneCase, type ECGCase, type Beat } from '../engine/types';
 import { LEADS, type Lead } from '../engine/lead-registry';
-import { usesRealisticBase } from '../engine/realistic/scope';
 import { activationAt, activationCandidate, activationPair, activationOptions, activationLimitation, ACTIVATION_SCOPE, ensureLearnedModel, learnedModelReady, type ActivationPair } from './activation-model';
 import { activationCharts, activationSvg, updateActivationCursor } from '../render/activation';
 import { esc, options } from './helpers';
@@ -65,7 +64,9 @@ export class ActivationLab {
   open(): void {
     const input = this.current();
     if (!input) { this.notify('Espera a que el simulador tenga una señal válida.'); return; }
-    if (!learnedModelReady() && usesRealisticBase(input.case)) {
+    // Any alternative (BRI, HBAI…) may need a learned class model, even from a
+    // kernel case: load them all before the first render.
+    if (!learnedModelReady()) {
       void ensureLearnedModel().then(() => this.open(), () => this.notify('No se pudo cargar el modelo aprendido.'));
       return;
     }

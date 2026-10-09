@@ -77,8 +77,28 @@ export function registerShapeModel(code: ModelCode, r: RawShapeModel): void {
   if (!registry.has(code)) registry.set(code, decode(code, r));
 }
 export const hasShapeModel = (code: ModelCode) => code === "NORM" || registry.has(code);
+/** Test seam: drop the class models so a test can exercise on-demand loading. */
+export function forgetClassShapeModels(): void {
+  for (const code of [...registry.keys()]) if (code !== "NORM") registry.delete(code);
+}
+
+/** Offline scripts bundled for Node (scripts/, run from the repository root)
+ * read class models from disk. Browsers and the test runner never do: there a
+ * missing model must surface as an error, so on-demand loading stays tested. */
+function readFromDisk(code: ModelCode): RawShapeModel | null {
+  const host = (globalThis as { process?: { env?: Record<string, string | undefined>; cwd?: () => string; getBuiltinModule?: (id: string) => unknown } }).process;
+  if (!host?.getBuiltinModule || !host.cwd || host.env?.VITEST) return null;
+  const fs = host.getBuiltinModule("node:fs") as { existsSync(p: string): boolean; readFileSync(p: string, e: string): string };
+  const file = `${host.cwd()}/src/engine/realistic/models/${code}.json`;
+  return fs.existsSync(file) ? (JSON.parse(fs.readFileSync(file, "utf8")) as RawShapeModel) : null;
+}
+
 export function shapeModel(code: ModelCode = "NORM"): ShapeModel {
   if (code === "NORM" && !registry.has(code)) registerShapeModel(code, raw);
+  if (!registry.has(code)) {
+    const fromDisk = readFromDisk(code);
+    if (fromDisk) registerShapeModel(code, fromDisk);
+  }
   const m = registry.get(code);
   // Callers load class models first (ensureShapeModel); never fall back silently
   // to another population, which would change the trace without notice.

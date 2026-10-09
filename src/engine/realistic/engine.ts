@@ -9,11 +9,11 @@ import { random } from "../random";
 import { qrsAmplitudeScale, T_REFERENCE_AMPLITUDE } from "../morphology";
 import { dipoleOf, reconstruct, samplePatient, transform, type Patient } from "./shape-model";
 import { addAtrial, addVentricular, beatShapeState, beatTemplate, qrsOnsetLevel, type BeatShapeState } from "./beat";
+import { learnedSecondaryRepolarization, realisticModelFor } from "./scope";
 
 const P_REFERENCE_AMPLITUDE = 0.15;
 /** Horizontal heart rotation per unit of the transition control (degrees). */
 export const TRANSITION_DEG = 18;
-import { learnedSecondaryRepolarization, realisticModelFor } from "./scope";
 export { usesRealisticBase } from "./scope";
 
 /** Whether the case's learned T keeps the patient's own axis (not the control). */
@@ -38,8 +38,9 @@ export function realisticPatient(c: ECGCase): Patient {
       model, seed: c.seed, axis: c.axis, pAxis, tAxis,
       pScale: c.pAmp / P_REFERENCE_AMPLITUDE, qrsScale: qrsAmplitudeScale(c),
       // Secondary repolarization (bundle-branch block, LVH strain) follows the
-      // depolarization: the QRS gain also scales ST-T, so ST/QRS ratios hold.
-      tScale: (c.tAmp / T_REFERENCE_AMPLITUDE) * (learnedSecondaryRepolarization(model) ? qrsAmplitudeScale(c) : 1),
+      // depolarization: the QRS gain scales ST-T (ST/QRS ratios hold) and the T
+      // amplitude control, disabled in the interface, does not apply.
+      tScale: learnedSecondaryRepolarization(model) ? qrsAmplitudeScale(c) : c.tAmp / T_REFERENCE_AMPLITUDE,
       horizontalDeg: TRANSITION_DEG * c.transition,
     });
     if (patients.size > 64) patients.clear();

@@ -753,10 +753,12 @@ export const PRESETS: Preset[] = [
  * meet every classic normal criterion (scripts/fidelity/choose-textbook-seed.mjs):
  * presets show the textbook example; the seed control explores real variety. */
 export const TEXTBOOK_SEED = 1951;
-/** Per learned population: the patient a classifier trained only on real PTB-XL
- * ECGs finds most typical of the class among 300 seeds (docs/fidelidad.md, F3).
- * The normal population keeps the criteria-based choice above. */
-export const TEXTBOOK_SEEDS: Record<ModelCode, number> = { NORM: TEXTBOOK_SEED, CLBBB: TEXTBOOK_SEED, IRBBB: 148, LAFB: 225, LVH: 283 };
+/** Per learned population, among 300 seeds: those a classifier trained only on
+ * real PTB-XL ECGs finds most typical of the class (probability within 0.03 of
+ * the best), then the one the frozen analyzer measures closest to the programmed
+ * QRS, with a measurable QT (docs/fidelidad.md, F3). The normal population keeps
+ * the criteria-based choice above. */
+export const TEXTBOOK_SEEDS: Record<ModelCode, number> = { NORM: TEXTBOOK_SEED, CLBBB: 24, IRBBB: 34, LAFB: 225, LVH: 285 };
 
 export function fromPreset(preset: Preset, view?: ECGCase["view"]): ECGCase {
   const c = cloneCase(DEFAULT_CASE);

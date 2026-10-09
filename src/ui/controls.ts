@@ -5,11 +5,19 @@ import { regionalActivationControls } from "./regional-activation";
 import { LEADS, type ECGCase } from "../engine/types";
 import { lesionControlEffect, tVector } from "../engine/morphology";
 import { range, select, toggle } from "./helpers";
-import { usesRealisticBase } from "../engine/realistic/scope";
+import { learnedSecondaryRepolarization, realisticModelFor } from "../engine/realistic/scope";
 
 /** On the learned base, P and T follow the patient until their slider is moved. */
-const learnedNatural = (c: ECGCase, wave: "p" | "t") =>
-  usesRealisticBase(c) && (wave === "p" ? c.naturalPAxis : c.naturalTAxis) !== false;
+function learnedNatural(c: ECGCase, wave: "p" | "t") {
+  const model = realisticModelFor(c);
+  if (!model) return false;
+  return wave === "p" ? c.naturalPAxis !== false : c.naturalTAxis !== false || learnedSecondaryRepolarization(model);
+}
+/** Learned populations whose whole ST-T is secondary (it follows the QRS gain). */
+const learnedSecondary = (c: ECGCase) => {
+  const model = realisticModelFor(c);
+  return model !== null && learnedSecondaryRepolarization(model);
+};
 /** Applicability of the existing amplitude controls, separate from clinical severity. */
 export function amplitudeControlState(c: ECGCase) {
   const organized = c.rhythm !== "vf" && c.rhythm !== "asystole" && !isVviNoncapture(c),
@@ -17,6 +25,8 @@ export function amplitudeControlState(c: ECGCase) {
     mutedT = effect === "t" && c.tAmp === 0;
   const note = !organized
     ? "Sin complejos organizados: los controles de T y lesión ST–T no se aplican."
+    : learnedSecondary(c)
+      ? "ST–T secundaria del paciente (aprendida de ECG reales): sigue la amplitud del QRS; la amplitud de T no se aplica."
     : mutedT
       ? "Este patrón modifica la T. Reactiva Amplitud de T para ajustar su intensidad."
       : effect === "none"
@@ -26,7 +36,7 @@ export function amplitudeControlState(c: ECGCase) {
         : effect === "t"
           ? "Intensidad: escala la modificación de T de Wellens; 0 conserva la T basal y 2 es el patrón de referencia. No expresa grado de estenosis."
           : "Intensidad: escala el componente primario ST–T; 0 lo retira y 2 es el patrón de referencia. No expresa extensión de necrosis ni gravedad clínica.";
-  return { tDisabled: !organized, stDisabled: !organized || effect === "none" || mutedT, note };
+  return { tDisabled: !organized || learnedSecondary(c), stDisabled: !organized || effect === "none" || mutedT, note };
 }
 /** Applicability of this model's primary-T direction control, not clinical impossibility. */
 export function tAxisControlState(c: ECGCase) {

@@ -347,23 +347,38 @@ la primera vez que un caso lo usa (`models.ts`); el sinusal normal no descarga
 nada nuevo. Un modelo no cargado falla de forma explícita, nunca cae en otra
 población.
 
-**Repolarización secundaria.** En BRI, BRD incompleto y HVI la ST-T es la del
-paciente: el control de eje de T sigue inactivo y sin efecto (como en los
-núcleos), y la ganancia del QRS escala también la ST-T, de modo que las razones
-ST/QRS (Sgarbossa) se conservan. En el HBAI la T es primaria y el control actúa.
+**Repolarización secundaria.** En BRI, BRD incompleto y HVI la ST-T entera es
+la del paciente: los controles de eje y de amplitud de T quedan inactivos y sin
+efecto, y la ganancia del QRS escala también la ST-T, de modo que las razones
+ST/QRS (Sgarbossa) se conservan. En el HBAI la T es primaria y sus controles
+actúan. (Con el filtro diagnóstico de 0,05 Hz, un QRS ancho y grande deja tras
+de sí la respuesta del paso alto, ≈ 0,2 mV en V1 en el BRI: es la física del
+filtro, no repolarización; con el filtro apagado y T anulada no queda nada.)
 El preset de HVI ya no multiplica el voltaje (×1,5) ni fija la T (160°): ambos
 salen de la población.
 
-**Paciente de libro por clase.** Se exportaron 300 semillas de cada preset y se
-eligió la que el clasificador diagnóstico (entrenado solo con pacientes reales)
-reconoce con más certeza: BRD incompleto 148, HBAI 225, HVI 283; el BRI conserva
-1951 (todas reconocidas con p = 1,00).
+**Paciente de libro por clase.** Se exportaron 300 semillas de cada preset. Entre
+las que el clasificador diagnóstico (entrenado solo con pacientes reales)
+reconoce con probabilidad a ≤ 0,03 de la mejor, se eligió la que el analizador
+congelado mide más cerca del QRS programado, con QT medible (empates de ≤ 2 ms por
+QT utilizable y luego probabilidad): BRI 24, BRD incompleto 34, HBAI 225, HVI 285.
+Elegir solo por el clasificador daba pacientes típicos que el analizador medía
+mal (BRI: QRS 234 ms frente a 160 programados).
+
+**Carga robusta.** Si la descarga de un modelo falla, el worker lo informa como
+fallo de transporte y el controlador lo reinicia una vez (módulos nuevos, nueva
+descarga); un error de dominio no se reintenta. El laboratorio de activación
+carga todos los modelos de clase al abrirse (≈ 770 KB sin comprimir, una vez),
+porque cualquier alternativa puede necesitar uno. Los scripts de Node
+(`scripts/`) los leen del disco; el navegador y las pruebas nunca: ahí un modelo
+ausente es un error explícito, y una prueba ejecuta el worker real con el
+registro vacío.
 
 ### Resultado
 
 Clasificador diagnóstico sobre el catálogo: 25 de 39 presets reconocidos
-(F2.2: 24). BRI 1,00; BRD incompleto 0,985 (antes lo llamaba BRD completo);
-HBAI 0,999; HVI 0,981 (con «isquemia/sobrecarga» 0,96).
+(F2.2: 24). BRI 1,00; BRD incompleto 0,96 (antes lo llamaba BRD completo);
+HBAI 0,999; HVI 0,96 (con «isquemia/sobrecarga» 0,85).
 
 Sobre poblaciones (300 semillas por clase, presets con sus QRS y ejes fijos)
 frente a los pacientes reales de la reserva (pliegue 10) con el mismo umbral:
@@ -382,6 +397,10 @@ vienen de fijar QRS y eje por preset (los reales los varían).
 **Pruebas.** Criterios de libro medidos en las muestras de cada preset (BRI:
 QS/rS en V1 y ST-T discordante; BRD incompleto: r' terminal en V1; HBAI: eje
 ≤ −45°, qR en aVL, rS inferior con S III > S II; HVI: Sokolow-Lyon ≥ 3,5 mV y
-sobrecarga lateral) y la linealidad exacta de la ST-T secundaria con el QRS. Las
+sobrecarga lateral), la linealidad exacta de la ST-T secundaria con el QRS y el
+analizador congelado sobre cada paciente de libro con adquisición realista (QRS a
+±10 ms, QT medible). Sobre otras semillas el analizador mide peor que en el
+sinusal (QT ausente en ≈ 2/3 de los BRI y HVI): es el límite conocido del
+analizador congelado, y las tarjetas muestran los valores del modelo. Las
 pruebas de los mecanismos de los núcleos (fuente ST secundaria, vector T
 primario, fixtures del analizador) corren sobre los núcleos.

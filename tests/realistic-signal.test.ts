@@ -314,3 +314,15 @@ describe("clases aprendidas (F3): criterios de libro medidos en las muestras", (
     for (const l of ["I", "V2", "V5"] as const) expect(Math.abs(two.st60(l) - one.st60(l))).toBeLessThan(0.01);
   });
 });
+
+describe("clases aprendidas (F3): el analizador congelado mide el paciente de libro", () => {
+  it.each(["lbbb", "irbbb", "lafb", "lvh"])("%s: QRS medido a ±10 ms del programado y QT medible", async (id) => {
+    const { analyzeSamples } = await import("../src/engine/sample-analysis");
+    // As the user sees it: the preset with realistic acquisition (seeded, deterministic).
+    const c = { ...fromPreset(presetById(id)!), acquisition: "realistic" as const }, s = synthesize(c, 10);
+    const m = analyzeSamples({ fs: s.fs, leads: s.leads });
+    expect(m.evidence.qrs.status).toBe("usable");
+    expect(Math.abs(m.qrs! - c.qrs)).toBeLessThanOrEqual(10);
+    expect(m.qt).not.toBeNull();
+  });
+});
