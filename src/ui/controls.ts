@@ -253,6 +253,15 @@ export function controls(c: ECGCase) {
    ],
    c.notch,
  )}
+ ${select(
+   "acquisition",
+   "Adquisición",
+   [
+     ["realistic", "Realista: ruido de reposo medido"],
+     ["ideal", "Ideal: sin ruido de fondo"],
+   ],
+   c.acquisition ?? "realistic",
+ )}
  ${range("artifacts.baseline", "Deriva de línea base", 0, 1, 0.05, c.artifacts.baseline, "")}${range("artifacts.muscle", "Actividad muscular", 0, 1, 0.05, c.artifacts.muscle, "")}${range("artifacts.mains", "Interferencia de red", 0, 1, 0.05, c.artifacts.mains, "")}${range("artifacts.loose", "Electrodo V2 inestable", 0, 1, 0.05, c.artifacts.loose, "")}
  ${toggle("artifacts.reversed", "Inversión brazo derecho / izquierdo", c.artifacts.reversed)}${toggle("view.cabrera", "Orden de Cabrera (−aVR)", c.view.cabrera)}
  ${select(

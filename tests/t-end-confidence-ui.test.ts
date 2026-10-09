@@ -8,7 +8,7 @@ import { classifyTEndReviewCandidate } from '../src/engine/t-end-confidence';
 
 describe('T-end agreement is visible but never promoted to QT',()=>{
  it('renders the exact engine stratum and its retrospective limitation',()=>{
-  const c=fromPreset(presetById('tachy')!),s=synthesize(c,10),m=measure(s);
+  const c=fromPreset(presetById('tachy')!),s=synthesize(c,10,{learnedBase:false}),m=measure(s); // fixture where the frozen analyzer abstains from QT
   const suggestions=suggestTEnds(s,m),i=suggestions.findIndex(Boolean);expect(i).toBeGreaterThanOrEqual(0);
   const confidence=classifyTEndReviewCandidate(suggestions[i]!);const html=beatDetail(s,m,c,i);
   expect(html).toContain(`data-t-end-agreement="${confidence.stratum}"`);

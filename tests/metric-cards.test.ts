@@ -69,3 +69,32 @@ describe('No apparent valid number without supporting evidence', () => {
     expect(metricCards(DEFAULT_CASE,m)[0].note).toBe('media · 5.5 s');
   });
 });
+
+import { modelMetricCards } from "../src/ui/metric-cards";
+import { synthesize } from "../src/engine/signal";
+import { fromPreset, presetById } from "../src/presets/catalog";
+
+describe("modelMetricCards: el simulador muestra lo que generó", () => {
+  const cards = (id: string) => {
+    const c = fromPreset(presetById(id)!);
+    return modelMetricCards(c, synthesize(c, 10));
+  };
+  it("sinusal: PR, QRS, QTc y eje programados, sin depender del analizador", () => {
+    const [hr, pr, qrs, qtc, axis] = cards("sinus");
+    expect(Number.parseFloat(hr.value)).toBeGreaterThan(68);
+    expect(pr.value).toBe("160<small>ms</small>");
+    expect(qrs.value).toBe("90<small>ms</small>");
+    expect(Math.abs(Number.parseFloat(qtc.value) - 410)).toBeLessThan(12);
+    expect(axis.value).toBe("55<small>°</small>");
+    expect([hr, pr, qrs, qtc, axis].every((x) => x.status === "usable" && x.note.startsWith("modelo"))).toBe(true);
+  });
+  it("Wenckebach: el PR es el rango progresivo, no «No estimable»", () => {
+    const pr = cards("wenckebach")[1];
+    expect(pr.value).toMatch(/^\d+–\d+<small>ms<\/small>$/);
+    expect(pr.note).toBe("modelo · progresivo");
+  });
+  it("FV y BAV completo: sin PR; FV sin ningún número", () => {
+    expect(cards("vf").every((x) => x.value === "—")).toBe(true);
+    expect(cards("complete")[1].value).toBe("—");
+  });
+});

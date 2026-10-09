@@ -6,6 +6,7 @@ import { qrsKernels } from '../src/engine/morphology';
 import { fromPreset, PRESETS, presetById } from '../src/presets/catalog';
 import { project, frontal, type Vec } from '../src/engine/leads';
 import { LEADS, type Beat, type ECGCase } from '../src/engine/types';
+import { realisticQrsVector, usesRealisticBase } from '../src/engine/realistic/engine';
 
 const beat: Beat = { time: 1, rr: 1, kind: 'normal' };
 const load = (id: string) => fromPreset(presetById(id)!);
@@ -55,13 +56,20 @@ describe('Merged regional engine and QRS laboratory share the same temporal supp
   });
 
   it('preserves the historical basis plus independently specified WPW delta for every eligible preset and beat kind', () => {
-    let checked = 0, deltaChecked = 0;
+    let checked = 0, deltaChecked = 0, learned = 0;
     for (const preset of PRESETS.filter(p => p.strategy !== 'pending')) {
       const c = fromPreset(preset), events = generateEvents(c, 10);
       for (const kind of new Set(events.beats.map(b => b.kind))) {
         const event = events.beats.find(b => b.kind === kind)!;
         if (activationLimitation(c, event)) continue;
-        const trace = sampleActivation(c, event), kernels = qrsKernels(c, event);
+        const trace = sampleActivation(c, event);
+        if (event.kind === 'normal' && usesRealisticBase(c)) {
+          // Learned base: the lab samples the same learned heart vector instead.
+          trace.xyz.forEach((actual, i) => assert.deepEqual(actual, realisticQrsVector(c, trace.timesMs[i] / trace.durationMs)));
+          learned++;
+          continue;
+        }
+        const kernels = qrsKernels(c, event);
         assert.ok(kernels.every(k => !k.regional));
         const hasDelta = c.conduction === 'wpw' && event.kind === 'normal';
         if (hasDelta) deltaChecked++;
@@ -84,7 +92,8 @@ describe('Merged regional engine and QRS laboratory share the same temporal supp
         checked++;
       }
     }
-    assert.ok(checked > 50);
+    assert.ok(checked > 30);
+    assert.ok(learned > 15, 'Learned-base presets must use the learned loop');
     assert.equal(deltaChecked, 1, 'The WPW preset must participate, not be silently skipped');
   });
 

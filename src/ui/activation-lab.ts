@@ -1,7 +1,7 @@
 import './activation.css';
 import { cloneCase, type ECGCase, type Beat } from '../engine/types';
 import { LEADS, type Lead } from '../engine/lead-registry';
-import { activationAt, activationCandidate, activationPair, activationOptions, activationLimitation, ACTIVATION_SCOPE, type ActivationPair } from './activation-model';
+import { activationAt, activationCandidate, activationPair, activationOptions, activationLimitation, ACTIVATION_SCOPE, ensureLearnedModel, learnedModelReady, type ActivationPair } from './activation-model';
 import { activationCharts, activationSvg, updateActivationCursor } from '../render/activation';
 import { esc, options } from './helpers';
 import { download } from './persistence';
@@ -64,6 +64,10 @@ export class ActivationLab {
   open(): void {
     const input = this.current();
     if (!input) { this.notify('Espera a que el simulador tenga una señal válida.'); return; }
+    if (!learnedModelReady()) {
+      void ensureLearnedModel().then(() => this.open(), () => this.notify('No se pudo cargar el modelo aprendido.'));
+      return;
+    }
     if (this.dialog.open) return;
     this.opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     this.snapshot = { case: cloneCase(input.case), beats: input.beats.filter(b => b.time >= 0 && b.time < 10).map(b => ({ ...b })) };

@@ -115,9 +115,12 @@ def features(x):
         k = int(np.argmax(np.abs(t)))
         out[f't_amp_{L}'] = float(t[k])
         out[f't_time_{L}'] = 130 + k * 2
-        # Asimetría de T: pendiente ascendente/descendente alrededor del ápice.
-        rise = np.abs(np.diff(t[:k + 1])).max() if k > 1 else 0
-        fall = np.abs(np.diff(t[k:])).max() if k < len(t) - 2 else 0
+        # Asimetría de T: pendiente máxima de subida/bajada alrededor del ápice,
+        # medida sobre 20 ms para que el ruido residual no domine el cociente.
+        h = ms(20)
+        sl = np.abs(t[h:] - t[:-h]) if len(t) > h else np.zeros(1)
+        rise = sl[:max(1, k - h + 1)].max() if k > h else 0
+        fall = sl[k:].max() if k < len(sl) else 0
         out[f't_asym_{L}'] = float(np.log((fall + 1e-6) / (rise + 1e-6)))
         p = m[w(-300, -90), j]
         out[f'p_amp_{L}'] = float(p[np.argmax(np.abs(p))])

@@ -1,4 +1,4 @@
-import type { ECGCase, Measurement, MetricKey, Reliability } from "../engine/types";
+import type { ECGCase, Measurement, MetricKey, Reliability, Signal } from "../engine/types";
 import { esc } from "./helpers";
 
 export interface MetricCard {
@@ -76,4 +76,31 @@ export const monitorRateNote = (c: ECGCase, m: Measurement): string =>
 /** Keep raw candidates in data, but do not present unavailable values as estimates. */
 export function availableMetricValue(m:Measurement,key:MetricKey):number|null {
   return m.evidence[key].status==='unavailable'?null:m[key];
+}
+
+/**
+ * Cards for the simulator's own signal: the model's values (what was generated),
+ * not a delineation of it. The frozen sample analyzer stays available in the
+ * measurements dialog as an independent estimate, and for imported signals.
+ */
+export function modelMetricCards(c: ECGCase, s: Signal): MetricCard[] {
+  const none = unorganized(c), t = s.truth, model = "Valor del modelo que generó este trazado. La estimación automática desde las muestras está en «Medidas».";
+  const beats = s.events.beats, rr = beats.length > 1 ? (beats[beats.length - 1].time - beats[0].time) / (beats.length - 1) : null;
+  const conducted = beats.filter((b) => b.pr !== undefined).map((b) => Math.round(b.pr! * 1000));
+  const prRange = conducted.length ? [Math.min(...conducted), Math.max(...conducted)] : null;
+  const variablePr = prRange !== null && prRange[1] - prRange[0] >= 10;
+  const qtc = t.qt !== null && rr ? t.qt / Math.cbrt(rr) : null;
+  const card = (key: MetricKey, label: string, value: string, note: string): MetricCard =>
+    value === "—"
+      ? { key, label, value, note: "No aplica", status: "unavailable", reason: "Sin este componente en el ritmo generado." }
+      : { key, label, value, note, status: "usable", reason: model };
+  return [
+    card("hr", "FC ventricular", none || !t.hr ? "—" : display(t.hr, "lpm"), "modelo · media 10 s"),
+    variablePr
+      ? card("pr", "PR", `${prRange![0]}–${prRange![1]}<small>ms</small>`, c.av === "mobitz1" ? "modelo · progresivo" : "modelo · variable")
+      : card("pr", "PR", none || t.pr === null ? "—" : display(t.pr, "ms"), "modelo"),
+    card("qrs", "QRS", none ? "—" : display(t.qrs, "ms"), "modelo"),
+    card("qt", "QTc", none || c.rhythm === "torsades" ? "—" : display(qtc, "ms"), "modelo · Fridericia"),
+    card("axis", "Eje QRS", none ? "—" : display(t.axis, "°"), "modelo"),
+  ];
 }

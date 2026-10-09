@@ -84,11 +84,11 @@ describe("All current presets: eight-channel sample contract", () => {
 describe.each(["off", "diagnostic"] as const)(
   "Sample phenotype acceptance · %s",
   (filter) => {
-    const signal = (id: string, duration = 10) => {
+    const signal = (id: string, duration = 10, options?: { learnedBase?: boolean }) => {
       const c = load(id);
       c.variability = 0;
       c.filter = filter;
-      return synthesize(c, duration);
+      return synthesize(c, duration, options);
     };
 
     it("sinus preserves P polarity and right-to-left QRS transition", () => {
@@ -227,7 +227,7 @@ describe.each(["off", "diagnostic"] as const)(
 
     it("de Winter retains ascending depressed ST followed by prominent anterior T", () => {
       const s = signal("de_winter"),
-        normal = signal("sinus");
+        normal = signal("sinus", 10, { learnedBase: false }); // same-model control until de Winter migrates
       const controls = interior(normal);
       for (const [index, b] of interior(s).entries())
         for (const lead of ["V2", "V3", "V4"] as const) {

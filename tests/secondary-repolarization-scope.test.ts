@@ -7,7 +7,9 @@ import {beatWindows,assertSampleRegion} from './support/repolarization-contract.
 // Controlled isolated beats: no tachycardic overlap, artifacts, or IIR tails.
 // Production always has a centred antialias FIR (40 ms each side).
 describe('T amplitude does not change the twelve-lead QRS outside FIR influence',()=>{
-  for(const id of ['sinus','rbbb','irbbb','lbbb','wpw','vvi','ddd','vt','idioventricular'])
+  // Kernel-model presets; the learned base (repolarization from J) is covered in
+  // tests/realistic-signal.test.ts.
+  for(const id of ['rbbb','irbbb','lbbb','wpw','vvi','ddd','vt','idioventricular'])
     it(`${id}: compares the complete QRS, with seconds-valued event boundaries`,()=>{
       const c={...fromPreset(presetById(id)!),filter:'off' as const,hr:60,atrialRate:60,variability:0};
       const a=synthesize({...c,tAmp:0},10),b=synthesize(c,10);

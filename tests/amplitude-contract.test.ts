@@ -35,8 +35,9 @@ describe("T amplitude is a scale of the entire T component", () => {
     expect(tVector(c, { time: 1, rr: 1, kind })).toEqual([0, 0, 0]);
   });
 
+  // Kernel-model presets; the learned base has its own contract in
+  // tests/realistic-signal.test.ts (repolarization starts at J, Ta tail remains).
   it.each([
-    "sinus",
     "rbbb",
     "rv_acute",
     "rv_chronic",
@@ -65,7 +66,6 @@ describe("T amplitude is a scale of the entire T component", () => {
   });
 
   it.each([
-    "sinus",
     "rbbb",
     "lbbb",
     "rv_acute",
@@ -129,7 +129,7 @@ describe("Lesion intensity changes the supported regional repolarization", () =>
       const c = load(id);
       c.st = 0;
       const zero = synthesize(c, 10),
-        baseline = synthesize({ ...c, ischemia: "none" }, 10);
+        baseline = synthesize({ ...c, ischemia: "none" }, 10, { learnedBase: false }); // same-model basal until ischemia migrates
       expect(maxDifference(zero, baseline)).toBeLessThan(1e-12);
       c.st = 1;
       const half = synthesize(c, 10);
@@ -167,7 +167,7 @@ describe("Lesion intensity changes the supported regional repolarization", () =>
       expect(
         maxDifference(
           synthesize(c, 10),
-          synthesize({ ...c, ischemia: "none" }, 10),
+          synthesize({ ...c, ischemia: "none" }, 10, { learnedBase: false }),
         ),
       ).toBeLessThan(1e-12);
     },
@@ -183,7 +183,7 @@ describe("Lesion intensity changes the supported regional repolarization", () =>
       expect(
         maxDifference(
           synthesize(c, 10),
-          synthesize({ ...c, ischemia: "none" }, 10),
+          synthesize({ ...c, ischemia: "none" }, 10, { learnedBase: false }),
         ),
       ).toBeLessThan(1e-12);
     },

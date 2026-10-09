@@ -39,11 +39,19 @@ import { assertRepresentableEvents, tWaveSupport } from "./constraints";
 import { median } from "./analysis/statistics";
 import { atrialVector, tWave } from "./morphology";
 import { regionalTerritory, regionalTCorrection } from "./regional-repolarization";
+import { RealisticTrack, usesRealisticBase } from "./realistic/engine";
+import { acquisitionFloor } from "./realistic/acquisition";
 const FS = 1000,
   OUT = 500,
   WARM = 4,
   GUARD = 0.1;
-export function synthesize(c: ECGCase, duration = 65): Signal {
+export interface SynthesisOptions {
+  /** Temporary seam while modifiers migrate stage by stage (docs/fidelidad.md):
+   * false keeps the historical kernels so a test can isolate a not-yet-migrated
+   * modifier against a basal case of the same model. The product never sets it. */
+  learnedBase?: boolean;
+}
+export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions = {}): Signal {
   duration = Math.max(10, Math.min(120, duration));
   const total = duration + WARM,
     guard = c.filter === "monitor" ? 4 : GUARD,
@@ -83,7 +91,13 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
       arr[i] += amp * fn((i / FS - start) / len);
   };
   const scale = (v: Vec, a: number): Vec => [v[0] * a, v[1] * a, v[2] * a];
+  // Learned beat shapes (docs/fidelidad.md) where the case is representable on them.
+  const track = options.learnedBase !== false && usesRealisticBase(c) ? new RealisticTrack(c, n, FS) : null;
   for (const a of events.atria) {
+    if (track && a.kind === "sinus") {
+      track.addAtrial(a);
+      continue;
+    }
     const len = a.kind === "ectopic" ? 0.075 : 0.095,
       v = frontal(
         a.kind === "retrograde" ? -100 : a.kind === "ectopic" ? 20 : c.pAxis,
@@ -96,6 +110,10 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
     );
   }
   for (const b of events.beats) {
+    if (track && b.kind === "normal") {
+      track.addBeat(b, qrsDuration(c, b));
+      continue;
+    }
     const dur = qrsDuration(c, b),
       ks = qrsKernels(c, b),
       qt = b.qt!,
@@ -239,6 +257,7 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
   for (const t of events.spikes)
     add(t, 0.004, (u) => scale(frontal(65, 1.9, -0.8), u < 0.5 ? 1 : -0.22));
   const output = makeArrays(Math.floor(duration * OUT));
+  const floor = acquisitionFloor(c, n, FS);
   for (let lindex = 0; lindex < INDEPENDENT.length; lindex++) {
     const l = INDEPENDENT[lindex],
       row = DOWER[l],
@@ -256,6 +275,8 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
         xyz[1][i] * row[1] +
         xyz[2][i] * row[2] +
         (ca?.[i] || 0) +
+        (track ? track.acc[lindex][i] : 0) +
+        (floor ? floor[lindex][i] : 0) +
         c.artifacts.baseline *
           0.3 *
           Math.sin(
@@ -274,8 +295,13 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
     applyAcquisitionFilter(arr, FS, c.filter);
     if (c.notch) biquad(arr, FS, c.notch, "notch", 25);
     const filtered = antialias(arr, FS);
-    for (let i = 0; i < output[l].length; i++)
-      output[l][i] = filtered[Math.round(WARM * FS) + i * 2];
+    // A realistic recorder quantizes (1 µV, as PTB-XL's 1000 counts/mV); the
+    // ideal acquisition keeps exact model arithmetic.
+    const quantize = floor !== null;
+    for (let i = 0; i < output[l].length; i++) {
+      const v = filtered[Math.round(WARM * FS) + i * 2];
+      output[l][i] = quantize ? Math.round(v * 1000) / 1000 : v;
+    }
   }
   for (let i = 0; i < output.I.length; i++) {
     const a = output.I[i],
@@ -284,6 +310,8 @@ export function synthesize(c: ECGCase, duration = 65): Signal {
     output.aVR[i] = -(a + b) / 2;
     output.aVL[i] = a - b / 2;
     output.aVF[i] = b - a / 2;
+    // A recorder stores every lead at its own 1 µV resolution.
+    if (floor) for (const lead of ["III", "aVR", "aVL", "aVF"] as const) output[lead][i] = Math.round(output[lead][i] * 1000) / 1000;
   }
   if (c.artifacts.reversed) {
     const i = output.I,

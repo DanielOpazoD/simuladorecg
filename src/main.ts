@@ -6,7 +6,7 @@ import "./style.css";
 import { APP_VERSION } from "./ui/version";
 import { ActivationLab, type ActivationApplyResult } from "./ui/activation-lab";
 import { familyLabel } from "./ui/catalog-presentation";
-import { metricCards, metricsHtml, monitorRate, monitorRateNote } from "./ui/metric-cards";
+import { metricsHtml, modelMetricCards } from "./ui/metric-cards";
 import { openDialog, closeDialog } from "./ui/dialog";
 import { exportDialogHtml } from "./ui/export-dialog";
 import { handleExportAction } from "./ui/export-actions";
@@ -19,7 +19,6 @@ import { ComparisonLab } from "./ui/comparison-lab";
 import { captureTrace } from "./ui/comparison-model";
 import { ExternalLab } from "./ui/external-lab";
 import {
-  DEFAULT_CASE,
   cloneCase,
   type ECGCase,
   type Signal,
@@ -62,7 +61,9 @@ import {
 const $ = <T extends Element = HTMLElement>(selector: string) =>
   document.querySelector<T>(selector)!;
 const session = new TraceSession();
-let c = cloneCase(DEFAULT_CASE),
+// Start on the sinus preset itself (textbook patient, resting HRV), not on the
+// bare defaults it is built from.
+let c = fromPreset(presetById("sinus")!),
   layout: Layout | null = null,
   monitor: Monitor | null = null;
 let annotations = false,
@@ -225,9 +226,12 @@ function renderInfo() {
 }
 function renderMetrics() {
   if (!session.signal || !session.measurement) return;
-  $("#metrics").innerHTML = metricsHtml(metricCards(c, session.measurement));
-  $("#monitor-rate").textContent = monitorRate(c, session.measurement);
-  $("#monitor-rate-note").textContent = monitorRateNote(c, session.measurement);
+  // The simulator knows what it generated: show the model's values. The frozen
+  // sample analyzer remains an independent estimate inside «Medidas».
+  const cards = modelMetricCards(c, session.signal), rate = cards[0];
+  $("#metrics").innerHTML = metricsHtml(cards);
+  $("#monitor-rate").textContent = rate.value === "—" ? "—" : rate.value.replace(/<small>.*<\/small>/, "");
+  $("#monitor-rate-note").textContent = rate.value === "—" ? "No estimable" : "lpm · modelo";
 }
 function renderDetail() {
   if (session.signal && session.measurement)
