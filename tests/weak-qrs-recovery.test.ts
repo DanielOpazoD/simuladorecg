@@ -7,7 +7,7 @@ import type { ECGCase, Signal } from "../src/engine/types";
 function recording(id: string, changes: Partial<ECGCase>) {
   const config = { ...fromPreset(presetById(id)!), variability: 0, ...changes };
   config.artifacts = { ...config.artifacts, baseline: 0, muscle: 0, mains: 0 };
-  return synthesize(config, 10);
+  return synthesize(config, 10, { learnedBase: false }); // frozen-analyzer fixture on kernels
 }
 function ventricularIdentity(signal: Signal, peaks: readonly number[]) {
   const events = signal.events.beats.filter(

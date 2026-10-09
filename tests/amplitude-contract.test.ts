@@ -48,7 +48,7 @@ describe("T amplitude is a scale of the entire T component", () => {
   ])("leaves no T samples in the isolated terminal T window of %s", (id) => {
     const c = load(id);
     c.tAmp = 0;
-    const s = synthesize(c, 10),
+    const s = synthesize(c, 10, { learnedBase: false }),
       b = s.events.beats[3];
     // Beyond QRS and the local de Winter ST correction, including FIR support.
     // Start after the secondary ST-to-T transition and the 40 ms FIR support.
@@ -79,11 +79,11 @@ describe("T amplitude is a scale of the entire T component", () => {
     (id) => {
       const c = load(id);
       c.tAmp = 0;
-      const zero = synthesize(c, 10);
+      const zero = synthesize(c, 10, { learnedBase: false });
       c.tAmp = 0.14;
-      const half = synthesize(c, 10);
+      const half = synthesize(c, 10, { learnedBase: false });
       c.tAmp = 0.28;
-      const full = synthesize(c, 10),
+      const full = synthesize(c, 10, { learnedBase: false }),
         b = full.events.beats[3];
       let response = 0,
         error = 0;

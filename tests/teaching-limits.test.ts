@@ -45,7 +45,8 @@ describe("Specific teaching limits reflect the implemented source", () => {
   });
   it.each(['lbbb','vvi','ddd'])("%s preserves QRS gain while keeping Sgarbossa ratios explicitly unvalidated",id=>{
     const c=load(id);c.filter='off';c.variability=0;c.qrsAmp=.1;
-    const low=synthesize(c,10);c.qrsAmp=1;const high=synthesize(c,10);
+    // Kernel secondary-ST source; the learned BRI keeps ST/QRS by scaling both (realistic-signal).
+    const low=synthesize(c,10,{learnedBase:false});c.qrsAmp=1;const high=synthesize(c,10,{learnedBase:false});
     const read=(s:Signal)=>{
       const b=s.events.beats.find(b=>b.time>3)!;
       const q=s.leads.V2.slice(Math.ceil((b.time+.01)*s.fs),Math.floor((b.time+b.qrs!-.02)*s.fs));

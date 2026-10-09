@@ -49,7 +49,8 @@ for (const [engine, launcher] of Object.entries(engines)) {
       page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); if (m.type() === 'warning') warnings.push(m.text()); });
       page.on('request', r => requests.push(r.url()));
       const ready = () => page.locator('#signal-loading').waitFor({ state: 'hidden' });
-      const open = () => page.locator('[data-action="activation"]').click();
+      // Opening is asynchronous: the lab loads the learned models first.
+      const open = async () => { await page.locator('[data-action="activation"]').click(); await page.locator('#activation-dialog').waitFor({ state: 'visible' }); };
       const close = () => page.locator('#activation-dialog [data-activation="close"]').click();
       const applicationReady = async () => { await page.locator('#activation-dialog').waitFor({ state: 'hidden' }); await ready(); };
       const inViewport = selector => page.locator(selector).evaluate(e => {
@@ -248,11 +249,11 @@ for (const [engine, launcher] of Object.entries(engines)) {
         const wpw = JSON.parse(await download('[data-activation="json"]', 'wpw-experiment.json'));
         assert.equal(wpw.cursorMs, 20); assert.equal(wpw.a.timing.deltaDurationMs, 45);
         assert.equal(wpw.b.timing.deltaDurationMs, null); assert.match(wpw.timeReference, /original captured event/);
-        // Equal base kernels, duration, gain and axis: the observed difference
-        // must be precisely the historical delta, not an arbitrary prettier curve.
-        const expectedDeltaII = .25 * Math.cos((55 - 60) * Math.PI / 180) * Math.sin(Math.PI * 20 / 45);
-        assert.ok(Math.abs(wpw.a.leads.II[20] - wpw.b.leads.II[20] - expectedDeltaII) < 1e-10);
-        assert.ok(Math.abs(wpw.a.leads.II[80] - wpw.b.leads.II[80]) < 1e-10);
+        // Normal conduction is the learned beat (F2): A and B no longer share base
+        // kernels, so the exact delta arithmetic is checked on kernels in
+        // tests/activation-model.test.ts; here B must be the learned loop.
+        assert.equal(wpw.b.timing.label, 'Latido aprendido (PTB-XL)');
+        assert.ok(Math.abs(wpw.a.leads.II[20] - wpw.b.leads.II[20]) > 1e-3);
         assert.match(await download('[data-activation="svg"]', 'wpw-experiment.svg'), /Delta incluida · A: 45 ms · B: 0 ms/);
         assert.equal(await page.locator('#activation-dialog').evaluate(d => d.scrollWidth <= d.clientWidth + 1), true);
         await page.locator('#activation-charts').screenshot({ path: path.join(out, `${tag}-activation-wpw.png`) });

@@ -206,7 +206,8 @@ describe("Medición independiente", () => {
     expect(Math.min(...segment("V6", 0.09, 0.15))).toBeLessThan(-0.25);
   });
   it("BRI mantiene predominio negativo en V1 y positivo lateral", () => {
-    const s = synthesize(load("lbbb"), 10),
+    // Kernel BRI; the learned BRI is checked against criteria in realistic-signal.
+    const s = synthesize({ ...load("lbbb"), seed: DEFAULT_CASE.seed }, 10, { learnedBase: false }),
       b = s.events.beats.find((b) => b.time > 0.4)!;
     const cut = (l: "I" | "V1") =>
       Array.from(

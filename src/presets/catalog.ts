@@ -1,6 +1,7 @@
 import { WPW_REPOLARIZATION_LIMIT, SECONDARY_ST_RATIO_LIMIT } from "./teaching-limits";
 import { DEFAULT_CASE, cloneCase, type ECGCase } from "../engine/types";
-import { usesRealisticBase } from "../engine/realistic/scope";
+import { realisticModelFor } from "../engine/realistic/scope";
+import type { ModelCode } from "../engine/realistic/shape-model";
 export interface Preset {
   id: string;
   name: string;
@@ -636,7 +637,9 @@ export const PRESETS: Preset[] = [
     "Hipertrofia del ventrículo izquierdo",
     "Hipertrofia VI",
     "Sobrecarga",
-    { overload: "lv", axis: 0, qrsAmp: 1.5, tAxis: 160 },
+    // Voltaje y repolarización salen de la población HVI aprendida (PTB-XL), no de
+    // multiplicadores: qrsAmp 1 = mediana de los pacientes con HVI.
+    { overload: "lv", axis: 0 },
     "Aumento de fuerzas del ventrículo izquierdo.",
     ["Voltaje precordial aumentado", "Sobrecarga lateral"],
     "vectorial",
@@ -750,11 +753,18 @@ export const PRESETS: Preset[] = [
  * meet every classic normal criterion (scripts/fidelity/choose-textbook-seed.mjs):
  * presets show the textbook example; the seed control explores real variety. */
 export const TEXTBOOK_SEED = 1951;
+/** Per learned population, among 300 seeds: those a classifier trained only on
+ * real PTB-XL ECGs finds most typical of the class (probability within 0.03 of
+ * the best), then the one the frozen analyzer measures closest to the programmed
+ * QRS, with a measurable QT (docs/fidelidad.md, F3). The normal population keeps
+ * the criteria-based choice above. */
+export const TEXTBOOK_SEEDS: Record<ModelCode, number> = { NORM: TEXTBOOK_SEED, CLBBB: 24, IRBBB: 34, LAFB: 225, LVH: 285 };
 
 export function fromPreset(preset: Preset, view?: ECGCase["view"]): ECGCase {
   const c = cloneCase(DEFAULT_CASE);
   Object.assign(c, preset.patch);
-  if (preset.patch.seed === undefined && usesRealisticBase(c)) c.seed = TEXTBOOK_SEED;
+  const model = realisticModelFor(c);
+  if (preset.patch.seed === undefined && model) c.seed = TEXTBOOK_SEEDS[model];
   c.presetId = preset.id;
   c.name = preset.name;
   if (view) c.view = { ...view };

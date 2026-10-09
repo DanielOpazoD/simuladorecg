@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { synthesize } from "../src/engine/signal";
 import { LEADS, type ECGCase, type Signal } from "../src/engine/types";
-import { fromPreset, presetById, PRESETS, TEXTBOOK_SEED } from "../src/presets/catalog";
-import { usesRealisticBase } from "../src/engine/realistic/engine";
+import { fromPreset, presetById, PRESETS, TEXTBOOK_SEED, TEXTBOOK_SEEDS } from "../src/presets/catalog";
+import { realisticModelFor } from "../src/engine/realistic/scope";
 import { samplePatient } from "../src/engine/realistic/shape-model";
 
 function load(id: string, patch: Partial<ECGCase> = {}): ECGCase {
@@ -22,17 +22,28 @@ function peak(s: Signal, start: number, end: number) {
   return max;
 }
 
-describe("alcance de la base aprendida (F2)", () => {
-  it("cubre los ritmos supraventriculares con conducción normal y nada más", () => {
-    const learned = PRESETS.filter((p) => p.strategy !== "pending" && usesRealisticBase(fromPreset(p))).map((p) => p.id);
+describe("alcance de la base aprendida (F2–F3)", () => {
+  it("cubre los ritmos supraventriculares y las clases aprendidas, y nada más", () => {
+    const model = Object.fromEntries(PRESETS.filter((p) => p.strategy !== "pending").map((p) => [p.id, realisticModelFor(fromPreset(p))]));
     for (const id of ["sinus", "brady", "tachy", "rsa", "af", "flutter", "junctional", "pac", "av1", "wenckebach", "complete", "longqt"])
-      expect(learned).toContain(id);
-    for (const id of ["pvc", "vt", "vvi", "rbbb", "lbbb", "wpw", "anterior", "lvh", "hyperk", "complete_v"])
-      expect(learned).not.toContain(id);
+      expect(model[id]).toBe("NORM");
+    expect([model.lbbb, model.irbbb, model.lafb, model.lvh]).toEqual(["CLBBB", "IRBBB", "LAFB", "LVH"]);
+    for (const id of ["pvc", "vt", "vvi", "rbbb", "lpfb", "bifascicular", "wpw", "anterior", "sgarbossa", "rv_acute", "hyperk", "complete_v"])
+      expect(model[id]).toBeNull();
+    // A population is a whole learned beat: modifiers are not stacked across them.
+    expect(realisticModelFor({ ...fromPreset(presetById("lbbb")!), overload: "lv" })).toBeNull();
+    expect(realisticModelFor({ ...fromPreset(presetById("lvh")!), rhythm: "af" })).toBe("LVH");
   });
-  it("los presets aprendidos muestran el paciente de libro; la semilla del caso manda", () => {
+  it("los presets aprendidos muestran el paciente de libro de su población; la semilla del caso manda", () => {
     expect(fromPreset(presetById("sinus")!).seed).toBe(TEXTBOOK_SEED);
+    for (const [id, code] of [["irbbb", "IRBBB"], ["lafb", "LAFB"], ["lvh", "LVH"], ["lbbb", "CLBBB"]] as const)
+      expect(fromPreset(presetById(id)!).seed).toBe(TEXTBOOK_SEEDS[code]);
     expect(fromPreset(presetById("wpw")!).seed).not.toBe(TEXTBOOK_SEED);
+  });
+  it("un modelo de clase sin cargar falla de forma explícita, nunca cae en otra población", async () => {
+    const { shapeModel, hasShapeModel } = await import("../src/engine/realistic/shape-model");
+    expect(hasShapeModel("CLBBB")).toBe(true); // tests/setup lo precarga
+    expect(() => shapeModel("XYZ" as never)).toThrow(/no está cargado/);
   });
 });
 
@@ -249,5 +260,69 @@ describe("ejes naturales de P y T", () => {
     expect(dT).toBeGreaterThan(5);
     expect(dT).toBeLessThan(25);
     expect(dP).toBeLessThan(dT);
+  });
+});
+
+describe("clases aprendidas (F3): criterios de libro medidos en las muestras", () => {
+  const read = (id: string, patch: Partial<ECGCase> = {}) => {
+    const s = synthesize(load(id, patch), 10), b = s.events.beats[3], q = b.qrs!;
+    const qrs = (l: (typeof LEADS)[number]) => Array.from(s.leads[l].slice(Math.round(b.time * s.fs), Math.round((b.time + q) * s.fs)));
+    const st60 = (l: (typeof LEADS)[number]) => s.leads[l][Math.round((b.time + q + 0.06) * s.fs)];
+    return { s, qrs, st60, max: (l: (typeof LEADS)[number]) => Math.max(...qrs(l)), min: (l: (typeof LEADS)[number]) => Math.min(...qrs(l)) };
+  };
+  it("BRI: QS/rS en V1, R lateral sin S y ST-T discordante", () => {
+    const r = read("lbbb");
+    expect(-r.min("V1")).toBeGreaterThan(3 * r.max("V1"));
+    for (const l of ["I", "V6"] as const) expect(r.max(l)).toBeGreaterThan(4 * -r.min(l));
+    for (const l of ["V1", "V2"] as const) expect(r.st60(l)).toBeGreaterThan(0.1);
+    for (const l of ["I", "V6"] as const) expect(r.st60(l)).toBeLessThan(-0.1);
+  });
+  it("BRD incompleto: r' terminal en V1 tras la S", () => {
+    const v1 = read("irbbb").qrs("V1"), s = v1.indexOf(Math.min(...v1));
+    expect(Math.min(...v1)).toBeLessThan(-0.1);
+    expect(Math.max(...v1.slice(s))).toBeGreaterThan(0.1);
+  });
+  it("HBAI: eje ≤ −45°, qR en aVL y rS inferior con S III > S II", () => {
+    const r = read("lafb"), avl = r.qrs("aVL");
+    expect(r.s.truth.axis!).toBeLessThanOrEqual(-45);
+    expect(Math.min(...avl.slice(0, 10))).toBeLessThan(-0.05);
+    expect(r.max("aVL")).toBeGreaterThan(0.5);
+    for (const l of ["II", "III", "aVF"] as const) expect(-r.min(l)).toBeGreaterThan(2 * r.max(l));
+    expect(-r.min("III")).toBeGreaterThan(-r.min("II"));
+  });
+  it("HVI: Sokolow-Lyon ≥ 3,5 mV y sobrecarga lateral", () => {
+    const r = read("lvh");
+    expect(-r.min("V1") + Math.max(r.max("V5"), r.max("V6"))).toBeGreaterThanOrEqual(3.5);
+    for (const l of ["V5", "V6"] as const) expect(r.st60(l)).toBeLessThan(-0.05);
+  });
+  it.each(["lbbb", "irbbb", "lvh"])("%s: la ST-T secundaria sigue la ganancia del QRS (ST/QRS constante)", (id) => {
+    // Without P there is no atrial Ta, so the ventricular trace is exactly linear.
+    const one = synthesize(load(id, { pAmp: 0 }), 10), two = synthesize(load(id, { pAmp: 0, qrsAmp: 2 }), 10);
+    let err = 0, peak = 0;
+    for (const l of LEADS)
+      for (let i = 0; i < one.leads[l].length; i++) {
+        err = Math.max(err, Math.abs(two.leads[l][i] - 2 * one.leads[l][i]));
+        peak = Math.max(peak, Math.abs(one.leads[l][i]));
+      }
+    expect(peak).toBeGreaterThan(1);
+    expect(err).toBeLessThan(1e-9);
+  });
+  it("HBAI conserva una T primaria: la ganancia del QRS no toca la ST-T", () => {
+    const one = read("lafb", { pAmp: 0 }), two = read("lafb", { pAmp: 0, qrsAmp: 2 });
+    // Only the decaying removal of the inherited atrial Ta (µV, scaled with the QRS
+    // template it sits on) differs; a secondary class would double ST60.
+    for (const l of ["I", "V2", "V5"] as const) expect(Math.abs(two.st60(l) - one.st60(l))).toBeLessThan(0.01);
+  });
+});
+
+describe("clases aprendidas (F3): el analizador congelado mide el paciente de libro", () => {
+  it.each(["lbbb", "irbbb", "lafb", "lvh"])("%s: QRS medido a ±10 ms del programado y QT medible", async (id) => {
+    const { analyzeSamples } = await import("../src/engine/sample-analysis");
+    // As the user sees it: the preset with realistic acquisition (seeded, deterministic).
+    const c = { ...fromPreset(presetById(id)!), acquisition: "realistic" as const }, s = synthesize(c, 10);
+    const m = analyzeSamples({ fs: s.fs, leads: s.leads });
+    expect(m.evidence.qrs.status).toBe("usable");
+    expect(Math.abs(m.qrs! - c.qrs)).toBeLessThanOrEqual(10);
+    expect(m.qt).not.toBeNull();
   });
 });

@@ -128,6 +128,10 @@ export class SignalController {
         this.worker = worker;
         worker.onmessage = (event: MessageEvent<SignalResponse>) => {
           if (this.disposed || worker !== this.worker || event.data.id !== this.active?.id) return;
+          if ("infrastructure" in event.data && event.data.infrastructure) {
+            this.fail(worker, event.data.error);
+            return;
+          }
           this.clearTimer();
           this.active = null;
           if (this.pending) {

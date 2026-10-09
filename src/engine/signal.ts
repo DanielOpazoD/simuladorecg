@@ -39,7 +39,7 @@ import { assertRepresentableEvents, tWaveSupport } from "./constraints";
 import { median } from "./analysis/statistics";
 import { atrialVector, tWave } from "./morphology";
 import { regionalTerritory, regionalTCorrection } from "./regional-repolarization";
-import { RealisticTrack, usesRealisticBase } from "./realistic/engine";
+import { naturalTAxis, RealisticTrack, usesRealisticBase } from "./realistic/engine";
 import { acquisitionFloor } from "./realistic/acquisition";
 const FS = 1000,
   OUT = 500,
@@ -372,7 +372,7 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
             : c.axis
         : null,
       ...(track && c.naturalPAxis !== false ? { pAxis: track.patient.achievedAxes.p } : {}),
-      ...(track && c.naturalTAxis !== false ? { tAxis: track.patient.achievedAxes.t } : {}),
+      ...(track && naturalTAxis(c) ? { tAxis: track.patient.achievedAxes.t } : {}),
     },
     warnings: constraints(c),
   };

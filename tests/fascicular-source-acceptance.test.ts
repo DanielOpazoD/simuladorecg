@@ -7,7 +7,7 @@ function prepare(id:'lafb'|'lpfb') {
  const preset=presetById(id);if(!preset||preset.id!==id)throw Error('Missing declared preset');
  const c={...fromPreset(preset),filter:'off' as const,pAmp:0,tAmp:0,st:0,variability:0};
  c.artifacts={...c.artifacts,baseline:0,muscle:0,mains:0,loose:0};
- const s=synthesize(c,6),beat=s.events.beats.find(b=>b.time>3);
+ const s=synthesize(c,6,{learnedBase:false}),beat=s.events.beats.find(b=>b.time>3);
  if(!beat?.qrs)throw Error('Missing declared QRS support');
  return {c,s,beat};
 }

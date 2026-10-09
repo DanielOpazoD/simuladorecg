@@ -12,7 +12,7 @@ describe('T amplitude does not change the twelve-lead QRS outside FIR influence'
   for(const id of ['rbbb','irbbb','lbbb','wpw','vvi','ddd','vt','idioventricular'])
     it(`${id}: compares the complete QRS, with seconds-valued event boundaries`,()=>{
       const c={...fromPreset(presetById(id)!),filter:'off' as const,hr:60,atrialRate:60,variability:0};
-      const a=synthesize({...c,tAmp:0},10),b=synthesize(c,10);
+      const a=synthesize({...c,tAmp:0},10,{learnedBase:false}),b=synthesize(c,10,{learnedBase:false});
       assert.deepEqual(a.events,b.events);
       let samples=0;
       for(const beat of a.events.beats.filter(x=>x.time>1 && x.time<8)) {

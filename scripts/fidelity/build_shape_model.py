@@ -2,6 +2,7 @@
 
 Uso: python scripts/fidelity/build_shape_model.py --data ~/datos/ecg-referencia \
         --out src/engine/realistic/normal-shape-model.json [--components 64]
+Clases (F3): --class CLBBB|IRBBB|LAFB|LVH|… --out src/engine/realistic/models/CODE.json
 
 Entrena SOLO con los pliegues 1–8 de PTB-XL (los 9–10 son la reserva del banco).
 Por paciente se usa un único ECG NORM = 100 en ritmo sinusal, sin marcas de ruido,
@@ -34,6 +35,7 @@ PHASES = [('pre', 24), ('p', 40), ('pq', 20), ('qrs', 56), ('st', 80), ('t', 48)
 # Tras el fin de T: incluye la onda U y el retorno lento al TP (la cola que más
 # delataba al sintético, sobre todo en V2–V3). Con --source raw el marco dura 1,4 s.
 POST_MS = 260
+CLASS_POST_MS = 200  # clases: QRS/QT más largos dejan menos TP antes de la P siguiente
 FRAME_MS = 1396
 
 
@@ -51,7 +53,7 @@ def frac_index(x_ms):
     return x_ms / 2.0  # 500 Hz
 
 
-def segment(med, fid):
+def segment(med, fid, post_ms=POST_MS):
     """med: (600, 12) mV. fid: dict ms. Devuelve vector de fases y duraciones."""
     cols = [i for i, n in enumerate(['I', 'II', 'III', 'aVR', 'aVL', 'aVF', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6']) if n in INDEP]
     x = med[:, cols]
@@ -64,7 +66,7 @@ def segment(med, fid):
     # Ápice de T: máximo de la magnitud espacial entre el 30 % y el 92 % del ST-T.
     tt = np.linspace(qoff + 0.3 * (toff - qoff), qoff + 0.92 * (toff - qoff), 200)
     apex = tt[int(np.argmax(np.linalg.norm(interp(tt) - base, axis=1)))]
-    bounds = [(pon - PRE_MS, pon), (pon, poff), (poff, qon), (qon, qoff), (qoff, apex), (apex, toff), (toff, toff + POST_MS)]
+    bounds = [(pon - PRE_MS, pon), (pon, poff), (poff, qon), (qon, qoff), (qoff, apex), (apex, toff), (toff, toff + post_ms)]
     parts = []
     for (name, n), (a, b) in zip(PHASES, bounds):
         parts.append(interp(np.linspace(a, b, n)) - base)
@@ -185,7 +187,10 @@ def main():
     rejected = {'fiduciales': 0, 'archivo': 0, 'rango': 0}
     for row in rows:
         scp = ast.literal_eval(row['scp_codes'])
-        clean = all(row[k] == '' for k in ['pacemaker', 'electrodes_problems', 'burst_noise', 'static_noise', 'baseline_drift'])
+        # La deriva se tolera en las clases (el mediano la atenúa); el modelo normal,
+        # con miles de casos, la excluye.
+        flags = ['pacemaker', 'electrodes_problems', 'burst_noise', 'static_noise'] + (['baseline_drift'] if a.code == 'NORM' else [])
+        clean = all(row[k] == '' for k in flags)
         if not (row['strat_fold'] in [str(i) for i in range(1, 9)] and clean and selects(row, scp, a.code)):
             continue
         if row['patient_id'] in seen or not row['age'] or float(row['age']) < 18:
@@ -194,7 +199,8 @@ def main():
         f = fid.get(eid)
         # La cola post-T no debe alcanzar la P siguiente (P_On + RR) ni salir del marco.
         frame_end = FRAME_MS if a.source == 'raw' else 1196
-        if not f or not (PRE_MS < f['P_On'] < f['P_Off'] < f['QRS_On'] < f['QRS_Off'] < f['T_Off'] and f['T_Off'] + POST_MS <= min(frame_end, f['P_On'] + f['RR'] - 10)):
+        post = POST_MS if a.code == 'NORM' else CLASS_POST_MS
+        if not f or not (PRE_MS < f['P_On'] < f['P_Off'] < f['QRS_On'] < f['QRS_Off'] < f['T_Off'] and f['T_Off'] + post <= min(frame_end, f['P_On'] + f['RR'] - 10)):
             rejected['fiduciales'] += 1
             continue
         d = (f['P_Off'] - f['P_On'], f['QRS_On'] - f['P_Off'], f['QRS_Off'] - f['QRS_On'], f['T_Off'] - f['QRS_Off'])  # ms
@@ -219,7 +225,7 @@ def main():
                 rejected['archivo'] += 1
                 continue
             med = raw
-        v, dd = segment(med, f)
+        v, dd = segment(med, f, post)
         if not np.isfinite(v).all() or np.abs(v).max() > 6:
             rejected['rango'] += 1
             continue
@@ -286,7 +292,7 @@ def main():
         'diagnosis': a.code,
         'leads': INDEP,
         'phases': [{'name': nme, 'points': pts} for nme, pts in PHASES],
-        'postMs': POST_MS,
+        'postMs': POST_MS if a.code == 'NORM' else CLASS_POST_MS,
         'preMs': PRE_MS,
         'subjects': n,
         'components': k,
