@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { synthesize } from "../src/engine/signal";
 import { LEADS, type ECGCase, type Signal } from "../src/engine/types";
-import { fromPreset, presetById, PRESETS, TEXTBOOK_SEED, TEXTBOOK_SEEDS } from "../src/presets/catalog";
+import { fromPreset, presetById, PRESETS, TEXTBOOK_AF_SEED, TEXTBOOK_SEED, TEXTBOOK_SEEDS } from "../src/presets/catalog";
 import { realisticModelFor } from "../src/engine/realistic/scope";
 import { samplePatient } from "../src/engine/realistic/shape-model";
 
@@ -381,5 +381,43 @@ describe("F3.2: alcance del infarto antiguo y textos de la interfaz", () => {
     const warn = /infarto antiguo aprendido de pacientes reales/;
     expect(caseContext({ ...fromPreset(presetById("inferior")!), phase: "chronic" }).warnings.join(" ")).toMatch(warn);
     expect(caseContext(fromPreset(presetById("old_inferior")!)).warnings.join(" ")).not.toMatch(warn);
+  });
+});
+
+describe("F5.1: ondas f y RR de la FA aprendidos de PTB-XL", () => {
+  it("cada paciente tiene su propio CV de RR y su frecuencia dominante, deterministas por semilla", async () => {
+    const { afPatient } = await import("../src/engine/realistic/atrial-fibrillation");
+    const cvs = new Set<number>();
+    for (let seed = 1; seed <= 40; seed++) {
+      const p = afPatient(seed);
+      expect(p.rrCv).toBeGreaterThanOrEqual(0.08);
+      expect(p.rrCv).toBeLessThanOrEqual(0.4);
+      expect(p.dominantHz).toBeGreaterThanOrEqual(3);
+      expect(p.dominantHz).toBeLessThanOrEqual(12);
+      expect(p.fir.every(Number.isFinite)).toBe(true);
+      cvs.add(Math.round(p.rrCv * 1000));
+    }
+    expect(cvs.size).toBeGreaterThan(20);
+    expect(afPatient(7)).toEqual(afPatient(7));
+  });
+  it("las ondas f del paciente de libro se ven en V1 entre latidos (3–12 Hz, decenas de µV)", () => {
+    const s = synthesize(load("af"), 10), beats = s.events.beats;
+    let sumSq = 0, n = 0;
+    for (let k = 1; k < beats.length; k++) {
+      const a = beats[k - 1].time + beats[k - 1].qt! + 0.04, b = beats[k].time - 0.06;
+      for (let i = Math.ceil(a * s.fs); i < Math.floor(b * s.fs); i++) { sumSq += s.leads.V1[i] ** 2; n++; }
+    }
+    expect(n).toBeGreaterThan(200);
+    const rms = Math.sqrt(sumSq / n) * 1000;
+    expect(rms).toBeGreaterThan(8);
+    expect(rms).toBeLessThan(150);
+  });
+  it("sin base aprendida (núcleos) la FA conserva sus ondas f históricas", () => {
+    const c = load("af"), learned = synthesize(c, 4), kernels = synthesize(c, 4, { learnedBase: false });
+    expect(Array.from(learned.leads.V1)).not.toEqual(Array.from(kernels.leads.V1));
+    expect(kernels.leads.V1.every(Number.isFinite)).toBe(true);
+  });
+  it("los presets de FA muestran su paciente de libro", () => {
+    for (const id of ["af", "af_fast", "af_slow"]) expect(fromPreset(presetById(id)!).seed).toBe(TEXTBOOK_AF_SEED);
   });
 });

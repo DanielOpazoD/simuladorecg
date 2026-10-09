@@ -480,3 +480,55 @@ una vez).
 **Pruebas nuevas:** rsR' y S terminal ancha (≥ 30 ms) del BRD; Q ≥ 30 ms en aVF
 y QS en III del infarto inferior; QS en V1–V2 del anteroseptal; analizador sobre
 los siete pacientes de libro (QRS ±10 ms, QT medible).
+
+## F5.1 · Fibrilación auricular: ondas f y RR aprendidos
+
+**Datos.** 1.514 registros con FA de PTB-XL (bajados y verificados con sus SHA-256);
+963 pacientes adultos de los pliegues 1–8, sin flutter ni marcapasos
+(`scripts/fidelity/build_atrial_model.py`). Los códigos de ritmo de PTB-XL llevan
+probabilidad 0: cuenta su presencia.
+
+**Extracción.** Cancelación del QRST por latido medio (ganancia por latido y
+derivación, bordes suavizados), ±70 ms del QRS enmascarados, a 100 Hz: espectro
+de V1 (2–15 Hz), covarianza entre las 8 derivaciones independientes (3–12 Hz) y
+RR (CV, autocorrelación de lag 1). Una gaussiana contraída sobre los parámetros
+del espectro (pico en la frecuencia dominante, ancho, armónico), la covarianza
+(log-Cholesky, 7 modos) y el CV del RR. Sin trazados ni registros individuales.
+
+**Generación.** Cada paciente (semilla) tiene sus ondas f: fuentes blancas
+filtradas con su espectro y mezcladas con su covarianza, generadas en orden (un
+buffer más largo no cambia las muestras previas) y su propio CV de RR (antes 0,22
+fijo). Dos decisiones medidas:
+1. Una gaussiana sobre componentes principales del log-espectro mezclaba picos
+   y los aplanaba (frecuencia dominante sintética 3,9 Hz frente a 5,5 Hz real);
+   el espectro pasa a paramétrico.
+2. El fondo de baja frecuencia del espectro real es sobre todo resto de la
+   cancelación del QRST, que los latidos sintéticos ya producen: generarlo
+   también bajaba la frecuencia medida a 4,0 Hz. Se genera solo el pico y su
+   armónico sobre un piso pequeño (FA fina sin pico organizado).
+
+### Resultado
+
+Mismo extractor sobre 300 pacientes sintéticos (preset FA, adquisición realista)
+y los 297 reales con FA de la reserva (pliegues 9–10):
+
+| Rasgo | Real p10 / p50 / p90 | Sintético | KS (ondas f históricas) |
+|---|---|---|---|
+| Frecuencia dominante (Hz) | 3,0 / 5,5 / 7,5 | 3,0 / 5,5 / 7,8 | 0,15 (0,82) |
+| Ondas f en V1 (µV) | 11 / 22 / 46 | 15 / 23 / 45 | 0,15 (0,50) |
+| Ondas f en II (µV) | 9 / 17 / 30 | 16 / 22 / 33 | 0,33 (0,81) |
+| CV del RR | 0,11 / 0,19 / 0,28 | 0,11 / 0,17 / 0,30 | 0,11 (0,24) |
+| Autocorrelación RR | −0,51 / −0,07 / 0,31 | −0,38 / −0,04 / 0,30 | 0,12 (0,12) |
+
+Clasificador diagnóstico (FA): población sintética 83 % reconocida frente a 84 %
+de los reales (históricas: 87 %, con ondas f caricaturescas de 8,25 Hz fijos).
+Presets: FA 0,81 → 0,997; FA rápida 0,31 → 0,76; FA lenta 0,94 → 0,90. Paciente
+de libro de FA: semilla 251 (misma regla que las clases, sin QT, que el
+analizador no mide en FA).
+
+**Límites.** Las ondas f son un proceso estacionario: no reproducen la
+organización transitoria ni las fases de FA gruesa/fina dentro de un trazado. La
+amplitud en II queda algo alta en los pacientes de ondas pequeñas. El RR sigue
+siendo una renovación gamma (sin la autocorrelación negativa leve de los reales).
+Los casos de FA sobre núcleos (con extrasístoles ventriculares, por ejemplo)
+conservan las ondas f históricas.

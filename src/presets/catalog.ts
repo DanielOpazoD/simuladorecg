@@ -782,13 +782,16 @@ export const TEXTBOOK_SEED = 1951;
  * the best), then the one the frozen analyzer measures closest to the programmed
  * QRS, with a measurable QT (docs/fidelidad.md, F3). The normal population keeps
  * the criteria-based choice above. */
+/** Atrial fibrillation presets (F5.1): the patient also defines the f waves and RR
+ * irregularity; same rule as the classes (the analyzer does not measure QT in AF). */
+export const TEXTBOOK_AF_SEED = 251;
 export const TEXTBOOK_SEEDS: Record<ModelCode, number> = { NORM: TEXTBOOK_SEED, CLBBB: 15, CRBBB: 276, IRBBB: 201, LAFB: 9, LVH: 154, IMI: 52, ASMI: 105 };
 
 export function fromPreset(preset: Preset, view?: ECGCase["view"]): ECGCase {
   const c = cloneCase(DEFAULT_CASE);
   Object.assign(c, preset.patch);
   const model = realisticModelFor(c);
-  if (preset.patch.seed === undefined && model) c.seed = TEXTBOOK_SEEDS[model];
+  if (preset.patch.seed === undefined && model) c.seed = model === "NORM" && c.rhythm === "af" ? TEXTBOOK_AF_SEED : TEXTBOOK_SEEDS[model];
   c.presetId = preset.id;
   c.name = preset.name;
   if (view) c.view = { ...view };

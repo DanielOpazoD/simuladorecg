@@ -41,6 +41,7 @@ import { atrialVector, tWave } from "./morphology";
 import { regionalTerritory, regionalTCorrection } from "./regional-repolarization";
 import { naturalTAxis, RealisticTrack, usesRealisticBase } from "./realistic/engine";
 import { acquisitionFloor } from "./realistic/acquisition";
+import { addFibrillationWaves } from "./realistic/atrial-fibrillation";
 const FS = 1000,
   OUT = 500,
   WARM = 4,
@@ -221,7 +222,9 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
       );
     }
   }
-  if (c.rhythm === "af" || c.rhythm === "flutter" || c.rhythm === "vf") {
+  // Learned f waves (F5.1) go straight to the eight independent leads.
+  if (track && c.rhythm === "af") addFibrillationWaves(track.acc, FS, c.seed);
+  else if (c.rhythm === "af" || c.rhythm === "flutter" || c.rhythm === "vf") {
     const r = random(c.seed + 11);
     let phase = 0,
       noise = 0;

@@ -29,12 +29,12 @@ function referenceAfDraw(r: () => number, mean: number): number {
 `;
 }
 export function restoreHistoricalAfClock(source) {
- const imported="import {afInterval} from './af-rr';\n", call='      t += afInterval(r, base);';
+ const imported="import {afInterval} from './af-rr';\n", call='      t += afInterval(r, base, cv);';
  assert.equal(source.split(imported).length,2,'AF import changed');
  assert.equal(source.split(call).length,2,'AF invocation changed');
  return source.replace(imported,'').replace(call,OLD_INCREMENT);
 }
 export function assertFrozenAfSampler(source) {
  assert.equal(createHash('sha256').update(source).digest('hex'),
-  '13d8f1257cbfe7a3526dfb2cfc51bf4f942ae4b506485ecec797b0dc04d3b307','AF sampler changed after evaluation');
+  'b559b955deffac0ee022439a6a1ced96591b977de8d158f71d12d510f2b9e2c1','AF sampler changed after evaluation');
 }
