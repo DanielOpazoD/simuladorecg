@@ -464,9 +464,9 @@ reales de la reserva (pliegue 10) con el mismo umbral:
 | IM inferior antiguo | 70 % | 25 % |
 | IM anteroseptal antiguo | 77 % | 59 % |
 
-Los infartos antiguos sintéticos se reconocen más que los reales: los pacientes
-etiquetados IMI en PTB-XL incluyen muchos con Q mínimas; los presets fijan QRS y
-eje, y el modelo excluye comorbilidades que enmascaran el patrón.
+Los infartos antiguos sintéticos se reconocen más que los reales. Hipótesis no
+medidas: los presets fijan QRS y eje, y el modelo excluye comorbilidades (bloqueos,
+otros infartos) que en los reales enmascaran el patrón.
 
 **Pruebas nuevas:** rsR' y S terminal ancha (≥ 30 ms) del BRD; Q ≥ 30 ms en aVF
 y QS en III del infarto inferior; QS en V1–V2 del anteroseptal; analizador sobre
