@@ -32,7 +32,7 @@ export function beatTemplate(p: Patient, state: BeatShapeState, t: number, respi
   const phi = (2 * Math.PI * respiratoryRate * t) / 60;
   const resp = rotation(RESP_FRONTAL_DEG * Math.sin(phi), RESP_HORIZONTAL_DEG * Math.sin(phi + 0.6));
   const gain = 1 + RESP_GAIN * Math.sin(phi + 1.2);
-  const pGain = Math.max(0.5, 1 + P_RESP_GAIN * Math.sin(phi + 0.3) + P_JITTER * normal(state.rng));
+  const pGain = Math.max(0.6, Math.min(1.4, 1 + P_RESP_GAIN * Math.sin(phi + 0.3) + P_JITTER * normal(state.rng)));
   // Respiration acts on the already axis-corrected heart vector: R_resp · R_phase.
   const ops = {} as Record<PhaseName, Float64Array>;
   for (const ph of Object.keys(p.scales) as PhaseName[]) {
