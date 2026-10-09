@@ -77,8 +77,8 @@ def features(x):
     tp = []
     for p, q in zip(pk[:-1], pk[1:]):
         # Entre el final de T y el inicio de P, escalado con el RR.
-        rr = q - p
-        lo, hi = p + int(0.55 * rr), q - max(int(0.25 * rr), ms(220))
+        span = q - p
+        lo, hi = p + int(0.55 * span), q - max(int(0.25 * span), ms(220))
         if hi - lo >= ms(30):
             tp.append(hp[lo:hi])
     for j, L in enumerate(LEADS):
