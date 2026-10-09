@@ -192,17 +192,30 @@ export function leadOperator(r: Mat3, scale = 1): Float64Array {
     }
   return op;
 }
+/** Points around J over which the QRS operator hands over to the repolarization
+ * operator (last QRS points, first ST points). Different gains or rotations on
+ * each side would otherwise leave a step at J. */
+const J_BLEND = { qrs: 4, st: 12 };
+
 /** Apply one operator per phase to a template (returns a new array). */
-export function transform(m: ShapeModel, x: Float64Array, ops: Record<PhaseName, Float64Array>): Float64Array {
-  const y = new Float64Array(x.length);
+export function transform(m: ShapeModel, x: Float64Array, ops: Record<PhaseName, Float64Array>, blendAtJ = true): Float64Array {
+  const y = new Float64Array(x.length), q = m.phases.qrs, st = m.phases.st;
+  const blendStart = blendAtJ ? q.offset + q.points - J_BLEND.qrs : -1, blendEnd = blendAtJ ? st.offset + J_BLEND.st : -1;
+  const mixed = new Float64Array(NL * NL);
   for (const ph of Object.values(m.phases)) {
-    const op = ops[ph.name];
-    for (let p = ph.offset; p < ph.offset + ph.points; p++)
+    for (let p = ph.offset; p < ph.offset + ph.points; p++) {
+      let op = ops[ph.name];
+      if (p >= blendStart && p < blendEnd) {
+        const w = (p - blendStart + 0.5) / (blendEnd - blendStart);
+        for (let k = 0; k < NL * NL; k++) mixed[k] = (1 - w) * ops.qrs[k] + w * ops.st[k];
+        op = mixed;
+      }
       for (let a = 0; a < NL; a++) {
         let s = 0;
         for (let b = 0; b < NL; b++) s += op[a * NL + b] * x[p * NL + b];
         y[p * NL + a] = s;
       }
+    }
   }
   return y;
 }
@@ -251,10 +264,30 @@ export interface Patient {
   pqMs: number;
   /** Fraction of the ST-T interval at which the spatial T apex occurs. */
   tApexFraction: number;
+  /** Net-area frontal axes the template actually has (equal to the targets
+   * unless a dominant non-dipolar residual makes a target unreachable). */
+  achievedAxes: { p: number; qrs: number; t: number };
   /** Per-phase lead operators that enforce the requested axes and magnitudes. */
   ops: Record<PhaseName, Float64Array>;
   rotations: Record<PhaseName, Mat3>;
   scales: Record<PhaseName, number>;
+}
+
+/** Net areas of phases split into the heart-vector (dipolar) part and the
+ * non-dipolar residual seen in I and II. */
+function netAreas(m: ShapeModel, x: Float64Array, names: PhaseName[]) {
+  const dipole = [0, 0, 0];
+  let residualI = 0, residualII = 0;
+  for (const name of names) {
+    const ph = m.phases[name];
+    for (let p = ph.offset; p < ph.offset + ph.points; p++) {
+      const v = dipoleOf(x, p * NL);
+      for (let i = 0; i < 3; i++) dipole[i] += v[i];
+      residualI += x[p * NL] - (D[0][0] * v[0] + D[0][1] * v[1] + D[0][2] * v[2]);
+      residualII += x[p * NL + 1] - (D[1][0] * v[0] + D[1][1] * v[1] + D[1][2] * v[2]);
+    }
+  }
+  return { dipole, residualI, residualII };
 }
 
 /** Frontal axis of one or more phases from net I and aVF area (degrees). */
@@ -274,42 +307,59 @@ const GROUPS: { phases: PhaseName[]; ref: PhaseName[]; target: (t: PatientTarget
   { phases: ["qrs"], ref: ["qrs"], target: (t) => t.axis },
   { phases: ["st", "t", "post"], ref: ["st", "t"], target: (t) => t.tAxis },
 ];
-const ALL = (op: Float64Array): Record<PhaseName, Float64Array> => ({ p: op, pq: op, qrs: op, st: op, t: op, post: op });
 
 /** Sample a reproducible patient that honors the case-level targets. */
 export function samplePatient(t: PatientTargets): Patient {
+  // A patient whose frontal net area is nearly zero (indeterminate axis) cannot be
+  // rotated to every requested axis. The seed then moves deterministically to the
+  // next candidate, so the axis controls always hold; the best attempt is kept.
+  let best: Patient | null = null, bestErr = Infinity;
+  for (let attempt = 0; attempt < 12; attempt++) {
+    const p = sampleCandidate(t, attempt);
+    const miss = (got: number, goal: number | null) => (goal === null ? 0 : Math.abs(((got - goal + 540) % 360) - 180));
+    const err = Math.max(miss(p.achievedAxes.qrs, t.axis), miss(p.achievedAxes.p, t.pAxis), miss(p.achievedAxes.t, t.tAxis));
+    if (err < bestErr) { best = p; bestErr = err; }
+    if (err < 1) break;
+  }
+  return best!;
+}
+
+function sampleCandidate(t: PatientTargets, attempt: number): Patient {
   const m = shapeModel(), pop = m.population.magnitudesP50;
-  const rng = random((t.seed ^ 0x5eed1e) >>> 0);
+  const rng = random(((t.seed ^ 0x5eed1e) + attempt * 0x9e3779b9) >>> 0);
   // Unconditional draw: the person depends only on the seed.
   const known: Record<string, number> = {};
   const s = sampleConditional(m, known, rng);
   const z = Float64Array.from({ length: m.k }, (_, i) => s[`z${i}`]);
   const base = reconstruct(m, z);
   const rotations = {} as Record<PhaseName, Mat3>;
-  for (const g of GROUPS) {
-    // Rotate this group's heart vector until its net-area axis matches the target.
-    // Secant iteration: the non-dipolar residual does not rotate, so the axis is
-    // not exactly linear in the rotation angle (notably for small net T areas).
-    let frontal = 0;
+  const achieved = { p: 0, qrs: 0, t: 0 };
+  for (const [gi, g] of GROUPS.entries()) {
+    // The net-area axis is linear in the template: a rotating dipolar part plus a
+    // fixed non-dipolar residual. Scan the whole circle, then refine. When the
+    // residual dominates a tiny net area no rotation reaches the target; the
+    // closest axis is used and reported as achieved (never claimed as exact).
+    const areas = netAreas(m, base, g.ref);
+    const axisAt = (angle: number) => {
+      const r = rotation(angle, t.horizontalDeg), v = [0, 1, 2].map((i) => r[i * 3] * areas.dipole[0] + r[i * 3 + 1] * areas.dipole[1] + r[i * 3 + 2] * areas.dipole[2]);
+      const lead = (k: number) => D[k][0] * v[0] + D[k][1] * v[1] + D[k][2] * v[2];
+      const I = lead(0) + areas.residualI, II = lead(1) + areas.residualII;
+      return (Math.atan2(II - I / 2, I) * 180) / Math.PI;
+    };
     const goal = g.target(t);
+    let best = 0;
     if (goal !== null) {
-      const err = (angle: number) => {
-        const y = transform(m, base, ALL(leadOperator(rotation(angle, t.horizontalDeg))));
-        return ((goal - phaseAxis(m, y, g.ref) + 540) % 360) - 180;
-      };
-      let a0 = 0, e0 = err(0), a1 = e0, e1 = err(a1);
-      for (let iter = 0; iter < 40 && Math.abs(e1) > 0.05; iter++) {
-        const slope = Math.abs(e1 - e0) > 1e-9 ? (a1 - a0) / (e0 - e1) : 1;
-        const step = Math.max(-90, Math.min(90, e1 * (Number.isFinite(slope) && slope > 0.2 && slope < 5 ? slope : 1)));
-        a0 = a1; e0 = e1; a1 += step; e1 = err(a1);
-      }
-      frontal = a1;
+      const err = (a: number) => Math.abs(((goal - axisAt(a) + 540) % 360) - 180);
+      for (let a = -180; a < 180; a += 0.5) if (err(a) < err(best)) best = a;
+      for (let step = 0.25; step > 1e-4; step /= 2)
+        for (const c of [best - step, best + step]) if (err(c) < err(best)) best = c;
     }
-    for (const ph of g.phases) rotations[ph] = rotation(frontal, t.horizontalDeg);
+    achieved[(["p", "qrs", "t"] as const)[gi]] = axisAt(best);
+    for (const ph of g.phases) rotations[ph] = rotation(best, t.horizontalDeg);
   }
   const unit = {} as Record<PhaseName, Float64Array>;
   for (const ph of Object.keys(rotations) as PhaseName[]) unit[ph] = leadOperator(rotations[ph]);
-  const rotated = transform(m, base, unit);
+  const rotated = transform(m, base, unit, false);
   const tGain = (pop[2] * t.tScale) / Math.max(1e-6, phaseMagnitude(m, rotated, ["st", "t"]));
   const pGain = (pop[0] * t.pScale) / Math.max(1e-6, phaseMagnitude(m, rotated, "p"));
   const scales: Record<PhaseName, number> = {
@@ -319,8 +369,14 @@ export function samplePatient(t: PatientTargets): Patient {
   };
   const ops = {} as Record<PhaseName, Float64Array>;
   for (const ph of Object.keys(scales) as PhaseName[]) ops[ph] = leadOperator(rotations[ph], scales[ph]);
+  // Report the axes of the rotated template without gains (a wave scaled to zero
+  // keeps its direction; the J hand-over moves them by tenths of a degree at most).
+  const final = rotated;
+  achieved.p = phaseAxis(m, final, "p");
+  achieved.qrs = phaseAxis(m, final, "qrs");
+  achieved.t = phaseAxis(m, final, ["st", "t"]);
   return {
-    model: m, z, ops, rotations, scales, pMs: Math.exp(s.log_p), pqMs: Math.exp(s.log_pq),
+    model: m, z, ops, rotations, scales, achievedAxes: achieved, pMs: Math.exp(s.log_p), pqMs: Math.exp(s.log_pq),
     tApexFraction: Math.min(0.9, Math.max(0.35, 1 / (1 + Math.exp(-s.logit_t_apex)))),
   };
 }

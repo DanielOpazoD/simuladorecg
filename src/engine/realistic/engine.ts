@@ -74,7 +74,8 @@ export function realisticQrsVector(c: ECGCase, u: number): [number, number, numb
   if (!(u > 0 && u < 1)) return [0, 0, 0];
   const p = realisticPatient(c), m = p.model, key = "qrsTemplate";
   const cache = p as Patient & { [key]?: Float64Array };
-  const x = cache[key] ?? (cache[key] = transform(m, reconstruct(m, p.z), p.ops));
+  // The lab shows activation alone: no hand-over to the repolarization operator.
+  const x = cache[key] ?? (cache[key] = transform(m, reconstruct(m, p.z), p.ops, false));
   const q = m.phases.qrs, s = u * (q.points - 1);
   const i = Math.min(q.points - 2, Math.floor(s)), f = s - i;
   const a = dipoleOf(x, (q.offset + i) * 8), b = dipoleOf(x, (q.offset + i + 1) * 8);

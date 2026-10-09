@@ -7,6 +7,8 @@
 import { DEFAULT_CASE } from "../../src/engine/types";
 import { ensureLearnedModel } from "../../src/ui/activation-model";
 
+// Keep the product default visible to the test that guards it.
+(globalThis as { productAcquisition?: unknown }).productAcquisition = DEFAULT_CASE.acquisition;
 DEFAULT_CASE.acquisition = "ideal";
 // The browser lab loads the learned model on demand; tests preload it.
 await ensureLearnedModel();

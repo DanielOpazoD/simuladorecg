@@ -123,14 +123,22 @@ las duraciones de P, PQ y ápice de T). Los controles actúan como transformacio
 exactas sobre ella: deformación temporal por fase (PR, QRS, QT del calendario),
 rotación del vector cardiaco (ejes P/QRS/T exactos por área neta, transición como
 rotación horizontal) y ganancia por onda. Mover un control no deforma otra onda.
+El eje se busca en todo el círculo sobre el área neta (parte dipolar que rota más
+residuo no dipolar fijo). Un paciente con área frontal casi nula (eje
+indeterminado, 6–12 % de las semillas) no alcanza cualquier eje: la semilla pasa
+de forma determinista al siguiente candidato, y el eje informado como verdad es
+siempre el que tiene la plantilla (error < 1° en 120 semillas × 4 ejes). En J,
+el operador del QRS cede al de la repolarización de forma gradual (4 + 12 puntos),
+sin escalón aunque QRS y T tengan ganancias muy distintas.
 Los presets muestran el paciente de libro (`TEXTBOOK_SEED`, elegido por
 `choose-textbook-seed.mjs`: el más cercano a la media entre los 143/4.000 que
 cumplen todos los criterios clásicos); la semilla explora la variedad real.
 
 **Repolarización auricular.** La P parte de la línea TP; el PR queda por debajo
 (onda Ta) y esa desviación decae dentro del QRS-ST (τ = 80 ms). Un latido
-conducido reproduce exactamente la plantilla; una P bloqueada o un latido sin
-aurícula organizada (FA, unión) siguen siendo fisiológicos.
+conducido conserva la plantilla salvo que su Ta sigue la amplitud de su propia P;
+una P bloqueada o un latido sin aurícula organizada (FA, unión) siguen siendo
+fisiológicos.
 
 **Vida entre latidos.** Rotación respiratoria del vector (1,5° frontal, 6°
 horizontal), ganancia respiratoria 2,5 % y variación morfológica AR(1) de 0,05 DE;
@@ -145,18 +153,28 @@ precordiales ≈2 µV e independientes, deriva respiratoria dominada por la pier
 (`tests/setup/ideal-acquisition.ts`).
 
 **Tarjetas de medidas.** Las tarjetas muestran ahora los valores del modelo que
-generó el trazado (PR progresivo como rango en Wenckebach). El analizador congelado
-sigue disponible como estimación en «Medidas» y para señales importadas.
+generó el trazado (PR progresivo como rango en Wenckebach; QRS y QTc del latido
+conducido, así que el bigeminismo no mezcla extrasístoles). El analizador
+congelado sigue disponible como estimación en «Medidas» y para señales importadas.
+
+**Atribución.** El pie de la app acredita PTB-XL y PTB-XL+ (CC BY 4.0), porque el
+bundle distribuye coeficientes derivados.
 
 ### Resultado en el banco (8-10-2026)
 
 | | Motor v1.5 | F2 |
 |---|---|---|
-| AUC global (GB / RL) | 1,00 / 1,00 | 0,99 / 0,95 |
-| AUC morfología (GB / RL) | 1,00 / 1,00 | 0,96 / 0,89 |
-| AUC dinámica (GB / RL) | 1,00 / 1,00 | 0,83 / 0,77 |
-| AUC ruido (GB / RL) | 1,00 / 1,00 | 0,99 / 0,86 |
-| KS mediano morfología / dinámica / ruido | 0,40 / 1,00 / 0,87 | 0,11 / 0,15 / 0,17 |
+| AUC global (GB / RL) | 1,00 / 1,00 | 0,99 / 0,96 |
+| AUC morfología (GB / RL) | 1,00 / 1,00 | 0,98 / 0,91 |
+| AUC dinámica (GB / RL) | 1,00 / 1,00 | 0,82 / 0,76 |
+| AUC ruido (GB / RL) | 1,00 / 1,00 | 0,99 / 0,87 |
+| KS mediano morfología / dinámica / ruido | 0,40 / 1,00 / 0,87 | 0,12 / 0,16 / 0,17 |
+
+**Prueba visual a ciegas.** 20 ECG (10 reales de la reserva, 10 de F2) dibujados
+igual y mezclados; un revisor automático con criterio de electrofisiólogo acertó
+15/20 (esperaba ~60 %). Tomó 3 sintéticos por reales (uno por patológico) y 2
+reales limpios por sintéticos. Su pista principal: los reales muestran más ruido
+muscular y deriva visibles y más variación de T entre latidos. Es el objetivo de F2.1.
 
 Rasgos antes delatores (mediana real → v1.5 → F2): ruido > 25 Hz en I 4,6 → 0,17 →
 3,8 µV; variación del QRS latido a latido 2,9 → 0,12 → 3,3 %; P en V3 0,059 →
@@ -175,6 +193,7 @@ El analizador (PR #155) se diseñó y validó sobre la morfología antigua. Sobr
 latidos reales: mide el QT 15–40 ms más corto que el fin de T de 12SL, puede no
 estimar el PR por la P de amplitud real con depresión Ta, y con QRS de 10 % de
 amplitud y P/T máximas cuenta ondas T como latidos. Por eso las tarjetas usan los
-valores del modelo. Sus pruebas de regresión siguen corriendo sobre el modelo de
+valores del modelo. Una prueba acota el sesgo para que no empeore sin aviso
+(FC ±2 lpm, QRS ±20 ms, QT ±50 ms en sinusal a 60/72/90 lpm). Sus pruebas de regresión siguen corriendo sobre el modelo de
 núcleos (`synthesize(..., { learnedBase: false })`), una costura temporal que
 desaparece cuando cada grupo de patologías migre.

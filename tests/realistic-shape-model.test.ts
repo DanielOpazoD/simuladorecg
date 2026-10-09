@@ -42,10 +42,10 @@ describe("modelo de forma del latido normal", () => {
     for (const axis of [-30, 0, 30, 55, 80, 100]) {
       const p = samplePatient({ ...base, axis, qrsScale: 1.4, tScale: 0.7 });
       const x = transform(p.model, reconstruct(p.model, p.z), p.ops);
-      expect(Math.abs(templateAxis(p.model, x) - axis)).toBeLessThan(0.2);
+      expect(Math.abs(templateAxis(p.model, x) - axis)).toBeLessThan(0.5);
       const q = samplePatient({ ...base, axis, pAxis: 60, tAxis: 30 }), y = transform(q.model, reconstruct(q.model, q.z), q.ops);
-      expect(Math.abs(phaseAxis(q.model, y, "p") - 60)).toBeLessThan(0.2);
-      expect(Math.abs(phaseAxis(q.model, y, ["st", "t"]) - 30)).toBeLessThan(0.2);
+      expect(Math.abs(phaseAxis(q.model, y, "p") - 60)).toBeLessThan(0.5);
+      expect(Math.abs(phaseAxis(q.model, y, ["st", "t"]) - 30)).toBeLessThan(0.5);
       const pop = p.model.population.magnitudesP50;
       expect(phaseMagnitude(p.model, x, "qrs")).toBeCloseTo(pop[1] * 1.4, 6);
       expect(phaseMagnitude(p.model, x, ["st", "t"])).toBeCloseTo(pop[2] * 0.7, 6);
@@ -80,5 +80,32 @@ describe("modelo de forma del latido normal", () => {
     expect(-lead(V1, "qrs").min).toBeGreaterThan(lead(V1, "qrs").max);
     expect(lead(II, "p").max).toBeGreaterThan(0.04);
     expect(lead(II, "t").max).toBeGreaterThan(0.1);
+  });
+});
+
+describe("propiedades sobre muchos pacientes", () => {
+  const seeds = Array.from({ length: 120 }, (_, i) => 1 + i * 37);
+  it("el eje informado es siempre el que tiene la plantilla, y casi siempre el pedido", () => {
+    for (const axis of [-90, 55, 150, 180]) {
+      let exact = 0;
+      for (const seed of seeds) {
+        // Activation axis (no J hand-over to the repolarization gain).
+        const p = samplePatient({ ...base, seed, axis }), x = transform(p.model, reconstruct(p.model, p.z), p.ops, false);
+        expect(Math.abs(((templateAxis(p.model, x) - p.achievedAxes.qrs + 540) % 360) - 180)).toBeLessThan(0.05);
+        if (Math.abs(((p.achievedAxes.qrs - axis + 540) % 360) - 180) < 1) exact++;
+      }
+      expect(exact / seeds.length).toBe(1);
+    }
+  });
+  it("no hay escalón en J aunque QRS y T tengan ganancias muy distintas", () => {
+    for (const [qrsScale, tScale] of [[1, 1], [1, 3.6], [3, 1], [0.1, 3.6]]) {
+      let worst = 0;
+      for (const seed of seeds.slice(0, 40)) {
+        const p = samplePatient({ ...base, seed, qrsScale, tScale }), m = p.model, y = transform(m, reconstruct(m, p.z), p.ops);
+        const j = m.phases.st.offset, before = j - 1;
+        for (let l = 0; l < 8; l++) worst = Math.max(worst, Math.abs(y[j * 8 + l] - y[before * 8 + l]));
+      }
+      expect(worst).toBeLessThan(0.06);
+    }
   });
 });

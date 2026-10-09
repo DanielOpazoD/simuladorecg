@@ -1,7 +1,7 @@
 """Construye el modelo de forma del latido sinusal normal desde PTB-XL+ (CC BY 4.0).
 
 Uso: python scripts/fidelity/build_shape_model.py --data ~/datos/ecg-referencia \
-        --out src/engine/realistic/normal-shape-model.json [--components 28]
+        --out src/engine/realistic/normal-shape-model.json [--components 64]
 
 Entrena SOLO con los pliegues 1–8 de PTB-XL (los 9–10 son la reserva del banco).
 Por paciente se usa un único ECG NORM = 100 en ritmo sinusal, sin marcas de ruido,

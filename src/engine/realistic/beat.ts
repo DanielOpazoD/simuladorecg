@@ -55,8 +55,9 @@ export const TA_DECAY_MS = 80;
  * Adds consecutive warped phases starting at `start` (s). Templates are referred
  * to the TP line before P, so the PQ segment ends below it (Ta). That offset is
  * carried by the atrial component as an exponential tail and removed from the
- * ventricular one, so a conducted beat reproduces the learned waveform exactly
- * while dissociated P waves and atrium-less beats stay physiological.
+ * ventricular one: a conducted beat keeps the learned waveform except that its
+ * Ta follows the P wave's own amplitude, and dissociated P waves and atrium-less
+ * beats stay physiological.
  */
 function place(acc: Float64Array[], fs: number, start: number, x: Float64Array, p: Patient, segs: Segment[], mode: "atrial" | "ventricular") {
   const m = p.model, phasesMs = segs.reduce((s, g) => s + g.ms, 0);

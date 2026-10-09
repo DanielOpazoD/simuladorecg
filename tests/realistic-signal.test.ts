@@ -51,8 +51,9 @@ describe("amplitud de T sobre la base aprendida", () => {
     expect(response).toBeGreaterThan(0.1);
     expect(error).toBeLessThan(1e-12);
   });
-  it("no toca P ni QRS (fuera del soporte de ±40 ms del filtro antialias)", () => {
-    expect(maxDiff(zero, full, b.time - 0.25, j - 0.041)).toBeLessThan(1e-12);
+  it("no toca P ni QRS (fuera del traspaso en J y del soporte de ±40 ms del filtro antialias)", () => {
+    // The QRS→ST operator hand-over spans the last 4/56 of the QRS (≈6 ms here).
+    expect(maxDiff(zero, full, b.time - 0.25, j - 0.05)).toBeLessThan(1e-12);
   });
   it("con T = 0 solo queda la cola de la onda Ta auricular (µV), no repolarización ventricular", () => {
     const window: [number, number] = [j + 0.1, b.time + b.qt! - 0.01];
@@ -134,5 +135,39 @@ describe("adquisición realista", () => {
       expect(rms(noise(lead))).toBeGreaterThan(3);
       expect(rms(noise(lead))).toBeLessThan(200);
     }
+  });
+});
+
+import { measure } from "../src/engine/measure";
+import { modelMetricCards } from "../src/ui/metric-cards";
+
+describe("límites conocidos del analizador congelado sobre la base aprendida", () => {
+  // Cota explícita para que el sesgo documentado en docs/fidelidad.md no empeore
+  // sin que nadie lo note; las tarjetas usan los valores del modelo.
+  it.each([60, 72, 90])("FC %s: FC ±2 lpm, QRS ±20 ms y QT ±50 ms", (hr) => {
+    const s = synthesize(load("sinus", { hr }), 10), m = measure(s);
+    expect(Math.abs(m.hr! - s.truth.hr)).toBeLessThan(2);
+    expect(Math.abs(m.qrs! - s.truth.qrs!)).toBeLessThan(20);
+    if (m.qt !== null) expect(Math.abs(m.qt - s.truth.qt!)).toBeLessThan(50);
+  });
+});
+
+describe("producto", () => {
+  it("la adquisición por defecto del producto es realista", () => {
+    expect((globalThis as { productAcquisition?: unknown }).productAcquisition).toBe("realistic");
+  });
+  it("todos los presets se generan con adquisición realista sin valores no finitos", () => {
+    for (const p of PRESETS.filter((x) => x.strategy !== "pending")) {
+      const s = synthesize({ ...fromPreset(p), acquisition: "realistic" }, 10);
+      for (const lead of LEADS) expect(s.leads[lead].every(Number.isFinite), p.id).toBe(true);
+    }
+  }, 60_000);
+  it("el eje de la tarjeta es el que tiene el trazado, no solo el pedido", () => {
+    const s = synthesize(load("sinus", { axis: 150, seed: 21 }), 10);
+    expect(modelMetricCards(load("sinus", { axis: 150, seed: 21 }), s)[4].value).toBe(`${Math.round(s.truth.axis!)}<small>°</small>`);
+  });
+  it("bigeminismo: QRS y QTc de las tarjetas describen el latido conducido", () => {
+    const c = fromPreset(presetById("bigeminy")!), cards = modelMetricCards(c, synthesize(c, 10));
+    expect(cards[2].value).toBe(`${c.qrs}<small>ms</small>`);
   });
 });

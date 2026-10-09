@@ -89,7 +89,14 @@ export function modelMetricCards(c: ECGCase, s: Signal): MetricCard[] {
   const conducted = beats.filter((b) => b.pr !== undefined).map((b) => Math.round(b.pr! * 1000));
   const prRange = conducted.length ? [Math.min(...conducted), Math.max(...conducted)] : null;
   const variablePr = prRange !== null && prRange[1] - prRange[0] >= 10;
-  const qtc = t.qt !== null && rr ? t.qt / Math.cbrt(rr) : null;
+  // Interval cards describe the dominant conducted beat: in bigeminy the median of
+  // every beat would mix in the ectopics. Rhythms without conducted beats keep the
+  // generated QRS but have no meaningful QTc.
+  const normal = beats.filter((b) => b.kind === "normal" && b.qrs !== undefined && b.qt !== undefined);
+  const middle = (xs: number[]) => xs.sort((a, b) => a - b)[Math.floor(xs.length / 2)];
+  const qrsMs = normal.length ? middle(normal.map((b) => b.qrs! * 1000)) : t.qrs;
+  const qtMs = normal.length ? middle(normal.map((b) => b.qt! * 1000)) : null;
+  const qtc = qtMs !== null && rr ? qtMs / Math.cbrt(rr) : null;
   const card = (key: MetricKey, label: string, value: string, note: string): MetricCard =>
     value === "—"
       ? { key, label, value, note: "No aplica", status: "unavailable", reason: "Sin este componente en el ritmo generado." }
@@ -99,7 +106,7 @@ export function modelMetricCards(c: ECGCase, s: Signal): MetricCard[] {
     variablePr
       ? card("pr", "PR", `${prRange![0]}–${prRange![1]}<small>ms</small>`, c.av === "mobitz1" ? "modelo · progresivo" : "modelo · variable")
       : card("pr", "PR", none || t.pr === null ? "—" : display(t.pr, "ms"), "modelo"),
-    card("qrs", "QRS", none ? "—" : display(t.qrs, "ms"), "modelo"),
+    card("qrs", "QRS", none ? "—" : display(qrsMs, "ms"), "modelo"),
     card("qt", "QTc", none || c.rhythm === "torsades" ? "—" : display(qtc, "ms"), "modelo · Fridericia"),
     card("axis", "Eje QRS", none ? "—" : display(t.axis, "°"), "modelo"),
   ];

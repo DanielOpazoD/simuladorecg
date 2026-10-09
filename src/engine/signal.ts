@@ -362,7 +362,9 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
       qrs: bs.length ? widths[Math.floor(widths.length / 2)] : null,
       qt: bs.length ? median(bs.map((b) => b.qt! * 1000)) : null,
       axis: bs.length
-        ? c.rhythm === "torsades"
+        ? track && bs.some((b) => b.kind === "normal")
+          ? track.patient.achievedAxes.qrs
+          : c.rhythm === "torsades"
           ? null
           : allV
             ? ventricularSource(c, bs[0])!.axis
