@@ -103,6 +103,10 @@ export interface ECGCase {
     reversed: boolean;
   };
   filter: "off" | "diagnostic" | "monitor" | "aggressive";
+  /** Learned base: P and T keep the patient's own axes and turn with the heart
+   * unless the user sets them (then pAxis/tAxis are exact targets). Missing = natural. */
+  naturalPAxis?: boolean;
+  naturalTAxis?: boolean;
   /** Resting noise floor measured in real recordings; missing means "realistic". */
   acquisition?: "realistic" | "ideal";
   notch: 0 | 50 | 60;
@@ -157,6 +161,9 @@ export interface Signal {
     qrs: number | null;
     qt: number | null;
     axis: number | null;
+    /** Learned base with natural P/T axes: the patient's own P and T axes. */
+    pAxis?: number;
+    tAxis?: number;
   };
   warnings: string[];
 }
@@ -261,6 +268,8 @@ export const DEFAULT_CASE: ECGCase = {
   artifacts: { baseline: 0, muscle: 0, mains: 0, loose: 0, reversed: false },
   filter: "diagnostic",
   acquisition: "realistic",
+  naturalPAxis: true,
+  naturalTAxis: true,
   notch: 0,
   mainsFrequency: 50,
   view: {
@@ -291,6 +300,8 @@ export function normalizeCase(input: unknown): ECGCase {
     throw new Error("Versión de caso no compatible (se requiere versión 1).");
   const c = cloneCase(DEFAULT_CASE);
   const enums: Record<string, readonly unknown[]> = {
+    naturalPAxis: [true, false],
+    naturalTAxis: [true, false],
     acquisition: ["realistic", "ideal"],
     rhythm: [
       "sinus",
@@ -400,6 +411,9 @@ export function normalizeCase(input: unknown): ECGCase {
     }
   }
   c.seed = Math.round(c.seed);
+  // Cases saved before natural P/T axes existed keep an axis they had changed.
+  if (s.naturalPAxis === undefined) c.naturalPAxis = s.pAxis === undefined || s.pAxis === DEFAULT_CASE.pAxis;
+  if (s.naturalTAxis === undefined) c.naturalTAxis = s.tAxis === undefined || s.tAxis === DEFAULT_CASE.tAxis;
   c.flutterRatio = Math.round(c.flutterRatio);
   for (const k of ["presetId", "name"] as const)
     if (typeof s[k] === "string") c[k] = s[k].slice(0, 100);

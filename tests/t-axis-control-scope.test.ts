@@ -10,13 +10,15 @@ it.each(['lbbb','rbbb','irbbb','bifascicular','vvi','ddd','vt','torsades','compl
  expect(input(html)).toMatch(/\bdisabled\b/);
  expect(input(html)).toContain('aria-describedby="t-axis-note"');
  expect(html).toContain('id="t-axis-note"');
- const a=synthesize({...c,tAxis:-40},6),b=synthesize({...c,tAxis:80},6);
+ // Moving the slider fixes the axis (on the learned base it is natural until then).
+ const a=synthesize({...c,tAxis:-40,naturalTAxis:false},6),b=synthesize({...c,tAxis:80,naturalTAxis:false},6);
  expect(a.leads).toEqual(b.leads);expect(c).toEqual(before);
 });
 it.each(['sinus','lafb','lpfb','pvc','bigeminy','af','flutter','junctional'])
 ('%s retains a responsive primary T-axis control',id=>{
  const c=load(id);expect(input(controls(c))).not.toMatch(/\bdisabled\b/);
- const a=synthesize({...c,tAxis:-40},6),b=synthesize({...c,tAxis:80},6);
+ // Moving the slider fixes the axis (on the learned base it is natural until then).
+ const a=synthesize({...c,tAxis:-40,naturalTAxis:false},6),b=synthesize({...c,tAxis:80,naturalTAxis:false},6);
  expect(a.leads.II).not.toEqual(b.leads.II);
 });
 it('preserves a stored axis while T is muted and restores it without altering the case',()=>{

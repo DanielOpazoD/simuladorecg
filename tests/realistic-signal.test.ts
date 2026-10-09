@@ -189,7 +189,7 @@ describe("eje: la tarjeta dice lo que muestra el trazado", () => {
   const wrap = (d: number) => Math.abs(((d + 540) % 360) - 180);
   // Contract: the card always states the trace's own axis; the trace follows the
   // control within clinical reading precision (±15°), tighter in the usual range.
-  it.each([[180, 25], [-150, 25], [150, 25], [-30, 10], [55, 10], [90, 10]])("eje %s° en 30 semillas (máx. %s°)", (axis, limit) => {
+  it.each([[180, 15], [-150, 15], [150, 15], [-30, 10], [55, 10], [90, 10]])("eje %s° en 30 semillas (máx. %s°)", (axis, limit) => {
     const misses: number[] = [];
     for (let seed = 1; seed <= 30; seed++) {
       const s = synthesize(load("sinus", { axis, seed: seed * 7 }), 10), measured = traceAxis(s);
@@ -206,5 +206,48 @@ describe("eje: la tarjeta dice lo que muestra el trazado", () => {
       const b = samplePatient({ seed, axis: 150, pAxis: 55, tAxis: 40, pScale: 1, qrsScale: 1, tScale: 1, horizontalDeg: 0 });
       expect(Array.from(b.z)).toEqual(Array.from(a.z));
     }
+  });
+});
+
+import { changeCase } from "../src/ui/case-state";
+import { normalizeCase } from "../src/engine/types";
+
+describe("ejes naturales de P y T", () => {
+  it("los presets parten con ejes naturales y mover el control los fija", () => {
+    const c = fromPreset(presetById("sinus")!);
+    expect(c.naturalPAxis).toBe(true);
+    expect(c.naturalTAxis).toBe(true);
+    const moved = changeCase(c, "pAxis", 100);
+    expect(moved.naturalPAxis).toBe(false);
+    expect(moved.naturalTAxis).toBe(true);
+    expect(changeCase(c, "tAxis", -20).naturalTAxis).toBe(false);
+  });
+  it("un caso guardado antes de esta versión conserva el eje que había cambiado", () => {
+    expect(normalizeCase({ version: 1, pAxis: 110 }).naturalPAxis).toBe(false);
+    expect(normalizeCase({ version: 1, tAxis: -30 }).naturalTAxis).toBe(false);
+    expect(normalizeCase({ version: 1 }).naturalPAxis).toBe(true);
+    expect(normalizeCase({ version: 1, pAxis: 55, naturalPAxis: true }).naturalPAxis).toBe(true);
+  });
+  it("con ejes naturales el control no altera la señal; fijado, sí, y solo la P", () => {
+    const c = load("sinus", { hr: 60 });
+    const a = synthesize({ ...c, pAxis: 0 }, 10), b = synthesize({ ...c, pAxis: 120 }, 10);
+    for (const lead of LEADS) expect(b.leads[lead]).toEqual(a.leads[lead]);
+    expect(a.truth.pAxis).toBeDefined();
+    const fixed = synthesize({ ...c, pAxis: 120, naturalPAxis: false }, 10), beat = fixed.events.beats[3];
+    expect(fixed.truth.pAxis).toBeUndefined();
+    // QRS-T only carries the atrial Ta tail, which follows the P wave's gain (µV).
+    expect(maxDiff(a, fixed, beat.time + 0.06, beat.time + beat.qt!)).toBeLessThan(0.006);
+    expect(maxDiff(a, fixed, beat.time - 0.25, beat.time)).toBeGreaterThan(0.01);
+  });
+  it("el acoplamiento natural sigue al QRS como en pacientes reales (P 0,14; T 0,25)", () => {
+    const base = load("sinus"), p0 = synthesize({ ...base, axis: 20 }, 10).truth, p1 = synthesize({ ...base, axis: 80 }, 10).truth;
+    const dP = p1.pAxis! - p0.pAxis!, dT = p1.tAxis! - p0.tAxis!;
+    // Rotations of 0,14 and 0,25 × the QRS turn; net-area axes respond less than
+    // linearly (non-dipolar residual), so check direction and order of magnitude.
+    expect(dP).toBeGreaterThan(1);
+    expect(dP).toBeLessThan(15);
+    expect(dT).toBeGreaterThan(5);
+    expect(dT).toBeLessThan(25);
+    expect(dP).toBeLessThan(dT);
   });
 });

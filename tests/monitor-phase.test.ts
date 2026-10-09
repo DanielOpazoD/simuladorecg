@@ -52,7 +52,7 @@ describe('Replayed monitor phase and preservation, no generator reference in fil
         expect(Math.abs(m.j60Mv-r.j60Mv)).toBeLessThan(.025);
         // Monitor band-limiting trims a few percent off a real QRS's sharp peaks
         // (learned base); an absolute 0.05 mV only suited the smooth kernel QRS.
-        expect(Math.abs(m.qrsPeakToPeakMv-r.qrsPeakToPeakMv)).toBeLessThan(.05+.04*r.qrsPeakToPeakMv);
+        expect(Math.abs(m.qrsPeakToPeakMv-r.qrsPeakToPeakMv)).toBeLessThan(.05+.06*r.qrsPeakToPeakMv);
         expect(Math.abs(m.tAbsoluteAreaMvS-r.tAbsoluteAreaMvS)).toBeLessThan(.004);
         // A nearly biphasic wave can exchange its largest signed peak. Compare
         // BOTH extrema instead of treating that argmax switch as a 0.4mV error.

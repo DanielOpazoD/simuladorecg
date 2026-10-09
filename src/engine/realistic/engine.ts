@@ -20,11 +20,12 @@ const patients = new Map<string, Patient>();
  * (time warping, heart rotation, per-wave gain), so moving one control never
  * reshapes an unrelated wave. */
 export function realisticPatient(c: ECGCase): Patient {
-  const key = [c.seed, c.axis, c.pAxis, c.tAxis, c.pAmp, qrsAmplitudeScale(c), c.tAmp, c.transition].join("|");
+  const pAxis = c.naturalPAxis === false ? c.pAxis : null, tAxis = c.naturalTAxis === false ? c.tAxis : null;
+  const key = [c.seed, c.axis, pAxis, tAxis, c.pAmp, qrsAmplitudeScale(c), c.tAmp, c.transition].join("|");
   let p = patients.get(key);
   if (!p) {
     p = samplePatient({
-      seed: c.seed, axis: c.axis, pAxis: c.pAxis, tAxis: c.tAxis,
+      seed: c.seed, axis: c.axis, pAxis, tAxis,
       pScale: c.pAmp / P_REFERENCE_AMPLITUDE, qrsScale: qrsAmplitudeScale(c), tScale: c.tAmp / T_REFERENCE_AMPLITUDE,
       horizontalDeg: TRANSITION_DEG * c.transition,
     });

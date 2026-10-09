@@ -16,7 +16,7 @@ import { LEAD_REGISTRY } from "../lead-registry";
 import { normal, random } from "../random";
 
 export const MODEL_LEADS = ["I", "II", "V1", "V2", "V3", "V4", "V5", "V6"] as const;
-export type PhaseName = "p" | "pq" | "qrs" | "st" | "t" | "post";
+export type PhaseName = "pre" | "p" | "pq" | "qrs" | "st" | "t" | "post";
 const NL = MODEL_LEADS.length;
 
 export interface PhaseLayout { name: PhaseName; points: number; offset: number }
@@ -26,11 +26,15 @@ export interface ShapeModel {
   points: number;
   phases: Record<PhaseName, PhaseLayout>;
   postMs: number;
+  /** Learned lead-in before P onset (gradual start of atrial activation). */
+  preMs: number;
   mean: Float64Array;
   basis: Float64Array; // k × dim
   names: string[];
   jointMean: Float64Array;
   jointCov: Float64Array; // m × m
+  /** Gaussian mixture over the same joint vector (the real population is not Gaussian). */
+  mixture: { weights: number[]; means: Float64Array; cholesky: Float64Array };
   population: { durationsMsP50: number[]; axisP50: number; magnitudesP50: number[] };
 }
 
@@ -47,9 +51,9 @@ let cached: ShapeModel | null = null;
 export function shapeModel(): ShapeModel {
   if (cached) return cached;
   const k = raw.components, mean = decodeFloat32(raw.mean), dim = mean.length;
-  const b16 = decodeInt16(raw.basis), basis = new Float64Array(k * dim);
+  const b16 = decodeInt16(raw.basis), basis = new Float64Array(k * dim), basisScale = decodeFloat32(raw.basisScale);
   for (let i = 0; i < k; i++)
-    for (let j = 0; j < dim; j++) basis[i * dim + j] = b16[i * dim + j] * raw.basisScale[i];
+    for (let j = 0; j < dim; j++) basis[i * dim + j] = b16[i * dim + j] * basisScale[i];
   const phases = {} as Record<PhaseName, PhaseLayout>;
   let offset = 0;
   for (const p of raw.phases) {
@@ -58,9 +62,10 @@ export function shapeModel(): ShapeModel {
   }
   if (offset * NL !== dim) throw new Error("Modelo de forma inconsistente.");
   cached = {
-    k, dim, points: offset, phases, postMs: raw.postMs, mean, basis,
+    k, dim, points: offset, phases, postMs: raw.postMs, preMs: raw.preMs, mean, basis,
     names: raw.joint.names, jointMean: Float64Array.from(raw.joint.mean),
     jointCov: Float64Array.from(raw.joint.cov), population: raw.population,
+    mixture: { weights: raw.mixture.weights, means: decodeFloat32(raw.mixture.means), cholesky: decodeFloat32(raw.mixture.cholesky) },
   };
   return cached;
 }
@@ -240,7 +245,8 @@ export function phaseMagnitude(m: ShapeModel, x: Float64Array, names: PhaseName 
 
 export interface PatientTargets {
   seed: number;
-  /** Frontal axes (degrees, net area) of QRS, P and T; null keeps the sampled one. */
+  /** Frontal axes (degrees, net area) of QRS, P and T; null for P or T keeps the
+   * patient's own axis relative to the QRS (it turns with the heart). */
   axis: number;
   pAxis: number | null;
   tAxis: number | null;
@@ -329,8 +335,12 @@ export function phaseAxis(m: ShapeModel, x: Float64Array, names: PhaseName | Pha
   }
   return (Math.atan2(avf, i1) * 180) / Math.PI;
 }
+/** Regression slope of P and T frontal axes on the QRS axis in 6.574 PTB-XL NORM
+ * ECGs (12SL axes): P 0,14 (r = 0,19), T 0,25 (r = 0,38). Index = GROUPS order. */
+const AXIS_COUPLING = [0.14, 1, 0.25];
+
 const GROUPS: { phases: PhaseName[]; ref: PhaseName[]; target: (t: PatientTargets) => number | null }[] = [
-  { phases: ["p", "pq"], ref: ["p"], target: (t) => t.pAxis },
+  { phases: ["pre", "p", "pq"], ref: ["p"], target: (t) => t.pAxis },
   { phases: ["qrs"], ref: ["qrs"], target: (t) => t.axis },
   { phases: ["st", "t", "post"], ref: ["st", "t"], target: (t) => t.tAxis },
 ];
@@ -357,8 +367,18 @@ export function samplePatient(t: PatientTargets): Patient {
 
 function candidateZ(seed: number, attempt: number) {
   const m = shapeModel(), rng = random(((seed ^ 0x5eed1e) + attempt * 0x9e3779b9) >>> 0);
-  // Unconditional draw: the person depends only on the seed.
-  const s = sampleConditional(m, {}, rng);
+  // The person depends only on the seed: one draw from the population mixture.
+  const { weights, means, cholesky } = m.mixture, M = m.names.length;
+  let u = rng(), c = 0;
+  while (c < weights.length - 1 && u > weights[c]) u -= weights[c++];
+  const e = Array.from({ length: M }, () => normal(rng)), s: Record<string, number> = {};
+  for (let a = 0; a < M; a++) {
+    let v = means[c * M + a];
+    // Lower triangle stored row by row per component.
+    const base = c * ((M * (M + 1)) / 2) + (a * (a + 1)) / 2;
+    for (let b = 0; b <= a; b++) v += cholesky[base + b] * e[b];
+    s[m.names[a]] = v;
+  }
   return { s, z: Float64Array.from({ length: m.k }, (_, i) => s[`z${i}`]) };
 }
 
@@ -368,7 +388,11 @@ function sampleCandidate(t: PatientTargets, attempt: number): Patient {
   const base = reconstruct(m, z);
   const rotations = {} as Record<PhaseName, Mat3>;
   const achieved = { p: 0, qrs: 0, t: 0 };
-  for (const [gi, g] of GROUPS.entries()) {
+  // QRS first. P and T without an explicit target keep the patient's own axes and
+  // follow the QRS rotation only as much as real P and T axes co-vary with it.
+  let heart = 0;
+  for (const gi of [1, 0, 2]) {
+    const g = GROUPS[gi];
     // The net-area axis is linear in the template: a rotating dipolar part plus a
     // fixed non-dipolar residual. Scan the whole circle, then refine. When the
     // residual dominates a tiny net area no rotation reaches the target; the
@@ -381,13 +405,14 @@ function sampleCandidate(t: PatientTargets, attempt: number): Patient {
       return (Math.atan2(II - I / 2, I) * 180) / Math.PI;
     };
     const goal = g.target(t);
-    let best = 0;
+    let best = goal === null ? AXIS_COUPLING[gi] * heart : 0;
     if (goal !== null) {
       const err = (a: number) => Math.abs(((goal - axisAt(a) + 540) % 360) - 180);
       for (let a = -180; a < 180; a += 0.5) if (err(a) < err(best)) best = a;
       for (let step = 0.25; step > 1e-4; step /= 2)
         for (const c of [best - step, best + step]) if (err(c) < err(best)) best = c;
     }
+    if (gi === 1) heart = best;
     achieved[(["p", "qrs", "t"] as const)[gi]] = axisAt(best);
     for (const ph of g.phases) rotations[ph] = rotation(best, t.horizontalDeg);
   }
@@ -397,7 +422,7 @@ function sampleCandidate(t: PatientTargets, attempt: number): Patient {
   const tGain = (pop[2] * t.tScale) / Math.max(1e-6, phaseMagnitude(m, rotated, ["st", "t"]));
   const pGain = (pop[0] * t.pScale) / Math.max(1e-6, phaseMagnitude(m, rotated, "p"));
   const scales: Record<PhaseName, number> = {
-    p: pGain, pq: pGain,
+    pre: pGain, p: pGain, pq: pGain,
     qrs: (pop[1] * t.qrsScale) / Math.max(1e-6, phaseMagnitude(m, rotated, "qrs")),
     st: tGain, t: tGain, post: tGain,
   };

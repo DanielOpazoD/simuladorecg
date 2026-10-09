@@ -6,7 +6,7 @@ import { measure } from '../src/engine/measure';
 import { synthesize } from '../src/engine/signal';
 import { fromPreset,presetById } from '../src/presets/catalog';
 import { measurementSupportHtml } from '../src/ui/measurement-support';
-const sample=()=>synthesize(fromPreset(presetById('sinus')!),10);
+const sample=()=>synthesize(fromPreset(presetById('sinus')!),10,{learnedBase:false}); // analyzer fixture on the kernel model (frozen analyzer; learned base: docs/fidelidad.md)
 describe('Per-metric support and selective abstention',()=>{
  it('freezes the explicit engineering policy',()=>{const p=JSON.parse(readFileSync(new URL('../benchmarks/measurement-quality/protocol.json',import.meta.url),'utf8'));expect(MEASUREMENT_SUPPORT_POLICY).toEqual(p.policy);expect(Object.isFrozen(MEASUREMENT_SUPPORT_POLICY)).toBe(true);});
  it('traces actual PR/QRS/QT endpoints and different axes leads',()=>{

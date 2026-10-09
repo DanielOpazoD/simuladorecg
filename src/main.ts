@@ -400,6 +400,7 @@ function publishSignal(next: Signal, measured: Measurement, requestId: number, c
     $("#signal-loading").hidden = true;
     $("#signal-state").textContent = "500 muestras/s · análisis independiente";
     renderMetrics();
+    syncNaturalAxes(next);
     renderQuiz();
     renderInfo();
     renderScales();
@@ -563,6 +564,18 @@ function setValue(key: string, value: unknown) {
     session.selectBeat(representativeBeat(session.measurement, visibleSegmentEnd()));
   if (!key.startsWith("view.")) { renderCatalog(); renderInfo(); }
 }
+/** Natural P/T axes: show the patient's actual axis on the slider until it is moved. */
+function syncNaturalAxes(s: Signal) {
+  for (const key of ["pAxis", "tAxis"] as const) {
+    const value = s.truth[key];
+    if (value === undefined) continue;
+    const shown = Math.round(value / 5) * 5;
+    const input = document.querySelector<HTMLInputElement>(`input[data-key="${key}"]`);
+    const output = document.querySelector(`[data-output="${key}"]`);
+    if (input) input.value = String(shown);
+    if (output) output.innerHTML = `${shown} <small>°</small>`;
+  }
+}
 function visibleSegmentEnd(): number {
   if (c.view.mode !== "paper" || c.view.timing !== "simultaneous")
     return Infinity;
@@ -578,6 +591,11 @@ document.addEventListener("input", (e) => {
   const key = el.dataset.key;
   if (!key || el.type !== "range") return;
   setValue(key, Number(el.value));
+  // Moving an axis slider fixes it: drop the "natural" hint without re-rendering.
+  if (key === "pAxis" || key === "tAxis") {
+    const text = el.closest("label")?.querySelector("span")?.firstChild;
+    if (text?.nodeType === Node.TEXT_NODE) text.textContent = key === "pAxis" ? "Eje de P" : "Eje de T";
+  }
   if (!key.startsWith("view.")) syncAmplitudeControls();
   const output = document.querySelector(`[data-output="${key}"]`);
   if (output)

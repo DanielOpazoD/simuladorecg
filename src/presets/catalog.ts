@@ -749,7 +749,7 @@ export const PRESETS: Preset[] = [
 /** Patient of the learned base closest to the population mean among those that
  * meet every classic normal criterion (scripts/fidelity/choose-textbook-seed.mjs):
  * presets show the textbook example; the seed control explores real variety. */
-export const TEXTBOOK_SEED = 1950;
+export const TEXTBOOK_SEED = 1951;
 
 export function fromPreset(preset: Preset, view?: ECGCase["view"]): ECGCase {
   const c = cloneCase(DEFAULT_CASE);

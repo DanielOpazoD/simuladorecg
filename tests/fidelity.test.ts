@@ -88,15 +88,14 @@ describe("Repolarization and signal-chain acceptance", () => {
     const c = fromPreset(presetById("sinus")!);
     c.filter = "off";
     c.variability = 0;
+    // Median over several beats: real P amplitude varies ≈13 % between beats.
     const s = synthesize(c, 10),
-      a = s.events.atria[2],
-      values = s.leads.V1.slice(
-        Math.round(a.time * 500),
-        Math.round((a.time + 0.095) * 500),
-      );
-    expect(Math.max(...values)).toBeGreaterThan(0.02);
-    expect(Math.min(...values)).toBeLessThan(-0.02);
-    expect(Math.min(...values)).toBeGreaterThan(-0.07);
+      median = (x: number[]) => x.sort((p, q) => p - q)[Math.floor(x.length / 2)],
+      waves = s.events.atria.slice(1, 8).map((a) => Array.from(s.leads.V1.slice(Math.round(a.time * 500), Math.round((a.time + 0.11) * 500)))),
+      highs = median(waves.map((w) => Math.max(...w))), lows = median(waves.map((w) => Math.min(...w)));
+    expect(highs).toBeGreaterThan(0.02);
+    expect(lows).toBeLessThan(-0.02);
+    expect(lows).toBeGreaterThan(-0.07);
   });
   it("suppresses frequencies above output Nyquist without shifting the waveform", () => {
     const amplitude = (f: number) => {

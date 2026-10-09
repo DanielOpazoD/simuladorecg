@@ -127,6 +127,8 @@ export function leadDifferences(a: ComparisonTrace, b: ComparisonTrace, w: Compa
 }
 
 const LABELS: Record<string, string> = {
+  naturalPAxis: "Eje P natural",
+  naturalTAxis: "Eje T natural",
   rhythm: 'Ritmo', ventricularSource: 'Fuente ventricular', av: 'Conducción AV', conduction: 'Conducción QRS',
   ischemia: 'Lesión', overload: 'Sobrecarga', electrolyte: 'Electrolitos / voltaje', hr: 'FC configurada (lpm)',
   atrialRate: 'Frecuencia auricular (lpm)', pr: 'PR configurado (ms)', qrs: 'QRS configurado (ms)', qtc: 'QTc configurado (ms)',

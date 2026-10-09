@@ -371,6 +371,8 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
             ? ventricularSource(c, bs[0])!.axis
             : c.axis
         : null,
+      ...(track && c.naturalPAxis !== false ? { pAxis: track.patient.achievedAxes.p } : {}),
+      ...(track && c.naturalTAxis !== false ? { tAxis: track.patient.achievedAxes.t } : {}),
     },
     warnings: constraints(c),
   };

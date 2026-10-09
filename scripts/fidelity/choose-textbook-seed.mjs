@@ -21,7 +21,7 @@ const c = M.DEFAULT_CASE, n = Number(process.argv[2] ?? 4000);
 const LEADS = ["I", "II", "V1", "V2", "V3", "V4", "V5", "V6"];
 const results = [];
 for (let seed = 1; seed <= n; seed++) {
-  const p = M.samplePatient({ seed, axis: c.axis, pAxis: c.pAxis, tAxis: c.tAxis, pScale: 1, qrsScale: 1, tScale: 1, horizontalDeg: 0 });
+  const p = M.samplePatient({ seed, axis: c.axis, pAxis: null, tAxis: null, pScale: 1, qrsScale: 1, tScale: 1, horizontalDeg: 0 }) // P/T natural, as in the presets;
   const m = p.model, x = M.transform(m, M.reconstruct(m, p.z), p.ops);
   const wave = (phase, lead) => {
     const ph = m.phases[phase], li = LEADS.indexOf(lead);
@@ -37,7 +37,8 @@ for (let seed = 1; seed <= n; seed++) {
   const checks = {
     pII: max(wave("p", "II")) > 0.07,
     pAVR: min(wave("p", "aVR")) < -0.04,
-    pV1biphasic: max(v1p) > 0.02 && min(v1p) < -0.02,
+    // Visible on paper (≥0.4 mm) yet small terminal negativity (no left atrial pattern).
+    pV1biphasic: max(v1p) > 0.045 && min(v1p) < -0.03 && min(v1p) > -0.055,
     rsV1: rs("V1") < 0.5, rsV2: rs("V2") < 0.8,
     progression: rs("V1") < rs("V2") && rs("V2") < rs("V3") && rs("V3") < rs("V4"),
     transition: rs("V3") > 0.5 && rs("V3") < 2,
