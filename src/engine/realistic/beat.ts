@@ -53,15 +53,17 @@ export const TA_DECAY_MS = 80;
 
 /**
  * Adds consecutive warped phases starting at `start` (s). Templates are referred
- * to the TP line before P, so the PQ segment ends below it (Ta). That offset is
- * carried by the atrial component as an exponential tail and removed from the
- * ventricular one: a conducted beat keeps the learned waveform except that its
- * Ta follows the P wave's own amplitude, and dissociated P waves and atrium-less
- * beats stay physiological.
+ * to the TP line before P; the PQ segment ends below it (atrial Ta), and the
+ * learned QRS-ST carries that Ta as it decays. In a conducted beat the Ta is
+ * scaled with the P wave (fraction `taKeep` of the inherited level) and the PQ
+ * ends exactly at that level, so the join is seamless and P stays linear in its
+ * amplitude. A blocked P adds its own Ta tail; a beat with no preceding P (AF,
+ * junctional) has the inherited Ta removed (taKeep = 0).
  */
-function place(acc: Float64Array[], fs: number, start: number, x: Float64Array, p: Patient, segs: Segment[], mode: "atrial" | "ventricular") {
+function place(acc: Float64Array[], fs: number, start: number, x: Float64Array, p: Patient, segs: Segment[],
+  mode: "atrial-conducted" | "atrial-blocked" | "ventricular", endAt?: ArrayLike<number>, taKeep = 0) {
   const m = p.model, phasesMs = segs.reduce((s, g) => s + g.ms, 0);
-  const tailMs = mode === "atrial" ? 5 * TA_DECAY_MS : 0, totalMs = phasesMs + tailMs;
+  const tailMs = mode === "atrial-blocked" ? 5 * TA_DECAY_MS : 0, totalMs = phasesMs + tailMs;
   const first = m.phases[segs[0].phase], last = m.phases[segs[segs.length - 1].phase];
   const lo = Math.max(0, Math.ceil(start * fs)), hi = Math.min(acc[0].length - 1, Math.floor(start * fs + (totalMs * fs) / 1000));
   const lastStartMs = phasesMs - segs[segs.length - 1].ms;
@@ -72,18 +74,21 @@ function place(acc: Float64Array[], fs: number, start: number, x: Float64Array, 
       const elapsed = (i / fs - start) * 1000;
       let v: number;
       if (elapsed > phasesMs) {
-        v = vEnd * Math.exp(-(elapsed - phasesMs) / TA_DECAY_MS); // Ta tail
+        v = vEnd * Math.exp(-(elapsed - phasesMs) / TA_DECAY_MS); // Ta tail of a blocked P
       } else {
         let tms = elapsed, k = 0;
         while (k < segs.length - 1 && tms > segs[k].ms) tms -= segs[k++].ms;
         const ph = m.phases[segs[k].phase], u = Math.min(1, Math.max(0, tms / segs[k].ms));
         v = phaseValue(x, ph.offset, ph.points, lead, u);
-        if (mode === "atrial") {
+        if (mode === "atrial-conducted" || mode === "atrial-blocked") {
           // Start exactly on the TP line: fade the tiny residual over the P wave.
           if (k === 0) v -= v0 * (1 - u);
+          // Hand over to the QRS onset level of the beat this P conducts to.
+          if (endAt && k === segs.length - 1) v -= (vEnd - endAt[lead]) * u;
         } else {
-          // Remove the inherited Ta offset; end exactly on the TP line.
-          v -= v0 * Math.exp(-elapsed / TA_DECAY_MS);
+          // Keep the fraction of the inherited Ta that the preceding P accounts for.
+          v -= v0 * (1 - taKeep) * Math.exp(-elapsed / TA_DECAY_MS);
+          // End exactly on the TP line.
           if (k === segs.length - 1) {
             const w = (elapsed - lastStartMs) / segs[k].ms;
             v -= vEnd * w;
@@ -96,10 +101,15 @@ function place(acc: Float64Array[], fs: number, start: number, x: Float64Array, 
   }
 }
 
-export function addAtrial(acc: Float64Array[], fs: number, start: number, pMs: number, pqMs: number, x: Float64Array, p: Patient) {
-  place(acc, fs, start, x, p, [{ phase: "p", ms: pMs }, { phase: "pq", ms: pqMs }], "atrial");
+/** QRS-onset level of a ventricular template, per lead. */
+export function qrsOnsetLevel(x: Float64Array, p: Patient): Float64Array {
+  const o = p.model.phases.qrs.offset * NL;
+  return x.slice(o, o + NL);
 }
-export function addVentricular(acc: Float64Array[], fs: number, start: number, qrsMs: number, sttMs: number, x: Float64Array, p: Patient) {
+export function addAtrial(acc: Float64Array[], fs: number, start: number, pMs: number, pqMs: number, x: Float64Array, p: Patient, conductsTo?: ArrayLike<number>) {
+  place(acc, fs, start, x, p, [{ phase: "p", ms: pMs }, { phase: "pq", ms: pqMs }], conductsTo ? "atrial-conducted" : "atrial-blocked", conductsTo);
+}
+export function addVentricular(acc: Float64Array[], fs: number, start: number, qrsMs: number, sttMs: number, x: Float64Array, p: Patient, taKeep: number) {
   const st = sttMs * p.tApexFraction;
-  place(acc, fs, start, x, p, [{ phase: "qrs", ms: qrsMs }, { phase: "st", ms: st }, { phase: "t", ms: sttMs - st }, { phase: "post", ms: p.model.postMs }], "ventricular");
+  place(acc, fs, start, x, p, [{ phase: "qrs", ms: qrsMs }, { phase: "st", ms: st }, { phase: "t", ms: sttMs - st }, { phase: "post", ms: p.model.postMs }], "ventricular", undefined, taKeep);
 }

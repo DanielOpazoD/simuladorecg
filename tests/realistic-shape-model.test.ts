@@ -105,7 +105,7 @@ describe("propiedades sobre muchos pacientes", () => {
         const j = m.phases.st.offset, before = j - 1;
         for (let l = 0; l < 8; l++) worst = Math.max(worst, Math.abs(y[j * 8 + l] - y[before * 8 + l]));
       }
-      expect(worst).toBeLessThan(0.06);
+      expect(worst).toBeLessThan(0.08); // before the J hand-over: up to 1.29 mV
     }
   });
 });

@@ -123,11 +123,17 @@ las duraciones de P, PQ y ápice de T). Los controles actúan como transformacio
 exactas sobre ella: deformación temporal por fase (PR, QRS, QT del calendario),
 rotación del vector cardiaco (ejes P/QRS/T exactos por área neta, transición como
 rotación horizontal) y ganancia por onda. Mover un control no deforma otra onda.
-El eje se busca en todo el círculo sobre el área neta (parte dipolar que rota más
-residuo no dipolar fijo). Un paciente con área frontal casi nula (eje
-indeterminado, 6–12 % de las semillas) no alcanza cualquier eje: la semilla pasa
-de forma determinista al siguiente candidato, y el eje informado como verdad es
-siempre el que tiene la plantilla (error < 1° en 120 semillas × 4 ejes). En J,
+El eje (área neta desde el nivel de fin del PR, como miden los electrocardiógrafos)
+se busca en todo el círculo: parte dipolar que rota más residuo no dipolar fijo.
+Un paciente cuya curva de área no rodea el origen con margen (eje indeterminado,
+≈30 % de los sorteos) se descarta y la semilla pasa de forma determinista al
+siguiente candidato; la elección no depende del eje pedido, así que mover el eje
+rota a la misma persona. La verdad del eje se mide sobre el componente generado
+sin ruido, así que la tarjeta dice el eje que muestra el trazado (≤ 3° frente a la
+medición en las muestras). Error frente al eje pedido en 30 semillas: mediana
+1–2°; máximo 10° entre −30° y 90°, 22° en 180°/−150°. El latido conducido se une
+sin costura: el PQ termina en el nivel de inicio del QRS aprendido y la Ta se
+escala con la P. En J,
 el operador del QRS cede al de la repolarización de forma gradual (4 + 12 puntos),
 sin escalón aunque QRS y T tengan ganancias muy distintas.
 Los presets muestran el paciente de libro (`TEXTBOOK_SEED`, elegido por
@@ -136,9 +142,8 @@ cumplen todos los criterios clásicos); la semilla explora la variedad real.
 
 **Repolarización auricular.** La P parte de la línea TP; el PR queda por debajo
 (onda Ta) y esa desviación decae dentro del QRS-ST (τ = 80 ms). Un latido
-conducido conserva la plantilla salvo que su Ta sigue la amplitud de su propia P;
-una P bloqueada o un latido sin aurícula organizada (FA, unión) siguen siendo
-fisiológicos.
+conducido conserva la plantilla, con la Ta escalada con su P; una P bloqueada o
+un latido sin aurícula organizada (FA, unión) siguen siendo fisiológicos.
 
 **Vida entre latidos.** Rotación respiratoria del vector (1,5° frontal, 6°
 horizontal), ganancia respiratoria 2,5 % y variación morfológica AR(1) de 0,05 DE;

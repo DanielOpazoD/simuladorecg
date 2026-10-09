@@ -3,6 +3,7 @@ import { synthesize } from "../src/engine/signal";
 import { LEADS, type ECGCase, type Signal } from "../src/engine/types";
 import { fromPreset, presetById, PRESETS, TEXTBOOK_SEED } from "../src/presets/catalog";
 import { usesRealisticBase } from "../src/engine/realistic/engine";
+import { samplePatient } from "../src/engine/realistic/shape-model";
 
 function load(id: string, patch: Partial<ECGCase> = {}): ECGCase {
   return { ...fromPreset(presetById(id)!), filter: "off", variability: 0, ...patch };
@@ -169,5 +170,41 @@ describe("producto", () => {
   it("bigeminismo: QRS y QTc de las tarjetas describen el latido conducido", () => {
     const c = fromPreset(presetById("bigeminy")!), cards = modelMetricCards(c, synthesize(c, 10));
     expect(cards[2].value).toBe(`${c.qrs}<small>ms</small>`);
+  });
+});
+
+describe("eje: la tarjeta dice lo que muestra el trazado", () => {
+  const traceAxis = (s: Signal) => {
+    let i1 = 0, avf = 0;
+    for (const b of s.events.beats.filter((x) => x.kind === "normal")) {
+      const k0 = Math.ceil(b.time * s.fs), pr = (x: Float64Array) => (x[k0 - 4] + x[k0 - 3] + x[k0 - 2]) / 3;
+      const b0 = pr(s.leads.I), b1 = pr(s.leads.aVF);
+      for (let k = k0; k < Math.floor((b.time + b.qrs!) * s.fs); k++) {
+        i1 += s.leads.I[k] - b0;
+        avf += s.leads.aVF[k] - b1;
+      }
+    }
+    return (Math.atan2(avf, i1) * 180) / Math.PI;
+  };
+  const wrap = (d: number) => Math.abs(((d + 540) % 360) - 180);
+  // Contract: the card always states the trace's own axis; the trace follows the
+  // control within clinical reading precision (±15°), tighter in the usual range.
+  it.each([[180, 25], [-150, 25], [150, 25], [-30, 10], [55, 10], [90, 10]])("eje %s° en 30 semillas (máx. %s°)", (axis, limit) => {
+    const misses: number[] = [];
+    for (let seed = 1; seed <= 30; seed++) {
+      const s = synthesize(load("sinus", { axis, seed: seed * 7 }), 10), measured = traceAxis(s);
+      expect(wrap(s.truth.axis! - measured)).toBeLessThan(3);
+      misses.push(wrap(measured - axis));
+    }
+    misses.sort((a, b) => a - b);
+    expect(misses[15]).toBeLessThan(3);
+    expect(misses[29]).toBeLessThan(limit);
+  }, 60_000);
+  it("cambiar solo el eje rota a la misma persona", () => {
+    for (let seed = 1; seed <= 60; seed++) {
+      const a = samplePatient({ seed, axis: 55, pAxis: 55, tAxis: 40, pScale: 1, qrsScale: 1, tScale: 1, horizontalDeg: 0 });
+      const b = samplePatient({ seed, axis: 150, pAxis: 55, tAxis: 40, pScale: 1, qrsScale: 1, tScale: 1, horizontalDeg: 0 });
+      expect(Array.from(b.z)).toEqual(Array.from(a.z));
+    }
   });
 });

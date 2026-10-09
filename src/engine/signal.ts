@@ -93,6 +93,7 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
   const scale = (v: Vec, a: number): Vec => [v[0] * a, v[1] * a, v[2] * a];
   // Learned beat shapes (docs/fidelidad.md) where the case is representable on them.
   const track = options.learnedBase !== false && usesRealisticBase(c) ? new RealisticTrack(c, n, FS) : null;
+  track?.prepare(events.beats);
   for (const a of events.atria) {
     if (track && a.kind === "sinus") {
       track.addAtrial(a);
@@ -363,7 +364,7 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
       qt: bs.length ? median(bs.map((b) => b.qt! * 1000)) : null,
       axis: bs.length
         ? track && bs.some((b) => b.kind === "normal")
-          ? track.patient.achievedAxes.qrs
+          ? track.measuredQrsAxis(events.beats.filter((b) => b.time >= WARM && b.time < total))
           : c.rhythm === "torsades"
           ? null
           : allV

@@ -8,7 +8,7 @@ import type { AtrialEvent, Beat, ECGCase } from "../types";
 import { random } from "../random";
 import { qrsAmplitudeScale, T_REFERENCE_AMPLITUDE } from "../morphology";
 import { dipoleOf, reconstruct, samplePatient, transform, type Patient } from "./shape-model";
-import { addAtrial, addVentricular, beatShapeState, beatTemplate, type BeatShapeState } from "./beat";
+import { addAtrial, addVentricular, beatShapeState, beatTemplate, qrsOnsetLevel, type BeatShapeState } from "./beat";
 
 const P_REFERENCE_AMPLITUDE = 0.15;
 /** Horizontal heart rotation per unit of the transition control (degrees). */
@@ -46,23 +46,60 @@ export class RealisticTrack {
     this.atrial = beatShapeState(this.patient, random(((c.seed * 31) ^ 0xa7a1) >>> 0));
     this.ventricular = beatShapeState(this.patient, random(((c.seed * 37) ^ 0x7e57) >>> 0));
   }
+  private templates = new Map<number, Float64Array>();
+  /** Inherited Ta level kept in a conducted beat: P gain relative to QRS gain, so
+   * atrial repolarization follows the P wave (none without P). */
+  private get taKeep() { return this.patient.scales.p / Math.max(1e-9, this.patient.scales.qrs); }
+  private conducted = new Set<number>();
+  private key = (t: number) => Math.round(t * 1e6);
+  /** Ventricular templates are drawn first (in beat order) so a conducted P can
+   * end exactly at its QRS-onset level. */
+  prepare(beats: readonly Beat[]) {
+    for (const b of beats)
+      if (b.kind === "normal") this.templates.set(this.key(b.time), beatTemplate(this.patient, this.ventricular, b.time, this.c.respiratoryRate));
+  }
   /** Sinus P wave and PQ segment; conducted P waves end exactly at QRS onset. */
   addAtrial(a: AtrialEvent) {
     const p = this.patient;
-    let pMs = p.pMs, pqMs = p.pqMs;
+    let pMs = p.pMs, pqMs = p.pqMs, target: Float64Array | undefined;
     if (a.conducted && a.pr) {
-      const pr = a.pr * 1000;
+      const pr = a.pr * 1000, beat = this.key(a.time + a.pr), x = this.templates.get(beat);
       pMs = Math.min(pMs, pr - 12);
       pqMs = pr - pMs;
+      if (x) {
+        target = qrsOnsetLevel(x, p).map((v) => v * this.taKeep);
+        this.conducted.add(beat);
+      }
     }
     const x = beatTemplate(p, this.atrial, a.time, this.c.respiratoryRate);
-    addAtrial(this.acc, this.fs, a.time, pMs, pqMs, x, p);
+    addAtrial(this.acc, this.fs, a.time, pMs, pqMs, x, p, target);
+  }
+  /** Net-area frontal QRS axis (degrees) of the noise-free learned component over
+   * the given conducted beats, from the QRS-onset level: the axis the trace shows. */
+  measuredQrsAxis(beats: readonly Beat[]): number | null {
+    let i1 = 0, avf = 0;
+    for (const b of beats) {
+      if (b.kind !== "normal" || b.qrs === undefined) continue;
+      // Areas from the end-of-PR level, as electrocardiographs measure the axis.
+      const k0 = Math.ceil(b.time * this.fs), pr = (lead: number) => {
+        let sum = 0;
+        for (let k = k0 - Math.round(0.008 * this.fs); k < k0 - Math.round(0.002 * this.fs); k++) sum += this.acc[lead][k];
+        return sum / (Math.round(0.008 * this.fs) - Math.round(0.002 * this.fs));
+      };
+      const base0 = pr(0), base1 = pr(1);
+      for (let k = k0; k < Math.floor((b.time + b.qrs) * this.fs); k++) {
+        i1 += this.acc[0][k] - base0;
+        avf += this.acc[1][k] - base1 - (this.acc[0][k] - base0) / 2;
+      }
+    }
+    return i1 === 0 && avf === 0 ? null : (Math.atan2(avf, i1) * 180) / Math.PI;
   }
   /** QRS, ST-T and post-T of a normally conducted beat, warped to its QRS and QT. */
   addBeat(b: Beat, qrsSeconds: number) {
     const qrsMs = qrsSeconds * 1000, sttMs = Math.max(80, b.qt! * 1000 - qrsMs);
-    const x = beatTemplate(this.patient, this.ventricular, b.time, this.c.respiratoryRate);
-    addVentricular(this.acc, this.fs, b.time, qrsMs, sttMs, x, this.patient);
+    const key = this.key(b.time);
+    const x = this.templates.get(key) ?? beatTemplate(this.patient, this.ventricular, b.time, this.c.respiratoryRate);
+    addVentricular(this.acc, this.fs, b.time, qrsMs, sttMs, x, this.patient, this.conducted.has(key) ? this.taKeep : 0);
   }
 }
 

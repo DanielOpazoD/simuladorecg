@@ -222,13 +222,7 @@ export function transform(m: ShapeModel, x: Float64Array, ops: Record<PhaseName,
 
 /** Frontal QRS axis from net I and aVF area of the template QRS phase (degrees). */
 export function templateAxis(m: ShapeModel, x: Float64Array): number {
-  const q = m.phases.qrs;
-  let i1 = 0, avf = 0;
-  for (let p = q.offset; p < q.offset + q.points; p++) {
-    i1 += x[p * NL];
-    avf += x[p * NL + 1] - x[p * NL] / 2;
-  }
-  return (Math.atan2(avf, i1) * 180) / Math.PI;
+  return phaseAxis(m, x, "qrs");
 }
 /** Peak spatial magnitude (8-lead norm) within one or more phases. */
 export function phaseMagnitude(m: ShapeModel, x: Float64Array, names: PhaseName | PhaseName[]): number {
@@ -280,24 +274,57 @@ function netAreas(m: ShapeModel, x: Float64Array, names: PhaseName[]) {
   let residualI = 0, residualII = 0;
   for (const name of names) {
     const ph = m.phases[name];
+    // QRS areas are taken from the QRS-onset level, as electrocardiographs do,
+    // so the atrial Ta offset inherited from the TP reference does not count.
+    const base = name === "qrs" ? x.slice(ph.offset * NL, ph.offset * NL + NL) : new Float64Array(NL);
     for (let p = ph.offset; p < ph.offset + ph.points; p++) {
-      const v = dipoleOf(x, p * NL);
+      const y = Array.from({ length: NL }, (_, a) => x[p * NL + a] - base[a]);
+      const v = dipoleOf(y);
       for (let i = 0; i < 3; i++) dipole[i] += v[i];
-      residualI += x[p * NL] - (D[0][0] * v[0] + D[0][1] * v[1] + D[0][2] * v[2]);
-      residualII += x[p * NL + 1] - (D[1][0] * v[0] + D[1][1] * v[1] + D[1][2] * v[2]);
+      residualI += y[0] - (D[0][0] * v[0] + D[0][1] * v[1] + D[0][2] * v[2]);
+      residualII += y[1] - (D[1][0] * v[0] + D[1][1] * v[1] + D[1][2] * v[2]);
     }
   }
   return { dipole, residualI, residualII };
+}
+
+/** Worst-case frontal net area of the QRS (from its onset level) over every heart
+ * rotation, relative to its rotation-invariant spatial size; 0 when some axes are
+ * unreachable. Small values mean an indeterminate axis that beat jitter or
+ * respiration can flip. */
+export function axisMargin(m: ShapeModel, x: Float64Array, horizontalDeg = 0): number {
+  const areas = netAreas(m, x, ["qrs"]), q = m.phases.qrs;
+  let size = 0;
+  for (let p = q.offset; p < q.offset + q.points; p++) {
+    let s2 = 0;
+    for (let a = 0; a < NL; a++) s2 += x[p * NL + a] ** 2;
+    size += Math.sqrt(s2);
+  }
+  // As the heart rotates, the net-area vector traces a closed curve in the
+  // (I, aVF) plane. Every axis is reachable only if that curve winds around the
+  // origin; the margin is then its closest approach to the origin.
+  let worst = Infinity, turned = 0, previous: number | null = null;
+  for (let angle = -180; angle <= 180; angle += 2) {
+    const r = rotation(angle, horizontalDeg), v = [0, 1, 2].map((i) => r[i * 3] * areas.dipole[0] + r[i * 3 + 1] * areas.dipole[1] + r[i * 3 + 2] * areas.dipole[2]);
+    const I = D[0][0] * v[0] + D[0][1] * v[1] + D[0][2] * v[2] + areas.residualI;
+    const II = D[1][0] * v[0] + D[1][1] * v[1] + D[1][2] * v[2] + areas.residualII;
+    const F = II - I / 2, phi = Math.atan2(F, I);
+    worst = Math.min(worst, Math.hypot(I, F));
+    if (previous !== null) turned += ((phi - previous + 3 * Math.PI) % (2 * Math.PI)) - Math.PI;
+    previous = phi;
+  }
+  if (Math.abs(turned) < Math.PI) return 0;
+  return worst / Math.max(1e-9, size);
 }
 
 /** Frontal axis of one or more phases from net I and aVF area (degrees). */
 export function phaseAxis(m: ShapeModel, x: Float64Array, names: PhaseName | PhaseName[]): number {
   let i1 = 0, avf = 0;
   for (const name of [names].flat()) {
-    const ph = m.phases[name];
+    const ph = m.phases[name], b0 = name === "qrs" ? x[ph.offset * NL] : 0, b1 = name === "qrs" ? x[ph.offset * NL + 1] : 0;
     for (let p = ph.offset; p < ph.offset + ph.points; p++) {
-      i1 += x[p * NL];
-      avf += x[p * NL + 1] - x[p * NL] / 2;
+      i1 += x[p * NL] - b0;
+      avf += x[p * NL + 1] - b1 - (x[p * NL] - b0) / 2;
     }
   }
   return (Math.atan2(avf, i1) * 180) / Math.PI;
@@ -309,28 +336,35 @@ const GROUPS: { phases: PhaseName[]; ref: PhaseName[]; target: (t: PatientTarget
 ];
 
 /** Sample a reproducible patient that honors the case-level targets. */
+/** Minimum worst-rotation axis margin a patient needs (≈ 30th percentile of
+ * unselected draws): below it the measured axis is unstable. */
+export const MIN_AXIS_MARGIN = 0.07;
+
 export function samplePatient(t: PatientTargets): Patient {
-  // A patient whose frontal net area is nearly zero (indeterminate axis) cannot be
-  // rotated to every requested axis. The seed then moves deterministically to the
-  // next candidate, so the axis controls always hold; the best attempt is kept.
-  let best: Patient | null = null, bestErr = Infinity;
-  for (let attempt = 0; attempt < 12; attempt++) {
-    const p = sampleCandidate(t, attempt);
-    const miss = (got: number, goal: number | null) => (goal === null ? 0 : Math.abs(((got - goal + 540) % 360) - 180));
-    const err = Math.max(miss(p.achievedAxes.qrs, t.axis), miss(p.achievedAxes.p, t.pAxis), miss(p.achievedAxes.t, t.tAxis));
-    if (err < bestErr) { best = p; bestErr = err; }
-    if (err < 1) break;
+  // A patient with an indeterminate frontal axis (tiny net area at some rotation)
+  // cannot carry an axis control reliably. The choice depends only on the seed
+  // and the horizontal rotation, never on the requested axes: moving an axis
+  // control rotates the same person.
+  const m = shapeModel();
+  let chosen = 0, bestMargin = -1;
+  for (let attempt = 0; attempt < 16; attempt++) {
+    const margin = axisMargin(m, reconstruct(m, candidateZ(t.seed, attempt).z), t.horizontalDeg);
+    if (margin > bestMargin) { chosen = attempt; bestMargin = margin; }
+    if (margin >= MIN_AXIS_MARGIN) break;
   }
-  return best!;
+  return sampleCandidate(t, chosen);
+}
+
+function candidateZ(seed: number, attempt: number) {
+  const m = shapeModel(), rng = random(((seed ^ 0x5eed1e) + attempt * 0x9e3779b9) >>> 0);
+  // Unconditional draw: the person depends only on the seed.
+  const s = sampleConditional(m, {}, rng);
+  return { s, z: Float64Array.from({ length: m.k }, (_, i) => s[`z${i}`]) };
 }
 
 function sampleCandidate(t: PatientTargets, attempt: number): Patient {
   const m = shapeModel(), pop = m.population.magnitudesP50;
-  const rng = random(((t.seed ^ 0x5eed1e) + attempt * 0x9e3779b9) >>> 0);
-  // Unconditional draw: the person depends only on the seed.
-  const known: Record<string, number> = {};
-  const s = sampleConditional(m, known, rng);
-  const z = Float64Array.from({ length: m.k }, (_, i) => s[`z${i}`]);
+  const { s, z } = candidateZ(t.seed, attempt);
   const base = reconstruct(m, z);
   const rotations = {} as Record<PhaseName, Mat3>;
   const achieved = { p: 0, qrs: 0, t: 0 };
