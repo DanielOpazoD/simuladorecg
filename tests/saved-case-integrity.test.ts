@@ -1,8 +1,8 @@
 import {afterEach,beforeEach,describe,it,expect,vi} from 'vitest';
 import {savedCases,saveCase} from '../src/ui/persistence';
-import {cloneCase,DEFAULT_CASE} from '../src/engine/types';
+import {fromPreset,presetById} from '../src/presets/catalog';
 let raw:string|null;let writes:number;
-const named=(name:string)=>({...cloneCase(DEFAULT_CASE),name});
+const named=(name:string)=>({...fromPreset(presetById('sinus')!),name});
 beforeEach(()=>{raw=null;writes=0;vi.stubGlobal('localStorage',{getItem:()=>raw,setItem:(_k:string,v:string)=>{raw=v;writes++;}});});
 afterEach(()=>vi.unstubAllGlobals());
 describe('Saved case preservation',()=>{

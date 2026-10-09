@@ -61,7 +61,7 @@ describe('Area T-end assistance is not automatic QT', () => {
     expect(suggestTEnds(s,m)).toEqual(candidates);
   });
   it('displays a proposal on tachycardia without adding a QT interval', () => {
-    const c=fromPreset(presetById('tachy')!),s=synthesize(c,10),m=measure(s),before=structuredClone(m);
+    const c=fromPreset(presetById('tachy')!),s=synthesize(c,10,{learnedBase:false}),m=measure(s),before=structuredClone(m); // fixture where the frozen analyzer abstains from QT
     const i=suggestTEnds(s,m).findIndex(x=>x!==null); expect(i).toBeGreaterThanOrEqual(0);
     const html=beatDetail(s,m,c,i);
     expect(html).toContain('data-t-end-candidate'); expect(html).toContain('revisión manual');

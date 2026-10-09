@@ -1,5 +1,6 @@
 // Exporta ECG sintéticos del motor actual para el banco de realismo.
-// Uso: node scripts/fidelity/export-synthetic.mjs <dir-salida> [n=300] [preset=sinus]
+// Uso: node scripts/fidelity/export-synthetic.mjs <dir-salida> [n=300] [preset=sinus] [ideal]
+// "ideal" desactiva el ruido de adquisición para aislar la morfología.
 // Escribe <dir>/index.json y un .f32 por ECG (5000 × 12, mV, orden de LEADS).
 import { build } from "esbuild";
 import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
@@ -7,7 +8,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-const [outDir, nArg = "300", presetId = "sinus"] = process.argv.slice(2);
+const [outDir, nArg = "300", presetId = "sinus", mode = ""] = process.argv.slice(2);
 if (!outDir) throw new Error("Falta el directorio de salida");
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../..");
 
@@ -51,11 +52,14 @@ for (let i = 0; i < n; i++) {
   const r = rng(9001 + i);
   const u = (a, b) => a + (b - a) * r();
   const c = { ...fromPreset(preset), seed: 1 + i };
+  if (mode === "ideal") c.acquisition = "ideal";
   if (presetId === "sinus") {
     Object.assign(c, {
       hr: u(52, 98), pr: u(130, 195), qrs: u(80, 104), qtc: u(390, 440),
       axis: u(-15, 85), pAxis: u(35, 70), qrsAmp: u(0.8, 1.25), tAmp: u(0.18, 0.38),
-      pAmp: u(0.09, 0.18), transition: u(-0.6, 0.6), respiratoryRate: u(10, 18),
+      pAmp: u(0.11, 0.2), transition: u(-0.6, 0.6), respiratoryRate: u(10, 18),
+      // Variabilidad RR individual: lognormal alrededor de la mediana de reposo.
+      variability: 0.035 * Math.exp(0.6 * Math.sqrt(-2 * Math.log(r() || 1e-9)) * Math.cos(2 * Math.PI * r())),
     });
   }
   const s = synthesize(c, 10);

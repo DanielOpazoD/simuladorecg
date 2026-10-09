@@ -1,5 +1,6 @@
 import { WPW_REPOLARIZATION_LIMIT, SECONDARY_ST_RATIO_LIMIT } from "./teaching-limits";
 import { DEFAULT_CASE, cloneCase, type ECGCase } from "../engine/types";
+import { usesRealisticBase } from "../engine/realistic/scope";
 export interface Preset {
   id: string;
   name: string;
@@ -38,7 +39,8 @@ export const PRESETS: Preset[] = [
     "Ritmo sinusal",
     "Sinusal",
     "Ritmos",
-    {},
+    // Variabilidad RR de reposo medida en PTB-XL NORM (CV ≈ 2 %).
+    { variability: 0.035 },
     "Activación auricular sinusal seguida de conducción AV 1:1.",
     [
       "P positiva en II, negativa en aVR",
@@ -51,7 +53,7 @@ export const PRESETS: Preset[] = [
     "Bradicardia sinusal",
     "Bradicardia",
     "Ritmos",
-    { hr: 45 },
+    { hr: 45, variability: 0.035 },
     "Disminución de la frecuencia del nodo sinusal.",
     ["FC <60 lpm", "Una P antes de cada QRS"],
   ),
@@ -60,7 +62,7 @@ export const PRESETS: Preset[] = [
     "Taquicardia sinusal",
     "Taquicardia",
     "Ritmos",
-    { hr: 125, pr: 140, qtc: 410 },
+    { hr: 125, pr: 140, qtc: 410, variability: 0.02 },
     "Aumento de automatismo sinusal con conducción conservada.",
     ["FC >100 lpm", "P sinusal y relación AV 1:1"],
   ),
@@ -744,9 +746,15 @@ export const PRESETS: Preset[] = [
     ),
   ),
 ];
+/** Patient of the learned base closest to the population mean among those that
+ * meet every classic normal criterion (scripts/fidelity/choose-textbook-seed.mjs):
+ * presets show the textbook example; the seed control explores real variety. */
+export const TEXTBOOK_SEED = 1950;
+
 export function fromPreset(preset: Preset, view?: ECGCase["view"]): ECGCase {
   const c = cloneCase(DEFAULT_CASE);
   Object.assign(c, preset.patch);
+  if (preset.patch.seed === undefined && usesRealisticBase(c)) c.seed = TEXTBOOK_SEED;
   c.presetId = preset.id;
   c.name = preset.name;
   if (view) c.view = { ...view };

@@ -8,7 +8,9 @@ import type { ECGCase, Signal } from "../src/engine/types";
 function recording(id: string, changes: Partial<ECGCase>) {
   const config = { ...fromPreset(presetById(id)!), variability: 0, ...changes };
   config.artifacts = { ...config.artifacts, baseline: 0, muscle: 0, mains: 0 };
-  return synthesize(config, 10);
+  // Analyzer stress fixtures on the kernel model; the frozen analyzer's limits on
+  // the learned base are recorded in docs/fidelidad.md.
+  return synthesize(config, 10, { learnedBase: false });
 }
 // A correct average is insufficient: every interior ventricular activation has
 // exactly one candidate and every interior candidate belongs to an activation.

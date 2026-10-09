@@ -8,8 +8,8 @@ import { LEADS, type Lead, type ECGCase } from '../src/engine/types';
 import { morphologyMetrics } from './support/morphology-metrics';
 const ids = ['inferior', 'inferior_lcx', 'anterior', 'lateral'];
 function load(id: string): ECGCase { return { ...fromPreset(presetById(id)!), variability: 0, hr: 72, filter: 'off' }; }
-function inspect(c: ECGCase, lead: Lead) {
- const s = synthesize(c,10), b = s.events.beats.find(x=>x.time>3)!;
+function inspect(c: ECGCase, lead: Lead, options?: { learnedBase?: boolean }) {
+ const s = synthesize(c,10,options), b = s.events.beats.find(x=>x.time>3)!;
  const tStart = b.qt! - Math.min(.22,(b.qt! - b.qrs!)*.68);
  return morphologyMetrics(s.leads[lead],s.fs,{baseline:[b.time-.04,b.time-.02],qrs:[b.time,b.time+b.qrs!],t:[b.time+tStart,b.time+b.qt!]});
 }
@@ -17,7 +17,7 @@ function difference(a: Float64Array,b: Float64Array) { let d=0; for(let i=0;i<a.
 describe('Scoped regional repolarization', () => {
  it.each(ids)('%s retains exact basal samples at zero intensity and resolved phase', id=>{
   const c=load(id); c.phase='hyperacute'; c.st=0;
-  const a=synthesize(c,10),b=synthesize({...c,ischemia:'none'},10);
+  const a=synthesize(c,10),b=synthesize({...c,ischemia:'none'},10,{learnedBase:false}); // same-model basal until ischemia migrates
   for(const l of LEADS) expect(a.leads[l]).toEqual(b.leads[l]);
   c.phase='chronic'; c.st=8;
   const d=synthesize(c,10); for(const l of LEADS) expect(d.leads[l]).toEqual(b.leads[l]);
@@ -51,7 +51,7 @@ describe('Scoped regional repolarization', () => {
   expect(inspect(c,'aVL').tPeakMv).toBeLessThan(-.2);
  });
  it.each([['inferior','II'],['inferior_lcx','II'],['anterior','V3'],['lateral','V5']] as const)('%s produces broad hyperacute and negative evolving T in %s',(id,l)=>{
-  const c=load(id), basal=inspect({...c,ischemia:'none'},l); c.phase='hyperacute';
+  const c=load(id), basal=inspect({...c,ischemia:'none'},l,{learnedBase:false}); c.phase='hyperacute';
   const h=inspect(c,l); expect(h.tAbsoluteAreaMvS).toBeGreaterThan(basal.tAbsoluteAreaMvS);
   expect(h.tFwhmMs!).toBeGreaterThan(basal.tFwhmMs!);
   c.phase='evolving'; expect(inspect(c,l).tPeakMv).toBeLessThan(-.15);

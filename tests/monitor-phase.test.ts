@@ -50,7 +50,9 @@ describe('Replayed monitor phase and preservation, no generator reference in fil
       const w={baseline:[b.time-.035,b.time-.020] as const,qrs:[b.time,b.time+b.qrs!] as const,t:[b.time+tWaveSupport(c,b.qrs!,b.qt!).start,b.time+b.qt!] as const};
       for(const l of LEADS){const r=morphologyMetrics(clean.leads[l],500,w),m=morphologyMetrics(mon.leads[l],500,w);
         expect(Math.abs(m.j60Mv-r.j60Mv)).toBeLessThan(.025);
-        expect(Math.abs(m.qrsPeakToPeakMv-r.qrsPeakToPeakMv)).toBeLessThan(.05);
+        // Monitor band-limiting trims a few percent off a real QRS's sharp peaks
+        // (learned base); an absolute 0.05 mV only suited the smooth kernel QRS.
+        expect(Math.abs(m.qrsPeakToPeakMv-r.qrsPeakToPeakMv)).toBeLessThan(.05+.04*r.qrsPeakToPeakMv);
         expect(Math.abs(m.tAbsoluteAreaMvS-r.tAbsoluteAreaMvS)).toBeLessThan(.004);
         // A nearly biphasic wave can exchange its largest signed peak. Compare
         // BOTH extrema instead of treating that argmax switch as a 0.4mV error.

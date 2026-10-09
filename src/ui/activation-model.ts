@@ -6,6 +6,16 @@ import { VENTRICULAR_SOURCE_IDS, VENTRICULAR_SOURCES, ventricularSource } from '
 import { WPW_REPOLARIZATION_LIMIT } from '../presets/teaching-limits';
 import { changeCase } from './case-state';
 import { regionalActivationState, regionalActivationTimeline, usesRegionalActivation } from '../engine/regional-activation';
+import { usesRealisticBase } from '../engine/realistic/scope';
+import type * as LearnedEngine from '../engine/realistic/engine';
+
+// The learned model (~400 KB) lives in the signal worker; the main thread loads
+// it only when the activation lab needs a learned-base loop.
+let learned: typeof LearnedEngine | null = null;
+export const learnedModelReady = () => learned !== null;
+export async function ensureLearnedModel(): Promise<void> {
+  learned ??= await import('../engine/realistic/engine');
+}
 
 export interface ActivationTrace {
   case: ECGCase;
@@ -63,10 +73,13 @@ export function activationCandidate(c: ECGCase, b: Beat, choice: string, edits: 
 export function activationTiming(c: ECGCase, b: Beat) {
   const state = regionalActivationState(c), regional = usesRegionalActivation(c, b);
   const deltaDurationMs = c.conduction === 'wpw' && b.kind === 'normal' ? WPW_DELTA_SECONDS * 1000 : null;
+  const learned = b.kind === 'normal' && !regional && usesRealisticBase(c);
   const applied = b.kind !== 'normal' ? 'ventricular-source' : regional ? state.model : 'template';
-  const label = regional ? (state.model === 'regional-lbbb-v1' ? 'BRI regional · experimental' : 'BRD regional · experimental') : state.requested ? 'Regional no aplicado'
+  const label = learned ? 'Latido aprendido (PTB-XL)' : regional ? (state.model === 'regional-lbbb-v1' ? 'BRI regional · experimental' : 'BRD regional · experimental') : state.requested ? 'Regional no aplicado'
     : b.kind !== 'normal' ? 'Fuente ventricular' : deltaDurationMs ? 'Plantilla histórica + delta' : 'Plantilla histórica';
-  const note = b.kind !== 'normal'
+  const note = learned
+    ? 'Vector cardiaco del QRS aprendido de ECG reales (PTB-XL), proyectado con Dower. Los pacientes cambian con la semilla; el eje y las amplitudes siguen los controles del caso.'
+    : b.kind !== 'normal'
     ? 'Este latido usa su fuente ventricular, no el reloj regional de los latidos conducidos. El perfil puede imponer un QRS mínimo.'
     : regional && state.model === 'regional-lbbb-v1' ? 'Base inicial VD/septal fija y bases VI diferidas. Son soportes de ingeniería, no mapa anatómico ni predicción de resincronización.'
     : regional ? 'Reloj septal/VI fijo; el soporte VD va de 55 ms al final del QRS. Son bases de ingeniería, no tiempos anatómicos medidos.'
@@ -86,7 +99,9 @@ export function sampleActivation(c: ECGCase, b: Beat): ActivationTrace {
   if (limitation) throw Error(limitation);
   const durationMs = qrsDuration(c, b) * 1000;
   if (!Number.isFinite(durationMs) || durationMs <= 0 || durationMs > 1000) throw Error('Duración QRS no válida.');
-  const kernels = qrsKernels(c, b), count = Math.ceil(durationMs), step = durationMs / count;
+  const learnedBeat = b.kind === 'normal' && !usesRegionalActivation(c, b) && usesRealisticBase(c);
+  if (learnedBeat && !learned) throw Error('El modelo aprendido aún se está cargando.');
+  const kernels = learnedBeat ? [] : qrsKernels(c, b), count = Math.ceil(durationMs), step = durationMs / count;
   const timing = activationTiming(c, b), deltaEnd = timing.deltaDurationMs;
   if (deltaEnd !== null && durationMs < deltaEnd) throw Error('La delta no cabe en el QRS solicitado.');
   const timesMs = Array.from({ length: count + 1 }, (_, i) => i === count ? durationMs : i * step);
@@ -99,7 +114,7 @@ export function sampleActivation(c: ECGCase, b: Beat): ActivationTrace {
   const integral: Vec = [0, 0, 0];
   let peakMagnitude = 0, pathLength = 0;
   for (let i = 0; i < timesMs.length; i++) {
-    const elapsed = timesMs[i], u = elapsed / durationMs, v: Vec = [0, 0, 0];
+    const elapsed = timesMs[i], u = elapsed / durationMs, v: Vec = learnedBeat ? learned!.realisticQrsVector(c, u) : [0, 0, 0];
     for (const k of kernels) {
       const g = qrsKernelValue(k, u);
       for (let j = 0; j < 3; j++) v[j] += g * k.v[j];

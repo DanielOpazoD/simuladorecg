@@ -40,8 +40,8 @@ describe('Posterior local R follows QRS gain, not lesion or T amplitude', () => 
   });
   it('scales the posterior-minus-basal correction and preserves all other leads', () => {
     const c = setup();
-    const a = synthesize(c, 10), baseA = synthesize({ ...c, ischemia: 'none' }, 10);
-    const b = synthesize({ ...c, qrsAmp: .1 }, 10), baseB = synthesize({ ...c, qrsAmp: .1, ischemia: 'none' }, 10);
+    const a = synthesize(c, 10), baseA = synthesize({ ...c, ischemia: 'none' }, 10, { learnedBase: false }); // same-model basal until posterior migrates
+    const b = synthesize({ ...c, qrsAmp: .1 }, 10), baseB = synthesize({ ...c, qrsAmp: .1, ischemia: 'none' }, 10, { learnedBase: false });
     let localResponse = 0;
     for (const l of LEADS) for (let i = 0; i < a.leads[l].length; i++) {
       const full = a.leads[l][i] - baseA.leads[l][i], tenth = b.leads[l][i] - baseB.leads[l][i];

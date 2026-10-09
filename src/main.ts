@@ -6,7 +6,7 @@ import "./style.css";
 import { APP_VERSION } from "./ui/version";
 import { ActivationLab, type ActivationApplyResult } from "./ui/activation-lab";
 import { familyLabel } from "./ui/catalog-presentation";
-import { metricCards, metricsHtml, monitorRate, monitorRateNote } from "./ui/metric-cards";
+import { metricsHtml, modelMetricCards } from "./ui/metric-cards";
 import { openDialog, closeDialog } from "./ui/dialog";
 import { exportDialogHtml } from "./ui/export-dialog";
 import { handleExportAction } from "./ui/export-actions";
@@ -19,7 +19,6 @@ import { ComparisonLab } from "./ui/comparison-lab";
 import { captureTrace } from "./ui/comparison-model";
 import { ExternalLab } from "./ui/external-lab";
 import {
-  DEFAULT_CASE,
   cloneCase,
   type ECGCase,
   type Signal,
@@ -62,7 +61,9 @@ import {
 const $ = <T extends Element = HTMLElement>(selector: string) =>
   document.querySelector<T>(selector)!;
 const session = new TraceSession();
-let c = cloneCase(DEFAULT_CASE),
+// Start on the sinus preset itself (textbook patient, resting HRV), not on the
+// bare defaults it is built from.
+let c = fromPreset(presetById("sinus")!),
   layout: Layout | null = null,
   monitor: Monitor | null = null;
 let annotations = false,
@@ -88,7 +89,7 @@ try {
 applyTheme(readTheme());
 const root = $("#app");
 root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="ECG Lab, inicio">${icon("pulse")}<span>ECG<span class="brand-light">lab</span></span><span class="brand-divider"></span><small>Explora la electrocardiografía</small></a><nav aria-label="Herramientas"><button class="btn mobile-cases" data-action="catalog">${icon("menu")}<span>Casos</span></button>${btn("quiz", "Practicar", "quiz")}${btn("about", "Guía", "book")}${btn("theme", "Tema", "sun", "icon-button")}${btn("export", "Exportar", "download", "primary")}</nav></header>
- <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><div><h2>Biblioteca de patrones</h2><span>${PRESETS.filter((x) => x.strategy !== "pending").length} ejemplos · agrupados por patrón</span></div>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Patrón, sigla o palabra…" aria-label="Buscar caso"/></label><label class="category-select"><span class="sr-only">Categoría</span><select id="category">${options([["", "Todas las familias"], ...Array.from(new Set(PRESETS.map((x) => x.group))).map((x) => [x, familyLabel(x)] as [string, string])], "")}</select></label><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div><div class="sidebar-footer">${icon("pulse")}<div>Señal 100% sintética<small data-product-version="${APP_VERSION}">Modelo educativo · v${APP_VERSION}</small></div></div></aside>
+ <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><div><h2>Biblioteca de patrones</h2><span>${PRESETS.filter((x) => x.strategy !== "pending").length} ejemplos · agrupados por patrón</span></div>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Patrón, sigla o palabra…" aria-label="Buscar caso"/></label><label class="category-select"><span class="sr-only">Categoría</span><select id="category">${options([["", "Todas las familias"], ...Array.from(new Set(PRESETS.map((x) => x.group))).map((x) => [x, familyLabel(x)] as [string, string])], "")}</select></label><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div><div class="sidebar-footer">${icon("pulse")}<div>Señal sintética aprendida de ECG reales<small data-product-version="${APP_VERSION}">Modelo educativo · v${APP_VERSION}</small></div></div></aside>
  <main class="workspace"><nav class="workspace-nav" aria-label="Espacios de trabajo"><span class="workspace-current" aria-current="page">${icon("pulse")}Simulador</span>${workspaceButton("external", "Abrir señal", "Abrir", "book")}${workspaceButton("compare", "Comparar A/B", "Comparar", "strip")}${workspaceButton("activation", "Activación QRS", "Activación", "pulse")}${workspaceButton("parameters", "Ajustar el caso", "Ajustar", "settings", "workspace-adjust")}</nav><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><p id="case-subtitle">Activación auricular sinusal seguida de conducción AV 1:1.</p><div id="exploration-context" class="exploration-context" hidden></div></div><div class="case-state"><span class="status-label">Ejemplo sintético</span>${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
  <section id="diagnosis-navigation" class="diagnosis-navigation" aria-label="Variantes del patrón" hidden></section>
  <div id="diagnosis-content">
@@ -101,7 +102,7 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  </div>
  <section id="comparison-lab" class="comparison-lab" aria-label="Laboratorio comparativo A/B"></section>
  <section class="lower-grid"><div id="inspector" class="inspector"></div><aside class="interpretation"><div class="section-label">Guía de lectura</div><h2 id="finding-title">Hallazgos esperados</h2><ul id="findings"></ul><div id="limitation" class="model-note"></div><div id="warnings"></div><button class="text-button" data-action="measurements">Ver medidas y valores del modelo ${icon("chevron")}</button><button class="text-button" data-action="about">Estado y referencias ${icon("chevron")}</button></aside></section>
- <footer class="workspace-footer"><span>ECG Lab · Laboratorio de electrocardiografía</span><span>Uso educativo. Sin validación clínica.</span></footer></main></div>
+ <footer class="workspace-footer"><span>ECG Lab · Laboratorio de electrocardiografía</span><span>Morfología normal aprendida de <a href="https://physionet.org/content/ptb-xl/1.0.3/" target="_blank" rel="noopener">PTB-XL</a> y <a href="https://physionet.org/content/ptb-xl-plus/1.0.1/" target="_blank" rel="noopener">PTB-XL+</a> (Wagner et al. 2020; Strodthoff et al. 2023), <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>; se distribuyen solo coeficientes derivados.</span><span>Uso educativo. Sin validación clínica.</span></footer></main></div>
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
 
 const variantNavigation = new VariantNavigation($("#diagnosis-navigation"), $("#diagnosis-content"));
@@ -225,9 +226,12 @@ function renderInfo() {
 }
 function renderMetrics() {
   if (!session.signal || !session.measurement) return;
-  $("#metrics").innerHTML = metricsHtml(metricCards(c, session.measurement));
-  $("#monitor-rate").textContent = monitorRate(c, session.measurement);
-  $("#monitor-rate-note").textContent = monitorRateNote(c, session.measurement);
+  // The simulator knows what it generated: show the model's values. The frozen
+  // sample analyzer remains an independent estimate inside «Medidas».
+  const cards = modelMetricCards(c, session.signal), rate = cards[0];
+  $("#metrics").innerHTML = metricsHtml(cards);
+  $("#monitor-rate").textContent = rate.value === "—" ? "—" : rate.value.replace(/<small>.*<\/small>/, "");
+  $("#monitor-rate-note").textContent = rate.value === "—" ? "No estimable" : "lpm · modelo";
 }
 function renderDetail() {
   if (session.signal && session.measurement)
