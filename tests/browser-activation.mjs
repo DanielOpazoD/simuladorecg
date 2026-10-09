@@ -49,7 +49,8 @@ for (const [engine, launcher] of Object.entries(engines)) {
       page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); if (m.type() === 'warning') warnings.push(m.text()); });
       page.on('request', r => requests.push(r.url()));
       const ready = () => page.locator('#signal-loading').waitFor({ state: 'hidden' });
-      const open = () => page.locator('[data-action="activation"]').click();
+      // Opening is asynchronous: the lab loads the learned models first.
+      const open = async () => { await page.locator('[data-action="activation"]').click(); await page.locator('#activation-dialog').waitFor({ state: 'visible' }); };
       const close = () => page.locator('#activation-dialog [data-activation="close"]').click();
       const applicationReady = async () => { await page.locator('#activation-dialog').waitFor({ state: 'hidden' }); await ready(); };
       const inViewport = selector => page.locator(selector).evaluate(e => {
