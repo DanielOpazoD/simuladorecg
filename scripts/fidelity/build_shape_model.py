@@ -7,7 +7,9 @@ Entrena SOLO con los pliegues 1–8 de PTB-XL (los 9–10 son la reserva del ban
 Por paciente se usa un único ECG NORM = 100 en ritmo sinusal, sin marcas de ruido,
 de electrodos ni de marcapasos, con puntos fiduciales 12SL completos y ordenados.
 
-Cada latido mediano 12SL (µV → mV) se referencia a la línea TP previa a la P y se divide en
+Cada latido mediano (por defecto calculado del registro crudo de PTB-XL 500 Hz y
+alineado al latido 12SL de PTB-XL+ para heredar sus puntos fiduciales; con
+--source 12sl, el mediano 12SL mismo) se referencia a la línea TP previa a la P y se divide en
 fases por sus puntos fiduciales: P, segmento PQ, QRS, ST-T y cola post-T. Cada fase
 se remuestrea a un número fijo de puntos en las 8 derivaciones independientes
 (I, II, V1–V6). Sobre ese vector se calcula un ACP: media + modos de variación.
@@ -26,8 +28,13 @@ INDEP = ['I', 'II', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6']
 # Fases y puntos por fase (a 500 Hz las duraciones típicas son 50/30/45/170/80 muestras).
 # El ST-T se divide en el ápice espacial de T (registro por puntos de referencia):
 # sin esa alineación, el promedio de ondas T con picos desfasados queda asimétrico.
-PHASES = [('p', 40), ('pq', 20), ('qrs', 56), ('st', 80), ('t', 48), ('post', 32)]
-POST_MS = 160
+# 'pre': los 80 ms previos a la P (inicio gradual de la activación auricular).
+PRE_MS = 80
+PHASES = [('pre', 24), ('p', 40), ('pq', 20), ('qrs', 56), ('st', 80), ('t', 48), ('post', 48)]
+# Tras el fin de T: incluye la onda U y el retorno lento al TP (la cola que más
+# delataba al sintético, sobre todo en V2–V3). Con --source raw el marco dura 1,4 s.
+POST_MS = 260
+FRAME_MS = 1396
 
 
 def resample(seg, n):
@@ -57,7 +64,7 @@ def segment(med, fid):
     # Ápice de T: máximo de la magnitud espacial entre el 30 % y el 92 % del ST-T.
     tt = np.linspace(qoff + 0.3 * (toff - qoff), qoff + 0.92 * (toff - qoff), 200)
     apex = tt[int(np.argmax(np.linalg.norm(interp(tt) - base, axis=1)))]
-    bounds = [(pon, poff), (poff, qon), (qon, qoff), (qoff, apex), (apex, toff), (toff, toff + POST_MS)]
+    bounds = [(pon - PRE_MS, pon), (pon, poff), (poff, qon), (qon, qoff), (qoff, apex), (apex, toff), (toff, toff + POST_MS)]
     parts = []
     for (name, n), (a, b) in zip(PHASES, bounds):
         parts.append(interp(np.linspace(a, b, n)) - base)
@@ -66,24 +73,85 @@ def segment(med, fid):
     return v, durs
 
 
+def phase_slice(name, extra=()):
+    """Filas del vector (puntos, 8) que ocupan una o más fases, por nombre."""
+    offs, o = {}, 0
+    for nme, n in PHASES:
+        offs[nme] = (o, o + n)
+        o += n
+    names = [name, *extra]
+    return slice(offs[names[0]][0], offs[names[-1]][1])
+
+
 def qrs_axis(v):
     """Eje frontal por área neta del QRS (I y aVF = II - I/2) en grados."""
-    o = sum(n for _, n in PHASES[:2])
-    q = v[o:o + PHASES[2][1]]
+    q = v[phase_slice('qrs')]
     ai = q[:, 0].sum()
     af = (q[:, 1] - q[:, 0] / 2).sum()
     return np.degrees(np.arctan2(af, ai))
 
 
 def magnitudes(v):
-    o_p = 0
-    o_q = PHASES[0][1] + PHASES[1][1]
-    o_t = o_q + PHASES[2][1]
-    p = v[o_p:o_p + PHASES[0][1]]
-    q = v[o_q:o_q + PHASES[2][1]]
-    t = v[o_t:o_t + PHASES[3][1] + PHASES[4][1]]
+    p, q, t = v[phase_slice('p')], v[phase_slice('qrs')], v[phase_slice('st', ('t',))]
     # Amplitud espacial máxima (norma de las 8 derivaciones) de cada onda.
     return [np.linalg.norm(p, axis=1).max(), np.linalg.norm(q, axis=1).max(), np.linalg.norm(t, axis=1).max()]
+
+
+# Clases diagnósticas (códigos SCP de PTB-XL) con sus rangos fisiológicos de
+# duración (ms): P, PQ, QRS, ST-T. "conflicts" excluye registros con otro
+# diagnóstico que cambiaría la morfología que el modelo debe aprender.
+CONDUCTION = ['CLBBB', 'CRBBB', 'IRBBB', 'LAFB', 'LPFB', 'WPW', 'IVCD']
+MI = ['IMI', 'ASMI', 'AMI', 'ALMI', 'ILMI', 'IPLMI', 'IPMI', 'LMI', 'PMI']
+HYPER = ['LVH', 'RVH', 'SEHYP']
+CLASS_SPEC = {
+    'NORM': {'min': 100, 'p': (60, 140), 'pq': (10, 140), 'qrs': (60, 120), 'stt': (180, 420), 'conflicts': []},
+    'CLBBB': {'min': 50, 'p': (60, 160), 'pq': (5, 200), 'qrs': (110, 200), 'stt': (180, 460), 'conflicts': ['CRBBB', 'WPW'] + MI},
+    'CRBBB': {'min': 50, 'p': (60, 160), 'pq': (5, 200), 'qrs': (110, 200), 'stt': (180, 460), 'conflicts': ['CLBBB', 'WPW', 'LAFB', 'LPFB'] + MI},
+    'IRBBB': {'min': 50, 'p': (60, 150), 'pq': (5, 180), 'qrs': (80, 130), 'stt': (180, 440), 'conflicts': ['CLBBB', 'CRBBB', 'WPW'] + MI + HYPER},
+    'LAFB': {'min': 50, 'p': (60, 150), 'pq': (5, 180), 'qrs': (70, 130), 'stt': (180, 440), 'conflicts': ['CLBBB', 'CRBBB', 'WPW', 'LPFB'] + MI},
+    'LVH': {'min': 50, 'p': (60, 160), 'pq': (5, 200), 'qrs': (70, 130), 'stt': (180, 460), 'conflicts': CONDUCTION + MI},
+    'WPW': {'min': 50, 'p': (50, 160), 'pq': (0, 120), 'qrs': (90, 200), 'stt': (160, 460), 'conflicts': ['CLBBB', 'CRBBB'] + MI},
+    'IMI': {'min': 50, 'p': (60, 160), 'pq': (5, 200), 'qrs': (70, 130), 'stt': (180, 460), 'conflicts': ['CLBBB', 'CRBBB', 'WPW', 'ASMI', 'AMI', 'ALMI', 'LMI']},
+    'ASMI': {'min': 50, 'p': (60, 160), 'pq': (5, 200), 'qrs': (70, 130), 'stt': (180, 460), 'conflicts': ['CLBBB', 'CRBBB', 'WPW', 'IMI', 'ILMI', 'IPLMI', 'IPMI']},
+}
+
+
+def selects(row, scp, code):
+    spec = CLASS_SPEC[code]
+    if scp.get(code, 0) < spec['min'] or any(scp.get(k, 0) > 0 for k in spec['conflicts']):
+        return False
+    if code == 'NORM':
+        return 'SR' in scp
+    # Ritmo sinusal (incluye bradi/taqui sinusal) para que la P sea sinusal.
+    return any(k in scp for k in ('SR', 'SBRAD', 'STACH', 'SARRH'))
+
+
+def raw_aligned(root, rel, med12):
+    """Mediana del registro crudo en el marco temporal del latido 12SL (600 muestras)."""
+    from features import detect_beats, median_beat, _bp, INDEP as FI
+    path = os.path.join(root, 'ptb-xl', rel)
+    if not (os.path.exists(path + '.dat') and os.path.exists(path + '.hea')):
+        return None
+    fs, names, x = read(path)
+    pk = detect_beats(x)
+    med, used = median_beat(x, pk, pre=640, post=1100)
+    if med is None or len(used) < 5:
+        return None
+    energy = lambda m: np.sqrt((np.gradient(_bp(m[:, FI], 5, 40), axis=0) ** 2).sum(1))
+    e12, er = energy(med12), energy(med)
+    # Pico de energía del QRS en ambos marcos y ajuste fino por correlación ±20 ms.
+    c12 = int(np.argmax(e12[100:500])) + 100
+    best, lag = -np.inf, 0
+    for d in range(-10, 11):
+        lo = 320 - c12 + d  # índice en `med` que corresponde a la muestra 0 del marco 12SL
+        if lo < 0 or lo + 600 > len(med):
+            continue
+        c = float(np.corrcoef(e12, er[lo:lo + 600])[0, 1])
+        if c > best:
+            best, lag = c, lo
+    if best < 0.8:
+        return None
+    return med[lag:lag + 700] if lag + 700 <= len(med) else None
 
 
 def main():
@@ -92,6 +160,10 @@ def main():
     ap.add_argument('--out', required=True)
     ap.add_argument('--components', type=int, default=64)
     ap.add_argument('--report')
+    ap.add_argument('--class', dest='code', default='NORM', choices=sorted(CLASS_SPEC),
+                    help='diagnóstico SCP a modelar (NORM por defecto)')
+    ap.add_argument('--source', choices=['12sl', 'raw'], default='raw',
+                    help='raw: medianas de los registros crudos (por defecto); 12sl: medianas de PTB-XL+')
     a = ap.parse_args()
     root = os.path.expanduser(a.data)
 
@@ -114,17 +186,20 @@ def main():
     for row in rows:
         scp = ast.literal_eval(row['scp_codes'])
         clean = all(row[k] == '' for k in ['pacemaker', 'electrodes_problems', 'burst_noise', 'static_noise', 'baseline_drift'])
-        if not (row['strat_fold'] in [str(i) for i in range(1, 9)] and scp.get('NORM', 0) >= 100 and 'SR' in scp and clean):
+        if not (row['strat_fold'] in [str(i) for i in range(1, 9)] and clean and selects(row, scp, a.code)):
             continue
         if row['patient_id'] in seen or not row['age'] or float(row['age']) < 18:
             continue
         eid = int(row['ecg_id'])
         f = fid.get(eid)
-        if not f or not (0 < f['P_On'] < f['P_Off'] < f['QRS_On'] < f['QRS_Off'] < f['T_Off'] and f['T_Off'] + POST_MS <= 1196):
+        # La cola post-T no debe alcanzar la P siguiente (P_On + RR) ni salir del marco.
+        frame_end = FRAME_MS if a.source == 'raw' else 1196
+        if not f or not (PRE_MS < f['P_On'] < f['P_Off'] < f['QRS_On'] < f['QRS_Off'] < f['T_Off'] and f['T_Off'] + POST_MS <= min(frame_end, f['P_On'] + f['RR'] - 10)):
             rejected['fiduciales'] += 1
             continue
         d = (f['P_Off'] - f['P_On'], f['QRS_On'] - f['P_Off'], f['QRS_Off'] - f['QRS_On'], f['T_Off'] - f['QRS_Off'])  # ms
-        if not (60 <= d[0] <= 140 and 10 <= d[1] <= 140 and 60 <= d[2] <= 120 and 180 <= d[3] <= 420 and 500 <= f['RR'] <= 1500):
+        spec = CLASS_SPEC[a.code]
+        if not all(lo <= v <= hi for v, (lo, hi) in zip(d, (spec['p'], spec['pq'], spec['qrs'], spec['stt']))) or not 500 <= f['RR'] <= 1500:
             rejected['rango'] += 1
             continue
         path = os.path.join(root, 'ptb-xl-plus', 'median_beats', '12sl', '%05d' % (eid // 1000 * 1000), '%05d_medians' % eid)
@@ -135,6 +210,15 @@ def main():
             continue
         assert fs == 500 and med.shape == (600, 12)
         med = med / 1000.0  # µV → mV (ver docs/fidelidad.md)
+        if a.source == 'raw':
+            # Mediana calculada del registro crudo (como mide el banco), alineada al
+            # latido 12SL para heredar sus puntos fiduciales. El 12SL lleva una huella
+            # de procesamiento propia que una red distingue (AUC 0,999).
+            raw = raw_aligned(root, row['filename_hr'], med)
+            if raw is None:
+                rejected['archivo'] += 1
+                continue
+            med = raw
         v, dd = segment(med, f)
         if not np.isfinite(v).all() or np.abs(v).max() > 6:
             rejected['rango'] += 1
@@ -149,10 +233,21 @@ def main():
     n = len(V)
     print(f'Latidos usados: {n}; rechazos: {rejected}')
 
+    # Clases pequeñas: no más modos que una décima parte de los pacientes.
+    k = min(a.components, max(8, n // 10))
+    # Casos atípicos (mediana mal alineada, latido contaminado): fuera antes del
+    # ACP definitivo, para que el modelo no aprenda ni muestree formas imposibles.
+    m0 = V.mean(0)
+    _, S0, W0 = np.linalg.svd(V - m0, full_matrices=False)
+    z0 = (V - m0) @ W0[:k].T / (S0[:k] / np.sqrt(n - 1))
+    keep = np.abs(z0).max(1) <= 5
+    V, D, RR = V[keep], D[keep], RR[keep]
+    rejected['atipicos'] = int((~keep).sum())
+    n = len(V)
+    print(f'Tras quitar atípicos: {n}')
     mean = V.mean(0)
     U, S, Wt = np.linalg.svd(V - mean, full_matrices=False)
     var = S ** 2 / (n - 1)
-    k = a.components
     explained = float(var[:k].sum() / var.sum())
     comps = Wt[:k]                      # (k, dim)
     scores = (V - mean) @ comps.T       # (n, k)
@@ -168,6 +263,12 @@ def main():
     J = np.column_stack([z, cond])
     mu = J.mean(0)
     C = np.cov(J.T)
+    # La población real no es gaussiana en el espacio de modos (asimetría y colas):
+    # un clasificador separa muestras gaussianas de pacientes reales (AUC 0,85) y no
+    # separa las de una mezcla de 8 gaussianas. El motor muestrea de esa mezcla.
+    from sklearn.mixture import GaussianMixture
+    gm = GaussianMixture(min(8, max(1, n // 200)), covariance_type='full', reg_covar=1e-4, random_state=0).fit(J)
+    chol = np.stack([np.linalg.cholesky(c) for c in gm.covariances_])
 
     # Error de reconstrucción con k modos (mV, RMS por muestra).
     rec = mean + scores @ comps
@@ -180,20 +281,23 @@ def main():
     f32 = lambda x: base64.b64encode(np.asarray(x, dtype='<f4').tobytes()).decode()
     q = lambda x: [round(float(v), 6) for v in np.ravel(x)]
     model = {
-        'schema': 'ecg-lab-shape-model/1',
-        'source': 'PTB-XL 1.0.3 + PTB-XL+ 1.0.1 (CC BY 4.0), latidos medianos 12SL, pliegues 1-8, NORM=100',
+        'schema': 'ecg-lab-shape-model/2',
+        'source': f'PTB-XL 1.0.3 + PTB-XL+ 1.0.1 (CC BY 4.0), latidos medianos {"de registros crudos alineados a 12SL" if a.source == "raw" else "12SL"}, pliegues 1-8, {a.code}',
+        'diagnosis': a.code,
         'leads': INDEP,
         'phases': [{'name': nme, 'points': pts} for nme, pts in PHASES],
         'postMs': POST_MS,
+        'preMs': PRE_MS,
         'subjects': n,
         'components': k,
         'explainedVariance': round(explained, 4),
         'mean': f32(mean),
         'basis': base64.b64encode(b16.tobytes()).decode(),
-        'basisScale': q(scale),
+        'basisScale': f32(scale),  # float32: un redondeo a 6 decimales anulaba los modos finos
         # Gaussiana conjunta de [z (k), variables del caso]; el motor condiciona
         # sobre el subconjunto que el caso fija.
         'joint': {'names': [f'z{i}' for i in range(k)] + cond_names, 'mean': q(mu), 'cov': q(C)},
+        'mixture': {'weights': q(gm.weights_), 'means': f32(gm.means_), 'cholesky': f32(chol)},
         'population': {
             'durationsMsP50': q(np.median(D, 0)),
             'axisP50': round(float(np.median(ax)), 1),

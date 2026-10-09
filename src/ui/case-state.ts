@@ -45,6 +45,9 @@ export function changeCase(
       value;
   else (c as unknown as Record<string, unknown>)[key] = value;
   if (key === "view.gain") c.view.chestGain = c.view.gain;
+  // Moving an axis control fixes that axis; until then it follows the patient.
+  if (key === "pAxis") c.naturalPAxis = false;
+  if (key === "tAxis") c.naturalTAxis = false;
   if (key === "rhythm") {
     c.av = "normal";
     c.ectopy = "none";

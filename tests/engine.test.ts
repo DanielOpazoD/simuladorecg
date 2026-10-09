@@ -220,7 +220,7 @@ describe("Medición independiente", () => {
     expect(Math.max(...cut("I"))).toBeGreaterThan(0.4);
   });
   it("reciprocidad inferior persiste en el trazado filtrado", () => {
-    const a = synthesize(load("sinus"), 10),
+    const a = synthesize(load("sinus"), 10, { learnedBase: false }), // same-model basal until ischemia migrates
       b = synthesize(load("inferior"), 10),
       beat = b.events.beats.find((b) => b.time > 0.4)!,
       idx = Math.round((beat.time + 0.125) * 500);
@@ -233,7 +233,7 @@ describe("Medición independiente", () => {
   });
   it("sinusal: FC, PR, QRS y QT dentro de tolerancias de la maqueta", () => {
     const c = load("sinus"),
-      s = synthesize(c, 10),
+      s = synthesize(c, 10, { learnedBase: false }), // frozen-analyzer fixture (kernel model)
       m = measure(s);
     expect(m.hr).toBeCloseTo(72, 0);
     expect(m.qrs!).toBeGreaterThan(65);

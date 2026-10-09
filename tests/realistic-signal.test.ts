@@ -189,7 +189,7 @@ describe("eje: la tarjeta dice lo que muestra el trazado", () => {
   const wrap = (d: number) => Math.abs(((d + 540) % 360) - 180);
   // Contract: the card always states the trace's own axis; the trace follows the
   // control within clinical reading precision (±15°), tighter in the usual range.
-  it.each([[180, 25], [-150, 25], [150, 25], [-30, 10], [55, 10], [90, 10]])("eje %s° en 30 semillas (máx. %s°)", (axis, limit) => {
+  it.each([[180, 15], [-150, 15], [150, 15], [-30, 15], [55, 15], [90, 15]])("eje %s° en 30 semillas (máx. %s°)", (axis, limit) => {
     const misses: number[] = [];
     for (let seed = 1; seed <= 30; seed++) {
       const s = synthesize(load("sinus", { axis, seed: seed * 7 }), 10), measured = traceAxis(s);

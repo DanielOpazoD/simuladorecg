@@ -7,7 +7,7 @@ import { auditMeasurement } from '../src/engine/analysis/model-audit';
 import { fromPreset, presetById } from '../src/presets/catalog';
 
 const example = () => {
-  const signal = synthesize(fromPreset(presetById('sinus')!), 10);
+  const signal = synthesize(fromPreset(presetById('sinus')!), 10, { learnedBase: false }); // analyzer fixture on the kernel model (frozen analyzer; learned base: docs/fidelidad.md)
   return { signal, raw: measure(signal) };
 };
 
@@ -63,7 +63,7 @@ describe('Sample analysis -> model audit: rejections are not erased or reinstate
   });
 
   it.each(['sinus', 'pvc', 'complete', 'complete_v'])('re-auditing %s preserves the rejection record', id => {
-    const signal = synthesize(fromPreset(presetById(id)!), 10);
+    const signal = synthesize(fromPreset(presetById(id)!), 10, { learnedBase: false }); // analyzer fixture on the kernel model (frozen analyzer; learned base: docs/fidelidad.md)
     const first = auditMeasurement(signal, analyzeSamples(signal));
     const second = auditMeasurement(signal, first);
     expect(second.rejected).toEqual(first.rejected);

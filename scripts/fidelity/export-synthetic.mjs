@@ -1,5 +1,6 @@
 // Exporta ECG sintéticos del motor actual para el banco de realismo.
-// Uso: node scripts/fidelity/export-synthetic.mjs <dir-salida> [n=300] [preset=sinus] [ideal]
+// Uso: node scripts/fidelity/export-synthetic.mjs <dir-salida> [n=300] [preset=sinus|catalog] [ideal|realistic] [desplazamiento=0]
+// "catalog" exporta cada preset activo una vez con su caso por defecto.
 // "ideal" desactiva el ruido de adquisición para aislar la morfología.
 // Escribe <dir>/index.json y un .f32 por ECG (5000 × 12, mV, orden de LEADS).
 import { build } from "esbuild";
@@ -8,7 +9,9 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-const [outDir, nArg = "300", presetId = "sinus", mode = ""] = process.argv.slice(2);
+const [outDir, nArg = "300", presetId = "sinus", mode = "", offsetArg = "0"] = process.argv.slice(2);
+// Desplazamiento de semillas: lotes de entrenamiento y de prueba sin pacientes en común.
+const offset = Number(offsetArg);
 if (!outDir) throw new Error("Falta el directorio de salida");
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../..");
 
@@ -43,15 +46,33 @@ function rng(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
+await mkdir(outDir, { recursive: true });
+const index = [];
+const write = async (c, file, extra = {}) => {
+  const s = synthesize(c, 10), len = s.leads.I.length, data = new Float32Array(len * LEADS.length);
+  for (let k = 0; k < len; k++)
+    for (let j = 0; j < LEADS.length; j++) data[k * LEADS.length + j] = Math.round(s.leads[LEADS[j]][k] * 1000) / 1000; // 1 µV, como PTB-XL
+  await writeFile(path.join(outDir, file), Buffer.from(data.buffer));
+  index.push({ file, fs: s.fs, samples: len, leads: LEADS, ...extra });
+};
+// "catalog": cada preset activo una vez, con su caso por defecto (clasificador diagnóstico).
+if (presetId === "catalog") {
+  for (const p of PRESETS.filter((x) => x.strategy !== "pending")) {
+    const c = fromPreset(p);
+    if (mode === "ideal") c.acquisition = "ideal";
+    await write(c, `${p.id}.f32`, { preset: p.id });
+  }
+  await writeFile(path.join(outDir, "index.json"), JSON.stringify(index));
+  console.log(`${index.length} presets en ${outDir}`);
+  process.exit(0);
+}
 const preset = PRESETS.find((p) => p.id === presetId);
 if (!preset) throw new Error(`Preset desconocido: ${presetId}`);
 const n = Number(nArg);
-await mkdir(outDir, { recursive: true });
-const index = [];
 for (let i = 0; i < n; i++) {
-  const r = rng(9001 + i);
+  const r = rng(9001 + offset + i);
   const u = (a, b) => a + (b - a) * r();
-  const c = { ...fromPreset(preset), seed: 1 + i };
+  const c = { ...fromPreset(preset), seed: 1 + offset + i };
   if (mode === "ideal") c.acquisition = "ideal";
   if (presetId === "sinus") {
     Object.assign(c, {
@@ -62,14 +83,7 @@ for (let i = 0; i < n; i++) {
       variability: 0.035 * Math.exp(0.6 * Math.sqrt(-2 * Math.log(r() || 1e-9)) * Math.cos(2 * Math.PI * r())),
     });
   }
-  const s = synthesize(c, 10);
-  const len = s.leads.I.length;
-  const data = new Float32Array(len * LEADS.length);
-  for (let k = 0; k < len; k++)
-    for (let j = 0; j < LEADS.length; j++) data[k * LEADS.length + j] = Math.round(s.leads[LEADS[j]][k] * 1000) / 1000; // 1 µV, como PTB-XL
-  const file = `syn_${String(i).padStart(4, "0")}.f32`;
-  await writeFile(path.join(outDir, file), Buffer.from(data.buffer));
-  index.push({ file, fs: s.fs, samples: len, leads: LEADS, preset: presetId, params: { hr: c.hr, axis: c.axis, qrs: c.qrs } });
+  await write(c, `syn_${String(i).padStart(4, "0")}.f32`, { preset: presetId, params: { hr: c.hr, axis: c.axis, qrs: c.qrs } });
 }
 await writeFile(path.join(outDir, "index.json"), JSON.stringify(index));
 console.log(`${n} ECG sintéticos en ${outDir}`);

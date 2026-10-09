@@ -38,7 +38,7 @@ export function beatTemplate(p: Patient, state: BeatShapeState, t: number, respi
   for (const ph of Object.keys(p.scales) as PhaseName[]) {
     const r = p.rotations[ph], rr = new Array(9).fill(0) as typeof r;
     for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) for (let q = 0; q < 3; q++) rr[i * 3 + j] += resp[i * 3 + q] * r[q * 3 + j];
-    ops[ph] = leadOperator(rr, p.scales[ph] * (ph === "p" || ph === "pq" ? pGain : gain));
+    ops[ph] = leadOperator(rr, p.scales[ph] * (ph === "pre" || ph === "p" || ph === "pq" ? pGain : gain));
   }
   return transform(m, reconstruct(m, z), ops);
 }
@@ -85,8 +85,9 @@ function place(acc: Float64Array[], fs: number, start: number, x: Float64Array, 
         const ph = m.phases[segs[k].phase], u = Math.min(1, Math.max(0, tms / segs[k].ms));
         v = phaseValue(x, ph.offset, ph.points, lead, u);
         if (mode === "atrial-conducted" || mode === "atrial-blocked") {
-          // Start exactly on the TP line: fade the tiny residual over the P wave.
-          if (k === 0) v -= v0 * (1 - u);
+          // Lead-in: start exactly on the TP line and fade in over its first half, so
+          // it carries the gradual onset of P without duplicating the previous T/U tail.
+          if (k === 0) v = (v - v0 * (1 - u)) * (u < 0.5 ? 0.5 * (1 - Math.cos(2 * Math.PI * u)) : 1);
           // Hand over to the QRS onset level of the beat this P conducts to.
           if (endAt && k === segs.length - 1) v -= (vEnd - endAt[lead]) * u;
         } else {
@@ -96,7 +97,7 @@ function place(acc: Float64Array[], fs: number, start: number, x: Float64Array, 
           if (k === segs.length - 1) {
             const w = (elapsed - lastStartMs) / segs[k].ms;
             v -= vEnd * w;
-            if (w > 0.6) v *= 0.5 * (1 + Math.cos((Math.PI * (w - 0.6)) / 0.4));
+            if (w > 0.8) v *= 0.5 * (1 + Math.cos((Math.PI * (w - 0.8)) / 0.2));
           }
         }
       }
@@ -111,7 +112,8 @@ export function qrsOnsetLevel(x: Float64Array, p: Patient): Float64Array {
   return x.slice(o, o + NL);
 }
 export function addAtrial(acc: Float64Array[], fs: number, start: number, pMs: number, pqMs: number, x: Float64Array, p: Patient, conductsTo?: ArrayLike<number>) {
-  place(acc, fs, start, x, p, [{ phase: "p", ms: pMs }, { phase: "pq", ms: pqMs }], conductsTo ? "atrial-conducted" : "atrial-blocked", conductsTo);
+  // The learned lead-in starts before P onset (`start` is P onset).
+  place(acc, fs, start - p.model.preMs / 1000, x, p, [{ phase: "pre", ms: p.model.preMs }, { phase: "p", ms: pMs }, { phase: "pq", ms: pqMs }], conductsTo ? "atrial-conducted" : "atrial-blocked", conductsTo);
 }
 export function addVentricular(acc: Float64Array[], fs: number, start: number, qrsMs: number, sttMs: number, x: Float64Array, p: Patient, taKeep: number) {
   const st = sttMs * p.tApexFraction;

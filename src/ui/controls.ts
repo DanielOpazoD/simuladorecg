@@ -5,6 +5,11 @@ import { regionalActivationControls } from "./regional-activation";
 import { LEADS, type ECGCase } from "../engine/types";
 import { lesionControlEffect, tVector } from "../engine/morphology";
 import { range, select, toggle } from "./helpers";
+import { usesRealisticBase } from "../engine/realistic/scope";
+
+/** On the learned base, P and T follow the patient until their slider is moved. */
+const learnedNatural = (c: ECGCase, wave: "p" | "t") =>
+  usesRealisticBase(c) && (wave === "p" ? c.naturalPAxis : c.naturalTAxis) !== false;
 /** Applicability of the existing amplitude controls, separate from clinical severity. */
 export function amplitudeControlState(c: ECGCase) {
   const organized = c.rhythm !== "vf" && c.rhythm !== "asystole" && !isVviNoncapture(c),
@@ -220,7 +225,7 @@ export function controls(c: ECGCase) {
    c.overload,
  )}
  ${range("st", "Intensidad de lesión", 0, 8, 0.25, c.st, "escala del patrón", amplitude.stDisabled)}${range("transition", "Rotación precordial", -1, 1, 0.1, c.transition, "", rhythm.noOrganizedBeats)}
- ${range("pAxis", "Eje de P", -180, 180, 5, c.pAxis, "°", rhythm.pAxisDisabled)}<div class="t-axis-control">${range("tAxis", "Eje de T", -180, 180, 5, c.tAxis, "°", tAxis.disabled, "t-axis-note")}<p class="control-note" id="t-axis-note">${tAxis.reason}</p></div>${range("pAmp", "Amplitud de P", 0, 0.5, 0.01, c.pAmp, "mV ref.", rhythm.pAmplitudeDisabled)}${range("qrsAmp", "Amplitud QRS", 0.1, 3, 0.1, c.qrsAmp, "×", rhythm.noOrganizedBeats)}${range("tAmp", "Amplitud de T", 0, 1, 0.01, c.tAmp, "mV ref.", amplitude.tDisabled)}
+ ${range("pAxis", learnedNatural(c, "p") ? "Eje de P (natural del paciente)" : "Eje de P", -180, 180, 5, c.pAxis, "°", rhythm.pAxisDisabled)}<div class="t-axis-control">${range("tAxis", learnedNatural(c, "t") ? "Eje de T (natural del paciente)" : "Eje de T", -180, 180, 5, c.tAxis, "°", tAxis.disabled, "t-axis-note")}<p class="control-note" id="t-axis-note">${tAxis.reason}</p></div>${range("pAmp", "Amplitud de P", 0, 0.5, 0.01, c.pAmp, "mV ref.", rhythm.pAmplitudeDisabled)}${range("qrsAmp", "Amplitud QRS", 0.1, 3, 0.1, c.qrsAmp, "×", rhythm.noOrganizedBeats)}${range("tAmp", "Amplitud de T", 0, 1, 0.01, c.tAmp, "mV ref.", amplitude.tDisabled)}
  ${toggle("septalQ", "Componente septal", c.septalQ)}</div><p class="control-note" id="amplitude-note">${amplitude.note}</p><p class="control-note">Amplitud de P ajusta las ondas P programadas, no las ondas de FA/flutter. En ritmo de la unión la dirección retrógrada es fija. Los controles atenuados conservan su valor.</p><p class="control-note">Amplitud de T escala toda la T, incluidas las correcciones locales; 0 la anula. No modifica QRS, el ST primario/secundario ni U. Los voltajes de referencia no son amplitudes de una derivación concreta.</p><p class="control-note" id="secondary-repolarization-note">T secundaria: la dirección sigue la activación QRS, no el control Eje de T; la sobrecarga actúa a través del QRS. ${c.rhythm === "torsades" ? "En torsades el modelo no añade un segmento ST separable." : "El ST secundario sigue esa misma fuente QRS, independientemente de Amplitud de T."} ST/T son aproximados y no validan criterios ST/QRS. El ST de lesión primaria es un componente distinto.</p></div>
  <div class="control-panel" data-control-panel="signal" hidden><div class="field-grid">
  ${select(

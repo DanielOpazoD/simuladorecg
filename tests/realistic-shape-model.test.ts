@@ -10,7 +10,7 @@ const base: PatientTargets = {
 };
 const identityOps = () => {
   const op = leadOperator(rotation(0, 0));
-  return { p: op, pq: op, qrs: op, st: op, t: op, post: op };
+  return { pre: op, p: op, pq: op, qrs: op, st: op, t: op, post: op };
 };
 
 describe("modelo de forma del latido normal", () => {
@@ -32,18 +32,19 @@ describe("modelo de forma del latido normal", () => {
   it("rotar el corazón conserva el residuo no dipolar", () => {
     const m = shapeModel(), x = reconstruct(m, new Float64Array(m.k));
     const op = leadOperator(rotation(30, 20)), back = leadOperator(rotation(-30, 0));
-    const once = transform(m, x, { p: op, pq: op, qrs: op, st: op, t: op, post: op });
+    const once = transform(m, x, { pre: op, p: op, pq: op, qrs: op, st: op, t: op, post: op });
     const r2 = leadOperator(rotation(0, -20));
-    const undone = transform(m, transform(m, once, { p: r2, pq: r2, qrs: r2, st: r2, t: r2, post: r2 }), { p: back, pq: back, qrs: back, st: back, t: back, post: back });
+    const undone = transform(m, transform(m, once, { pre: r2, p: r2, pq: r2, qrs: r2, st: r2, t: r2, post: r2 }), { pre: back, p: back, pq: back, qrs: back, st: back, t: back, post: back });
     for (let i = 0; i < x.length; i++) expect(undone[i]).toBeCloseTo(x[i], 9);
   });
 
   it("cumple exactamente el eje frontal y las magnitudes pedidas", () => {
     for (const axis of [-30, 0, 30, 55, 80, 100]) {
       const p = samplePatient({ ...base, axis, qrsScale: 1.4, tScale: 0.7 });
-      const x = transform(p.model, reconstruct(p.model, p.z), p.ops);
+      // Activation template (no J hand-over to the repolarization operator).
+      const x = transform(p.model, reconstruct(p.model, p.z), p.ops, false);
       expect(Math.abs(templateAxis(p.model, x) - axis)).toBeLessThan(0.5);
-      const q = samplePatient({ ...base, axis, pAxis: 60, tAxis: 30 }), y = transform(q.model, reconstruct(q.model, q.z), q.ops);
+      const q = samplePatient({ ...base, axis, pAxis: 60, tAxis: 30 }), y = transform(q.model, reconstruct(q.model, q.z), q.ops, false);
       expect(Math.abs(phaseAxis(q.model, y, "p") - 60)).toBeLessThan(0.5);
       expect(Math.abs(phaseAxis(q.model, y, ["st", "t"]) - 30)).toBeLessThan(0.5);
       const pop = p.model.population.magnitudesP50;

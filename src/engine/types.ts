@@ -103,6 +103,10 @@ export interface ECGCase {
     reversed: boolean;
   };
   filter: "off" | "diagnostic" | "monitor" | "aggressive";
+  /** Learned base: P and T keep the patient's own axes and turn with the heart
+   * unless the user sets them (then pAxis/tAxis are exact targets). Missing = natural. */
+  naturalPAxis?: boolean;
+  naturalTAxis?: boolean;
   /** Resting noise floor measured in real recordings; missing means "realistic". */
   acquisition?: "realistic" | "ideal";
   notch: 0 | 50 | 60;
@@ -261,6 +265,8 @@ export const DEFAULT_CASE: ECGCase = {
   artifacts: { baseline: 0, muscle: 0, mains: 0, loose: 0, reversed: false },
   filter: "diagnostic",
   acquisition: "realistic",
+  naturalPAxis: true,
+  naturalTAxis: true,
   notch: 0,
   mainsFrequency: 50,
   view: {
@@ -291,6 +297,8 @@ export function normalizeCase(input: unknown): ECGCase {
     throw new Error("Versión de caso no compatible (se requiere versión 1).");
   const c = cloneCase(DEFAULT_CASE);
   const enums: Record<string, readonly unknown[]> = {
+    naturalPAxis: [true, false],
+    naturalTAxis: [true, false],
     acquisition: ["realistic", "ideal"],
     rhythm: [
       "sinus",

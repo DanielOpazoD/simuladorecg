@@ -254,3 +254,62 @@ El costo de síntesis del piso de ruido sube (≈45 ms por 10 s de señal).
 Queda por cerrar: contenido no dipolar algo alto (0,75 % frente a 0,51 %) y
 pendiente máxima del QRS ≈15 % menor (detalle fino que el modelo de 64 modos
 suaviza).
+
+## Validación profunda y F2.2 · Morfología sin firma de laboratorio
+
+### Herramientas (`scripts/fidelity/`)
+
+- **Clasificador diagnóstico** (`diag_classifier.py`): ResNet 1D entrenada solo con
+  ECG reales de PTB-XL (100 Hz, pliegues 1–8, 46 declaraciones SCP con ≥ 100
+  registros). AUC macro 0,932 en el pliegue 10, a la par de lo publicado. Aplicado
+  a los presets reconoce 24/39 evaluables: sinusal (NORM 0,996), bradi/taqui,
+  arritmia sinusal, FA, BAV 1.°, BRD, BRI, HVI, extrasístoles, marcapasos y bajo
+  voltaje. No reconoce la isquemia del motor de núcleos (inferior, lateral,
+  Wellens), ni HVD/TEP, ni BRD incompleto (lo llama BRD completo): guía para F3/F4.
+- **Discriminador profundo** (`discriminator.py`): ResNet 1D real/sintético sobre
+  10 s crudos (3.000 reales de entrenamiento, reserva de 600). Control real contra
+  real: AUC 0,48. Ablaciones: latido mediano repetido (solo morfología) y banda
+  0,5–40 Hz. Mapa de saliencia (`--saliency`). Calibración con 15 ECG normales de
+  LUDB (otro equipo y población): los llama reales al 100 % y PTB-XL frente a LUDB
+  da AUC 0,45, así que lo que detecta es síntesis, no firma de equipo.
+- **Discriminador de latidos** (`beat_discriminator.py`): compara conjuntos de
+  latidos medianos (crudo, 12SL, reconstrucción, sintético).
+
+### Lo que encontraron y se corrigió
+
+1. **Firma de 12SL**: el mediano 12SL y el mediano crudo del mismo paciente se
+   distinguen con AUC 0,999. El modelo se aprende ahora de medianas de los
+   registros crudos de PTB-XL alineadas al latido 12SL (que aporta los puntos
+   fiduciales).
+2. **Modos finos anulados**: la escala por modo se guardaba redondeada a 6
+   decimales; 11 de 64 modos quedaban en cero. Ahora float32.
+3. **Población no gaussiana**: en el espacio de modos, los pacientes reales se
+   distinguen de muestras gaussianas (AUC 0,85) y no de una mezcla de 8
+   gaussianas (≈0,35); el motor muestrea de la mezcla. Casos atípicos (|z| > 5)
+   fuera antes del ACP.
+4. **Ejes de P y T**: estaban fijos por los controles (P 55°, T 40°) y rompían la
+   relación natural QRS–T. Ahora cada paciente conserva sus ejes y los acopla al
+   QRS con las pendientes medidas en 6.574 ECG normales (P 0,14; T 0,25). Mover un
+   control de eje lo fija.
+5. **Onda U y TP**: la saliencia se concentraba tras el fin de T en V2–V3; la cola
+   post-T pasa de 160 a 260 ms (sin alcanzar la P siguiente) y se apaga solo en su
+   último 20 %.
+6. **Inicio de la P**: la saliencia se movió entonces a los 80 ms previos a la P;
+   se añadió una fase previa aprendida con entrada suave.
+
+| Medida | v1.5 | F2.1 | F2.2 |
+|---|---|---|---|
+| Discriminador, solo latido mediano (AUC) | — | 0,998 | 0,972 |
+| Discriminador, señal completa (AUC) | — | 0,999 | 0,999 |
+| Banco, morfología (GB / RL) | 1,00 / 1,00 | 0,97 / 0,91 | 0,92 / 0,87 |
+| Banco, KS mediano morfología | 0,40 | 0,10 | 0,10 |
+
+La saliencia del discriminador de latido mediano quedó repartida de forma pareja
+entre derivaciones y tiempos (sin foco). Con la señal completa la red aún separa
+(0,999): lo que queda está en la dinámica y el ruido (respiración sinusoidal
+perfecta, variación gaussiana, forma de los impulsos musculares). Eso no lo
+distinguen revisores humanos ni automáticos a ojo (pruebas ciegas en azar).
+
+El paciente de libro pasa a la semilla 2822 (P bifásica visible en V1,
+terminal negativa pequeña). Las pruebas de analizador que usaban el sinusal como
+fijación pasan al modelo de núcleos, como las demás del analizador congelado.
