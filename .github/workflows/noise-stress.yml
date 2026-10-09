@@ -1,10 +1,6 @@
 name: Calibrated ECG noise stress
+# Congelado (fidelidad F0): referencia del analizador, solo ejecución manual.
 on:
-  pull_request:
-    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/noise-stress/**', 'scripts/*noise*', 'scripts/lib/noise*', 'tests/*noise*', 'tests/support/morphology-metrics.ts', 'package*.json', 'scripts/nstdb-source-cache.py', 'tests/test_nstdb_source_cache.py', 'tests/nstdb-cache-workflow.test.mjs', '.github/workflows/noise-stress.yml']
-  push:
-    branches: ['main']
-    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/noise-stress/**', 'scripts/*noise*', 'scripts/lib/noise*', 'tests/*noise*', 'tests/support/morphology-metrics.ts', 'package*.json', 'scripts/nstdb-source-cache.py', 'tests/test_nstdb_source_cache.py', 'tests/nstdb-cache-workflow.test.mjs', '.github/workflows/noise-stress.yml']
   workflow_dispatch:
 permissions:
   contents: read

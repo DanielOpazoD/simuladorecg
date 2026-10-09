@@ -1,8 +1,6 @@
 name: ECG fidelity
+# Congelado (fidelidad F0): referencia del analizador, solo ejecución manual.
 on:
-  push:
-    branches: ['main', 'improvement/v1.4-*']
-  pull_request:
   workflow_dispatch:
 permissions:
   contents: read

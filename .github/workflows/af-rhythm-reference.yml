@@ -1,10 +1,6 @@
 name: AF timing reference
+# Congelado (fidelidad F0): referencia del analizador, solo ejecución manual.
 on:
-  pull_request:
-    paths: ['scripts/*af-*', 'scripts/lib/af-clock-prediction.mjs', 'src/engine/af-rr.ts', 'src/engine/rhythm.ts', 'docs/ltafdb-development-protocol.json', 'tests/test_af_ltaf_reference.py', 'tests/test_af_rhythm_reference.py', 'benchmarks/af-rhythm/**', '.github/workflows/af-rhythm-reference.yml']
-  push:
-    branches: [main]
-    paths: ['scripts/*af-*', 'scripts/lib/af-clock-prediction.mjs', 'src/engine/af-rr.ts', 'src/engine/rhythm.ts', 'docs/ltafdb-development-protocol.json', 'tests/test_af_ltaf_reference.py', 'tests/test_af_rhythm_reference.py', 'benchmarks/af-rhythm/**', '.github/workflows/af-rhythm-reference.yml']
   workflow_dispatch:
 permissions:
   contents: read

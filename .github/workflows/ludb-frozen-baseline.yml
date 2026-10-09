@@ -1,10 +1,6 @@
 name: Original LUDB frozen baseline
+# Congelado (fidelidad F0): referencia del analizador, solo ejecución manual.
 on:
-  pull_request:
-    paths: ['benchmarks/ludb-baseline/**', 'scripts/*ludb-frozen-baseline*', 'scripts/lib/ludb-frozen-baseline.mjs', 'tests/ludb-frozen-baseline.node.mjs', 'scripts/lib/frozen-analyzer-identity.mjs', 'tests/frozen-analyzer-identity.test.mjs', '.github/workflows/ludb-frozen-baseline.yml']
-  push:
-    branches: ['main']
-    paths: ['benchmarks/ludb-baseline/**', 'scripts/*ludb-frozen-baseline*', 'scripts/lib/ludb-frozen-baseline.mjs', 'tests/ludb-frozen-baseline.node.mjs', 'scripts/lib/frozen-analyzer-identity.mjs', 'tests/frozen-analyzer-identity.test.mjs', '.github/workflows/ludb-frozen-baseline.yml']
   workflow_dispatch:
 permissions:
   contents: read
