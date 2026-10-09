@@ -132,7 +132,7 @@ for (const [engine, launcher] of Object.entries(engines)) {
         await open();
         const qrs = page.locator('#activation-qrs'), model = page.locator('#activation-model');
         await model.selectOption('regional-rbbb-v1'); await qrs.fill('190');
-        assert.match(await page.locator('[data-activation-model="A"]').innerText(), /Plantilla histórica/);
+        assert.match(await page.locator('[data-activation-model="A"]').innerText(), /Latido aprendido \(PTB-XL\)/);
         assert.match(await page.locator('[data-activation-model="B"]').innerText(), /BRD regional/);
         await page.locator('.activation-timing summary').click();
         assert.match(await page.locator('.activation-timing').innerText(), /VD tardío: 55–190 ms/);

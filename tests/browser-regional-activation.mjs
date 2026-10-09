@@ -88,7 +88,7 @@ for(const [engine,launcher] of Object.entries(engines)){
    // Roll back by importing the saved A case, not by mutating controls behind the application.
    await page.locator('#file-input').setInputFiles({name:'template-case.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(original.B.case))});
    await ready();const restored=await exported('restored');assert.deepEqual(restored.B.leads,original.B.leads);
-   assert.match(await page.locator('#regional-activation-status').innerText(),/Plantilla histórica/);
+   assert.match(await page.locator('#regional-activation-status').innerText(),/Latido aprendido \(PTB-XL\)|Plantilla histórica/);
    assert.deepEqual(errors,[]);checks.push({engine,width,preset,identity,actualWorker:true,incompatibleFallback:true,exportImport:true,exactRollback:true});
   }catch(error){await page.screenshot({path:resolve(out,`regional-failure-${preset}-${engine}-${width}.png`),fullPage:true}).catch(()=>{});
    await writeFile(resolve(out,`regional-failure-${preset}-${engine}-${width}.json`),JSON.stringify({error:String(error.stack),errors},null,2));throw error;

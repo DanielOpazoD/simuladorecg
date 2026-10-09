@@ -461,7 +461,7 @@ export function constraints(c: ECGCase): string[] {
   if (isVviDemand(c)) out.push(vviScopeDescription(c));
   const regional = regionalActivationState(c);
   if (regional.requested) out.push(regional.active ? regionalActivationLimit(c) :
-    `Activación regional solicitada pero no aplicada: ${regional.reason} Se usa la plantilla histórica.`);
+    `Activación regional solicitada pero no aplicada: ${regional.reason} Se usa la base no regional del caso.`);
   if (c.rhythm !== "sinus" && c.av !== "normal")
     out.push(
       "Los bloqueos AV seleccionables requieren actividad sinusal; se utiliza conducción propia del ritmo.",
