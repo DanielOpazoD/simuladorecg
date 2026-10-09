@@ -34,7 +34,7 @@ EXPECTED = {
     'lateral': ['ALMI', 'INJAL', 'ISCAL'], 'posterior': ['PMI'], 'rv_infarct': ['IMI', 'INJIN'],
     'diffuse': ['ISC_', 'NST_'], 'subendo': ['ISC_', 'NST_'], 'wellens_a': ['ISCAS', 'ISCAN'], 'wellens_b': ['ISCAS', 'ISCAN'],
     'de_winter': ['ISCAS', 'AMI'], 'sgarbossa': ['CLBBB'], 'pericarditis': ['STE_'], 'rv_acute': ['RVH', 'IRBBB'],
-    'rv_chronic': ['RVH', 'RAO/RAE'], 'lvh': ['LVH'], 'aai': ['PACE'], 'vvi': ['PACE'], 'ddd': ['PACE'],
+    'rv_chronic': ['RVH', 'RAO/RAE'], 'lvh': ['LVH'], 'old_inferior': ['IMI', 'ILMI'], 'old_anterior': ['ASMI', 'AMI'], 'aai': ['PACE'], 'vvi': ['PACE'], 'ddd': ['PACE'],
     'hypok': ['TAB_', 'NT_'], 'longqt': ['LNGQT'], 'lowvoltage': ['LVOLT'],
 }
 

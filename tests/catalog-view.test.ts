@@ -6,8 +6,8 @@ describe("catalog presentation", () => {
   it("keeps all collapsed entries and disables only the five pending examples", () => {
     const before = JSON.stringify(PRESETS);
     const view = catalogView(PRESETS);
-    expect(view.count).toBe("40 patrones · 61 ejemplos");
-    expect(view.html.match(/data-diagnosis=/g)).toHaveLength(45);
+    expect(view.count).toBe("41 patrones · 63 ejemplos");
+    expect(view.html.match(/data-diagnosis=/g)).toHaveLength(46);
     expect(view.html.match(/ disabled /g)).toHaveLength(5);
     expect(view.clearFiltersVisible).toBe(false);
     expect(JSON.stringify(PRESETS)).toBe(before);

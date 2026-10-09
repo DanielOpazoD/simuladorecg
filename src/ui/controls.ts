@@ -13,6 +13,11 @@ function learnedNatural(c: ECGCase, wave: "p" | "t") {
   if (!model) return false;
   return wave === "p" ? c.naturalPAxis !== false : c.naturalTAxis !== false || learnedSecondaryRepolarization(model);
 }
+/** Chronic phase of a territory with a learned old-infarction population. */
+const oldInfarction = (c: ECGCase) => {
+  const model = realisticModelFor(c);
+  return model === "IMI" || model === "ASMI";
+};
 /** Learned populations whose whole ST-T is secondary (it follows the QRS gain). */
 const learnedSecondary = (c: ECGCase) => {
   const model = realisticModelFor(c);
@@ -31,7 +36,9 @@ export function amplitudeControlState(c: ECGCase) {
       ? "Este patrón modifica la T. Reactiva Amplitud de T para ajustar su intensidad."
       : effect === "none"
         ? c.phase === "chronic" && c.ischemia !== "none"
-          ? "ST resuelto: el componente primario de lesión está desactivado; se conserva la repolarización basal o secundaria. No genera ondas Q de necrosis."
+          ? oldInfarction(c)
+            ? "Infarto antiguo aprendido de pacientes reales (PTB-XL): ondas Q y repolarización del paciente; la intensidad de lesión no se aplica."
+            : "ST resuelto: el componente primario de lesión está desactivado; se conserva la repolarización basal o secundaria. En este territorio o combinación no genera ondas Q de necrosis."
           : "Sin patrón primario ST–T activo: la intensidad de lesión no se aplica."
         : effect === "t"
           ? "Intensidad: escala la modificación de T de Wellens; 0 conserva la T basal y 2 es el patrón de referencia. No expresa grado de estenosis."
@@ -209,7 +216,7 @@ export function controls(c: ECGCase) {
      ["hyperacute", "Hiperaguda · T prominente"],
      ["acute", "Aguda · ST"],
      ["evolving", "Evolutiva · T invertida"],
-     ["chronic", "ST resuelto"],
+     ["chronic", "Crónica · ST resuelto / infarto antiguo"],
    ],
    c.phase,
  )}

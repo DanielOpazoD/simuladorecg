@@ -164,9 +164,9 @@ describe("Declared domain of the additive event model", () => {
     );
   });
 
-  it("keeps all 61 existing defaults within the documented model domain", () => {
+  it("keeps all 63 existing defaults within the documented model domain", () => {
     const active = PRESETS.filter((p) => p.strategy !== "pending");
-    expect(active).toHaveLength(61);
+    expect(active).toHaveLength(63);
     for (const preset of active) {
       const c = fromPreset(preset);
       expect(

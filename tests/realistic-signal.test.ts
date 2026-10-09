@@ -28,15 +28,19 @@ describe("alcance de la base aprendida (F2–F3)", () => {
     for (const id of ["sinus", "brady", "tachy", "rsa", "af", "flutter", "junctional", "pac", "av1", "wenckebach", "complete", "longqt"])
       expect(model[id]).toBe("NORM");
     expect([model.lbbb, model.irbbb, model.lafb, model.lvh]).toEqual(["CLBBB", "IRBBB", "LAFB", "LVH"]);
-    for (const id of ["pvc", "vt", "vvi", "rbbb", "lpfb", "bifascicular", "wpw", "anterior", "sgarbossa", "rv_acute", "hyperk", "complete_v"])
+    expect([model.rbbb, model.old_inferior, model.old_anterior]).toEqual(["CRBBB", "IMI", "ASMI"]);
+    for (const id of ["pvc", "vt", "vvi", "lpfb", "bifascicular", "wpw", "anterior", "inferior", "lateral", "sgarbossa", "rv_acute", "hyperk", "complete_v"])
       expect(model[id]).toBeNull();
+    // Only the chronic phase of a territory with a learned old-infarction population.
+    expect(realisticModelFor({ ...fromPreset(presetById("lateral")!), phase: "chronic" })).toBeNull();
+    expect(realisticModelFor({ ...fromPreset(presetById("old_inferior")!), conduction: "lbbb" })).toBeNull();
     // A population is a whole learned beat: modifiers are not stacked across them.
     expect(realisticModelFor({ ...fromPreset(presetById("lbbb")!), overload: "lv" })).toBeNull();
     expect(realisticModelFor({ ...fromPreset(presetById("lvh")!), rhythm: "af" })).toBe("LVH");
   });
   it("los presets aprendidos muestran el paciente de libro de su población; la semilla del caso manda", () => {
     expect(fromPreset(presetById("sinus")!).seed).toBe(TEXTBOOK_SEED);
-    for (const [id, code] of [["irbbb", "IRBBB"], ["lafb", "LAFB"], ["lvh", "LVH"], ["lbbb", "CLBBB"]] as const)
+    for (const [id, code] of [["irbbb", "IRBBB"], ["lafb", "LAFB"], ["lvh", "LVH"], ["lbbb", "CLBBB"], ["rbbb", "CRBBB"], ["old_inferior", "IMI"], ["old_anterior", "ASMI"]] as const)
       expect(fromPreset(presetById(id)!).seed).toBe(TEXTBOOK_SEEDS[code]);
     expect(fromPreset(presetById("wpw")!).seed).not.toBe(TEXTBOOK_SEED);
   });
@@ -277,10 +281,37 @@ describe("clases aprendidas (F3): criterios de libro medidos en las muestras", (
     for (const l of ["V1", "V2"] as const) expect(r.st60(l)).toBeGreaterThan(0.1);
     for (const l of ["I", "V6"] as const) expect(r.st60(l)).toBeLessThan(-0.1);
   });
-  it("BRD incompleto: r' terminal en V1 tras la S", () => {
-    const v1 = read("irbbb").qrs("V1"), s = v1.indexOf(Math.min(...v1));
+  it("BRD incompleto: r' terminal en V1 tras una S o una muesca (rSr', rR')", () => {
+    const v1 = read("irbbb").qrs("V1"), half = Math.floor(v1.length / 2);
+    const rPrime = Math.max(...v1.slice(half)), at = half + v1.slice(half).indexOf(rPrime);
+    const r = Math.max(...v1.slice(0, Math.floor(at * 0.7))), rAt = v1.indexOf(r);
+    const dip = Math.min(...v1.slice(rAt, at));
+    expect(r).toBeGreaterThan(0.05); // r inicial
+    expect(rPrime).toBeGreaterThan(0.1);
+    expect(Math.min(r, rPrime) - dip).toBeGreaterThan(0.1); // S o muesca entre ambas
+  });
+  it("BRD completo: rsR' en V1 y S terminal ancha en I y V6", () => {
+    const r = read("rbbb"), v1 = r.qrs("V1"), s = v1.indexOf(Math.min(...v1));
     expect(Math.min(...v1)).toBeLessThan(-0.1);
-    expect(Math.max(...v1.slice(s))).toBeGreaterThan(0.1);
+    expect(Math.max(...v1.slice(s))).toBeGreaterThan(2 * -Math.min(...v1));
+    for (const l of ["I", "V6"] as const) {
+      const x = r.qrs(l), tail = x.slice(Math.round(x.length * 0.6));
+      expect(tail.filter((v) => v < -0.05).length / 500).toBeGreaterThanOrEqual(0.03); // ≥ 30 ms
+    }
+  });
+  it("Infarto inferior antiguo: Q patológica en III y aVF", () => {
+    const r = read("old_inferior");
+    // aVF: Q ≥ 30 ms desde el nivel de inicio del QRS; III: QS (sin R previa).
+    const avf = r.qrs("aVF").map((v, _, x) => v - x[0]), qEnd = avf.findIndex((v, i) => i > avf.indexOf(Math.min(...avf)) && v >= 0);
+    expect(Math.min(...avf)).toBeLessThan(-0.1);
+    expect(qEnd / 500).toBeGreaterThanOrEqual(0.03);
+    const iii = r.qrs("III"), deepest = iii.indexOf(Math.min(...iii));
+    expect(iii[deepest]).toBeLessThan(-0.3);
+    expect(Math.max(...iii.slice(0, deepest))).toBeLessThan(0.1);
+  });
+  it("Infarto anteroseptal antiguo: QS o sin R en V1–V2", () => {
+    const r = read("old_anterior");
+    for (const l of ["V1", "V2"] as const) expect(r.max(l)).toBeLessThan(0.1 * -r.min(l) + 0.05);
   });
   it("HBAI: eje ≤ −45°, qR en aVL y rS inferior con S III > S II", () => {
     const r = read("lafb"), avl = r.qrs("aVL");
@@ -295,7 +326,7 @@ describe("clases aprendidas (F3): criterios de libro medidos en las muestras", (
     expect(-r.min("V1") + Math.max(r.max("V5"), r.max("V6"))).toBeGreaterThanOrEqual(3.5);
     for (const l of ["V5", "V6"] as const) expect(r.st60(l)).toBeLessThan(-0.05);
   });
-  it.each(["lbbb", "irbbb", "lvh"])("%s: la ST-T secundaria sigue la ganancia del QRS (ST/QRS constante)", (id) => {
+  it.each(["lbbb", "rbbb", "irbbb", "lvh"])("%s: la ST-T secundaria sigue la ganancia del QRS (ST/QRS constante)", (id) => {
     // Without P there is no atrial Ta, so the ventricular trace is exactly linear.
     const one = synthesize(load(id, { pAmp: 0 }), 10), two = synthesize(load(id, { pAmp: 0, qrsAmp: 2 }), 10);
     let err = 0, peak = 0;
@@ -316,7 +347,7 @@ describe("clases aprendidas (F3): criterios de libro medidos en las muestras", (
 });
 
 describe("clases aprendidas (F3): el analizador congelado mide el paciente de libro", () => {
-  it.each(["lbbb", "irbbb", "lafb", "lvh"])("%s: QRS medido a ±10 ms del programado y QT medible", async (id) => {
+  it.each(["lbbb", "rbbb", "irbbb", "lafb", "lvh", "old_inferior", "old_anterior"])("%s: QRS medido a ±10 ms del programado y QT medible", async (id) => {
     const { analyzeSamples } = await import("../src/engine/sample-analysis");
     // As the user sees it: the preset with realistic acquisition (seeded, deterministic).
     const c = { ...fromPreset(presetById(id)!), acquisition: "realistic" as const }, s = synthesize(c, 10);
@@ -324,5 +355,31 @@ describe("clases aprendidas (F3): el analizador congelado mide el paciente de li
     expect(m.evidence.qrs.status).toBe("usable");
     expect(Math.abs(m.qrs! - c.qrs)).toBeLessThanOrEqual(10);
     expect(m.qt).not.toBeNull();
+  });
+});
+
+describe("F3.2: alcance del infarto antiguo y textos de la interfaz", () => {
+  it("la fase crónica no descarta otros modificadores: con sobrecarga sigue en núcleos", () => {
+    const old = fromPreset(presetById("old_inferior")!);
+    for (const overload of ["lv", "rv_acute", "rv_chronic"] as const) expect(realisticModelFor({ ...old, overload })).toBeNull();
+    expect(realisticModelFor({ ...old, phase: "acute" })).toBeNull();
+    expect(realisticModelFor({ ...old, ischemia: "inferior_lcx" })).toBe("IMI");
+  });
+  it("los presets de infarto antiguo conservan una lesión visible si se pasan a fase aguda", () => {
+    for (const id of ["old_inferior", "old_anterior"]) expect(fromPreset(presetById(id)!).st).toBeGreaterThan(0);
+  });
+  it("los controles describen el infarto antiguo aprendido y la base regional real", async () => {
+    const { controls } = await import("../src/ui/controls");
+    const { regionalActivationControls } = await import("../src/ui/regional-activation");
+    expect(controls(fromPreset(presetById("old_inferior")!))).toMatch(/Infarto antiguo aprendido de pacientes reales/);
+    expect(controls({ ...fromPreset(presetById("lateral")!), phase: "chronic" })).toMatch(/no genera ondas Q/);
+    expect(regionalActivationControls(fromPreset(presetById("rbbb")!))).toMatch(/Latido aprendido \(PTB-XL\)/);
+    expect(regionalActivationControls(fromPreset(presetById("bifascicular")!))).toMatch(/Plantilla histórica/);
+  });
+  it("un caso crónico inferior o anterior fuera de sus presets avisa del cambio de trazado", async () => {
+    const { caseContext } = await import("../src/presets/case-context");
+    const warn = /infarto antiguo aprendido de pacientes reales/;
+    expect(caseContext({ ...fromPreset(presetById("inferior")!), phase: "chronic" }).warnings.join(" ")).toMatch(warn);
+    expect(caseContext(fromPreset(presetById("old_inferior")!)).warnings.join(" ")).not.toMatch(warn);
   });
 });

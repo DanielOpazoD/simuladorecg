@@ -20,7 +20,9 @@ describe('Scoped regional repolarization', () => {
   const a=synthesize(c,10),b=synthesize({...c,ischemia:'none'},10,{learnedBase:false}); // same-model basal until ischemia migrates
   for(const l of LEADS) expect(a.leads[l]).toEqual(b.leads[l]);
   c.phase='chronic'; c.st=8;
-  const d=synthesize(c,10); for(const l of LEADS) expect(d.leads[l]).toEqual(b.leads[l]);
+  // On kernels the resolved phase is the basal trace; on the learned base the
+  // inferior and anterior territories become an old infarction (F3.2, Q waves).
+  const d=synthesize(c,10,{learnedBase:false}); for(const l of LEADS) expect(d.leads[l]).toEqual(b.leads[l]);
  });
  it.each(ids)('%s preserves all T amplitude contracts and QRS/events', id=>{
   const c=load(id); c.phase='hyperacute'; c.tAmp=0;

@@ -83,7 +83,7 @@ CI (`.github/workflows/fidelity.yml`) comprueba PR, push a `main` y ejecución m
 
 ## Alcance actual, contratos y limitaciones
 
-Se conservan **61 presets activos y cinco pendientes**, sin nuevas derivaciones ni funciones diagnósticas. Tres responsabilidades distintas:
+Hay **63 presets activos y cinco pendientes** (F3.2 añadió los infartos inferior y anteroseptal antiguos), sin nuevas derivaciones ni funciones diagnósticas. Tres responsabilidades distintas:
 
 | Capa | Fuente | Qué demuestra su aceptación |
 |---|---|---|

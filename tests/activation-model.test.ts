@@ -18,7 +18,8 @@ const close = (a: number, b: number, tolerance = 1e-10) => assert.ok(Math.abs(a 
 
 describe('Activation lab: sampled vector, explicit domains and real beat kinds', () => {
   it('sums temporal components, rather than plotting or measuring a polygon of coefficients', () => {
-    const c = load('rbbb'), trace = sampleActivation(c, beat()), ks = qrsKernels(c, beat());
+    // A kernel case: normal conduction, BRD and other learned classes have no kernels.
+    const c = load('bifascicular'), trace = sampleActivation(c, beat()), ks = qrsKernels(c, beat());
     for (const index of [8, 30, 60, 110]) {
       const u = index / (trace.xyz.length - 1), taper = Math.min(1, u / .035, (1 - u) / .035);
       for (let j = 0; j < 3; j++) close(trace.xyz[index][j], ks.reduce((s, k) => s + k.v[j] * Math.exp(-.5 * ((u - k.mu) / k.sigma) ** 2) * taper, 0));
@@ -147,7 +148,7 @@ describe('Activation lab: sampled vector, explicit domains and real beat kinds',
       { region: 'septal', startMs: 0, endMs: 30 }, { region: 'lv-main', startMs: 12, endMs: 80 },
       { region: 'lv-terminal', startMs: 42, endMs: 96 }, { region: 'rv-delayed', startMs: 55, endMs: 190.5 },
     ]);
-    assert.match(activationSvg(pair), /Modelo A: Plantilla histórica · Modelo B: BRD regional/);
+    assert.match(activationSvg(pair), /Modelo A: Latido aprendido \(PTB-XL\) · Modelo B: BRD regional/);
     assert.equal(JSON.parse(JSON.stringify(pair)).b.timing.applied, 'regional-rbbb-v1');
     assert.equal(pair.b.timesMs.at(-1), 190.5);
   });
@@ -189,7 +190,7 @@ describe('Activation lab: sampled vector, explicit domains and real beat kinds',
   });
   it('covers every actual beat kind in the active catalog, marking unsupported domains rather than fabricating a beat', () => {
     let checked = 0, excluded = 0;
-    const cata = PRESETS.filter(p => p.strategy !== 'pending'); assert.equal(cata.length, 61);
+    const cata = PRESETS.filter(p => p.strategy !== 'pending'); assert.equal(cata.length, 63);
     for (const preset of cata) {
       const c = fromPreset(preset), events = generateEvents(c, 10);
       if (!events.beats.length) { assert.ok(activationLimitation(c)); excluded++; continue; }

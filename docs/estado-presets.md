@@ -45,6 +45,8 @@ Ningún patrón se presenta como validado clínicamente. La columna «Estrategia
 | Preexcitación ventricular | aproximado | vectorial | Delta aproximada; sin vías accesorias anatómicas ni circuito AVRT. Preexcitación aproximada: en los latidos preexcitados, ST y T siguen la activación QRS incluida la onda delta. Amplitudes no calibradas; no localiza vías accesorias ni reproduce AVRT o memoria cardíaca. |
 | Lesión inferior · predominio en III | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
 | Lesión inferior · predominio en II | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
+| Infarto inferior antiguo | aproximado | vectorial | Latido aprendido de pacientes con infarto inferior antiguo (PTB-XL); el ECG no data el infarto ni localiza la arteria. |
+| Infarto anteroseptal antiguo | aproximado | vectorial | Latido aprendido de pacientes con infarto anteroseptal antiguo (PTB-XL); el ECG no data el infarto ni localiza la arteria. |
 | Lesión anterior | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
 | Lesión lateral | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
 | Patrón de lesión posterior | aproximado | local | Corrección local de R; V7–V9 pendientes. |

@@ -32,7 +32,7 @@ Las tolerancias numéricas que usen estas pruebas son decisiones de ingeniería 
 
 El punto 4 merece especial precisión: **un prematuro temprano no es clínicamente imposible porque este motor lo rechace**. El programa todavía no representa adecuadamente ciertas interacciones entre activación y recuperación. Su límite no puede enseñarse como una ley electrofisiológica.
 
-En el punto 3, retirar el componente de lesión es una operación paramétrica. No demuestra reperfusión epicárdica, recuperación microvascular, ausencia de necrosis ni un tiempo transcurrido. La etiqueta existente «ST resuelto» y su advertencia de que no produce cicatriz ni Q patológicas deben conservar esa claridad.
+En el punto 3, retirar el componente de lesión es una operación paramétrica. No demuestra reperfusión epicárdica, recuperación microvascular, ausencia de necrosis ni un tiempo transcurrido. Desde F3.2, en los territorios inferior y anterior la fase crónica muestra un infarto antiguo aprendido de pacientes reales (ondas Q); en los demás territorios y combinaciones sigue siendo «ST resuelto» sin cicatriz ni Q, y su advertencia debe conservar esa claridad. Ninguna de las dos data el infarto.
 
 ## Aceptación inicial de los fenotipos existentes
 
