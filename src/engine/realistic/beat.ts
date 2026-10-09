@@ -11,6 +11,9 @@ import { normal } from "../random";
 const NL = 8;
 /** Respiratory modulation of the heart vector (degrees and fractional gain). */
 const RESP_FRONTAL_DEG = 1.5, RESP_HORIZONTAL_DEG = 6, RESP_GAIN = 0.025;
+/** P-wave amplitude: respiratory modulation and beat-to-beat scatter (real P waves
+ * vary ≈13 % between beats at rest, PTB-XL NORM). */
+const P_RESP_GAIN = 0.1, P_JITTER = 0.12;
 /** Per-beat morphology jitter in standardized mode units, AR(1). */
 const JITTER_SD = 0.05, JITTER_RHO = 0.6;
 
@@ -29,12 +32,13 @@ export function beatTemplate(p: Patient, state: BeatShapeState, t: number, respi
   const phi = (2 * Math.PI * respiratoryRate * t) / 60;
   const resp = rotation(RESP_FRONTAL_DEG * Math.sin(phi), RESP_HORIZONTAL_DEG * Math.sin(phi + 0.6));
   const gain = 1 + RESP_GAIN * Math.sin(phi + 1.2);
+  const pGain = Math.max(0.5, 1 + P_RESP_GAIN * Math.sin(phi + 0.3) + P_JITTER * normal(state.rng));
   // Respiration acts on the already axis-corrected heart vector: R_resp · R_phase.
   const ops = {} as Record<PhaseName, Float64Array>;
   for (const ph of Object.keys(p.scales) as PhaseName[]) {
     const r = p.rotations[ph], rr = new Array(9).fill(0) as typeof r;
     for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) for (let q = 0; q < 3; q++) rr[i * 3 + j] += resp[i * 3 + q] * r[q * 3 + j];
-    ops[ph] = leadOperator(rr, p.scales[ph] * (ph === "p" || ph === "pq" ? 1 : gain));
+    ops[ph] = leadOperator(rr, p.scales[ph] * (ph === "p" || ph === "pq" ? pGain : gain));
   }
   return transform(m, reconstruct(m, z), ops);
 }

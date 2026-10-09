@@ -205,3 +205,41 @@ valores del modelo. Una prueba acota el sesgo para que no empeore sin aviso
 (FC ±2 lpm, QRS ±20 ms, QT ±50 ms en sinusal a 60/72/90 lpm). Sus pruebas de regresión siguen corriendo sobre el modelo de
 núcleos (`synthesize(..., { learnedBase: false })`), una costura temporal que
 desaparece cuando cada grupo de patologías migre.
+
+## F2.1 · Textura de ruido y variación entre latidos
+
+La prueba ciega de F2 señaló que los sintéticos se veían «demasiado limpios y
+constantes». El banco añade ahora rasgos de variación de T, ST y P entre
+latidos, no estacionariedad del ruido (dispersión del RMS entre segmentos TP),
+curtosis y pendiente espectral del ruido. Con ellos el grupo de ruido de F2
+volvió a AUC 1,00: el ruido real es impulsivo (curtosis ≈8–11 frente a 3),
+llega en ráfagas (0,32 frente a 0,10) y concentra su energía bajo 60 Hz.
+
+**Cambios** (`acquisition.ts`, `beat.ts`):
+- Ruido muscular con espectro descendente desde ≈15 Hz y envolvente log-normal
+  lenta (ráfagas entre latidos) y rápida (impulsos de unidades motoras).
+- Movimiento electrodo-piel en 0,5–3 Hz (el ST tiembla entre latidos).
+- Amplitud de P con modulación respiratoria y dispersión latido a latido.
+
+| Rasgo (mediana) | Real | F2 | F2.1 |
+|---|---|---|---|
+| Curtosis del ruido, I / V2 | 8,2 / 11,4 | 3,0 / 3,0 | 8,6 / 10,8 |
+| Ráfagas (sd log RMS), I | 0,32 | 0,11 | 0,34 |
+| Ruido > 25 Hz, I / V2 (µV) | 4,6 / 1,7 | 3,8 / 1,7 | 4,6 / 1,7 |
+| Variación de P entre latidos (II) | 13 % | 4 % | 14 % |
+| Desviación del ST entre latidos, V2 (µV) | 15,7 | 10,7 | 16,8 |
+
+| Banco con todos los rasgos | F2 | F2.1 |
+|---|---|---|
+| AUC ruido (GB / RL) | 1,00 / 1,00 | 0,97 / 0,88 |
+| AUC dinámica (GB / RL) | 0,95 / 0,92 | 0,86 / 0,75 |
+| AUC morfología (GB / RL) | 0,98 / 0,91 | 0,96 / 0,92 |
+
+**Prueba visual a ciegas** con un set nuevo (10 reales de la reserva no usados
+antes, 10 de F2.1) y dos revisores automáticos independientes: 10/20 y 9/20, es
+decir azar (F2: 15/20). Calificaron como reales 6 de los 10 sintéticos; ambos
+declararon no poder separarlos con seguridad.
+
+Queda por cerrar: pendiente espectral del ruido algo más aguda que la real
+(KS 0,40), contenido no dipolar algo alto (0,75 % frente a 0,51 %) y pendiente
+máxima del QRS ≈15 % menor (detalle fino que el modelo de 64 modos suaviza).

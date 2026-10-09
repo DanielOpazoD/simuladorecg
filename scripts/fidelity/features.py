@@ -163,6 +163,43 @@ def features(x):
             amps.append(seg.max() - seg.min())
         amps = np.array(amps)
         out[f'dyn_qrs_cv_{L}'] = float(np.std(amps) / (np.mean(amps) + 1e-9))
+
+    # Variación latido a latido de T, ST y P, cada latido referido a su propio PR
+    # y medido en la latencia del pico del latido mediano (promedio de ±10 ms).
+    def per_beat(j, latency, half=ms(10)):
+        vals = []
+        for p in used:
+            if p + latency + half >= len(x) or p + latency - half < 0:
+                continue
+            base_b = np.mean(x[p - ms(120):p - ms(85), j])
+            vals.append(np.mean(x[p + latency - half:p + latency + half + 1, j]) - base_b)
+        return np.array(vals)
+    for L in ['II', 'V2', 'V5']:
+        j = LEADS.index(L)
+        t = m[w(130, 460), j]
+        lat = ms(130) + int(np.argmax(np.abs(t)))
+        v = per_beat(j, lat)
+        out[f'dyn_t_cv_{L}'] = float(np.std(v) / (abs(np.mean(v)) + 0.02))
+    for L in ['V2', 'V5']:
+        v = per_beat(LEADS.index(L), ms(80), ms(4))
+        out[f'dyn_st_sd_{L}'] = float(np.std(v)) * 1000
+    j = LEADS.index('II')
+    pw_ = m[w(-300, -90), j]
+    v = per_beat(j, -ms(300) + int(np.argmax(np.abs(pw_))))
+    out['dyn_p_cv_II'] = float(np.std(v) / (abs(np.mean(v)) + 0.02))
+
+    # Ruido no estacionario: dispersión del RMS entre segmentos TP, curtosis y
+    # pendiente espectral del ruido de alta frecuencia.
+    if len(tp) >= 3:
+        for L in ['I', 'V2']:
+            j = LEADS.index(L)
+            rms = np.array([np.sqrt(np.mean(s[:, j] ** 2)) for s in tp]) + 1e-9
+            out[f'noise_burst_{L}'] = float(np.std(np.log(rms)))
+            seg = np.concatenate([s[:, j] for s in tp])
+            out[f'noise_kurt_{L}'] = float(np.mean((seg - seg.mean()) ** 4) / (np.var(seg) ** 2 + 1e-18))
+            f, pw2 = welch(seg, fs=FS, nperseg=min(64, len(seg)))
+            lo, hi = pw2[(f >= 25) & (f < 60)].sum(), pw2[(f >= 60) & (f < 150)].sum()
+            out[f'noise_slope_{L}'] = float(np.log((lo + 1e-18) / (hi + 1e-18)))
     return out
 
 
