@@ -1,8 +1,6 @@
 name: Reference source acquisition
+# Congelado (fidelidad F0): referencia del analizador, solo ejecución manual.
 on:
-  push:
-    branches: ['improvement/v1.4-reference']
-    paths: ['.github/workflows/reference-source.yml', 'scripts/collect-staff.py']
   workflow_dispatch:
 permissions:
   contents: read

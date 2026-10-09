@@ -1,10 +1,6 @@
 name: PTB-XL+ morphology reference
+# Congelado (fidelidad F0): referencia del analizador, solo ejecución manual.
 on:
-  pull_request:
-    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/ptbxl-plus/**', 'scripts/*ptbxl*', 'scripts/secondary-stt-reference.py', 'scripts/isolated-phenotype-reference.py', 'tests/test_isolated_phenotype_reference.py', 'docs/reference-protocols/isolated-phenotypes-v1.json', 'docs/evidence/isolated-phenotypes-selection.json', 'tests/test_secondary_stt_reference.py', 'scripts/lib/ptbxl-morphology.mjs', 'tests/*ptbxl*', '.github/workflows/ptbxl-morphology.yml', '.github/workflows/generator-ptbxl-gap.yml']
-  push:
-    branches: ['main']
-    paths: ['src/engine/**', 'src/presets/**', 'benchmarks/ptbxl-plus/**', 'scripts/*ptbxl*', 'scripts/secondary-stt-reference.py', 'scripts/isolated-phenotype-reference.py', 'tests/test_isolated_phenotype_reference.py', 'docs/reference-protocols/isolated-phenotypes-v1.json', 'docs/evidence/isolated-phenotypes-selection.json', 'tests/test_secondary_stt_reference.py', 'scripts/lib/ptbxl-morphology.mjs', 'tests/*ptbxl*', '.github/workflows/ptbxl-morphology.yml', '.github/workflows/generator-ptbxl-gap.yml']
   workflow_dispatch:
 permissions:
   contents: read

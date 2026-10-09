@@ -2,6 +2,13 @@
 
 Simulador educativo de ECG de 12 derivaciones. Vite + TypeScript + Canvas, sin backend ni IA diagnóstica. La señal mostrada es sintética; los registros de referencia se usan únicamente fuera del producto. Ningún preset está validado clínicamente.
 
+## Ciclo actual: fidelidad de la señal
+
+El desarrollo está centrado en que los trazados sean indistinguibles de ECG reales.
+El analizador automático queda congelado en PR #155 y sus workflows de referencia
+solo se ejecutan a mano; la CI obligatoria es `.github/workflows/ci.yml`.
+Plan y decisiones: [docs/fidelidad.md](docs/fidelidad.md).
+
 ## Estado del código y de la publicación
 
 La repolarización regional y metrología de los PR [#1](https://github.com/DanielOpazoD/simuladorecg/pull/1), [#2](https://github.com/DanielOpazoD/simuladorecg/pull/2) y [#3](https://github.com/DanielOpazoD/simuladorecg/pull/3) están integradas desde `d55cc648cfbaf74754dfce5df647152f274f8f70`. P1–P3 de la auditoría posterior ([#5](https://github.com/DanielOpazoD/simuladorecg/pull/5), [#6](https://github.com/DanielOpazoD/simuladorecg/pull/6), [#7](https://github.com/DanielOpazoD/simuladorecg/pull/7)) están integrados desde `279ef40cfe8d98026d35542039d9709f9e021b73`.

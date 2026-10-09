@@ -1,10 +1,6 @@
 name: Heart rate detection quality
+# Congelado (fidelidad F0): referencia del analizador, solo ejecución manual.
 on:
-  pull_request:
-    paths: ['src/engine/**', 'scripts/*hr-quality*', 'benchmarks/hr-quality/**', 'tests/heart-rate-quality.test.ts', 'tests/hr-quality-external.test.mjs', 'tests/browser-hr-quality.mjs', 'scripts/nstdb-source-cache.py', 'tests/test_nstdb_source_cache.py', 'tests/nstdb-cache-workflow.test.mjs', '.github/workflows/hr-quality.yml']
-  push:
-    branches: ['main']
-    paths: ['src/engine/**', 'scripts/*hr-quality*', 'benchmarks/hr-quality/**', 'tests/heart-rate-quality.test.ts', 'tests/hr-quality-external.test.mjs', 'tests/browser-hr-quality.mjs', 'scripts/nstdb-source-cache.py', 'tests/test_nstdb_source_cache.py', 'tests/nstdb-cache-workflow.test.mjs', '.github/workflows/hr-quality.yml']
   workflow_dispatch:
 permissions:
   contents: read

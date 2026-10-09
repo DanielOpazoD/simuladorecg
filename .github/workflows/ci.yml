@@ -1,0 +1,34 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22.16.0'
+          cache: npm
+      - run: npm ci
+      - name: Pruebas unitarias
+        run: npx vitest run
+      - name: Tipos y build de producción
+        run: npm run build
+      - name: Humo en navegador (todos los presets)
+        run: |
+          npx playwright install --with-deps chromium
+          npx vite preview --host 127.0.0.1 --port 4173 --strictPort &
+          npx --yes wait-on@8.0.3 http://127.0.0.1:4173
+          node tests/smoke-browser.mjs http://127.0.0.1:4173

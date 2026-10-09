@@ -1,10 +1,6 @@
 name: External reference evaluation
+# Congelado (fidelidad F0): referencia del analizador, solo ejecución manual.
 on:
-  pull_request:
-    paths: ['scripts/*ludb-expansion*', 'scripts/lib/external-qrs-evaluation.mjs', 'tests/reference/ludb-expansion/**', 'tests/external-cohort.test.mjs', 'tests/reference/ludb/prepare_ludb.py', 'tests/test_ludb_annotations.py', '.github/workflows/external-reference.yml']
-  push:
-    branches: ['main']
-    paths: ['scripts/*ludb-expansion*', 'scripts/lib/external-qrs-evaluation.mjs', 'tests/reference/ludb-expansion/**', 'tests/external-cohort.test.mjs', 'tests/reference/ludb/prepare_ludb.py', 'tests/test_ludb_annotations.py', '.github/workflows/external-reference.yml']
   workflow_dispatch:
 permissions:
   contents: read

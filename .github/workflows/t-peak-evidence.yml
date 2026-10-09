@@ -1,8 +1,6 @@
 name: T peak evidence without QT promotion
+# Congelado (fidelidad F0): referencia del analizador, solo ejecución manual.
 on:
-  pull_request:
-  push:
-    branches: ['main']
   workflow_dispatch:
 permissions:
   contents: read
