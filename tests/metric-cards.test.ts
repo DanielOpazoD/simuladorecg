@@ -85,7 +85,8 @@ describe("modelMetricCards: el simulador muestra lo que generó", () => {
     expect(pr.value).toBe("160<small>ms</small>");
     expect(qrs.value).toBe("90<small>ms</small>");
     expect(Math.abs(Number.parseFloat(qtc.value) - 410)).toBeLessThan(12);
-    expect(axis.value).toBe("55<small>°</small>");
+    // The axis card states the axis the trace shows (measured), close to the 55° asked.
+    expect(Math.abs(Number.parseFloat(axis.value) - 55)).toBeLessThan(6);
     expect([hr, pr, qrs, qtc, axis].every((x) => x.status === "usable" && x.note.startsWith("modelo"))).toBe(true);
   });
   it("Wenckebach: el PR es el rango progresivo, no «No estimable»", () => {

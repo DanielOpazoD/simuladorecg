@@ -14,8 +14,8 @@ import { normal, random } from "../random";
 
 const UV = 0.001;
 // Electrode-level RMS in µV at the median patient.
-const EMG = { RA: 3.4, LA: 4.4, LL: 0.6, chest: 2.2, common: 0.7 };
-const WANDER = { RA: 26, LA: 26, LL: 48, chestCommon: 30, chestLocal: 35 };
+const EMG = { RA: 4.8, LA: 6.1, LL: 0.7, chest: 2.9, common: 0.6 };
+const WANDER = { RA: 30, LA: 30, LL: 52, chestCommon: 33, chestLocal: 39 };
 const RESP_SHARE = 0.7;
 
 function onePoleLowpass(x: Float64Array, fs: number, hz: number) {
@@ -39,16 +39,72 @@ function normalize(x: Float64Array, rms: number) {
   const k = rms / Math.sqrt(s / x.length || 1);
   for (let i = 0; i < x.length; i++) x[i] *= k;
 }
-/** Muscle-like broadband noise, roughly 15–120 Hz with a 1/f-like tail. */
+/** Spectral and temporal shape of muscle noise, measured in TP segments of
+ * PTB-XL NORM records: power falls with frequency above ≈15 Hz, the level waxes
+ * and wanes between beats (sd of log RMS across TP segments ≈0.3) and the noise is
+ * impulsive (kurtosis ≈8–11) without isolated large spikes (TP maxima stay below
+ * ≈0.2 mV). Impulsiveness comes from motor-unit action potentials: brief biphasic
+ * transients a few times the background, with a hard amplitude cap. */
+export const EMG_SHAPE = {
+  highpassHz: 15, lowpassHz: 10, whiteShare: 0.05, slowLogSd: 0.15, slowHz: 0.5,
+  muapPerSecond: 9, muapSigmaMs: 3.5, muapMedian: 7, muapLogSd: 0.45, muapCap: 14, muapShare: 0.65,
+};
+
+/** Slow log-normal envelope (bursts between beats), unit mean square. */
+function envelope(n: number, fs: number, r: () => number) {
+  const slow = Float64Array.from({ length: n }, () => normal(r));
+  onePoleLowpass(slow, fs, EMG_SHAPE.slowHz);
+  onePoleLowpass(slow, fs, EMG_SHAPE.slowHz);
+  normalize(slow, EMG_SHAPE.slowLogSd);
+  const g = new Float64Array(n);
+  let ms = 0;
+  for (let i = 0; i < n; i++) ms += (g[i] = Math.exp(Math.max(-1.2, Math.min(1.2, slow[i])))) ** 2;
+  const k = 1 / Math.sqrt(ms / n || 1);
+  for (let i = 0; i < n; i++) g[i] *= k;
+  return g;
+}
+
+/** Train of motor-unit action potentials: first derivative of a Gaussian, random
+ * sign, log-normal amplitude (in background-RMS units) capped at `muapCap`. */
+function muaps(n: number, fs: number, r: () => number) {
+  const x = new Float64Array(n), sigma = (EMG_SHAPE.muapSigmaMs * fs) / 1000, half = Math.ceil(4 * sigma);
+  const count = Math.round((EMG_SHAPE.muapPerSecond * n) / fs);
+  for (let c = 0; c < count; c++) {
+    const at = Math.floor(r() * n), sign = r() < 0.5 ? -1 : 1;
+    const amp = Math.min(EMG_SHAPE.muapCap, EMG_SHAPE.muapMedian * Math.exp(EMG_SHAPE.muapLogSd * normal(r)));
+    for (let k = -half; k <= half; k++) {
+      const i = at + k;
+      if (i < 0 || i >= n) continue;
+      const u = k / sigma;
+      x[i] += sign * amp * -u * Math.exp(0.5 - 0.5 * u * u); // peak ±amp at u = ∓1
+    }
+  }
+  return x;
+}
+
+/** Muscle noise: pink-leaning Gaussian background plus motor-unit transients, both
+ * modulated by a slow envelope so the level drifts between beats. */
 function emg(n: number, fs: number, rms: number, r: () => number) {
-  const x = Float64Array.from({ length: n }, () => normal(r));
-  onePoleHighpass(x, fs, 15);
-  onePoleLowpass(x, fs, 120);
+  const x = Float64Array.from({ length: n }, () => normal(r)), white = Float64Array.from({ length: n }, () => normal(r));
+  onePoleHighpass(x, fs, EMG_SHAPE.highpassHz);
+  onePoleLowpass(x, fs, EMG_SHAPE.lowpassHz);
+  normalize(x, Math.sqrt(1 - EMG_SHAPE.whiteShare));
+  onePoleHighpass(white, fs, EMG_SHAPE.highpassHz);
+  normalize(white, Math.sqrt(EMG_SHAPE.whiteShare));
+  const spikes = muaps(n, fs, r);
+  normalize(spikes, Math.sqrt(EMG_SHAPE.muapShare));
+  const g = envelope(n, fs, r), bg = Math.sqrt(1 - EMG_SHAPE.muapShare);
+  for (let i = 0; i < n; i++) x[i] = ((x[i] + white[i]) * bg + spikes[i]) * g[i];
   normalize(x, rms);
   return x;
 }
-/** Respiratory sway plus slow drift. */
-function wander(n: number, fs: number, rms: number, respHz: number, phase: number, r: () => number) {
+
+/** Electrode–skin motion in 0.5–3 Hz, µV RMS per electrode at the median patient:
+ * it makes the ST level wobble between beats (≈16 µV sd in real V2). */
+const MOTION_UV = 6.5;
+
+/** Respiratory sway, slow drift and electrode motion. */
+function wander(n: number, fs: number, rms: number, respHz: number, phase: number, r: () => number, motionRms = 0) {
   const x = new Float64Array(n), drift = new Float64Array(n), a2 = 0.3 * normal(r), p2 = 2 * Math.PI * r();
   for (let i = 0; i < n; i++) {
     const t = i / fs;
@@ -60,6 +116,14 @@ function wander(n: number, fs: number, rms: number, respHz: number, phase: numbe
   onePoleLowpass(drift, fs, 0.15);
   normalize(drift, rms * Math.sqrt(1 - RESP_SHARE));
   for (let i = 0; i < n; i++) x[i] += drift[i];
+  if (motionRms > 0) {
+    const motion = Float64Array.from({ length: n }, () => normal(r));
+    onePoleHighpass(motion, fs, 0.5);
+    onePoleLowpass(motion, fs, 3);
+    onePoleLowpass(motion, fs, 3);
+    normalize(motion, motionRms);
+    for (let i = 0; i < n; i++) x[i] += motion[i];
+  }
   return x;
 }
 
@@ -68,15 +132,17 @@ function wander(n: number, fs: number, rms: number, respHz: number, phase: numbe
 export function acquisitionFloor(c: ECGCase, n: number, fs: number): Float64Array[] | null {
   if (c.acquisition === "ideal") return null;
   const r = random(((c.seed * 2654435761) ^ 0xac9) >>> 0);
-  const emgScale = Math.exp(0.6 * normal(r)), wanderScale = Math.exp(0.55 * normal(r));
+  // Per-patient levels (log-normal, bounded at ±2 sd).
+  const bounded = () => Math.max(-2, Math.min(2, normal(r)));
+  const emgScale = Math.exp(0.6 * bounded()), wanderScale = Math.exp(0.55 * bounded());
   const respHz = c.respiratoryRate / 60, respPhase = 2 * Math.PI * r();
-  const limbWander = (name: "RA" | "LA" | "LL") => wander(n, fs, WANDER[name] * wanderScale * UV, respHz, respPhase + 0.4 * normal(r), r);
+  const limbWander = (name: "RA" | "LA" | "LL") => wander(n, fs, WANDER[name] * wanderScale * UV, respHz, respPhase + 0.4 * normal(r), r, MOTION_UV * wanderScale * UV);
   const RA = limbWander("RA"), LA = limbWander("LA"), LL = limbWander("LL");
   // Muscle noise of the arm electrodes reaches I and II but, as measured, not the
   // precordial leads (their HF noise is mutually uncorrelated): keep it out of WCT.
   const emgRA = emg(n, fs, EMG.RA * emgScale * UV, r), emgLA = emg(n, fs, EMG.LA * emgScale * UV, r), emgLL = emg(n, fs, EMG.LL * emgScale * UV, r);
   const common = wander(n, fs, WANDER.chestCommon * wanderScale * UV, respHz, respPhase, r);
-  const locals = Array.from({ length: 6 }, () => wander(n, fs, WANDER.chestLocal * wanderScale * UV, respHz, respPhase + 0.8 * normal(r), r));
+  const locals = Array.from({ length: 6 }, () => wander(n, fs, WANDER.chestLocal * wanderScale * UV, respHz, respPhase + 0.8 * normal(r), r, MOTION_UV * wanderScale * UV / 0.7));
   const out = Array.from({ length: 8 }, () => new Float64Array(n));
   for (let i = 0; i < n; i++) {
     out[0][i] = LA[i] + emgLA[i] - RA[i] - emgRA[i];
