@@ -468,6 +468,15 @@ Los infartos antiguos sintéticos se reconocen más que los reales. Hipótesis n
 medidas: los presets fijan QRS y eje, y el modelo excluye comorbilidades (bloqueos,
 otros infartos) que en los reales enmascaran el patrón.
 
+**Variedad, no solo libro.** Fuera de la semilla de libro, los criterios de las
+pruebas se cumplen en una parte de los pacientes (medido por el revisor en 150
+semillas): Q en aVF del IM inferior 75 %, QS en V2 del anteroseptal 71 %, rsR'
+del BRD 50 %. Es coherente con los pacientes reales, que tampoco muestran siempre
+el patrón de libro. Pasar de fase aguda a crónica en un caso cambia de núcleos al
+paciente aprendido de esa semilla; el contexto del caso lo avisa. El laboratorio
+de activación descarga ahora siete modelos de clase al abrirse (≈ 615 KB gzip,
+una vez).
+
 **Pruebas nuevas:** rsR' y S terminal ancha (≥ 30 ms) del BRD; Q ≥ 30 ms en aVF
 y QS en III del infarto inferior; QS en V1–V2 del anteroseptal; analizador sobre
 los siete pacientes de libro (QRS ±10 ms, QT medible).

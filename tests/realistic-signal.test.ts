@@ -357,3 +357,29 @@ describe("clases aprendidas (F3): el analizador congelado mide el paciente de li
     expect(m.qt).not.toBeNull();
   });
 });
+
+describe("F3.2: alcance del infarto antiguo y textos de la interfaz", () => {
+  it("la fase crónica no descarta otros modificadores: con sobrecarga sigue en núcleos", () => {
+    const old = fromPreset(presetById("old_inferior")!);
+    for (const overload of ["lv", "rv_acute", "rv_chronic"] as const) expect(realisticModelFor({ ...old, overload })).toBeNull();
+    expect(realisticModelFor({ ...old, phase: "acute" })).toBeNull();
+    expect(realisticModelFor({ ...old, ischemia: "inferior_lcx" })).toBe("IMI");
+  });
+  it("los presets de infarto antiguo conservan una lesión visible si se pasan a fase aguda", () => {
+    for (const id of ["old_inferior", "old_anterior"]) expect(fromPreset(presetById(id)!).st).toBeGreaterThan(0);
+  });
+  it("los controles describen el infarto antiguo aprendido y la base regional real", async () => {
+    const { controls } = await import("../src/ui/controls");
+    const { regionalActivationControls } = await import("../src/ui/regional-activation");
+    expect(controls(fromPreset(presetById("old_inferior")!))).toMatch(/Infarto antiguo aprendido de pacientes reales/);
+    expect(controls({ ...fromPreset(presetById("lateral")!), phase: "chronic" })).toMatch(/no genera ondas Q/);
+    expect(regionalActivationControls(fromPreset(presetById("rbbb")!))).toMatch(/Latido aprendido \(PTB-XL\)/);
+    expect(regionalActivationControls(fromPreset(presetById("bifascicular")!))).toMatch(/Plantilla histórica/);
+  });
+  it("un caso crónico inferior o anterior fuera de sus presets avisa del cambio de trazado", async () => {
+    const { caseContext } = await import("../src/presets/case-context");
+    const warn = /infarto antiguo aprendido de pacientes reales/;
+    expect(caseContext({ ...fromPreset(presetById("inferior")!), phase: "chronic" }).warnings.join(" ")).toMatch(warn);
+    expect(caseContext(fromPreset(presetById("old_inferior")!)).warnings.join(" ")).not.toMatch(warn);
+  });
+});

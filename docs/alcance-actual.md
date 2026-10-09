@@ -6,8 +6,8 @@ Producto 1.5.0; la fecha o etiqueta de versión no acredita validación clínica
 
 | Familia | Aguda | Hiperaguda | Evolutiva | ST resuelto (`chronic`) |
 |---|---|---|---|---|
-| Inferior: predominio III / predominio II (`inferior_rca`, `inferior_lcx`) | ST vectorial y morfología basal conservada | Base vectorial + corrección T por derivación | Base vectorial + corrección T regional | Se retira la contribución de lesión; no cicatriz ni Q de necrosis |
-| Anterior (`anterior`) | ST vectorial y morfología basal conservada | Base vectorial + corrección T por derivación | Base vectorial + corrección T regional | Igual límite: operación paramétrica, no reperfusión demostrada |
+| Inferior: predominio III / predominio II (`inferior_rca`, `inferior_lcx`) | ST vectorial y morfología basal conservada | Base vectorial + corrección T por derivación | Base vectorial + corrección T regional | Infarto inferior antiguo aprendido de pacientes reales (PTB-XL, IMI): ondas Q y repolarización de pacientes; en núcleos (otras combinaciones) se retira la lesión sin Q |
+| Anterior (`anterior`) | ST vectorial y morfología basal conservada | Base vectorial + corrección T por derivación | Base vectorial + corrección T regional | Infarto anteroseptal antiguo aprendido (PTB-XL, ASMI): QS en V1–V3; en núcleos, operación paramétrica sin Q, no reperfusión demostrada |
 | Lateral (`lateral`) | ST vectorial y morfología basal conservada | Base vectorial + corrección T por derivación | Base vectorial + corrección T regional | Igual límite |
 | Wellens / de Winter / posterior | Correcciones locales específicas ya existentes | No utilizan los nuevos perfiles regionales | No utilizan los nuevos perfiles regionales | No extender conclusiones de calibración temporal a estos patrones |
 | BRI / BRD / sobrecargas / electrolitos / latidos ventriculares o estimulados | Modelo previo según familia | Excluidos de los nuevos perfiles regionales | Excluidos de los nuevos perfiles regionales | No valida proporcionalidad secundaria ni recuperación tisular |

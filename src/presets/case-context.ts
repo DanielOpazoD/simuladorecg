@@ -1,6 +1,7 @@
 import { normalizeCase, type ECGCase } from "../engine/types";
 import { repolarizationLimitations } from "./teaching-limits";
 import { fromPreset, presetById, type Preset } from "./catalog";
+import { realisticModelFor } from "../engine/realistic/scope";
 
 /** Preset text describes physiology, not a case's free name or acquisition settings. */
 function physiology(c: ECGCase) {
@@ -60,6 +61,11 @@ export function caseContext(input: ECGCase): CaseContext {
   if (c.artifacts.reversed)
     warnings.push(
       "Inversión de electrodos de brazos activa. Los hallazgos del preset describen la adquisición basal sin inversión, no este registro. La fisiología se conserva.",
+    );
+  const learned = realisticModelFor(c);
+  if ((learned === "IMI" || learned === "ASMI") && !["old_inferior", "old_anterior"].includes(c.presetId))
+    warnings.push(
+      "Fase crónica de lesión inferior o anterior: se muestra un infarto antiguo aprendido de pacientes reales (ondas Q). Los casos guardados antes de F3.2 mostraban ST resuelto sin Q.",
     );
   warnings.push(...repolarizationLimitations(c));
   return {
