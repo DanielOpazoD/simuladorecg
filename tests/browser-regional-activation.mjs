@@ -30,6 +30,10 @@ for(const [engine,launcher] of Object.entries(engines)){
    assert.equal(await page.locator('vite-error-overlay').count(),0);
    assert.ok(await page.locator('#ecg').evaluate(c=>c.width>0&&c.height>0));
    await chooseCatalogPreset(page,preset);await ready();
+   // Regional-model contract, not resting noise: the frozen analyzer misses wide
+   // QRS under the realistic acquisition that became the default in F2.
+   await page.locator('[data-panel="signal"]').click();
+   await page.locator('[data-key="acquisition"]').selectOption('ideal');await ready();
    await page.locator('[data-action="compare"]').click();await page.locator('#compare-pin').click();
    const original=await exported('template');assert.deepEqual(original.A.leads,original.B.leads);
    await page.locator('[data-panel="conduction"]').click();
