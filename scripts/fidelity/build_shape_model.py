@@ -297,7 +297,8 @@ def main():
         # Gaussiana conjunta de [z (k), variables del caso]; el motor condiciona
         # sobre el subconjunto que el caso fija.
         'joint': {'names': [f'z{i}' for i in range(k)] + cond_names, 'mean': q(mu), 'cov': q(C)},
-        'mixture': {'weights': q(gm.weights_), 'means': f32(gm.means_), 'cholesky': f32(chol)},
+        # Solo el triángulo inferior de cada Cholesky (fila a fila): ~120 KB menos.
+        'mixture': {'weights': q(gm.weights_), 'means': f32(gm.means_), 'cholesky': f32(np.concatenate([c[np.tril_indices(len(c))] for c in chol]))},
         'population': {
             'durationsMsP50': q(np.median(D, 0)),
             'axisP50': round(float(np.median(ax)), 1),

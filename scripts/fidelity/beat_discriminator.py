@@ -53,7 +53,7 @@ def main():
     mean = np.frombuffer(base64.b64decode(M['mean']), '<f4').astype(float)
     basis = np.frombuffer(base64.b64decode(M['basis']), '<i2').astype(float).reshape(M['components'], -1) * np.array(M['basisScale'])[:, None]
     sys.path.insert(0, os.path.dirname(__file__))
-    from build_shape_model import segment, INDEP as MODEL_LEADS, PHASES
+    from build_shape_model import segment, INDEP as MODEL_LEADS, PHASES, PRE_MS
     import csv
     fid = {}
     r = csv.reader(open(os.path.join(root, 'ptb-xl-plus', 'features', '12sl_features.csv')))
@@ -94,7 +94,7 @@ def main():
         pts = np.cumsum([0] + [n for _, n in PHASES])
         apex = None
         times = np.concatenate([np.linspace(*seg, n) for seg, n in zip(
-            [(f['P_On'], f['P_Off']), (f['P_Off'], f['QRS_On']), (f['QRS_On'], f['QRS_Off'])], [p[1] for p in PHASES[:3]])])
+            [(f['P_On'] - PRE_MS, f['P_On']), (f['P_On'], f['P_Off']), (f['P_Off'], f['QRS_On']), (f['QRS_On'], f['QRS_Off'])], [p[1] for p in PHASES[:4]])])
         sel = [0, 1, 6, 7, 8, 9, 10, 11]
         for j, lead in enumerate(sel):
             recon[:, lead] = np.interp(t, times, rec[:len(times), j], left=np.nan, right=np.nan)

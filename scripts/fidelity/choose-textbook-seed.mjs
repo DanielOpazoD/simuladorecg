@@ -21,7 +21,7 @@ const c = M.DEFAULT_CASE, n = Number(process.argv[2] ?? 4000);
 const LEADS = ["I", "II", "V1", "V2", "V3", "V4", "V5", "V6"];
 const results = [];
 for (let seed = 1; seed <= n; seed++) {
-  const p = M.samplePatient({ seed, axis: c.axis, pAxis: c.pAxis, tAxis: c.tAxis, pScale: 1, qrsScale: 1, tScale: 1, horizontalDeg: 0 });
+  const p = M.samplePatient({ seed, axis: c.axis, pAxis: null, tAxis: null, pScale: 1, qrsScale: 1, tScale: 1, horizontalDeg: 0 }) // P/T natural, as in the presets;
   const m = p.model, x = M.transform(m, M.reconstruct(m, p.z), p.ops);
   const wave = (phase, lead) => {
     const ph = m.phases[phase], li = LEADS.indexOf(lead);

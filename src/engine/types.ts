@@ -161,6 +161,9 @@ export interface Signal {
     qrs: number | null;
     qt: number | null;
     axis: number | null;
+    /** Learned base with natural P/T axes: the patient's own P and T axes. */
+    pAxis?: number;
+    tAxis?: number;
   };
   warnings: string[];
 }
@@ -408,6 +411,9 @@ export function normalizeCase(input: unknown): ECGCase {
     }
   }
   c.seed = Math.round(c.seed);
+  // Cases saved before natural P/T axes existed keep an axis they had changed.
+  if (s.naturalPAxis === undefined) c.naturalPAxis = s.pAxis === undefined || s.pAxis === DEFAULT_CASE.pAxis;
+  if (s.naturalTAxis === undefined) c.naturalTAxis = s.tAxis === undefined || s.tAxis === DEFAULT_CASE.tAxis;
   c.flutterRatio = Math.round(c.flutterRatio);
   for (const k of ["presetId", "name"] as const)
     if (typeof s[k] === "string") c[k] = s[k].slice(0, 100);

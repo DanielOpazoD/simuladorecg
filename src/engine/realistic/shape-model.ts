@@ -374,7 +374,9 @@ function candidateZ(seed: number, attempt: number) {
   const e = Array.from({ length: M }, () => normal(rng)), s: Record<string, number> = {};
   for (let a = 0; a < M; a++) {
     let v = means[c * M + a];
-    for (let b = 0; b <= a; b++) v += cholesky[c * M * M + a * M + b] * e[b];
+    // Lower triangle stored row by row per component.
+    const base = c * ((M * (M + 1)) / 2) + (a * (a + 1)) / 2;
+    for (let b = 0; b <= a; b++) v += cholesky[base + b] * e[b];
     s[m.names[a]] = v;
   }
   return { s, z: Float64Array.from({ length: m.k }, (_, i) => s[`z${i}`]) };

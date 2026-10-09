@@ -110,8 +110,9 @@ QT largo/corto y bajo voltaje) usan latidos aprendidos de ECG reales. El resto d
 los presets conserva los núcleos vectoriales históricos hasta su etapa, para no
 mezclar ambos estilos en un trazado (`src/engine/realistic/scope.ts`).
 
-**Modelo** (`scripts/fidelity/build_shape_model.py` → `normal-shape-model.json`):
-3.733 latidos medianos 12SL de pacientes adultos distintos, pliegues 1–8,
+**Modelo** (`scripts/fidelity/build_shape_model.py` → `normal-shape-model.json`;
+ver F2.2 para la versión actual: 2.381 medianas de registros crudos):
+en F2, 3.733 latidos medianos 12SL de pacientes adultos distintos, pliegues 1–8,
 NORM = 100. Cada latido se referencia a la línea TP previa a la P y se divide en
 P, PQ, QRS, ST (hasta el ápice espacial de T), T y post-T, remuestreados en las
 8 derivaciones independientes. ACP con 64 modos: 99,3 % de la varianza, error de
@@ -309,6 +310,11 @@ entre derivaciones y tiempos (sin foco). Con la señal completa la red aún sepa
 (0,999): lo que queda está en la dinámica y el ruido (respiración sinusoidal
 perfecta, variación gaussiana, forma de los impulsos musculares). Eso no lo
 distinguen revisores humanos ni automáticos a ojo (pruebas ciegas en azar).
+
+**Analizador y P realista.** El analizador congelado mide el PR solo en 16 de 100
+ECG normales reales de la reserva; en el sinusal de F2.2 lo mide en 8 de 60 (antes,
+con una P de inicio abrupto, en 17 de 60: más fácil que la realidad). La P nueva
+es tan sutil como la real; por eso las tarjetas muestran los valores del modelo.
 
 El paciente de libro pasa a la semilla 2822 (P bifásica visible en V1,
 terminal negativa pequeña). Las pruebas de analizador que usaban el sinusal como
