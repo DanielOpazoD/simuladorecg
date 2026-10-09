@@ -22,7 +22,7 @@ describe('Catalog presentation never changes clinical presets', () => {
   it('keeps the actual available and pending counts', () => {
     const groups = catalogFamilies(PRESETS);
     assert.equal(groups.reduce((n,g) => n + g.count, 0), PRESETS.length);
-    assert.equal(groups.reduce((n,g) => n + g.available, 0), 61);
+    assert.equal(groups.reduce((n,g) => n + g.available, 0), 63);
     assert.equal(PRESETS.filter(p => p.strategy === 'pending').length, 5);
   });
   it('does not hide pending patterns or convert them to available', () => {

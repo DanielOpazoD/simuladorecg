@@ -1,8 +1,9 @@
 # Patrones y variantes en la hoja
 
-La biblioteca pasa de 61 filas activas a 40 entradas activas, sin eliminar ninguno de los
-61 presets. Los cinco pendientes continúan deshabilitados. Quince entradas tienen de dos
-a cuatro variantes y el resto permanece individual.
+La biblioteca agrupa 63 filas activas en 41 entradas activas, sin eliminar ninguno de los
+63 presets. Los cinco pendientes continúan deshabilitados. Dieciséis entradas tienen de dos
+a cuatro variantes y el resto permanece individual (F3.2 añadió «Infarto antiguo»: inferior
+y anteroseptal).
 
 FA, flutter y los cuatro ritmos sinusales comparten una entrada cada uno. Las variantes
 se seleccionan sobre el ECG, debajo del título, no en una segunda lista lateral. Se aplica

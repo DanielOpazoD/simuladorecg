@@ -24,6 +24,7 @@ export const DIAGNOSIS_GROUPS: readonly DiagnosisGroup[] = [
   group('lafb', 'Hemibloqueos izquierdos', [['lafb', 'Anterior'], ['lpfb', 'Posterior']]),
   group('bifascicular', 'Bloqueo bifascicular', [['bifascicular', 'BRD + HBAI'], ['bifascicular_pr', 'Con PR prolongado']]),
   group('inferior', 'Lesión inferior', [['inferior', 'Predominio en III'], ['inferior_lcx', 'Predominio en II']]),
+  group('old_inferior', 'Infarto antiguo', [['old_inferior', 'Inferior'], ['old_anterior', 'Anteroseptal']]),
   group('wellens_a', 'Patrón de Wellens', [['wellens_a', 'Tipo A'], ['wellens_b', 'Tipo B']]),
   group('rv_acute', 'Sobrecarga del ventrículo derecho', [['rv_acute', 'Aguda'], ['rv_chronic', 'Hipertrofia']]),
   group('aai', 'Estimulación con marcapasos', [['aai', 'AAI'], ['vvi', 'VVI'], ['ddd', 'DDD']]),

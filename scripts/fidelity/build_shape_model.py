@@ -35,7 +35,7 @@ PHASES = [('pre', 24), ('p', 40), ('pq', 20), ('qrs', 56), ('st', 80), ('t', 48)
 # Tras el fin de T: incluye la onda U y el retorno lento al TP (la cola que más
 # delataba al sintético, sobre todo en V2–V3). Con --source raw el marco dura 1,4 s.
 POST_MS = 260
-CLASS_POST_MS = 200  # clases: QRS/QT más largos dejan menos TP antes de la P siguiente
+CLASS_POST_MS = 120  # clases: QRS/QT más largos y FC altas dejan menos TP antes de la P siguiente; con 200 ms se perdía un tercio de los pacientes
 FRAME_MS = 1396
 
 
@@ -161,6 +161,8 @@ def main():
     ap.add_argument('--data', required=True)
     ap.add_argument('--out', required=True)
     ap.add_argument('--components', type=int, default=64)
+    ap.add_argument('--sample-scale', type=float, default=1.0,
+                    help='escala del muestreo en clases muy pequeñas (sus colas gaussianas mezclan subtipos que ningún paciente tiene)')
     ap.add_argument('--report')
     ap.add_argument('--class', dest='code', default='NORM', choices=sorted(CLASS_SPEC),
                     help='diagnóstico SCP a modelar (NORM por defecto)')
@@ -187,9 +189,9 @@ def main():
     rejected = {'fiduciales': 0, 'archivo': 0, 'rango': 0}
     for row in rows:
         scp = ast.literal_eval(row['scp_codes'])
-        # La deriva se tolera en las clases (el mediano la atenúa); el modelo normal,
-        # con miles de casos, la excluye.
-        flags = ['pacemaker', 'electrodes_problems', 'burst_noise', 'static_noise'] + (['baseline_drift'] if a.code == 'NORM' else [])
+        # Deriva y ruido se toleran en las clases (el latido mediano los atenúa y los
+        # atípicos se descartan); el modelo normal, con miles de casos, los excluye.
+        flags = ['pacemaker', 'electrodes_problems'] + (['burst_noise', 'static_noise', 'baseline_drift'] if a.code == 'NORM' else [])
         clean = all(row[k] == '' for k in flags)
         if not (row['strat_fold'] in [str(i) for i in range(1, 9)] and clean and selects(row, scp, a.code)):
             continue
@@ -254,6 +256,12 @@ def main():
     mean = V.mean(0)
     U, S, Wt = np.linalg.svd(V - mean, full_matrices=False)
     var = S ** 2 / (n - 1)
+    if a.code != 'NORM':
+        # Clases pequeñas: con n/10 modos el BRD completo (54 pacientes) solo
+        # explicaba el 84 % y perdía las muescas. Se admiten los modos del 95 % de
+        # la varianza, sin pasar de n/3; la gaussiana conjunta se contrae (abajo).
+        k95 = int(np.searchsorted(np.cumsum(var) / var.sum(), 0.95)) + 1
+        k = min(a.components, max(k, min(k95, n // 3)))
     explained = float(var[:k].sum() / var.sum())
     comps = Wt[:k]                      # (k, dim)
     scores = (V - mean) @ comps.T       # (n, k)
@@ -274,6 +282,14 @@ def main():
     # separa las de una mezcla de 8 gaussianas. El motor muestrea de esa mezcla.
     from sklearn.mixture import GaussianMixture
     gm = GaussianMixture(min(8, max(1, n // 200)), covariance_type='full', reg_covar=1e-4, random_state=0).fit(J)
+    if a.code != 'NORM' and gm.n_components == 1:
+        # Una sola gaussiana con pocos pacientes por dimensión: covarianza contraída
+        # (Ledoit-Wolf) sobre variables estandarizadas, para no muestrear
+        # direcciones que la muestra no sostiene.
+        from sklearn.covariance import LedoitWolf
+        sdJ = J.std(0, ddof=1)
+        C = LedoitWolf().fit((J - mu) / sdJ).covariance_ * np.outer(sdJ, sdJ)
+        gm.means_, gm.covariances_ = mu[None], C[None]
     chol = np.stack([np.linalg.cholesky(c) for c in gm.covariances_])
 
     # Error de reconstrucción con k modos (mV, RMS por muestra).
@@ -297,6 +313,7 @@ def main():
         'subjects': n,
         'components': k,
         'explainedVariance': round(explained, 4),
+        **({'sampleScale': a.sample_scale} if a.sample_scale != 1 else {}),
         'mean': f32(mean),
         'basis': base64.b64encode(b16.tobytes()).decode(),
         'basisScale': f32(scale),  # float32: un redondeo a 6 decimales anulaba los modos finos

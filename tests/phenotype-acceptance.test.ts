@@ -126,9 +126,11 @@ describe.each(["off", "diagnostic"] as const)(
           expect(Math.max(...segment(s, lead, b, 0.09, 0.14))).toBeGreaterThan(
             0.3,
           );
+        // Learned CRBBB (F3.2): the lateral terminal S is wide, not necessarily deep
+        // (the criterion is its duration); ≥ 0.1 mV in I, V5 and V6.
         for (const lead of ["I", "V5", "V6"] as const)
           expect(Math.min(...segment(s, lead, b, 0.09, 0.14))).toBeLessThan(
-            -0.2,
+            -0.1,
           );
         expect(mean(segment(s, "V1", b, 0.23, 0.36))).toBeLessThan(-0.05);
       }

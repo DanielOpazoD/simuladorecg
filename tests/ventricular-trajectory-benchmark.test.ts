@@ -14,7 +14,7 @@ describe("catalog ventricular trajectory benchmark",()=>{
       const source=ventricularSource(c,beat), q=spatialQrsSummary(qrsKernels(c,beat));
       return {kind,axisErrorDeg:angularSeparation(q.frontalAxis,source?.axis??c.axis),...q};
     });
-    expect(cases).toHaveLength(61);
+    expect(cases).toHaveLength(63);
     expect(Math.max(...cases.map(x=>x.axisErrorDeg))).toBeLessThan(1e-7);
     expect(cases.every(x=>x.peakSpatialMagnitude>0 && x.pathLength>0 && x.integrated.every(Number.isFinite))).toBe(true);
     expect(cases.every(x=>x.reversals<=2)).toBe(true);

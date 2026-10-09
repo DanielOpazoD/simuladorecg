@@ -16,7 +16,12 @@ const SUPPORTED_RHYTHMS: readonly ECGCase["rhythm"][] = ["sinus", "af", "flutter
 
 /** Conduction disorders learned from their own PTB-XL patients (stage F3). */
 const CONDUCTION_MODELS: Partial<Record<ECGCase["conduction"], ModelCode>> = {
-  normal: "NORM", lbbb: "CLBBB", irbbb: "IRBBB", lafb: "LAFB",
+  normal: "NORM", lbbb: "CLBBB", rbbb: "CRBBB", irbbb: "IRBBB", lafb: "LAFB",
+};
+/** Old infarction (resolved ST, chronic phase) of a territory with its own
+ * learned population: Q waves and T changes of real patients (F3.2). */
+const OLD_INFARCTION: Partial<Record<ECGCase["ischemia"], ModelCode>> = {
+  inferior_rca: "IMI", inferior_lcx: "IMI", anterior: "ASMI",
 };
 
 /** Learned population for the case's conducted beats, or null when the case keeps
@@ -26,9 +31,11 @@ const CONDUCTION_MODELS: Partial<Record<ECGCase["conduction"], ModelCode>> = {
  * actually applies keeps its own kernels; a request it cannot honor does not. */
 export function realisticModelFor(c: ECGCase): ModelCode | null {
   if (!(SUPPORTED_RHYTHMS.includes(c.rhythm) && !(c.av === "complete" && c.escape === "ventricular") &&
-    (c.ectopy === "none" || c.ectopy === "pac") && c.ischemia === "none" &&
+    (c.ectopy === "none" || c.ectopy === "pac") &&
     SUPPORTED_ELECTROLYTES.includes(c.electrolyte) && !regionalActivationState(c).active)) return null;
   const conduction = CONDUCTION_MODELS[c.conduction] ?? null;
+  if (c.ischemia !== "none")
+    return c.phase === "chronic" && conduction === "NORM" && c.overload === "none" ? OLD_INFARCTION[c.ischemia] ?? null : null;
   if (c.overload === "none") return conduction;
   return c.overload === "lv" && conduction === "NORM" ? "LVH" : null;
 }
@@ -36,5 +43,5 @@ export function realisticModelFor(c: ECGCase): ModelCode | null {
  * overload: the patient keeps its own T axis (the T-axis control, disabled in the
  * interface, has no effect, as with the historical kernels) and the QRS gain also
  * scales ST-T, so ST/QRS ratios are preserved. */
-export const learnedSecondaryRepolarization = (m: ModelCode) => m === "CLBBB" || m === "IRBBB" || m === "LVH";
+export const learnedSecondaryRepolarization = (m: ModelCode) => m === "CLBBB" || m === "CRBBB" || m === "IRBBB" || m === "LVH";
 export const usesRealisticBase = (c: ECGCase) => realisticModelFor(c) !== null;

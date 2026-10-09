@@ -36,6 +36,9 @@ export interface ShapeModel {
   jointCov: Float64Array; // m × m
   /** Gaussian mixture over the same joint vector (the real population is not Gaussian). */
   mixture: { weights: number[]; means: Float64Array; cholesky: Float64Array };
+  /** Spread of the population draw (1 = learned covariance). Below 1 only for very
+   * small classes, whose Gaussian tails blend subtypes no patient has. */
+  sampleScale: number;
   population: { durationsMsP50: number[]; axisP50: number; magnitudesP50: number[] };
 }
 
@@ -50,7 +53,7 @@ function decodeInt16(b64: string): Int16Array {
 
 /** Learned populations: the normal sinus beat (always bundled) and per-diagnosis
  * classes that the signal worker loads on demand (models.ts). */
-export type ModelCode = "NORM" | "CLBBB" | "IRBBB" | "LAFB" | "LVH";
+export type ModelCode = "NORM" | "CLBBB" | "CRBBB" | "IRBBB" | "LAFB" | "LVH" | "IMI" | "ASMI";
 export type RawShapeModel = typeof raw;
 const registry = new Map<ModelCode, ShapeModel>();
 
@@ -71,6 +74,7 @@ function decode(code: ModelCode, r: RawShapeModel): ShapeModel {
     names: r.joint.names, jointMean: Float64Array.from(r.joint.mean),
     jointCov: Float64Array.from(r.joint.cov), population: r.population,
     mixture: { weights: r.mixture.weights, means: decodeFloat32(r.mixture.means), cholesky: decodeFloat32(r.mixture.cholesky) },
+    sampleScale: (r as { sampleScale?: number }).sampleScale ?? 1,
   };
 }
 export function registerShapeModel(code: ModelCode, r: RawShapeModel): void {
@@ -409,7 +413,7 @@ function candidateZ(m: ShapeModel, seed: number, attempt: number) {
   const { weights, means, cholesky } = m.mixture, M = m.names.length;
   let u = rng(), c = 0;
   while (c < weights.length - 1 && u > weights[c]) u -= weights[c++];
-  const e = Array.from({ length: M }, () => normal(rng)), s: Record<string, number> = {};
+  const e = Array.from({ length: M }, () => normal(rng) * m.sampleScale), s: Record<string, number> = {};
   for (let a = 0; a < M; a++) {
     let v = means[c * M + a];
     // Lower triangle stored row by row per component.

@@ -7,13 +7,13 @@ const entries = (query = '', category = '', selected?: string) =>
   diagnosisFamilies(PRESETS, query, category, selected).flatMap(f => f.sections.flatMap(s => s.entries));
 
 describe('Pattern entries and canonical variant navigation', () => {
-  it('preserves all 61 active examples and five pending examples exactly once', () => {
+  it('preserves all 63 active examples and five pending examples exactly once', () => {
     const before = JSON.stringify(PRESETS), all = entries();
-    expect(all).toHaveLength(45);
-    expect(all.filter(e => e.target.strategy !== 'pending')).toHaveLength(40);
+    expect(all).toHaveLength(46);
+    expect(all.filter(e => e.target.strategy !== 'pending')).toHaveLength(41);
     expect(all.filter(e => e.target.strategy === 'pending')).toHaveLength(5);
     expect(all.flatMap(e => e.matches.map(p => p.id)).sort()).toEqual(PRESETS.map(p => p.id).sort());
-    expect(new Set(all.map(e => e.diagnosis.id)).size).toBe(45);
+    expect(new Set(all.map(e => e.diagnosis.id)).size).toBe(46);
     expect(JSON.stringify(PRESETS)).toBe(before);
   });
   it('has no duplicate, unavailable or cross-family variants in grouped navigation', () => {

@@ -362,7 +362,9 @@ export const PRESETS: Preset[] = [
     "Bloqueo completo de rama derecha",
     "BRD",
     "Conducción intraventricular",
-    { conduction: "rbbb", qrs: 150, axis: 35 },
+    // Eje cerca de la mediana de los BRD aislados de PTB-XL (66°): rotar mucho a un
+    // paciente aprendido deforma su morfología.
+    { conduction: "rbbb", qrs: 150, axis: 60 },
     "Activación tardía del ventrículo derecho.",
     [
       "rSR′ en V1",
@@ -470,6 +472,28 @@ export const PRESETS: Preset[] = [
     { ischemia: "inferior_lcx", st: 2 },
     "Vector de lesión inferior con mayor componente izquierdo.",
     ["ST↑ II ≥III", "I isoeléctrica o elevada"],
+  ),
+  p(
+    "old_inferior",
+    "Infarto inferior antiguo",
+    "IM inferior antiguo",
+    "Isquemia y ST",
+    { ischemia: "inferior_rca", phase: "chronic", st: 0, axis: -10 },
+    "Necrosis inferior establecida, aprendida de pacientes reales (PTB-XL).",
+    ["Q patológica en III y aVF", "ST resuelto; T inferior aplanada o negativa", "El ECG no data el infarto"],
+    "vectorial",
+    "Latido aprendido de pacientes con infarto inferior antiguo (PTB-XL); el ECG no data el infarto ni localiza la arteria.",
+  ),
+  p(
+    "old_anterior",
+    "Infarto anteroseptal antiguo",
+    "IM anteroseptal antiguo",
+    "Isquemia y ST",
+    { ischemia: "anterior", phase: "chronic", st: 0, axis: 0 },
+    "Necrosis anteroseptal establecida, aprendida de pacientes reales (PTB-XL).",
+    ["QS o pérdida de R en V1–V3", "ST resuelto o elevación residual leve", "El ECG no data el infarto"],
+    "vectorial",
+    "Latido aprendido de pacientes con infarto anteroseptal antiguo (PTB-XL); el ECG no data el infarto ni localiza la arteria.",
   ),
   p(
     "anterior",
@@ -758,7 +782,7 @@ export const TEXTBOOK_SEED = 1951;
  * the best), then the one the frozen analyzer measures closest to the programmed
  * QRS, with a measurable QT (docs/fidelidad.md, F3). The normal population keeps
  * the criteria-based choice above. */
-export const TEXTBOOK_SEEDS: Record<ModelCode, number> = { NORM: TEXTBOOK_SEED, CLBBB: 24, IRBBB: 34, LAFB: 225, LVH: 285 };
+export const TEXTBOOK_SEEDS: Record<ModelCode, number> = { NORM: TEXTBOOK_SEED, CLBBB: 15, CRBBB: 276, IRBBB: 201, LAFB: 9, LVH: 154, IMI: 52, ASMI: 105 };
 
 export function fromPreset(preset: Preset, view?: ECGCase["view"]): ECGCase {
   const c = cloneCase(DEFAULT_CASE);

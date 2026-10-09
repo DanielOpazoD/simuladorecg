@@ -404,3 +404,70 @@ sinusal (QT ausente en ≈ 2/3 de los BRI y HVI): es el límite conocido del
 analizador congelado, y las tarjetas muestran los valores del modelo. Las
 pruebas de los mecanismos de los núcleos (fuente ST secundaria, vector T
 primario, fixtures del analizador) corren sobre los núcleos.
+
+## F3.2 · BRD completo e infartos antiguos; más pacientes por clase
+
+**Más pacientes.** La cola post-T de 200 ms exigía que el fin de T + 200 ms no
+alcanzara la P siguiente: descartaba a un tercio de los pacientes con FC ≥ 90.
+Con 120 ms (la onda U cae casi entera en ese tramo) y tolerando ruido y deriva en
+las clases (la mediana los atenúa; los atípicos se descartan), todas crecen. El
+modelo normal no cambia (regeneración idéntica byte a byte).
+
+| Población | Pacientes F3.1 → F3.2 | Modos (varianza) |
+|---|---|---|
+| BRI (CLBBB) | 101 → 160 | 17 (0,95) |
+| BRD completo (CRBBB) | 44 → 60 | 19 (0,95) |
+| BRD incompleto (IRBBB) | 289 → 383 | 38 (0,98) |
+| HBAI (LAFB) | 294 → 406 | 41 (0,98) |
+| HVI (LVH) | 316 → 437 | 44 (0,99) |
+| Infarto inferior antiguo (IMI) | — → 499 | 50 (0,99) |
+| Infarto anteroseptal antiguo (ASMI) | — → 420 | 42 (0,98) |
+
+**Clases pequeñas.** Con n/10 modos el BRD completo explicaba el 84 % y perdía
+las muescas: ahora se admiten los modos del 95 % de la varianza (tope n/3) con una
+gaussiana conjunta contraída (Ledoit-Wolf). Aun así, las colas de una gaussiana
+sobre 60 pacientes heterogéneos producen mezclas que ningún paciente tiene (V1 con
+R' y T positiva): el clasificador reconocía el 73 % frente al 100 % de los reales.
+Una mezcla de 2 gaussianas no ayudó (77 %; con 3, un grupo de un solo paciente:
+descartada). El muestreo de esa clase se acota a 0,7 desviaciones (`sampleScale`
+en el modelo, medido: 0,8 → 86 %, 0,7 → 88 %, 0,65 → 93 %). WPW (22 pacientes)
+no da para un modelo honesto y sigue en núcleos.
+
+**Infarto antiguo.** La fase «crónica» de la lesión inferior (CD o Cx) y anterior
+usa la población de infarto antiguo correspondiente: ondas Q y repolarización de
+pacientes reales. Antes resolvía el ST sin Q de necrosis; en núcleos (otros
+territorios o combinaciones) sigue así. Presets nuevos: «Infarto inferior
+antiguo» y «Infarto anteroseptal antiguo» (entrada «Infarto antiguo»). El BRD
+completo pasa al latido aprendido con ST-T secundaria (como BRI); su preset pasa
+de eje 35° a 60°, cerca de la mediana de los BRD aislados (66°).
+
+**Pacientes de libro** (misma regla que F3.1, rehecha con los modelos nuevos):
+BRI 15, BRD 276, BRD incompleto 201, HBAI 9, HVI 154, IM inferior 52,
+IM anteroseptal 105.
+
+### Resultado
+
+Clasificador sobre el catálogo: 28 de 41 presets reconocidos (F3.1: 25 de 39).
+BRD 0,99; IM inferior antiguo 0,97 (como inferolateral, ILMI); IM anteroseptal
+antiguo 0,999.
+
+Poblaciones de 300 semillas con adquisición realista, frente a los pacientes
+reales de la reserva (pliegue 10) con el mismo umbral:
+
+| Clase | Sintéticos | Reales |
+|---|---|---|
+| BRI | 100 % | 96 % |
+| BRD completo | 88 % | 100 % |
+| BRD incompleto | 37 % | 40 % |
+| HBAI | 78 % | 61 % |
+| HVI | 62 % | 43 % |
+| IM inferior antiguo | 70 % | 25 % |
+| IM anteroseptal antiguo | 77 % | 59 % |
+
+Los infartos antiguos sintéticos se reconocen más que los reales: los pacientes
+etiquetados IMI en PTB-XL incluyen muchos con Q mínimas; los presets fijan QRS y
+eje, y el modelo excluye comorbilidades que enmascaran el patrón.
+
+**Pruebas nuevas:** rsR' y S terminal ancha (≥ 30 ms) del BRD; Q ≥ 30 ms en aVF
+y QS en III del infarto inferior; QS en V1–V2 del anteroseptal; analizador sobre
+los siete pacientes de libro (QRS ±10 ms, QT medible).

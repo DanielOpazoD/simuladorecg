@@ -312,6 +312,22 @@
     "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
   },
   {
+    "id": "old_inferior",
+    "nombre": "Infarto inferior antiguo",
+    "categoria": "Isquemia y ST",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Latido aprendido de pacientes con infarto inferior antiguo (PTB-XL); el ECG no data el infarto ni localiza la arteria."
+  },
+  {
+    "id": "old_anterior",
+    "nombre": "Infarto anteroseptal antiguo",
+    "categoria": "Isquemia y ST",
+    "estado": "aproximado",
+    "estrategia": "vectorial",
+    "limitacion": "Latido aprendido de pacientes con infarto anteroseptal antiguo (PTB-XL); el ECG no data el infarto ni localiza la arteria."
+  },
+  {
     "id": "anterior",
     "nombre": "Lesión anterior",
     "categoria": "Isquemia y ST",

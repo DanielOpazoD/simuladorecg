@@ -2,7 +2,8 @@
 import assert from 'node:assert/strict';
 const leads=['I','II','III','aVR','aVL','aVF','V1','V2','V3','V4','V5','V6'];
 export function assertRegionalSampleContract(mod) {
-  const c={...mod.fromPreset(mod.presetById('rbbb')),hr:60,variability:0,filter:'off',
+  // Historical kernel axis: the learned BRD preset moved to 60° (F3.2).
+  const c={...mod.fromPreset(mod.presetById('rbbb')),axis:35,hr:60,variability:0,filter:'off',
     pAmp:0,tAmp:0,st:0,qtc:600,ischemia:'none',electrolyte:'none'};
   const widths=[115,150,190,230], rows=[], signals=widths.map(qrs=>
     mod.synthesize({...c,qrs,activationModel:'regional-rbbb-v1'},10));
