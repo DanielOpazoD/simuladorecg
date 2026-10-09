@@ -21,5 +21,8 @@ const build=identity();
 export default defineConfig({
  define:{__ECG_BUILD_PROVENANCE__:JSON.stringify({appVersion:build.packageVersion,commit:build.commit,sourceSha256:build.sourceSha256,analysisSourceSha256:build.analysisSourceSha256,dirty:build.dirty})},
  server:{host:'0.0.0.0',allowedHosts:['terminal.local']},
+ // Module workers (already created with type 'module'): the signal worker loads
+ // each learned class model as its own chunk on demand.
+ worker:{format:'es'},
  plugins:[{name:'ecg-build-identity',generateBundle(){this.emitFile({type:'asset',fileName:'build-info.json',source:JSON.stringify(build,null,2)});}}],
 });

@@ -9,12 +9,16 @@ import { regionalActivationState, regionalActivationTimeline, usesRegionalActiva
 import { usesRealisticBase } from '../engine/realistic/scope';
 import type * as LearnedEngine from '../engine/realistic/engine';
 
-// The learned model (~400 KB) lives in the signal worker; the main thread loads
-// it only when the activation lab needs a learned-base loop.
+// The learned models live in the signal worker; the main thread loads them only
+// when the activation lab needs a learned-base loop. The lab compares conduction
+// alternatives, so it loads every class model at once.
 let learned: typeof LearnedEngine | null = null;
 export const learnedModelReady = () => learned !== null;
 export async function ensureLearnedModel(): Promise<void> {
-  learned ??= await import('../engine/realistic/engine');
+  if (learned) return;
+  const [engine, models] = await Promise.all([import('../engine/realistic/engine'), import('../engine/realistic/models')]);
+  await models.ensureAllShapeModels();
+  learned = engine;
 }
 
 export interface ActivationTrace {
@@ -75,15 +79,15 @@ export function activationTiming(c: ECGCase, b: Beat) {
   const deltaDurationMs = c.conduction === 'wpw' && b.kind === 'normal' ? WPW_DELTA_SECONDS * 1000 : null;
   const learned = b.kind === 'normal' && !regional && usesRealisticBase(c);
   const applied = b.kind !== 'normal' ? 'ventricular-source' : regional ? state.model : 'template';
-  const label = learned ? 'Latido aprendido (PTB-XL)' : regional ? (state.model === 'regional-lbbb-v1' ? 'BRI regional · experimental' : 'BRD regional · experimental') : state.requested ? 'Regional no aplicado'
-    : b.kind !== 'normal' ? 'Fuente ventricular' : deltaDurationMs ? 'Plantilla histórica + delta' : 'Plantilla histórica';
-  const note = learned
+  const label = regional ? (state.model === 'regional-lbbb-v1' ? 'BRI regional · experimental' : 'BRD regional · experimental') : state.requested ? 'Regional no aplicado'
+    : learned ? 'Latido aprendido (PTB-XL)' : b.kind !== 'normal' ? 'Fuente ventricular' : deltaDurationMs ? 'Plantilla histórica + delta' : 'Plantilla histórica';
+  const note = learned && !state.requested
     ? 'Vector cardiaco del QRS aprendido de ECG reales (PTB-XL), proyectado con Dower. Los pacientes cambian con la semilla; el eje y las amplitudes siguen los controles del caso.'
     : b.kind !== 'normal'
     ? 'Este latido usa su fuente ventricular, no el reloj regional de los latidos conducidos. El perfil puede imponer un QRS mínimo.'
     : regional && state.model === 'regional-lbbb-v1' ? 'Base inicial VD/septal fija y bases VI diferidas. Son soportes de ingeniería, no mapa anatómico ni predicción de resincronización.'
     : regional ? 'Reloj septal/VI fijo; el soporte VD va de 55 ms al final del QRS. Son bases de ingeniería, no tiempos anatómicos medidos.'
-      : state.requested ? `${state.reason} Se usa la plantilla histórica, conservando la selección solicitada.`
+      : state.requested ? `${state.reason} Se usa ${learned ? 'el latido aprendido (PTB-XL)' : 'la plantilla histórica'}, conservando la selección solicitada.`
         : 'Al variar QRS se estiran conjuntamente las bases temporales de la plantilla.';
   return { requested: c.activationModel ?? 'template', applied, label, deltaDurationMs,
     note: deltaDurationMs ? `${note} Delta sintética adicional: 0–${deltaDurationMs} ms fijos, incluida en XYZ y en las doce derivaciones; no localiza una vía accesoria. ${WPW_REPOLARIZATION_LIMIT}` : note,

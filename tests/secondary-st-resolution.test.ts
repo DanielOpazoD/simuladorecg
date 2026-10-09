@@ -6,7 +6,7 @@ import {analyzeSamples} from '../src/engine/sample-analysis';
 import {synthesize} from '../src/engine/signal';
 import {project} from '../src/engine/leads';
 const cases=['lbbb','rbbb','irbbb','vvi','pvc','vt','idioventricular'];
-function setup(id:string){const c={...fromPreset(presetById(id)!),filter:'off' as const,variability:0,hr:60,atrialRate:60,qtc:600,pAmp:0,tAmp:0,st:0};c.artifacts={...c.artifacts,baseline:0,muscle:0,mains:0,loose:0};const s=synthesize(c,10),b=s.events.beats.find(b=>b.time>3&&(id!=='pvc'||b.kind==='pvc'))!;return{c,s,b};}
+function setup(id:string){const c={...fromPreset(presetById(id)!),filter:'off' as const,variability:0,hr:60,atrialRate:60,qtc:600,pAmp:0,tAmp:0,st:0};c.artifacts={...c.artifacts,baseline:0,muscle:0,mains:0,loose:0};const s=synthesize(c,10,{learnedBase:false}),b=s.events.beats.find(b=>b.time>3&&(id!=='pvc'||b.kind==='pvc'))!;return{c,s,b};}
 describe('Represented secondary ST source',()=>{
  it.each(cases)('%s has a nonzero discordant ST vector independent of T amplitude',id=>{
   const{c,b}=setup(id),k=qrsKernels(c,b),a=secondaryRepolarization(c,b,k),t=secondaryRepolarization({...c,tAmp:.56},b,k);
@@ -18,7 +18,7 @@ describe('Represented secondary ST source',()=>{
  });
  it('retains both true PVCs when ST connects a late/early pair of slope candidates',()=>{
   const c={...fromPreset(presetById('couplet')!),hr:60,coupling:.35,filter:'off' as const,variability:0,seed:29};
-  Object.assign(c.artifacts,{baseline:0,muscle:0,mains:0,loose:0});const s=synthesize(c,10),m=analyzeSamples({fs:s.fs,leads:s.leads});
+  Object.assign(c.artifacts,{baseline:0,muscle:0,mains:0,loose:0});const s=synthesize(c,10,{learnedBase:false}),m=analyzeSamples({fs:s.fs,leads:s.leads});
   const pvc=s.events.beats.filter(b=>b.kind==='pvc'&&b.time>1&&b.time<9);
   expect(pvc).toHaveLength(2);
   const matched=new Set<number>();
@@ -32,7 +32,7 @@ describe('Represented secondary ST source',()=>{
  it.each(['lbbb','rbbb','vvi'])('%s renders measurable ST with T=0 and scales it with the QRS source',id=>{
   const{c,s,b}=setup(id),i=Math.round((b.time+b.qrs!+.06)*s.fs),source=secondaryRepolarization(c,b,qrsKernels(c,b));
   const expected=project(source.st!);
-  const gain=synthesize({...c,qrsAmp:c.qrsAmp*2},10);
+  const gain=synthesize({...c,qrsAmp:c.qrsAmp*2},10,{learnedBase:false});
   for(const l of ['I','II','V1','V5'] as const){expect(Math.sign(s.leads[l][i])).toBe(Math.sign(expected[l]));expect(Math.abs(s.leads[l][i])).toBeGreaterThan(.001);expect(gain.leads[l][i]).toBeCloseTo(2*s.leads[l][i],10);}
   expect(gain.events).toEqual(s.events);
  });

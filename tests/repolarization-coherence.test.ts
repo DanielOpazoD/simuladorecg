@@ -7,11 +7,14 @@ import {synthesize} from '../src/engine/signal';
 import {qrsKernels,tVector} from '../src/engine/morphology';
 import {controls} from '../src/ui/controls';
 import {secondaryRepolarization} from '../src/engine/secondary-repolarization';
+// Kernel mechanics (secondary ST source, primary T vector): the learned classes
+// of F3 have their own contracts in tests/realistic-signal.test.ts.
+const KERNELS={learnedBase:false};
 const families=['lbbb','rbbb','irbbb','vvi','pvc','vt','wpw'];
 function setup(id:string):{c:ECGCase;b:Beat}{
   const c=fromPreset(presetById(id)!);
   Object.assign(c,{hr:60,atrialRate:60,variability:0,filter:'off',qtc:600,ischemia:'none',electrolyte:'none',st:0});
-  const s=synthesize(c,10), b=s.events.beats.find(b=>b.time>2&&(id!=='pvc'||b.kind==='pvc'))!;
+  const s=synthesize(c,10,KERNELS), b=s.events.beats.find(b=>b.time>2&&(id!=='pvc'||b.kind==='pvc'))!;
   assert.ok(b); return {c,b};
 }
 function close(actual:number,expected:number,label:string){assert.ok(Math.abs(actual-expected)<1e-12,`${label}: ${actual} != ${expected}`);}
@@ -40,8 +43,8 @@ describe('A02/A03: independent components, one final T vector',()=>{
       assert.throws(()=>tVector({...c,electrolyte:'hypokalemia',ischemia:'anterior',phase:'evolving',st:1},b),/fuera de alcance/);
     });
     it(`${id}: rendered hypokalemic T has the same .4 response, not only a helper value`,()=>{
-      const {c}=setup(id),a=synthesize(c,10),a0=synthesize({...c,tAmp:0},10),
-        h=synthesize({...c,electrolyte:'hypokalemia'},10),h0=synthesize({...c,electrolyte:'hypokalemia',tAmp:0},10);
+      const {c}=setup(id),a=synthesize(c,10,KERNELS),a0=synthesize({...c,tAmp:0},10,KERNELS),
+        h=synthesize({...c,electrolyte:'hypokalemia'},10,KERNELS),h0=synthesize({...c,electrolyte:'hypokalemia',tAmp:0},10,KERNELS);
       assert.deepEqual(a.events,h.events);
       let response=0;
       for(const l of LEADS)for(let i=0;i<a.leads[l].length;i++){
@@ -54,7 +57,7 @@ describe('A02/A03: independent components, one final T vector',()=>{
   for(const id of ['lbbb','vvi','vt','idioventricular','complete_v','wpw'])
     it(`${id}: renders the secondary ST component with T amplitude zero`,()=>{
       const {c,b}=setup(id);c.tAmp=0;c.pAmp=0;
-      const s=synthesize(c,10),i=Math.round((b.time+b.qrs!+.060)*s.fs);
+      const s=synthesize(c,10,KERNELS),i=Math.round((b.time+b.qrs!+.060)*s.fs);
       assert.notEqual(secondaryRepolarization(c,b,qrsKernels(c,b)).st,null);
       assert.ok(Math.max(...LEADS.map(l=>Math.abs(s.leads[l][i])))>.005,"ST60 must be represented");
     });
@@ -73,7 +76,7 @@ describe('A02/A03: independent components, one final T vector',()=>{
   it('primary lesion remains distinct from the secondary ST mechanism',()=>{
     const {c,b}=setup('lbbb'),p={...c,ischemia:'anterior' as const,phase:'acute' as const,st:2};
     assert.deepEqual(secondaryRepolarization(c,b,qrsKernels(c,b)).st,secondaryRepolarization(p,b,qrsKernels(p,b)).st);
-    const a=synthesize({...c,tAmp:0,pAmp:0},10),z=synthesize({...p,tAmp:0,pAmp:0},10);
+    const a=synthesize({...c,tAmp:0,pAmp:0},10,KERNELS),z=synthesize({...p,tAmp:0,pAmp:0},10,KERNELS);
     assert.deepEqual(a.events,z.events);
     assert.ok(Math.abs(a.leads.V2[Math.round((b.time+b.qrs!+.06)*a.fs)]-z.leads.V2[Math.round((b.time+b.qrs!+.06)*z.fs)])>.01);
   });

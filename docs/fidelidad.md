@@ -316,6 +316,72 @@ ECG normales reales de la reserva; en el sinusal de F2.2 lo mide en 8 de 60 (ant
 con una P de inicio abrupto, en 17 de 60: más fácil que la realidad). La P nueva
 es tan sutil como la real; por eso las tarjetas muestran los valores del modelo.
 
-El paciente de libro pasa a la semilla 2822 (P bifásica visible en V1,
+El paciente de libro pasa a la semilla 1951 (P bifásica visible en V1,
 terminal negativa pequeña). Las pruebas de analizador que usaban el sinusal como
 fijación pasan al modelo de núcleos, como las demás del analizador congelado.
+
+## F3.1 · Conducción e hipertrofia con modelos por clase
+
+Cada trastorno se aprende de sus propios pacientes de PTB-XL (pliegues 1–8, ritmo
+sinusal, sin diagnósticos que cambien la morfología; `build_shape_model.py
+--class CODE`), con la misma segmentación por fases y referencia TP que el
+normal. La cola post-T se acorta a 200 ms en las clases (QRS y QT más largos
+dejan menos TP) y se toleran registros con deriva (la mediana la atenúa).
+
+| Población | Pacientes | Modos (varianza) | QRS mediano | Eje mediano |
+|---|---|---|---|---|
+| BRI (CLBBB) | 101 | 10 (0,91) | 156 ms | −23° |
+| BRD incompleto (IRBBB) | 289 | 29 (0,97) | 100 ms | 8° |
+| HBAI (LAFB) | 294 | 29 (0,97) | 100 ms | −49° |
+| HVI (LVH) | 316 | 31 (0,98) | 96 ms | 21° |
+
+Clases con muy pocos pacientes (BRD completo 44, WPW 20) y los infartos antiguos
+(IMI 328, ASMI 287, que necesitan presets nuevos) quedan para F3.2.
+
+**Producto.** `realisticModelFor(c)` (scope.ts) elige la población: conducción
+normal → NORM, BRI → CLBBB, BRD incompleto → IRBBB, HBAI → LAFB, sobrecarga VI con
+conducción normal → LVH. Una población es un latido completo: no se apilan
+modificadores entre poblaciones (HVI con BRI sigue en núcleos hasta tener un
+modelo conjunto). Cada modelo de clase es un trozo aparte que el worker carga
+la primera vez que un caso lo usa (`models.ts`); el sinusal normal no descarga
+nada nuevo. Un modelo no cargado falla de forma explícita, nunca cae en otra
+población.
+
+**Repolarización secundaria.** En BRI, BRD incompleto y HVI la ST-T es la del
+paciente: el control de eje de T sigue inactivo y sin efecto (como en los
+núcleos), y la ganancia del QRS escala también la ST-T, de modo que las razones
+ST/QRS (Sgarbossa) se conservan. En el HBAI la T es primaria y el control actúa.
+El preset de HVI ya no multiplica el voltaje (×1,5) ni fija la T (160°): ambos
+salen de la población.
+
+**Paciente de libro por clase.** Se exportaron 300 semillas de cada preset y se
+eligió la que el clasificador diagnóstico (entrenado solo con pacientes reales)
+reconoce con más certeza: BRD incompleto 148, HBAI 225, HVI 283; el BRI conserva
+1951 (todas reconocidas con p = 1,00).
+
+### Resultado
+
+Clasificador diagnóstico sobre el catálogo: 25 de 39 presets reconocidos
+(F2.2: 24). BRI 1,00; BRD incompleto 0,985 (antes lo llamaba BRD completo);
+HBAI 0,999; HVI 0,981 (con «isquemia/sobrecarga» 0,96).
+
+Sobre poblaciones (300 semillas por clase, presets con sus QRS y ejes fijos)
+frente a los pacientes reales de la reserva (pliegue 10) con el mismo umbral:
+
+| Clase | Reconocidos, sintéticos | Reconocidos, reales |
+|---|---|---|
+| BRI | 100 % | 96 % |
+| BRD incompleto | 27 % | 40 % |
+| HBAI | 77 % | 61 % |
+| HVI | 61 % | 43 % |
+
+Las tasas sintéticas quedan en el rango de las reales: la clase aprendida trae la
+misma mezcla de casos claros y limítrofes que los pacientes. Las diferencias
+vienen de fijar QRS y eje por preset (los reales los varían).
+
+**Pruebas.** Criterios de libro medidos en las muestras de cada preset (BRI:
+QS/rS en V1 y ST-T discordante; BRD incompleto: r' terminal en V1; HBAI: eje
+≤ −45°, qR en aVL, rS inferior con S III > S II; HVI: Sokolow-Lyon ≥ 3,5 mV y
+sobrecarga lateral) y la linealidad exacta de la ST-T secundaria con el QRS. Las
+pruebas de los mecanismos de los núcleos (fuente ST secundaria, vector T
+primario, fixtures del analizador) corren sobre los núcleos.

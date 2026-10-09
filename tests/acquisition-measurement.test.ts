@@ -25,12 +25,13 @@ describe('known display filtering cannot promote measurement confidence',()=>{
 it('the actual worker applies known acquisition scope after sample-only analysis',async()=>{
  const {vi}=await import('vitest');
  const messages:unknown[]=[];
- const worker={postMessage:(value:unknown)=>messages.push(value),onmessage:null as unknown as (event:MessageEvent)=>void};
+ const worker={postMessage:(value:unknown)=>messages.push(value),onmessage:null as unknown as (event:MessageEvent)=>Promise<void>};
  vi.stubGlobal('self',worker);
  try{
   await import('../src/engine/worker');
   for(const filter of ['diagnostic','monitor','aggressive'] as const){
-   worker.onmessage({data:{id:1,ecg:{...cloneCase(DEFAULT_CASE),filter},duration:10}} as MessageEvent);
+   // The worker awaits the case's learned model before synthesizing.
+   await worker.onmessage({data:{id:1,ecg:{...cloneCase(DEFAULT_CASE),filter},duration:10}} as MessageEvent);
    const response=messages.at(-1) as {measurement:ReturnType<typeof raw>;error?:string};
    expect(response.error).toBeUndefined();
    expect(response.measurement.evidence.hr.status).toBe(filter==='diagnostic'?'usable':filter==='monitor'?'review':'unavailable');

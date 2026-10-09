@@ -1,10 +1,13 @@
 import { applyAcquisitionScope } from "./acquisition-measurement";
 import { synthesize } from "./signal";
+import { ensureCaseModel } from "./realistic/models";
 import { analyzeSamples } from "./sample-analysis";
 import type { SignalRequest, SignalResponse } from "./protocol";
-self.onmessage = (event: MessageEvent<SignalRequest>) => {
+self.onmessage = async (event: MessageEvent<SignalRequest>) => {
   const { id, ecg, duration } = event.data;
   try {
+    // A class model (bundle-branch block, LVH…) is a separate chunk loaded once.
+    await ensureCaseModel(ecg);
     const signal = synthesize(ecg, duration),
       measurement = applyAcquisitionScope(analyzeSamples({ fs: signal.fs, leads: signal.leads }), ecg.filter);
     const response: SignalResponse = { id, signal, measurement };

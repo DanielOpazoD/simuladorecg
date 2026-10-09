@@ -4,7 +4,7 @@
 // "ideal" desactiva el ruido de adquisición para aislar la morfología.
 // Escribe <dir>/index.json y un .f32 por ECG (5000 × 12, mV, orden de LEADS).
 import { build } from "esbuild";
-import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile, rm, readdir, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -21,7 +21,8 @@ await build({
   stdin: {
     contents: `export { synthesize } from "./src/engine/signal.ts";
 export { PRESETS, fromPreset } from "./src/presets/catalog.ts";
-export { LEADS } from "./src/engine/lead-registry.ts";`,
+export { LEADS } from "./src/engine/lead-registry.ts";
+export { registerShapeModel } from "./src/engine/realistic/shape-model.ts";`,
     resolveDir: root,
     loader: "ts",
   },
@@ -31,8 +32,13 @@ export { LEADS } from "./src/engine/lead-registry.ts";`,
   outfile: bundle,
   logLevel: "error",
 });
-const { synthesize, PRESETS, fromPreset, LEADS } = await import(pathToFileURL(bundle).href);
+const { synthesize, PRESETS, fromPreset, LEADS, registerShapeModel } = await import(pathToFileURL(bundle).href);
 await rm(tmp, { recursive: true, force: true });
+// Modelos por clase: en la app los carga el worker bajo demanda (import.meta.glob);
+// aquí se registran desde el disco.
+const modelsDir = path.join(root, "src/engine/realistic/models");
+for (const f of await readdir(modelsDir))
+  if (f.endsWith(".json")) registerShapeModel(f.slice(0, -5), JSON.parse(await readFile(path.join(modelsDir, f), "utf8")));
 
 // Población "normal" para dar al motor su mejor oportunidad: los intervalos, el eje
 // y las amplitudes recorren rangos de adultos sanos. Determinista por índice.

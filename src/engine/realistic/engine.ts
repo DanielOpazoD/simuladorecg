@@ -13,20 +13,33 @@ import { addAtrial, addVentricular, beatShapeState, beatTemplate, qrsOnsetLevel,
 const P_REFERENCE_AMPLITUDE = 0.15;
 /** Horizontal heart rotation per unit of the transition control (degrees). */
 export const TRANSITION_DEG = 18;
+import { learnedSecondaryRepolarization, realisticModelFor } from "./scope";
 export { usesRealisticBase } from "./scope";
+
+/** Whether the case's learned T keeps the patient's own axis (not the control). */
+export function naturalTAxis(c: ECGCase): boolean {
+  const model = realisticModelFor(c);
+  return model !== null && (c.naturalTAxis !== false || learnedSecondaryRepolarization(model));
+}
 
 const patients = new Map<string, Patient>();
 /** The seed defines the person; case controls act as exact transforms on it
  * (time warping, heart rotation, per-wave gain), so moving one control never
  * reshapes an unrelated wave. */
 export function realisticPatient(c: ECGCase): Patient {
-  const pAxis = c.naturalPAxis === false ? c.pAxis : null, tAxis = c.naturalTAxis === false ? c.tAxis : null;
-  const key = [c.seed, c.axis, pAxis, tAxis, c.pAmp, qrsAmplitudeScale(c), c.tAmp, c.transition].join("|");
+  const model = realisticModelFor(c);
+  if (!model) throw new Error("El caso no usa el modelo aprendido.");
+  const pAxis = c.naturalPAxis === false ? c.pAxis : null;
+  const tAxis = naturalTAxis(c) ? null : c.tAxis;
+  const key = [model, c.seed, c.axis, pAxis, tAxis, c.pAmp, qrsAmplitudeScale(c), c.tAmp, c.transition].join("|");
   let p = patients.get(key);
   if (!p) {
     p = samplePatient({
-      seed: c.seed, axis: c.axis, pAxis, tAxis,
-      pScale: c.pAmp / P_REFERENCE_AMPLITUDE, qrsScale: qrsAmplitudeScale(c), tScale: c.tAmp / T_REFERENCE_AMPLITUDE,
+      model, seed: c.seed, axis: c.axis, pAxis, tAxis,
+      pScale: c.pAmp / P_REFERENCE_AMPLITUDE, qrsScale: qrsAmplitudeScale(c),
+      // Secondary repolarization (bundle-branch block, LVH strain) follows the
+      // depolarization: the QRS gain also scales ST-T, so ST/QRS ratios hold.
+      tScale: (c.tAmp / T_REFERENCE_AMPLITUDE) * (learnedSecondaryRepolarization(model) ? qrsAmplitudeScale(c) : 1),
       horizontalDeg: TRANSITION_DEG * c.transition,
     });
     if (patients.size > 64) patients.clear();

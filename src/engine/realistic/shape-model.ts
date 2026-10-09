@@ -21,6 +21,7 @@ const NL = MODEL_LEADS.length;
 
 export interface PhaseLayout { name: PhaseName; points: number; offset: number }
 export interface ShapeModel {
+  code: ModelCode;
   k: number;
   dim: number;
   points: number;
@@ -47,27 +48,42 @@ function decodeInt16(b64: string): Int16Array {
   return new Int16Array(bytes.buffer);
 }
 
-let cached: ShapeModel | null = null;
-export function shapeModel(): ShapeModel {
-  if (cached) return cached;
-  const k = raw.components, mean = decodeFloat32(raw.mean), dim = mean.length;
-  const b16 = decodeInt16(raw.basis), basis = new Float64Array(k * dim), basisScale = decodeFloat32(raw.basisScale);
+/** Learned populations: the normal sinus beat (always bundled) and per-diagnosis
+ * classes that the signal worker loads on demand (models.ts). */
+export type ModelCode = "NORM" | "CLBBB" | "IRBBB" | "LAFB" | "LVH";
+export type RawShapeModel = typeof raw;
+const registry = new Map<ModelCode, ShapeModel>();
+
+function decode(code: ModelCode, r: RawShapeModel): ShapeModel {
+  const k = r.components, mean = decodeFloat32(r.mean), dim = mean.length;
+  const b16 = decodeInt16(r.basis), basis = new Float64Array(k * dim), basisScale = decodeFloat32(r.basisScale);
   for (let i = 0; i < k; i++)
     for (let j = 0; j < dim; j++) basis[i * dim + j] = b16[i * dim + j] * basisScale[i];
   const phases = {} as Record<PhaseName, PhaseLayout>;
   let offset = 0;
-  for (const p of raw.phases) {
+  for (const p of r.phases) {
     phases[p.name as PhaseName] = { name: p.name as PhaseName, points: p.points, offset };
     offset += p.points;
   }
-  if (offset * NL !== dim) throw new Error("Modelo de forma inconsistente.");
-  cached = {
-    k, dim, points: offset, phases, postMs: raw.postMs, preMs: raw.preMs, mean, basis,
-    names: raw.joint.names, jointMean: Float64Array.from(raw.joint.mean),
-    jointCov: Float64Array.from(raw.joint.cov), population: raw.population,
-    mixture: { weights: raw.mixture.weights, means: decodeFloat32(raw.mixture.means), cholesky: decodeFloat32(raw.mixture.cholesky) },
+  if (offset * NL !== dim || !Array.from({ length: k }, (_, i) => `z${i}`).every((z) => r.joint.names.includes(z))) throw new Error(`Modelo de forma ${code} inconsistente.`);
+  return {
+    code, k, dim, points: offset, phases, postMs: r.postMs, preMs: r.preMs, mean, basis,
+    names: r.joint.names, jointMean: Float64Array.from(r.joint.mean),
+    jointCov: Float64Array.from(r.joint.cov), population: r.population,
+    mixture: { weights: r.mixture.weights, means: decodeFloat32(r.mixture.means), cholesky: decodeFloat32(r.mixture.cholesky) },
   };
-  return cached;
+}
+export function registerShapeModel(code: ModelCode, r: RawShapeModel): void {
+  if (!registry.has(code)) registry.set(code, decode(code, r));
+}
+export const hasShapeModel = (code: ModelCode) => code === "NORM" || registry.has(code);
+export function shapeModel(code: ModelCode = "NORM"): ShapeModel {
+  if (code === "NORM" && !registry.has(code)) registerShapeModel(code, raw);
+  const m = registry.get(code);
+  // Callers load class models first (ensureShapeModel); never fall back silently
+  // to another population, which would change the trace without notice.
+  if (!m) throw new Error(`El modelo aprendido ${code} no está cargado.`);
+  return m;
 }
 
 /** Mean + basisᵀ·z, in the (point, lead) layout. */
@@ -244,6 +260,8 @@ export function phaseMagnitude(m: ShapeModel, x: Float64Array, names: PhaseName 
 }
 
 export interface PatientTargets {
+  /** Learned population the patient is drawn from (default: normal sinus). */
+  model?: ModelCode;
   seed: number;
   /** Frontal axes (degrees, net area) of QRS, P and T; null for P or T keeps the
    * patient's own axis relative to the QRS (it turns with the heart). */
@@ -355,18 +373,18 @@ export function samplePatient(t: PatientTargets): Patient {
   // cannot carry an axis control reliably. The choice depends only on the seed
   // and the horizontal rotation, never on the requested axes: moving an axis
   // control rotates the same person.
-  const m = shapeModel();
+  const m = shapeModel(t.model);
   let chosen = 0, bestMargin = -1;
   for (let attempt = 0; attempt < 16; attempt++) {
-    const margin = axisMargin(m, reconstruct(m, candidateZ(t.seed, attempt).z), t.horizontalDeg);
+    const margin = axisMargin(m, reconstruct(m, candidateZ(m, t.seed, attempt).z), t.horizontalDeg);
     if (margin > bestMargin) { chosen = attempt; bestMargin = margin; }
     if (margin >= MIN_AXIS_MARGIN) break;
   }
-  return sampleCandidate(t, chosen);
+  return sampleCandidate(m, t, chosen);
 }
 
-function candidateZ(seed: number, attempt: number) {
-  const m = shapeModel(), rng = random(((seed ^ 0x5eed1e) + attempt * 0x9e3779b9) >>> 0);
+function candidateZ(m: ShapeModel, seed: number, attempt: number) {
+  const rng = random(((seed ^ 0x5eed1e) + attempt * 0x9e3779b9) >>> 0);
   // The person depends only on the seed: one draw from the population mixture.
   const { weights, means, cholesky } = m.mixture, M = m.names.length;
   let u = rng(), c = 0;
@@ -382,9 +400,9 @@ function candidateZ(seed: number, attempt: number) {
   return { s, z: Float64Array.from({ length: m.k }, (_, i) => s[`z${i}`]) };
 }
 
-function sampleCandidate(t: PatientTargets, attempt: number): Patient {
-  const m = shapeModel(), pop = m.population.magnitudesP50;
-  const { s, z } = candidateZ(t.seed, attempt);
+function sampleCandidate(m: ShapeModel, t: PatientTargets, attempt: number): Patient {
+  const pop = m.population.magnitudesP50;
+  const { s, z } = candidateZ(m, t.seed, attempt);
   const base = reconstruct(m, z);
   const rotations = {} as Record<PhaseName, Mat3>;
   const achieved = { p: 0, qrs: 0, t: 0 };
