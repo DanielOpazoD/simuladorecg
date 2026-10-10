@@ -493,25 +493,53 @@ describe("F5.3: extrasístoles ventriculares aprendidas de PTB-XL", () => {
 });
 
 describe("F5.2: ondas F del flutter aprendidas (Georgia + PTB-XL)", () => {
-  it("periódicas al ciclo auricular del caso y ancladas a la fase del QRS del paciente", async () => {
-    const { addFlutterWaves, flutterPatient } = await import("../src/engine/realistic/atrial-flutter");
-    const fs = 1000, acc = Array.from({ length: 8 }, () => new Float64Array(6 * fs)), p = flutterPatient(46);
-    addFlutterWaves(acc, fs, 46, 300, 0.4);
-    for (let i = 500; i < 5000; i += 37) expect(acc[1][i + 200]).toBeCloseTo(acc[1][i], 9); // 300/min → 200 ms
-    // At the conducted QRS time the wave is at the patient's QRS phase.
-    const B = p.cycle.length / 8, k = Math.round(p.qrsPhase * B) % B;
-    expect(Math.abs(acc[1][400] - p.cycle[k * 8 + 1])).toBeLessThan(0.02);
-    expect(p.qrsPhase).toBeGreaterThanOrEqual(0);
-    expect(p.qrsPhase).toBeLessThan(1);
+  it("periódicas al ciclo auricular del caso, a distintas frecuencias", async () => {
+    const { addFlutterWaves } = await import("../src/engine/realistic/atrial-flutter");
+    for (const rate of [240, 250]) { // cycles of 250 and 240 ms: whole samples at 1 kHz
+      const fs = 1000, cl = Math.round((60 / rate) * fs), acc = Array.from({ length: 8 }, () => new Float64Array(6 * fs));
+      addFlutterWaves(acc, fs, 39, rate, 0.45);
+      for (let i = 500; i < 4500; i += 37) expect(acc[1][i + cl]).toBeCloseTo(acc[1][i], 2);
+      let diff = 0;
+      for (let i = 500; i < 4500; i += 37) diff = Math.max(diff, Math.abs(acc[1][i + Math.round(0.2 * fs)] - acc[1][i]));
+      expect(diff).toBeGreaterThan(0.02); // not a fixed 200 ms cycle
+    }
   });
-  it("el flutter 3:1 de libro muestra ondas F en II entre complejos (típico: negativas)", () => {
-    const s = synthesize(load("flutter3"), 10), beats = s.events.beats;
-    let lo = Infinity, hi = -Infinity;
-    for (let k = 1; k < beats.length; k++)
-      for (let i = Math.round((beats[k - 1].time + beats[k - 1].qt! + 0.02) * s.fs); i < Math.round((beats[k].time - 0.03) * s.fs); i++) {
-        lo = Math.min(lo, s.leads.II[i]); hi = Math.max(hi, s.leads.II[i]);
+  it("en el trazado, la onda F entre complejos es el ciclo del paciente, anclado a la mitad del QRS", async () => {
+    const { flutterPatient } = await import("../src/engine/realistic/atrial-flutter");
+    const c = { ...load("flutter3"), acquisition: "ideal" as const }, s = synthesize(c, 10), p = flutterPatient(c.seed);
+    const cl = 60 / c.atrialRate, b = s.events.beats, B = p.cycle.length / 8;
+    const cycleII = (phase: number) => {
+      const x = (((phase % 1) + 1) % 1) * B, j = Math.floor(x) % B, f = x - Math.floor(x);
+      return p.cycle[j * 8 + 1] * (1 - f) + p.cycle[((j + 1) % B) * 8 + 1] * f;
+    };
+    // Free segments: after each T and before the next QRS.
+    const samples: [number, number][] = [];
+    for (let q = 1; q < b.length; q++)
+      for (let i = Math.round((b[q - 1].time + b[q - 1].qt! + 0.03) * s.fs); i < Math.round((b[q].time - 0.03) * s.fs); i++)
+        samples.push([i / s.fs, s.leads.II[i]]);
+    const mean = samples.reduce((a, [, y]) => a + y, 0) / samples.length;
+    const t0 = b[0].time + b[0].qrs! / 2 - p.qrsPhase * cl;
+    const rms = (delta: number) => Math.sqrt(samples.reduce((a, [t, y]) => a + (y - mean - cycleII((t - t0) / cl + delta)) ** 2, 0) / samples.length);
+    let best = 0;
+    for (let d = -0.25; d <= 0.25 + 1e-9; d += 0.0125) if (rms(d) < rms(best)) best = d;
+    expect(Math.abs(best)).toBeLessThanOrEqual(0.0125);
+    // And the learned cycle explains the free signal (not the historical sawtooth).
+    const total = Math.sqrt(samples.reduce((a, [, y]) => a + (y - mean) ** 2, 0) / samples.length);
+    expect(rms(0)).toBeLessThan(0.5 * total);
+  });
+  it("el flutter 3:1 de libro muestra ondas F negativas en II entre complejos, distintas del diente de sierra histórico", () => {
+    const c = load("flutter3"), s = synthesize(c, 10), k = synthesize(c, 10, { learnedBase: false }), beats = s.events.beats;
+    let lo = Infinity, hi = -Infinity, base = 0, nb = 0;
+    for (let i = 0; i < s.leads.II.length; i++) { base += s.leads.II[i]; nb++; }
+    base /= nb;
+    for (let q = 1; q < beats.length; q++)
+      for (let i = Math.round((beats[q - 1].time + beats[q - 1].qt! + 0.02) * s.fs); i < Math.round((beats[q].time - 0.03) * s.fs); i++) {
+        lo = Math.min(lo, s.leads.II[i] - base); hi = Math.max(hi, s.leads.II[i] - base);
       }
     expect(hi - lo).toBeGreaterThan(0.15);
+    expect(-lo).toBeGreaterThan(hi); // typical counter-clockwise: negative in II
+    expect(Array.from(s.leads.II)).not.toEqual(Array.from(k.leads.II));
     expect(fromPreset(presetById("flutter")!).seed).toBe(TEXTBOOK_FLUTTER_SEED);
   });
 });
+

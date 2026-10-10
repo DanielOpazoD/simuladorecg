@@ -236,7 +236,8 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
     : null;
   if (track && c.rhythm === "af") addFibrillationWaves(track.acc, FS, c.seed);
   else if (track && c.rhythm === "flutter" && events.beats.length)
-    addFlutterWaves(track.acc, FS, c.seed, c.atrialRate, events.beats[0].time);
+    // The learned phase refers to the QRS energy peak (≈ its middle), not its onset.
+    addFlutterWaves(track.acc, FS, c.seed, c.atrialRate, events.beats[0].time + qrsDuration(c, events.beats[0]) / 2);
   else if (c.rhythm === "af" || c.rhythm === "flutter" || c.rhythm === "vf") {
     const r = random(c.seed + 11);
     let phase = 0,

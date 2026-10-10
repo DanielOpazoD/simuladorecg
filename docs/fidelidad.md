@@ -616,31 +616,40 @@ automáticas cambian de morfología (ahora un paciente real) sin aviso propio.
   registros, más que la FA) resultó ser en su mayoría fibrilación auricular a la
   vista: se descartó.
 - Georgia (PhysioNet Challenge 2021, CC BY 4.0): 171 flutter sin FA (bajados y
-  verificados con SHA-256); con PTB-XL (pliegues 1–8), 28 pacientes con FC ≤ 100
+  verificados con SHA-256); con PTB-XL (pliegues 1–8), 29 pacientes con FC ≤ 100
   (conducción 3:1, 4:1 o variable) cuya onda plegada explica ≥ 20 % de la señal
-  libre (`scripts/fidelity/build_flutter_model.py --sample-scale 0.7`).
+  libre y cuya autocorrelación (Pearson, en [−1, 1]) supera 0,2.
 
-**Extracción.** QRS-T enmascarado (−80 ms … +min(450 ms, 0,55·RR)) y la señal
-original plegada por el ciclo auricular, sin cancelar latidos. El ciclo se estima
-por autocorrelación y se refina en pasos de 0,2 ms maximizando la varianza
-explicada (en 10 s caben ~50 ciclos: 3 ms de error emborronaban el plegado; con el
-refinado los pacientes útiles pasaron de 8 a 28). Por paciente: un ciclo de onda F
-(64 puntos × 8 derivaciones, nadir de II en la fase 0) y la fase del ciclo en que
-llega el QRS conducido. Población: ACP (9 modos) y gaussiana contraída, muestreo
-acotado a 0,7 (muy pocos pacientes).
+**Extracción** (`scripts/fidelity/build_flutter_model.py`). QRS-T enmascarado
+(−80 ms … +min(450 ms, 0,55·RR)) y la señal original plegada por el ciclo
+auricular, sin cancelar latidos. El ciclo se estima por autocorrelación y se
+refina en pasos de 0,2 ms maximizando la varianza explicada (en 10 s caben ~50
+ciclos: 3 ms de error emborronaban el plegado). Por paciente: un ciclo de onda F
+(64 puntos × 8 derivaciones) y la fase en que cae el pico de energía del QRS (con
+su concentración R). Los ciclos se alinean en la población por correlación
+circular con la media: alinearlos al nadir de II hacía que la media heredara un
+valle afilado y que la población generada saliera negativa en II en el 79–91 %
+(pacientes: 55 %). Población: ACP (9 modos) y gaussiana contraída con el ciclo,
+sin acotar el muestreo. La fase del QRS se resume aparte como distribución
+circular de los 17 pacientes con conducción fija (R ≥ 0,6): en los demás es casi
+ruido.
 
 **Producto.** Con base aprendida, el flutter dibuja el ciclo del paciente a la
-frecuencia auricular del caso (control), anclado para que cada QRS conducido caiga
-en su fase. Paciente de libro: semilla 46, flutter típico antihorario (sierra
-negativa en II, F positiva en V1, 0,25 mV en II). Núcleos: diente de sierra
-histórico.
+frecuencia auricular del caso (control), anclado a la mitad (pico de energía) de
+cada QRS conducido: anclar su inicio desplazaba la relación QRS–onda F ~0,2 ciclos.
+Paciente de libro: semilla 39, flutter típico antihorario (sierra negativa en II,
+F positiva en V1, ~0,25 mV en ambas). Núcleos: diente de sierra histórico.
 
 ### Resultado y límites
 
-A nivel de paciente frente a los 28 de entrenamiento: ondas F en II p10 / p50 /
-p90 0,09 / 0,15 / 0,22 mV (entrenamiento: mediana 0,165); flutter típico (II
-negativa, V1 positiva) 30 % frente a 54 %: la gaussiana sobre tan pocos pacientes
-mezcla subtipos. A nivel de trazado no hay comparación posible: la reserva deja 4
-registros utilizables, y el clasificador diagnóstico no tiene etiqueta de flutter
-(menos de 100 registros en PTB-XL). Es el modelo aprendido con menos respaldo del
-ciclo: más datos de flutter con conducción variable lo mejorarían.
+Población generada frente a los 29 pacientes: negativas en II 62 % frente a 55 %;
+amplitud en II mediana 158 frente a 165 µV; V1 positiva 56 % frente a 82 % (la
+gaussiana sobre tan pocos pacientes mezcla subtipos). A nivel de trazado no hay
+comparación posible: la reserva deja 4 registros utilizables, y el clasificador
+diagnóstico no tiene etiqueta de flutter (menos de 100 registros en PTB-XL). El
+criterio de calidad es débil: probado con trazados sintéticos de ciclo conocido,
+aceptó 6 de 40 y uno de ellos con el ciclo equivocado, así que el ciclo de algún
+paciente puede no ser el real. El modelo se aprendió entre 171 y 330 lpm
+auriculares; el control llega de 40 a 350 y fuera de ese rango estira el ciclo
+sin respaldo. Como en la FA, el bajo voltaje no escala las ondas F. Es el modelo
+aprendido con menos respaldo del ciclo.

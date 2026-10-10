@@ -120,7 +120,7 @@ export const PRESETS: Preset[] = [
       "Respuesta ventricular 150 lpm",
     ],
     "vectorial",
-    "Ondas F simplificadas; conducción variable y circuito de reentrada no modelados.",
+    "Ondas F aprendidas de 29 pacientes (Georgia y PTB-XL); circuito de reentrada no modelado y poca validación a nivel de trazado (pocos pacientes de reserva).",
   ),
   p(
     "flutter3",
@@ -130,6 +130,8 @@ export const PRESETS: Preset[] = [
     { rhythm: "flutter", atrialRate: 300, hr: 100, flutterRatio: 3 },
     "Conducción de una de cada tres activaciones auriculares.",
     ["Ondas F continuas", "Respuesta ventricular 100 lpm"],
+    "vectorial",
+    "Ondas F aprendidas de 29 pacientes (Georgia y PTB-XL); circuito de reentrada no modelado y poca validación a nivel de trazado (pocos pacientes de reserva).",
   ),
   p(
     "svt",
@@ -788,8 +790,8 @@ export const TEXTBOOK_AF_SEED = 251;
 /** Ventricular premature beat presets (F5.3): the seed also draws the PVC patient. */
 export const TEXTBOOK_PVC_SEED = 283;
 /** Atrial flutter presets (F5.2): a typical counter-clockwise patient (negative
- * sawtooth in II, positive F in V1, 0.25 mV in II); the classifier has no flutter label. */
-export const TEXTBOOK_FLUTTER_SEED = 46;
+ * sawtooth in II, positive F in V1, ~0.25 mV in both); the classifier has no flutter label. */
+export const TEXTBOOK_FLUTTER_SEED = 39;
 export const TEXTBOOK_SEEDS: Record<BeatModelCode, number> = { NORM: TEXTBOOK_SEED, CLBBB: 15, CRBBB: 276, IRBBB: 201, LAFB: 9, LVH: 154, IMI: 52, ASMI: 105 };
 
 export function fromPreset(preset: Preset, view?: ECGCase["view"]): ECGCase {

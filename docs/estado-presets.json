@@ -61,7 +61,7 @@
     "categoria": "Ritmos",
     "estado": "aproximado",
     "estrategia": "vectorial",
-    "limitacion": "Ondas F simplificadas; conducción variable y circuito de reentrada no modelados."
+    "limitacion": "Ondas F aprendidas de 29 pacientes (Georgia y PTB-XL); circuito de reentrada no modelado y poca validación a nivel de trazado (pocos pacientes de reserva)."
   },
   {
     "id": "flutter3",
@@ -69,7 +69,7 @@
     "categoria": "Ritmos",
     "estado": "aproximado",
     "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "limitacion": "Ondas F aprendidas de 29 pacientes (Georgia y PTB-XL); circuito de reentrada no modelado y poca validación a nivel de trazado (pocos pacientes de reserva)."
   },
   {
     "id": "svt",

@@ -17,14 +17,16 @@ donde el ciclo completo queda a la vista entre latidos. Por registro:
   2. Longitud del ciclo auricular: máximo de la autocorrelación de la señal libre
      entre 150 y 350 ms (170–400 lpm), refinado en pasos de 0,2 ms maximizando la
      varianza explicada por el plegado.
-  3. Onda F del paciente: mediana del residuo plegado por la fase del ciclo
-     (64 puntos × 8 derivaciones), desplazada para que el nadir de II quede en la
-     fase 0 (el sentido de la onda en II distingue el flutter típico).
-  4. Fase del ciclo en la que cae el pico del QRS (media circular) y razón de
-     conducción (RR / ciclo).
+  3. Onda F del paciente: mediana de la señal plegada por la fase del ciclo
+     (64 puntos × 8 derivaciones); después, en la población, cada ciclo se alinea
+     a la media por correlación circular (no se fuerza el nadir de II).
+  4. Fase del ciclo en la que cae el pico de energía del QRS (media circular, con
+     su concentración R) y razón de conducción (RR / ciclo).
 La población: ACP de las ondas F (modos del 95 %, tope n/3) y una gaussiana
-contraída (Ledoit-Wolf) con el ciclo y la fase del QRS. Con pocos pacientes el
-muestreo puede acotarse (--sample-scale). Sin trazados ni registros individuales.
+contraída (Ledoit-Wolf) con el ciclo; la fase del QRS, aparte, como distribución
+circular de los pacientes con conducción fija (R ≥ 0,6). La escala del muestreo
+(--sample-scale) se calibra para que la proporción de ondas F negativas en II se
+parezca a la de los pacientes. Sin trazados ni registros individuales.
 """
 import argparse, ast, base64, csv, json, os, sys
 import numpy as np
@@ -52,9 +54,16 @@ def record_features(x):
     if keep.mean() < 0.25:
         return None
     # Autocorrelación del residuo (cada derivación normalizada), solo con muestras útiles.
-    z = np.where(keep[:, None], r / (r[keep].std(0) + 1e-9), 0.0)
     lags = np.arange(ms(150), ms(350) + 1)
-    ac = np.array([(z[:-L] * z[L:]).sum() / max(1, (keep[:-L] & keep[L:]).sum() * z.shape[1]) for L in lags])
+
+    def pearson(L):
+        both = keep[:-L] & keep[L:]
+        if both.sum() < ms(200):
+            return -1.0
+        a, b = r[:-L][both], r[L:][both]
+        a, b = a - a.mean(0), b - b.mean(0)
+        return float(np.mean((a * b).sum(0) / np.sqrt((a * a).sum(0) * (b * b).sum(0) + 1e-12)))
+    ac = np.array([pearson(L) for L in lags])  # correlación de Pearson media, en [-1, 1]
     i = int(np.argmax(ac))
     if 0 < i < len(ac) - 1:
         a, b, c = ac[i - 1], ac[i], ac[i + 1]
@@ -86,11 +95,13 @@ def record_features(x):
         return None
     shift = int(np.argmin(tpl[:, 1]))  # nadir de II en la fase 0
     tpl = np.roll(tpl, -shift, axis=0)
+    # Fase del pico de energía del QRS (detect_beats), no de su inicio.
     qphase = ((pk / FS) / cl - shift / BINS) % 1
-    ang = np.angle(np.exp(2j * np.pi * qphase).mean())
+    resultant = np.exp(2j * np.pi * qphase).mean()
+    ang = np.angle(resultant)
     rr = np.diff(pk) / FS
     return {'tpl': tpl, 'cl': cl, 'ac': float(ac.max()), 'explained': float(explained),
-            'qrs_phase': float((ang / (2 * np.pi)) % 1), 'ratio': float(np.median(rr) / cl)}
+            'qrs_phase': float((ang / (2 * np.pi)) % 1), 'qrs_R': float(abs(resultant)), 'ratio': float(np.median(rr) / cl)}
 
 
 def main():
@@ -141,6 +152,17 @@ def main():
             rej['archivo'] += 1
     n = len(feats)
     print(f'Pacientes: {n}; rechazos: {rej}', file=sys.stderr)
+    # Alineación de población: el nadir de II de cada paciente en la fase 0 hacía
+    # que la media heredara un valle afilado y la población generada saliera
+    # negativa en II en el 79–91 % (pacientes: 55 %). Se alinea cada ciclo a la
+    # media por correlación circular en las 8 derivaciones, iterando.
+    for _ in range(5):
+        ref = np.mean([f['tpl'] for f in feats], 0)
+        for f in feats:
+            score = [float((np.roll(f['tpl'], -k, axis=0) * ref).sum()) for k in range(BINS)]
+            k = int(np.argmax(score))
+            f['tpl'] = np.roll(f['tpl'], -k, axis=0)
+            f['qrs_phase'] = (f['qrs_phase'] - k / BINS) % 1
     T = np.stack([f['tpl'].reshape(-1) for f in feats])
     m = T.mean(0)
     U, s, Wt = np.linalg.svd(T - m, full_matrices=False)
@@ -149,8 +171,12 @@ def main():
     k = max(2, min(k, n // 3))
     sd = np.sqrt(ev[:k])
     zt = (T - m) @ Wt[:k].T / sd
-    extra = np.array([[np.log(f['cl']), np.cos(2 * np.pi * f['qrs_phase']), np.sin(2 * np.pi * f['qrs_phase'])] for f in feats])
-    J = np.column_stack([zt, extra])
+    # La fase del QRS solo es informativa si los QRS caen siempre en la misma fase
+    # (conducción fija): se resume aparte, con los pacientes de R ≥ 0,6.
+    J = np.column_stack([zt, np.log([f['cl'] for f in feats])])
+    fixed = [f for f in feats if f['qrs_R'] >= 0.6]
+    phase_mean = np.angle(np.mean([np.exp(2j * np.pi * f['qrs_phase']) for f in fixed]))
+    phase_R = abs(np.mean([np.exp(2j * np.pi * f['qrs_phase']) for f in fixed]))
     from sklearn.covariance import LedoitWolf
     mu, sdJ = J.mean(0), J.std(0, ddof=1)
     Cj = LedoitWolf().fit((J - mu) / sdJ).covariance_ * np.outer(sdJ, sdJ)
@@ -160,7 +186,9 @@ def main():
         'source': 'Georgia 12-lead ECG Challenge (PhysioNet Challenge 2021 1.0.3, CC BY 4.0) y PTB-XL 1.0.3 (CC BY 4.0, pliegues 1-8): flutter sin FA con FC <= 100 lpm, 500 Hz; plegado por ciclo auricular con QRS-T enmascarado',
         'subjects': n, 'leads': ['I', 'II', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6'], 'bins': BINS,
         'template': {'mean': f32(m), 'basis': f32(Wt[:k] * sd[:, None]), 'k': k, 'explained': round(float(ev[:k].sum() / ev.sum()), 4)},
-        'joint': {'names': [f't{i}' for i in range(k)] + ['log_cycle_s', 'qrs_phase_cos', 'qrs_phase_sin'],
+        'qrsPhase': {'mean': round(float((phase_mean / (2 * np.pi)) % 1), 4), 'sd': round(float(np.sqrt(-2 * np.log(max(phase_R, 1e-6))) / (2 * np.pi)), 4), 'n': len(fixed),
+                     'reference': 'pico de energía del QRS'},
+        'joint': {'names': [f't{i}' for i in range(k)] + ['log_cycle_s'],
                   'mean': f32(mu), 'cholesky': f32(np.linalg.cholesky(Cj)[np.tril_indices(len(mu))])},
         **({'sampleScale': a.sample_scale} if a.sample_scale != 1 else {}),
     }
@@ -171,7 +199,8 @@ def main():
            'ptp_uv_p50_per_lead': np.median(ptp, 0).round(0).tolist(),
            'ratio_p10_50_90': np.percentile([f['ratio'] for f in feats], [10, 50, 90]).round(2).tolist(),
            'explained_p50': round(float(np.median([f['explained'] for f in feats])), 3),
-           'ii_negative_dominant': int(sum(abs(f['tpl'][:, 1].min()) > f['tpl'][:, 1].max() for f in feats))}
+           'ii_negative_dominant': int(sum(abs(f['tpl'][:, 1].min()) > f['tpl'][:, 1].max() for f in feats)),
+           'qrs_phase_fixed': len(fixed)}
     print(json.dumps(rep))
     if a.report:
         json.dump(rep, open(a.report, 'w'), indent=1)

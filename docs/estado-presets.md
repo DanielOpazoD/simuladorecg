@@ -13,8 +13,8 @@ Ningún patrón se presenta como validado clínicamente. La columna «Estrategia
 | Fibrilación auricular | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
 | FA con respuesta rápida | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
 | FA con respuesta lenta | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
-| Flutter auricular 2:1 | aproximado | vectorial | Ondas F simplificadas; conducción variable y circuito de reentrada no modelados. |
-| Flutter auricular 3:1 | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
+| Flutter auricular 2:1 | aproximado | vectorial | Ondas F aprendidas de 29 pacientes (Georgia y PTB-XL); circuito de reentrada no modelado y poca validación a nivel de trazado (pocos pacientes de reserva). |
+| Flutter auricular 3:1 | aproximado | vectorial | Ondas F aprendidas de 29 pacientes (Georgia y PTB-XL); circuito de reentrada no modelado y poca validación a nivel de trazado (pocos pacientes de reserva). |
 | Taquicardia supraventricular regular | aproximado | vectorial | No distingue AVNRT de AVRT; pseudo-r′ y pseudo-S no ajustadas de forma específica. |
 | Ritmo de la unión | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
 | Extrasístole auricular | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
