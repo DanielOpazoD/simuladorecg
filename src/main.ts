@@ -4,7 +4,6 @@ import { aboutDialogHtml } from "./ui/about-dialog";
 import { regionalActivationControls } from "./ui/regional-activation";
 import "./style.css";
 import { APP_VERSION } from "./ui/version";
-import { ActivationLab, type ActivationApplyResult } from "./ui/activation-lab";
 import { catalogGroup, catalogGroups, familyGuide, familyLabel } from "./ui/catalog-presentation";
 import { lesionBaseline } from "./engine/lesion-baseline";
 import { differenceSignal } from "./render/st-lens";
@@ -17,11 +16,7 @@ import { handleExportAction } from "./ui/export-actions";
 import { diagnosisForPreset } from "./ui/diagnosis-navigation";
 import { catalogView, VariantNavigation } from "./ui/catalog-view";
 import { WorkspaceNavigation } from "./ui/workspace-navigation";
-import { createExplorationOrigin, explorationContextHtml, explorationChanges, restoreExplorationOrigin, sameExplorationModel, type ExplorationOrigin } from "./ui/exploration-origin";
-import type { SyntheticComparisonTrace } from "./ui/comparison-model";
-import { ComparisonLab } from "./ui/comparison-lab";
-import { captureTrace } from "./ui/comparison-model";
-import { ExternalLab } from "./ui/external-lab";
+import { createExplorationOrigin, explorationContextHtml, explorationChanges, restoreExplorationOrigin, type ExplorationOrigin } from "./ui/exploration-origin";
 import {
   cloneCase,
   NATURAL_CONTROLS,
@@ -38,7 +33,7 @@ import { practiceFeedback, type PracticeId } from "./ui/practice-feedback";
 import { createPractice, answerPractice, type PracticeState } from "./ui/practice-session";
 import { practicePanelHtml } from "./ui/practice-panel";
 import { changeCase, isCaseControlKey, controlValue } from "./ui/case-state";
-import { beatDetail, representativeBeat, nearestBeat } from "./ui/beat-detail";
+import { representativeBeat, nearestBeat } from "./ui/beat-selection";
 import { measurementDialog } from "./ui/measurement-dialog";
 import { auditMeasurement } from "./engine/analysis/model-audit";
 import {
@@ -90,7 +85,6 @@ let timer = 0,
   group = "",
   quiz: PracticeState | null = null;
 let explorationOrigin: ExplorationOrigin | null = null;
-let explorationOriginTrace: SyntheticComparisonTrace | null = null;
 let initialError = "";
 try {
   c = decodeCase(location.hash) || c;
@@ -101,17 +95,15 @@ applyTheme(readTheme());
 const root = $("#app");
 root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="ECG Lab, inicio">${icon("pulse")}<span>ECG<span class="brand-light">lab</span></span><span class="brand-divider"></span><small>Explora la electrocardiografía</small></a><nav aria-label="Herramientas"><button class="btn mobile-cases" data-action="catalog">${icon("menu")}<span>Casos</span></button>${btn("quiz", "Practicar", "quiz")}${btn("about", "Guía", "book")}${btn("theme", "Tema", "sun", "icon-button")}${btn("export", "Exportar", "download", "primary")}</nav></header>
  <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><div><h2>Biblioteca de patrones</h2><span>${PRESETS.filter((x) => x.strategy !== "pending").length} ejemplos · agrupados por patrón</span></div>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Patrón, sigla o palabra…" aria-label="Buscar caso"/></label><label class="category-select"><span class="sr-only">Categoría</span><select id="category">${options([["", "Todas las familias"], ...catalogGroups(PRESETS).map((x) => [x, familyLabel(x)] as [string, string])], "")}</select></label><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div><div class="sidebar-footer">${icon("pulse")}<div>Señal sintética aprendida de ECG reales<small data-product-version="${APP_VERSION}">Modelo educativo · v${APP_VERSION}</small></div></div></aside>
- <main class="workspace"><nav class="workspace-nav" aria-label="Espacios de trabajo"><span class="workspace-current" aria-current="page">${icon("pulse")}Simulador</span>${workspaceButton("external", "Abrir señal", "Abrir", "book")}${workspaceButton("compare", "Comparar A/B", "Comparar", "strip")}${workspaceButton("activation", "Activación QRS", "Activación", "pulse")}${workspaceButton("parameters", "Ajustar el caso", "Ajustar", "settings", "workspace-adjust")}</nav><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><p id="case-subtitle">Activación auricular sinusal seguida de conducción AV 1:1.</p><div id="exploration-context" class="exploration-context" hidden></div></div><div class="case-state"><span class="status-label">Ejemplo sintético</span>${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
+ <main class="workspace"><nav class="workspace-nav" aria-label="Espacios de trabajo"><span class="workspace-current" aria-current="page">${icon("pulse")}Simulador</span>${workspaceButton("parameters", "Ajustar el caso", "Ajustar", "settings", "workspace-adjust")}</nav><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><p id="case-subtitle">Activación auricular sinusal seguida de conducción AV 1:1.</p><div id="exploration-context" class="exploration-context" hidden></div></div><div class="case-state"><span class="status-label">Ejemplo sintético</span>${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
  <section id="diagnosis-navigation" class="diagnosis-navigation" aria-label="Variantes del patrón" hidden></section>
  <div id="diagnosis-content">
  <section id="metrics" class="metrics" aria-label="Medidas del ECG"><div class="loading-metrics">Generando señal…</div></section>
- <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><div class="trace-tools">${btn("caliper", "Calibres", "ruler")}${btn("annotations", "Ondas", "eye")}<span class="lens-tools" role="group" aria-label="Lentes OMI">${btn("lens-previous", "ECG previo", "strip")}${btn("lens-change", "Solo el cambio", "pulse")}${btn("lens-st", "Punto J y ST", "ruler")}</span>${btn("focus", "Ampliar", "search")}${btn("pause", "Congelar", "pause")}</div></div>
+ <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><div class="trace-tools">${btn("caliper", "Calibres", "ruler")}${btn("annotations", "Ondas", "eye")}<span class="lens-tools" role="group" aria-label="Lentes OMI">${btn("lens-previous", "ECG previo", "strip")}${btn("lens-change", "Solo el cambio", "pulse")}${btn("lens-st", "Punto J y ST", "ruler")}</span>${btn("pause", "Congelar", "pause")}</div></div>
  <div id="quiz-panel" hidden></div><div id="caliper-editor" class="caliper-editor" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small id="monitor-rate-note">No estimable</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
  <div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div>
  <div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><div class="scale-toolbar" id="scale-toolbar"></div><div class="trace-caption"><span id="trace-caption">10 s · Columnas secuenciales</span><span id="signal-state">Señal sintética · 500 muestras/s</span></div><details class="keyboard-help"><summary>Teclado y calibres</summary><p id="trace-keyboard-help">Con foco en el trazado: M/P/R cambia vista, V/G cambia escala, C activa calibres y espacio congela el monitor. Calibres: flechas mueven el extremo seleccionado una muestra horizontal o 0,01 mV vertical; Mayús mueve diez pasos. También puedes usar los campos de tiempo y amplitud. Tab sale del trazado.</p></details></section>
- <section id="beat-detail" class="beat-detail" aria-label="Ampliación del latido"><div class="detail-empty">Preparando análisis…</div></section>
  </div>
- <section id="comparison-lab" class="comparison-lab" aria-label="Laboratorio comparativo A/B"></section>
  <section class="lower-grid"><div id="inspector" class="inspector"></div><aside class="interpretation"><div class="section-label">Guía de lectura</div><h2 id="finding-title">Hallazgos esperados</h2><ul id="findings"></ul><div id="omi-sheet"></div><div id="structured-description"></div><div id="limitation" class="model-note"></div><div id="warnings"></div><button class="text-button" data-action="measurements">Ver medidas y valores del modelo ${icon("chevron")}</button><button class="text-button" data-action="about">Estado y referencias ${icon("chevron")}</button></aside></section>
  <footer class="workspace-footer"><span>ECG Lab · Laboratorio de electrocardiografía</span><span>Morfología normal aprendida de <a href="https://physionet.org/content/ptb-xl/1.0.3/" target="_blank" rel="noopener">PTB-XL</a> y <a href="https://physionet.org/content/ptb-xl-plus/1.0.1/" target="_blank" rel="noopener">PTB-XL+</a> (Wagner et al. 2020; Strodthoff et al. 2023), <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>; se distribuyen solo coeficientes derivados.</span><span>Uso educativo. Sin validación clínica.</span></footer></main></div>
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
@@ -130,38 +122,7 @@ function toast(message: string) {
   $("#toast").classList.add("visible");
   toastTimer = window.setTimeout(clearToast, 3500);
 }
-const comparison = new ComparisonLab($("#comparison-lab"), toast, {
-  currentSynthetic: () => session.canExport && session.signal && session.measurement && (!quiz || quiz.answer)
-    ? captureTrace(c, session.signal, session.measurement) : null,
-  openExternal: () => { if (!quiz || quiz.answer) external.open(); },
-  focusSynthetic: () => { $("#canvas-wrap").scrollIntoView({block:"center"}); $("#ecg").focus({preventScroll:true}); },
-});
-const external = new ExternalLab((slot, trace) => {
-  comparison.acceptExternal(slot, trace);
-  external.park();
-  comparison.focus();
-});
-
-const activation = new ActivationLab(
-  () => session.canExport && session.signal && (!quiz || quiz.answer)
-    ? { case: c, beats: session.signal.events.beats } : null,
-  async (candidate, original, signal): Promise<ActivationApplyResult> => {
-    const current = () => session.canExport && (!quiz || !!quiz.answer) && JSON.stringify(c) === JSON.stringify(original);
-    if (!current() || signal.aborted) return { status: "cancelled" };
-    const result = await controller.evaluate(candidate, signal);
-    if (result.status === "cancelled" || signal.aborted) return { status: "cancelled" };
-    if (!current()) return { status: "stale" };
-    if (result.status === "error") return { status: "rejected", message: result.message };
-    // Only a successful full-worker result may replace A; no second synthesis.
-    publishSignal(result.signal, result.measurement, result.requestId, candidate);
-    return { status: "applied" };
-  }, toast,
-);
-
 const workspaceNavigation = new WorkspaceNavigation($("#catalog"), $<HTMLElement>("#inspector"), {
-  activation: () => activation.open(),
-  compare: () => comparison.focus(),
-  external: () => external.open(),
   about: showAbout,
   measurements: showMeasurements,
   export: exportDialog,
@@ -184,7 +145,7 @@ function renderExplorationContext(concealed:boolean) {
   const custom=!!explorationOrigin && changes.length>0 && !concealed;
   const open=root.querySelector("details")?.open ?? false;
   root.hidden=!custom;
-  root.innerHTML=custom ? explorationContextHtml(explorationOrigin!,changes,!!explorationOriginTrace&&session.canExport,open) : "";
+  root.innerHTML=custom ? explorationContextHtml(explorationOrigin!,changes,open) : "";
 }
 
 function showExplorationChanges(){if(!explorationOrigin)return;const changes=explorationChanges(explorationOrigin,c);openDialog("Cambios respecto al origen",`<p class="dialog-lead">Origen: <strong>${esc(explorationOrigin.presetName)}</strong>. Se muestran diferencias reales del modelo; la vista no cuenta como ajuste.</p><div class="measurement-table-wrap"><table><thead><tr><th>Parámetro</th><th>Origen</th><th>Actual</th></tr></thead><tbody>${changes.map(x=>`<tr><td>${esc(x.label)}</td><td>${esc(formatExplorationValue(x.before))}${x.beforeLabel?`<br><small>${esc(x.beforeLabel)}</small>`:""}</td><td>${esc(formatExplorationValue(x.after))}${x.afterLabel?`<br><small>${esc(x.afterLabel)}</small>`:""}</td></tr>`).join("")}</tbody></table></div><p class="control-note">Una acción puede cambiar varios parámetros coordinados; el recuento describe diferencias del estado resultante, no el número de clics.</p>`)}
@@ -250,8 +211,6 @@ function renderInfo() {
   $<HTMLButtonElement>('[data-action="export"]').disabled = !!concealed;
   $("#inspector").hidden = !!concealed;
   $<HTMLButtonElement>('[data-action="parameters"]').disabled = !!concealed;
-  $("#beat-detail").hidden = !!concealed;
-  if (concealed) activation.invalidate();
   $("#catalog").classList.toggle("quiz-concealed", !!concealed);
 }
 function renderMetrics() {
@@ -262,15 +221,6 @@ function renderMetrics() {
   $("#metrics").innerHTML = metricsHtml(cards);
   $("#monitor-rate").textContent = rate.value === "—" ? "—" : rate.value.replace(/<small>.*<\/small>/, "");
   $("#monitor-rate-note").textContent = rate.value === "—" ? "No estimable" : "lpm · modelo";
-}
-function renderDetail() {
-  if (session.signal && session.measurement)
-    $("#beat-detail").innerHTML = beatDetail(
-      session.signal,
-      session.measurement,
-      c,
-      session.selectedBeat,
-    );
 }
 function renderControls() {
   const previous = activePanel;
@@ -406,10 +356,6 @@ function syncTraceTools() {
     b.setAttribute("aria-pressed", String(active));
     b.title = enabled ? "" : "Sin ECG previo: el caso no tiene una lesión aguda sobre el mismo paciente";
   }
-  $<HTMLButtonElement>('[data-action="focus"]').disabled = !ready;
-  $<HTMLButtonElement>('[data-action="compare"]').disabled = !!quiz && !quiz.answer;
-  $<HTMLButtonElement>('[data-action="external"]').disabled = !!quiz && !quiz.answer;
-  $<HTMLButtonElement>('[data-action="activation"]').disabled = !ready || (!!quiz && !quiz.answer);
   $('[data-action="theme"]').setAttribute("aria-pressed", String(currentTheme() === "dark"));
   const caliperButton = $<HTMLButtonElement>('[data-action="caliper"]');
   caliperButton.disabled = monitorMode || !ready;
@@ -432,8 +378,6 @@ function publishSignal(next: Signal, measured: Measurement, requestId: number, c
     }
     if (!session.accept(requestId, next, audited, c.view.mode,
       representativeBeat(audited, visibleSegmentEnd()))) return;
-    comparison.update(c, next, audited);
-    if(explorationOrigin&&sameExplorationModel(explorationOrigin,c)) explorationOriginTrace=captureTrace(c,next,audited);
     resetTracePresentation();
     $("#signal-loading").hidden = true;
     $("#signal-state").textContent = "500 muestras/s · análisis independiente";
@@ -443,7 +387,6 @@ function publishSignal(next: Signal, measured: Measurement, requestId: number, c
     renderInfo();
     renderScales();
     draw();
-    renderDetail();
 }
 const controller = new SignalController(
   (next, measured, requestId, previous) => {
@@ -455,14 +398,12 @@ const controller = new SignalController(
     // The persistent live region below carries the error. A duplicate long
     // toast can cover that explanation on mobile and announce it twice.
     clearToast();
-    comparison.invalidate(message);
     showUnavailableSignal(message, true);
     $("#metrics").innerHTML =
       '<div class="loading-metrics">Medidas no disponibles</div>';
     $("#signal-state").textContent = message.startsWith("Fuera del alcance del modelo:")
       ? "Combinación fuera del alcance del modelo"
       : "No se pudo actualizar la señal";
-    $("#beat-detail").innerHTML = '<div class="detail-empty">Ajusta los parámetros o restablece un caso para recuperar el trazado y sus medidas.</div>';
     renderInfo();
   },
 );
@@ -492,16 +433,13 @@ function showUnavailableSignal(message: string, unavailable = false) {
   $("#monitor-rate").textContent = "—";
   $("#monitor-rate-note").textContent = "No estimable";
   $("#measurement-readout").hidden = true;
-  $("#beat-detail").innerHTML = '<div class="detail-empty">El análisis estará disponible cuando termine de generarse la señal.</div>';
   $("#warnings").innerHTML = "";
   syncTraceTools();
 }
 function invalidateSignal() {
-  activation.invalidate();
   clearToast();
   session.invalidate();
   renderDescription();
-  comparison.invalidate();
   renderQuiz();
   showUnavailableSignal("Calculando señal…");
 }
@@ -593,7 +531,7 @@ function selectPreset(id: string) {
   const p = presetById(id);
   if (!p || p.strategy === "pending") return;
   c = fromPreset(p, c.view);
-  explorationOrigin=createExplorationOrigin(p,c); explorationOriginTrace=null;
+  explorationOrigin=createExplorationOrigin(p,c);
   caliper = null;
   session.resetTools();
   annotations = false;
@@ -671,11 +609,6 @@ document.addEventListener("input", (e) => {
 });
 document.addEventListener("change", (e) => {
   const el = e.target as HTMLInputElement | HTMLSelectElement;
-  if (el.id === "detail-lead") {
-    c.view.lead = el.value as ECGCase["view"]["lead"];
-    renderDetail();
-    return;
-  }
   if (el.id === "category") {
     group = el.value;
     renderCatalog();
@@ -698,7 +631,6 @@ document.addEventListener("change", (e) => {
   if (key.startsWith("view.")) {
     caliper = null;
     draw();
-    renderDetail();
   } else generate();
 });
 $("#case-search").addEventListener("keydown", (e) => {
@@ -734,8 +666,6 @@ function exportDialog() {
   );
 }
 function renderQuiz() {
-  comparison.conceal(!!quiz && !quiz.answer);
-  if (quiz && !quiz.answer) external.discard();
   const panel = $("#quiz-panel");
   panel.hidden = !quiz;
   if (!quiz) return;
@@ -797,7 +727,7 @@ document.addEventListener("click", async (e) => {
     const selected = savedCaseAt(savedCaseSnapshot, Number(saved.dataset.saved));
     if (!selected) { toast("El caso seleccionado no está disponible; vuelve a abrir la lista."); return; }
     c = selected;
-    explorationOrigin=null; explorationOriginTrace=null;
+    explorationOrigin=null;
     closeDialog();
     quiz = null;
     renderQuiz();
@@ -817,26 +747,7 @@ document.addEventListener("click", async (e) => {
   }
   if(action==="exploration-changes") showExplorationChanges();
   if(action==="restore-origin"&&explorationOrigin){c=restoreExplorationOrigin(explorationOrigin,c);caliper=null;session.resetTools();annotations=false;renderCatalog();renderControls();renderInfo();generate();toast("Origen restaurado; se conserva la vista actual.")}
-  if(action==="compare-origin"&&explorationOriginTrace&&session.signal&&session.measurement&&session.canExport){comparison.compareSynthetic(explorationOriginTrace,captureTrace(c,session.signal,session.measurement));comparison.focus();}
   if (workspaceNavigation.handle(action, !!quiz && !quiz.answer)) return;
-  if (action === "focus") {
-    annotations = true;
-    draw();
-    $("#beat-detail").scrollIntoView({
-      block: "center",
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "instant"
-        : "smooth",
-    });
-  }
-  if (action === "previous-beat" || action === "next-beat") {
-    if (session.measurement) {
-      session.selectBeat(session.selectedBeat + (action === "next-beat" ? 1 : -1));
-      annotations = true;
-      renderDetail();
-      draw();
-    }
-  }
   if (action === "pause") {
     if (!session.signal || c.view.mode !== "monitor") return;
     session.togglePause(c.view.mode);
@@ -877,7 +788,6 @@ document.addEventListener("click", async (e) => {
   if (action === "theme") {
     applyTheme(currentTheme() === "dark" ? "light" : "dark", true);
     draw();
-    renderDetail();
   }
   if(action==="reset"){if(explorationOrigin&&explorationChanges(explorationOrigin,c).length){c=restoreExplorationOrigin(explorationOrigin,c);caliper=null;session.resetTools();annotations=false;renderCatalog();renderControls();renderInfo();generate();toast("Origen restaurado; se conserva la vista actual.")}else{selectPreset(c.presetId==="custom"?"sinus":c.presetId);toast("Parámetros restablecidos")}}
   if (action === "quiz") startQuiz();
@@ -904,7 +814,7 @@ $<HTMLInputElement>("#file-input").addEventListener("change", async (e) => {
     if (f.size > 50000)
       throw new Error("El caso excede el tamaño máximo de 50 kB.");
     c = normalizeImportedCase(JSON.parse(await f.text()));
-    explorationOrigin=null; explorationOriginTrace=null;
+    explorationOrigin=null;
     quiz = null;
     closeDialog();
     renderQuiz();
@@ -946,7 +856,6 @@ canvas.addEventListener("pointerdown", (e) => {
       ));
       c.view.lead = seg.lead;
       annotations = true;
-      renderDetail();
       draw();
     }
     return;
@@ -1015,7 +924,7 @@ window.addEventListener("hashchange", () => {
     const next = decodeCase(location.hash);
     if (next) {
       c = next;
-      explorationOrigin=null; explorationOriginTrace=null;
+      explorationOrigin=null;
       quiz = null;
       renderQuiz();
       renderCatalog();

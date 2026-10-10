@@ -21,7 +21,7 @@ Punto de entrada a `docs/`. La navegación vigente empieza en el [README](../REA
 
 ## Generador: despolarización
 - [Fuente ventricular separada del ritmo (v1.5)](ventricular-source-v1.5.md)
-- [Laboratorio de activación QRS](activation-lab.md) · [Activación regional BRD](regional-rbbb-activation.md)
+- [Activación regional BRD](regional-rbbb-activation.md)
 - [Eje en ritmos ventriculares polimórficos](polymorphic-axis.md)
 - Amplitud QRS: [R posterior](posterior-qrs-amplitude.md) · [sobrecarga del VD](rv-qrs-amplitude.md) · [onda delta WPW](wpw-qrs-amplitude.md)
 
@@ -43,7 +43,6 @@ Punto de entrada a `docs/`. La navegación vigente empieza en el [README](../REA
 - LUDB: [línea base congelada](ludb-frozen-baseline.md) · [expansión preseleccionada](ludb-expansion-protocol.md) · [delineación v2](ludb-delineation-v2.md)
 - PTB-XL+: [referencia morfológica](ptbxl-morphology-reference.md) · [brecha del generador](generator-ptbxl-gap.md)
 - STAFF III: [exploración](staff-exploration-v1.4.md) · [selección del banco](staff-selection-v1.4.md)
-- Señales externas: [lector WFDB/CSV](external-signals.md) · [revisión manual](external-manual-review.md) · [comparación](comparison-external.md)
 - [Referencias aportadas](referencias/README.md)
 
 ## Interfaz y accesibilidad

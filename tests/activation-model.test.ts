@@ -1,7 +1,6 @@
 import { describe, it } from 'vitest';
 import assert from 'node:assert/strict';
 import { activationAt, activationCandidate, activationLimitation, activationOptions, activationPair, sampleActivation } from '../src/ui/activation-model';
-import { activationSvg, activationPoint } from '../src/render/activation';
 import { fromPreset, PRESETS, presetById } from '../src/presets/catalog';
 import { synthesize } from '../src/engine/signal';
 import { antialias } from '../src/engine/filter';
@@ -45,18 +44,6 @@ describe('Activation lab: sampled vector, explicit domains and real beat kinds',
     for (let i = 0; i < t.xyz.length; i++) for (const l of LEADS) close(t.leads[l][i], project(t.xyz[i])[l]);
     assert.throws(() => activationAt(t, NaN), /Instante/);
   });
-  it('uses shared absolute time and amplitude scales, not per-source normalization', () => {
-    const c = load('sinus'), pair = activationPair(c, beat(), 'rbbb');
-    // The learned sinus patient carries its own QRS (F2.3).
-    assert.equal(pair.a.durationMs, c.qrs); assert.equal(pair.b.durationMs, 150); assert.equal(pair.durationMs, 150);
-    assert.deepEqual(activationAt(pair.a, 110).xyz, [0, 0, 0]);
-    assert.ok(Math.hypot(...activationAt(pair.b, 110).xyz) > .01);
-    for (const t of [pair.a, pair.b]) for (const l of LEADS) assert.ok(Math.max(...t.leads[l].map(Math.abs)) < pair.leadRangeMv);
-    for (const plane of ['XYZ', 'XY', 'XZ', 'YZ'] as const) {
-      const a = activationPoint([.1, .2, .3], plane, pair.vectorRange), b = activationPoint([.1, .2, .3], plane, pair.vectorRange);
-      assert.deepEqual(a, b);
-    }
-  });
   it('scales every vector and projected lead with QRS amplitude without rotating the sampled axis', () => {
     const c = load('sinus'), a = sampleActivation(c, beat()), b = sampleActivation({ ...c, qrsAmp: c.qrsAmp * 2 }, beat());
     close(a.summary.frontalAxisDeg!, b.summary.frontalAxisDeg!);
@@ -70,16 +57,6 @@ describe('Activation lab: sampled vector, explicit domains and real beat kinds',
     assert.equal(pair.b.durationMs, 150);
     assert.equal(Object.hasOwn(pair.b.beat, 'qt'), false);
     assert.equal(captured.qt, .41);
-  });
-  it('fractional duration has exact endpoints and the exported cursor matches absolute milliseconds', () => {
-    const c = { ...load('sinus'), qrs: 93.7 }, t = sampleActivation(c, beat());
-    assert.equal(t.timesMs.at(-1), t.durationMs);
-    assert.deepEqual(activationAt(t, t.durationMs).xyz, [0, 0, 0]);
-    const pair = activationPair(c, beat(), 'rbbb'), svg = activationSvg(pair, 120);
-    assert.match(svg, /Cursor: 120 ms/);
-    assert.match(svg, /data-activation-cursor="true" x1="224\.80"/);
-    assert.throws(() => activationSvg(pair, NaN), /Instante/);
-    assert.throws(() => sampleActivation({ ...c, qrs: NaN }, beat()), /Duración/);
   });
   it('AAI is conducted, complete ventricular block is ventricular, ectopy keeps both actual beat kinds', () => {
     const aai = generateEvents(load('aai'), 10).beats; assert.ok(aai.every(b => b.kind === 'normal'));
@@ -100,15 +77,6 @@ describe('Activation lab: sampled vector, explicit domains and real beat kinds',
   for (const id of ['vf', 'asystole', 'torsades', 'posterior']) it(`${id} does not invent an eligible static QRS`, () => {
     const c = load(id); assert.ok(activationLimitation(c, generateEvents(c, 10).beats[0]));
     assert.throws(() => sampleActivation(c, beat()));
-  });
-  it('no-changes control is identical, independent and safely escaped in vector export', () => {
-    const c = load('sinus'), pair = activationPair(c, beat(), 'unchanged');
-    assert.deepEqual(pair.a, pair.b); assert.notEqual(pair.a.case, pair.b.case);
-    pair.b.label = '<script>alert(1)</script>';
-    const svg = activationSvg(pair); assert.ok(svg.startsWith('<svg')); assert.ok(!svg.includes('<script>'));
-    assert.equal((svg.match(/data-activation-lead=/g) ?? []).length, 12);
-    assert.equal((svg.match(/data-activation-plane=/g) ?? []).length, 4);
-    assert.match(svg, /No es VCG clínico/);
   });
   it('edits only B with the existing transitions, leaving A, source and rhythm untouched', () => {
     const c = load('rbbb'), original = cloneCase(c), event = beat();
@@ -141,17 +109,6 @@ describe('Activation lab: sampled vector, explicit domains and real beat kinds',
       assert.throws(() => activationPair(c, beat(), 'unchanged', { qrsMs }), /60 y 240/);
     assert.throws(() => activationCandidate(c, beat(), 'unchanged', { activationModel: 'unknown' as never }), /no válido/);
     assert.deepEqual(c, original);
-  });
-  it('reports the actual regional supports, including fractional endpoints in exported metadata', () => {
-    const pair = activationPair(load('rbbb'), beat(), 'unchanged', { qrsMs: 190.5, activationModel: 'regional-rbbb-v1' });
-    assert.deepEqual(pair.a.timing.regions, []);
-    assert.deepEqual(pair.b.timing.regions, [
-      { region: 'septal', startMs: 0, endMs: 30 }, { region: 'lv-main', startMs: 12, endMs: 80 },
-      { region: 'lv-terminal', startMs: 42, endMs: 96 }, { region: 'rv-delayed', startMs: 55, endMs: 190.5 },
-    ]);
-    assert.match(activationSvg(pair), /Modelo A: Latido aprendido \(PTB-XL\) · Modelo B: BRD regional/);
-    assert.equal(JSON.parse(JSON.stringify(pair)).b.timing.applied, 'regional-rbbb-v1');
-    assert.equal(pair.b.timesMs.at(-1), 190.5);
   });
   it('shows the fixed early clock and delayed RV change rather than globally stretching a regional trace', () => {
     const c = load('rbbb');
@@ -309,16 +266,6 @@ describe('WPW lab represents the entire existing vector QRS, without retuning it
     assert.equal(Object.hasOwn(pair.b.beat, 'qt'), false);
     assert.equal(caseContext(normalizeImportedCase(pair.b.case)).preset, undefined);
     assert.deepEqual(activationCandidate(c, beat(), 'unchanged'), saved);
-  });
-  it('keeps delta in historical fallback and exports its provenance rather than fictitious regional supports', () => {
-    const c = load('wpw'), pair = activationPair(c, beat(), 'normal');
-    assert.equal(pair.a.timing.deltaDurationMs, 45); assert.equal(pair.b.timing.deltaDurationMs, null);
-    const regional = sampleActivation({ ...c, activationModel: 'regional-rbbb-v1' }, beat());
-    assert.deepEqual(regional.xyz, pair.a.xyz); assert.equal(regional.timing.applied, 'template');
-    assert.match(regional.timing.label, /no aplicado/); assert.deepEqual(regional.timing.regions, []);
-    assert.match(regional.timing.note, /Delta sintética adicional/);
-    assert.match(activationSvg(pair, 20), /Delta incluida · A: 45 ms · B: 0 ms/);
-    assert.equal(JSON.parse(JSON.stringify(pair)).a.timing.deltaDurationMs, 45);
   });
 });
 

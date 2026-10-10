@@ -32,18 +32,6 @@ detalla la predicción, los cambios de medición, el nuevo origen de comparació
 los resultados adversos conservados. No valida amplitudes clínicas ni Sgarbossa.
 WPW y el ST separable de torsades quedan fuera de esta implementación.
 
-## Laboratorio de activación QRS
-
-**Activación QRS** abre un [experimento A/B interactivo](docs/activation-lab.md)
-sobre los eventos reales del caso: suma temporal XYZ, vista oblicua y tres planos,
-12 derivaciones, cursor sincronizado en milisegundos y escalas compartidas. Permite
-comparar conducciones o fuentes ventriculares, exportar SVG/JSON y aplicar B de
-forma explícita mediante el flujo existente. Cerrar no modifica el caso.
-
-Es una vista del **QRS vectorial aislado antes de adquisición**, no un VCG clínico
-ni una simulación anatómica nueva. No cambia los coeficientes del generador. Los
-componentes no representables se declaran en lugar de omitirse silenciosamente.
-
 ## Ejecutar y verificar
 
 Entorno de CI: Node **22.16.0**, instalación desde `package-lock.json`.

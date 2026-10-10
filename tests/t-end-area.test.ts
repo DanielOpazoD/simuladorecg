@@ -2,9 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { suggestTEnds } from '../src/engine/t-end-area';
 import { measure } from '../src/engine/measure';
 import { fixture, BIPHASIC_T, U } from './fixtures';
-import { synthesize } from '../src/engine/signal';
-import { fromPreset, presetById } from '../src/presets/catalog';
-import { beatDetail } from '../src/ui/beat-detail';
 
 describe('Area T-end assistance is not automatic QT', () => {
   it.each([250, 500, 1000])('locates an independent triangular T at %i Hz', fs => {
@@ -59,17 +56,5 @@ describe('Area T-end assistance is not automatic QT', () => {
     expect(s.leads).toEqual(saved.s.leads);
     expect(m.beats).toEqual(saved.m.beats); expect(m.qt).toEqual(saved.m.qt); expect(m.qtc).toEqual(saved.m.qtc);
     expect(suggestTEnds(s,m)).toEqual(candidates);
-  });
-  it('displays a proposal on tachycardia without adding a QT interval', () => {
-    const c=fromPreset(presetById('tachy')!),s=synthesize(c,10,{learnedBase:false}),m=measure(s),before=structuredClone(m); // fixture where the frozen analyzer abstains from QT
-    const i=suggestTEnds(s,m).findIndex(x=>x!==null); expect(i).toBeGreaterThanOrEqual(0);
-    const html=beatDetail(s,m,c,i);
-    expect(html).toContain('data-t-end-candidate'); expect(html).toContain('revisión manual');
-    expect(html).toContain('data-t-end-validation'); expect(html).toContain('Precisión insuficiente');
-    expect(html).toContain('41 finales T'); expect(html).toContain('32 ms'); expect(html).toContain('56 ms');
-    expect(html).toContain('no un margen de error de este latido');
-    expect(html).toContain('No modifica QT/QTc'); expect(html).not.toMatch(/QT \d+ ms/);
-    expect(m).toEqual(before); expect(m.qt).toBeNull(); expect(m.evidence.qt.status).toBe('unavailable');
-    c.view.lead='V5'; expect(beatDetail(s,m,c,i)).toContain('no un límite validado de V5');
   });
 });

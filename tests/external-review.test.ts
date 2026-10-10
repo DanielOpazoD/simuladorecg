@@ -8,8 +8,6 @@ import { externalWindow, exportECGCsv, parseECGCsv, type ExternalECG } from '../
 import { assessExternalWindow, evaluateExternalWindow, assertExternalSamples } from '../src/io/external-assessment';
 import { fingerprintECG, importReview, intervalMs, ManualHistory, MAX_REVIEW_BYTES, reviewSidecar,
   validateBounds, type BuildProvenance, type ManualAnnotation, type SignalIdentity } from '../src/io/external-review';
-import { validateExternalReply } from '../src/ui/external-protocol';
-import { renderReviewTrace, sampleAtReviewPoint, reviewPointAtSample } from '../src/render/external-review';
 
 const build: BuildProvenance = {appVersion:'1.5.0', commit:'a'.repeat(40), sourceSha256:'b'.repeat(64), analysisSourceSha256:'c'.repeat(64), dirty:false};
 function fixture(fs = 500): ExternalECG {
@@ -30,10 +28,6 @@ function ludb(id = 1): ExternalECG {
 }
 function annotation(id = 1): ManualAnnotation { return {id, lead:'II', kind:'QRS', startSample:500, endSample:550, origin:'manual', createdWith:{...build}}; }
 const copy = <T>(value:T):T => structuredClone(value);
-function canvas() {
-  const ctx = new Proxy({measureText:()=>({width:30})}, {get:(t,k)=>Reflect.get(t,k) ?? (()=>{}),set:(t,k,v)=>Reflect.set(t,k,v)});
-  return {style:{}, getContext:()=>ctx, setAttribute:()=>{}} as unknown as HTMLCanvasElement;
-}
 
 describe('A05 readable is not clinically validated or analytically eligible', () => {
   for (const fs of [100,125,250,500,1000]) it(`${fs} Hz: explicit domain and exact sample resolution, no resampling`, () => {
@@ -152,29 +146,5 @@ describe('A10 reversible manual intervals, never automatic corrections',()=>{
   it('bounds reject crossing and accept the actual last sample, without millisecond heuristics',()=>{
     assert.doesNotThrow(()=>validateBounds({...annotation(),endSample:4999},5000));assert.throws(()=>validateBounds({...annotation(),startSample:550},5000));
   });
-  it('rendering and pixel/sample round trips preserve all samples',()=>{
-    const r=fixture(),before=copy(r),g=renderReviewTrace(canvas(),r,{lead:'II',startSample:400,seconds:.8,range:2},annotation(),900);
-    for(let i=400;i<800;i++)assert.equal(sampleAtReviewPoint(reviewPointAtSample(i,g),g),i);
-    assert.equal(sampleAtReviewPoint(-900,g),400);assert.equal(sampleAtReviewPoint(90000,g),799);assert.deepEqual(r,before);
-  });
 });
 
-describe('worker boundary and gate cannot be forged with a flag',()=>{
-  async function good(){const record=ludb(),samples=externalWindow(record,0);return {id:7,kind:'read' as const,startSample:0,record,identity:await fingerprintECG(record),...evaluateExternalWindow(samples,analyzeSamples)};}
-  it('accepts an intact report unchanged, rejecting a different request or window',async()=>{
-    const r=await good();assert.equal(validateExternalReply(r,7,'read',null,0),r);
-    assert.throws(()=>validateExternalReply(r,8,'read',null,0));assert.throws(()=>validateExternalReply(r,7,'read',null,500));
-  });
-  it('rejects inconsistent assessment and malformed/nonfinite/missing numeric output',async()=>{
-    const r=await good();const a=copy(r);a.assessment.analysisAllowed=false;assert.throws(()=>validateExternalReply(a,7,'read',null,0));
-    const b=copy(r);b.measurement!.qrs=NaN;assert.throws(()=>validateExternalReply(b,7,'read',null,0));
-    const c=copy(r);c.measurement=null;assert.throws(()=>validateExternalReply(c,7,'read',null,0));
-  });
-  it('accepts manual-only data but rejects a fabricated automatic measurement on it',async()=>{
-    const record=fixture(250),result=evaluateExternalWindow(record,()=>{throw Error('excluded');});
-    const data={id:7,kind:'read',startSample:0,record,identity:await fingerprintECG(record),...result};
-    assert.equal(validateExternalReply(data,7,'read',null,0).measurement,null);
-    const measured = (await good()).measurement;
-    assert.throws(()=>validateExternalReply({...data,measurement:measured},7,'read',null,0));
-  });
-});

@@ -26,6 +26,6 @@ function rateContext(key:string,before:ECGCase,after:ECGCase) {
 }
 
 /** Provenance stays visible; secondary actions use a native keyboard disclosure. */
-export function explorationContextHtml(origin:ExplorationOrigin, changes:readonly ExplorationChange[], canCompare:boolean, open=false):string {
-  return `<details class="exploration-disclosure" ${open?"open":""}><summary><span>Origen: <strong>${esc(origin.presetName)}</strong></span> <span class="exploration-count">${changes.length} ${changes.length===1?"ajuste":"ajustes"}</span></summary><div class="exploration-actions"><button type="button" class="text-button" data-action="exploration-changes">Ver cambios</button><button type="button" class="text-button" data-action="compare-origin" ${canCompare?"":"disabled"}>Comparar con origen</button><button type="button" class="text-button" data-action="restore-origin">Restaurar origen</button></div></details><p>El origen no diagnostica el trazado actual.</p>`;
+export function explorationContextHtml(origin:ExplorationOrigin, changes:readonly ExplorationChange[], open=false):string {
+  return `<details class="exploration-disclosure" ${open?"open":""}><summary><span>Origen: <strong>${esc(origin.presetName)}</strong></span> <span class="exploration-count">${changes.length} ${changes.length===1?"ajuste":"ajustes"}</span></summary><div class="exploration-actions"><button type="button" class="text-button" data-action="exploration-changes">Ver cambios</button><button type="button" class="text-button" data-action="restore-origin">Restaurar origen</button></div></details><p>El origen no diagnostica el trazado actual.</p>`;
 }
