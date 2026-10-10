@@ -673,13 +673,16 @@ mediano −58° y QRS mediano 180 ms: el marcapasos apical del VD típico.
    II en el paciente de libro): el marcapasos dejaba de verse.
 3. (Elegido) Detectarla a 100 Hz en 59 registros, retirarla de la plantilla y
    aprender su dirección espacial, su tamaño log-normal (mediana 3,3 mV espaciales)
-   y su forma media; el motor la dibuja una vez con el tamaño del paciente. Las
-   espigas auriculares (AAI, DDD) usan los mismos parámetros por falta de datos
-   propios.
+   y su forma media; el motor la dibuja una vez con el tamaño del paciente.
+
+Las espigas auriculares (AAI y la auricular de DDD) conservan la de los núcleos:
+no hay datos de espiga auricular, y prestarles el tamaño y la forma de la
+ventricular hacía que el analizador las contara como latidos (AAI: 22 de 40
+trazados con la FC doble o sin FC; DDD: 28 de 40).
 
 **Producto.** VVI y DDD usan el complejo aprendido (`learnedEctopicModel`, junto a
 las EV) con su eje, ancho, ST-T y amplitud propios; AAI conduce el latido normal
-aprendido; todos dibujan la espiga aprendida. Sin latidos conducidos (VVI/DDD) la
+aprendido; la espiga ventricular es la aprendida. Sin latidos conducidos (VVI/DDD) la
 base es la sinusal normal con eje natural: los controles de eje y conducción no
 mueven la P. Paciente de libro VVI/DDD: semilla 13.
 
@@ -699,7 +702,14 @@ y reserva ya difieren entre sí con KS 0,17–0,42):
 
 Clasificador diagnóstico: 300 de 300 VVI sintéticos reconocidos como estimulados.
 
-**Límites.** El analizador congelado no fue ajustado a la espiga registrada: sus
-contratos de detección en AAI/VVI/DDD corren sobre núcleos, y en la AAI aprendida
-sus dos entradas (`measure` y `analyzeSamples`) divergen. Espigas auriculares con
-los parámetros de las ventriculares. Sin captura fallida ni fusión aprendidas.
+**Frecuencia medida.** El analizador congelado (`analyzeSamples`, la «FC
+ventricular» de la app) cuenta a veces la T del complejo estimulado como otro
+latido. Con ECG estimulados reales de PTB-XL (100 pacientes, todos los pliegues)
+da una FC doble o vacía en 9 de 100; con la base aprendida (semillas 1–20 a 60 y 90
+lpm), en 0 de 40 AAI, 4 de 40 VVI y 6 de 40 DDD; con los núcleos, en ninguno. Es
+un límite del analizador sobre morfologías estimuladas reales, no del trazado: el
+paciente de libro (semilla 13) mide bien en los tres modos. Corregirlo exige una
+nueva congelación del analizador.
+
+**Límites.** Los contratos de detección del analizador en AAI/VVI/DDD corren sobre
+núcleos. Sin espiga auricular aprendida. Sin captura fallida ni fusión aprendidas.

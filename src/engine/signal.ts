@@ -274,9 +274,13 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
       for (let j = 0; j < 3; j++) xyz[j][i] += v[j];
     }
   }
-  // On the learned base the spike is the recorded one (F5.4); kernels keep theirs.
+  // On the learned base the ventricular spike is the recorded one (F5.4). Atrial
+  // spikes keep the kernels' (no atrial spike data: borrowing the ventricular size
+  // made the frozen analyzer count them as beats in most AAI/DDD patients).
+  const ventricularSpike = (t: number) =>
+    c.pacing === "VVI" || (c.pacing === "DDD" && events.beats.some((b) => b.kind === "paced" && Math.abs(b.time - 0.005 - t) < 1e-6));
   for (const t of events.spikes)
-    if (track && c.rhythm === "paced") track.addSpike(t);
+    if (track && c.rhythm === "paced" && ventricularSpike(t)) track.addSpike(t);
     else add(t, 0.004, (u) => scale(frontal(65, 1.9, -0.8), u < 0.5 ? 1 : -0.22));
   const output = makeArrays(Math.floor(duration * OUT));
   const floor = acquisitionFloor(c, n, FS);

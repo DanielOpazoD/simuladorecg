@@ -571,6 +571,14 @@ describe("F5.4: marcapasos aprendido de PTB-XL", () => {
     const mean = peaks.reduce((a, b) => a + b, 0) / peaks.length;
     expect(Math.sqrt(peaks.reduce((a, b) => a + (b - mean) ** 2, 0) / peaks.length) / mean).toBeGreaterThan(0.15);
   });
+  it("la espiga auricular no se cuenta como latido: la FC medida de AAI es la del caso", async () => {
+    const { analyzeSamples } = await import("../src/engine/sample-analysis");
+    // With the ventricular spike borrowed for atrial pacing, 11 of these 16 failed.
+    for (let seed = 1; seed <= 8; seed++) for (const hr of [60, 90]) {
+      const s = synthesize(load("aai", { seed, hr, filter: "diagnostic" }), 10);
+      expect(analyzeSamples({ fs: s.fs, leads: s.leads }).hr).toBeCloseTo(hr, -1);
+    }
+  });
   it("los presets VVI y DDD muestran su paciente de libro", () => {
     for (const id of ["vvi", "ddd"]) expect(fromPreset(presetById(id)!).seed).toBe(TEXTBOOK_PACED_SEED);
   });

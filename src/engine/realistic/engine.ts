@@ -167,7 +167,7 @@ export class RealisticTrack {
   }
   private spikeVector: Float64Array | null = null;
   /** A pacing spike as recorded (F5.4): the learned filtered waveform (±10 ms)
-   * along this patient's spike vector; the same for atrial and ventricular spikes. */
+   * along this patient's spike vector (ventricular spikes only). */
   addSpike(t: number) {
     const m = shapeModel("VPACE"), sp = m.spike!;
     if (!this.spikeVector) {
