@@ -212,7 +212,7 @@ export const OMI_SHEETS: Readonly<Record<string, OmiSheet>> = {
   },
   old_anterior: {
     context: "Infarto anteroseptal establecido: necrosis con ondas Q y repolarización residual.",
-    ecg: "Q profundas en V1–V3 con pérdida de R anterior; ST residual elevado (bajo el criterio en el punto J, mayor a J+60) con T pequeñas o bifásicas en V3–V4.",
+    ecg: "Q profundas en V1–V3 con pérdida de R anterior; elevación leve y residual del ST, bajo el criterio de las guías, con T pequeñas o bifásicas en V3–V4.",
     interpretation: "Infarto anteroseptal antiguo con elevación residual del ST (aprendido de pacientes de PTB-XL). El ECG no fecha el infarto.",
     lesson: "Q anteriores con ST elevado pero T pequeña respecto del QRS orientan a infarto antiguo o aneurisma, no a un OMI en curso.",
     notes: [

@@ -137,7 +137,6 @@ h1 { font-size:32px; line-height:1.2; letter-spacing:-1px; font-weight:600; text
   .workspace { padding-top:12px; }
   .case-heading { margin-bottom:12px; }
   /* Custom-case subtitle repeats the provenance warning kept below the disclosure. */
-  .case-heading:has(.exploration-context:not([hidden])) #case-subtitle { display:none; }
   .case-heading:has(.exploration-context:not([hidden])) .case-category { display:none; }
   .exploration-context { padding:6px 10px; }
   .exploration-context>p { font-size:.75rem!important; margin-top:0!important; }
@@ -287,7 +286,7 @@ h1 { font-size:32px; line-height:1.2; letter-spacing:-1px; font-weight:600; text
 .metrics .metric > small { display:none; }
 .metrics .loading-metrics { padding:10px 14px; font-size:13px; }
 .trace-toolbar { padding-block:6px; }
-.view-tabs button { min-height:36px; padding-block:6px; }
+@media (min-width:801px) { .view-tabs button { min-height:36px; padding-block:6px; } }
 .guide-lead { margin:6px 0 0; font-size:14px; line-height:1.6; color:var(--ink); }
 .model-details { margin-top:14px; font-size:12px; }
 .model-details > summary { cursor:pointer; min-height:32px; color:var(--muted); font-weight:600; }
@@ -300,3 +299,25 @@ h1 { font-size:32px; line-height:1.2; letter-spacing:-1px; font-weight:600; text
   .metrics .metric:nth-child(n+4) { border-top:1px solid var(--line); }
   .case-heading h1 { font-size:22px; }
 }
+
+/* Paper menu (UI · 4): speed, gain, format and grid behind one button. */
+.paper-menu { position:relative; }
+.paper-menu > summary { list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+.paper-menu > summary::-webkit-details-marker { display:none; }
+.paper-menu[open] > summary { background:var(--soft); color:var(--accent); }
+.paper-menu .scale-toolbar { position:absolute; right:0; top:calc(100% + 6px); z-index:20; display:grid; grid-template-columns:repeat(2,minmax(130px,1fr)); gap:10px 12px; width:max-content; max-width:min(340px, 90vw); padding:14px; margin:0; background:var(--surface); border:1px solid var(--line); border-radius:10px; box-shadow:0 8px 24px #19323c22; }
+.paper-menu .scale-toolbar .scale-toggles { align-self:end; }
+/* Clinical description: a superscript opens the criteria behind each line. */
+.info-ref { border:0; background:none; padding:0 2px; margin-left:2px; color:var(--accent); cursor:pointer; font-weight:700; min-height:0; font-size:12px; line-height:1; }
+.info-ref:hover { text-decoration:underline; }
+.info-items { display:grid; gap:10px; margin:14px 0; }
+.info-items dt { font-weight:600; font-size:13px; color:var(--ink); }
+.info-items dd { margin:2px 0 0; font-size:13px; line-height:1.55; color:var(--muted); }
+.info-measures { margin:12px 0; font-size:13px; }
+.info-measures summary { cursor:pointer; font-weight:600; min-height:32px; }
+.info-hit td { font-weight:650; color:var(--accent); }
+.info-refs-title { font-size:13px; margin:16px 0 6px; }
+.info-refs { font-size:12px; line-height:1.55; padding-left:18px; display:grid; gap:6px; }
+@media (max-width:800px) { .info-ref { min-width:24px; min-height:24px; } }
+.metrics .metric-note { font-style:normal; font-size:11px; color:var(--muted); white-space:nowrap; }
+@media (max-width:360px) { .metrics .metric strong, .metrics .main-metric strong { font-size:16px; white-space:normal; } }

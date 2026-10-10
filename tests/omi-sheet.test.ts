@@ -8,7 +8,8 @@ import { OMI_FAMILIES, catalogGroup } from "../src/ui/catalog-presentation";
 import { OMI_SHEETS, REFERENCES } from "../src/presets/omi-content";
 import { leadList, leadMeasures, structuredDescription } from "../src/ui/structured-description";
 import { stMarks } from "../src/render/st-lens";
-import { omiSheetHtml } from "../src/ui/omi-sheet";
+import { omiSheetHtml, structuredDescriptionHtml } from "../src/ui/omi-sheet";
+import { descriptionInfoHtml } from "../src/ui/description-info";
 
 const preset = (id: string) => ({ ...fromPreset(presetById(id)!), variability: 0 });
 
@@ -49,32 +50,35 @@ describe("descripción estructurada", () => {
     expect(leadList(["I", "aVL", "V1", "V2", "V3", "V4", "V5"])).toBe("I, aVL y V1–V5");
     expect(leadList(["I", "V2", "V3"])).toBe("I, V2 y V3");
   });
-  it("lee SDST anterior con IDST inferior y reciprocidad en la oclusión de la DA", () => {
+  it("describe en lenguaje clínico la oclusión de la DA: elevación, descenso recíproco y T prominentes", () => {
     const d = read("anterior"), st = line(d, "ST");
-    expect(st).toMatch(/^SDST en [^;]*V1–V5/);
-    expect(st).toMatch(/IDST [^;]*III/);
-    expect(line(d, "Rec.")).toMatch(/reciprocidad/);
+    expect(st).toMatch(/^Elevación del ST en [^;]*V1–V5, máxima en V3/);
+    expect(st).toMatch(/descenso del ST [^;]*III/);
+    expect(line(d, "Rec.")).toBe("Cambios recíprocos del ST.");
+    expect(line(d, "T")).toMatch(/Ondas T invertidas en III y aVF; ondas T prominentes, grandes para su QRS, en [^.]*V3/);
+    expect(d.lines.find((l) => l.key === "ST")!.info).toBe("st");
     expect(d.summary).toContain("12 derivaciones");
   });
-  it("en el ECG normal no llama SDST a la elevación fisiológica de V1–V3", () => {
-    const st = line(read("sinus"), "ST");
-    expect(st).toMatch(/^Punto J elevado en V1–V3 .*bajo el criterio de las guías/);
-    expect(st).not.toMatch(/SDST|IDST/);
+  it("el ECG normal dice «sin alteraciones del ST», «onda T normal» y «sin ondas Q patológicas»", () => {
+    const d = read("sinus");
+    expect(line(d, "ST")).toBe("Sin alteraciones del ST.");
+    expect(line(d, "T")).toBe("Onda T normal.");
+    expect(line(d, "Q")).toBe("Sin ondas Q patológicas.");
+    expect(d.summary).not.toMatch(/J\+60|T\/QRS/);
   });
-  it("ve el IDST ascendente y la T desproporcionada de De Winter, y las T de Wellens", () => {
+  it("De Winter: descenso ascendente y T prominentes; Wellens: T bifásicas o invertidas", () => {
     const d = read("de_winter");
-    expect(line(d, "ST")).toMatch(/^IDST ascendente desde J en V1–V6/);
-    expect(Number(/T\/QRS (\d+),(\d)/.exec(line(d, "T"))!.slice(1).join("."))).toBeGreaterThanOrEqual(0.9);
-    expect(line(read("wellens_a"), "T")).toMatch(/T bifásicas positiva-negativa en V2 y V3/);
-    expect(line(read("wellens_b"), "T")).toMatch(/T negativas en V1–V3/);
+    expect(line(d, "ST")).toMatch(/^Descenso del ST ascendente en V1–V6/);
+    expect(line(d, "T")).toMatch(/ondas T prominentes, grandes para su QRS, en [^.]*V2–V6|Ondas T prominentes/i);
+    expect(line(read("wellens_a"), "T")).toBe("Ondas T bifásicas en V2 y V3.");
+    expect(line(read("wellens_b"), "T")).toBe("Ondas T invertidas en V2 y V3.");
   });
-  it("cuenta Q patológicas por la definición universal y no las evalúa con QRS ancho", () => {
-    expect(line(read("old_inferior"), "Q")).toMatch(/^Q patológicas en II, III y aVF/);
-    expect(line(read("sinus"), "Q")).toBe("Sin Q patológicas.");
+  it("cuenta Q patológicas por la definición universal y no las valora con QRS ancho", () => {
+    expect(line(read("old_inferior"), "Q")).toBe("Ondas Q patológicas en II, III y aVF.");
     const lbbb = read("lbbb");
-    expect(line(lbbb, "Q")).toMatch(/No se evalúan/);
+    expect(line(lbbb, "Q")).toMatch(/no valorables/);
     expect(line(lbbb, "Rec.")).toBe("");
-    expect(line(lbbb, "ST/QRS")).toMatch(/secundario/);
+    expect(line(lbbb, "ST/QRS")).toMatch(/secundarias/);
   });
   it("lee el ST de los latidos dominantes, no el de las extrasístoles", () => {
     const c = preset("bigeminy"), s = synthesize(c, 10);
@@ -85,16 +89,26 @@ describe("descripción estructurada", () => {
   });
   it("no lee el ST donde no hay base: flutter, torsades, FV", () => {
     expect(line(read("flutter"), "ST")).toMatch(/ondas F/);
-    for (const id of ["torsades", "vf"]) expect(line(read(id), "ST")).toMatch(/Sin complejos organizados/);
+    for (const id of ["torsades", "vf"]) expect(line(read(id), "ST")).toMatch(/no hay complejos organizados/);
   });
   it("en un bloqueo AV declara la frecuencia ventricular, la auricular y el bloqueo", () => {
     expect(line(read("complete"), "B·C")).toMatch(/bloqueo AV completo, frecuencia ventricular \d+ lpm, ondas P a \d+\/min/);
   });
   it("cada ficha coincide con su trazado en los rasgos que nombra", () => {
-    expect(line(read("subendo"), "ST")).toMatch(/máx\. −[\d,]+ mm en J, en V[45]/);
-    expect(line(read("lateral"), "ST")).toMatch(/^SDST en I, aVL y V3–V6/);
-    expect(line(read("posterior"), "ST")).toMatch(/en V[23]\)/);
+    expect(line(read("subendo"), "ST")).toMatch(/máximo en V[45]/);
+    expect(line(read("lateral"), "ST")).toMatch(/^Elevación del ST en I, aVL y V3–V6/);
+    expect(line(read("posterior"), "ST")).toMatch(/máximo en V[23]/);
     const lcx = leadMeasures(synthesize(preset("inferior_lcx"), 10)), at = (l: string) => lcx.find((m) => m.lead === l)!.j0;
     expect(at("II")).toBeGreaterThanOrEqual(at("III"));
+  });
+  it("cada línea clínica abre sus criterios, referencias y valores medidos", () => {
+    const d = read("old_inferior"), html = structuredDescriptionHtml(d);
+    expect(html.match(/data-action="description-info"/g)).toHaveLength(3);
+    const q = descriptionInfoHtml("q", d.measures);
+    expect(q).toContain("Cuarta definición universal");
+    expect(q).toContain("https://doi.org/10.1161/CIR.0000000000000617");
+    expect(q).toMatch(/<tr class="info-hit"><td>III<\/td>/);
+    expect(descriptionInfoHtml("st", d.measures)).toContain("1,5 mm en mujeres");
+    expect(descriptionInfoHtml("t", d.measures)).toContain("10.1161/CIRCULATIONAHA.108.191096");
   });
 });
