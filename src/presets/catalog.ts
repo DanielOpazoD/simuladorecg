@@ -792,6 +792,8 @@ export const TEXTBOOK_PVC_SEED = 283;
 /** Atrial flutter presets (F5.2): a typical counter-clockwise patient (negative
  * sawtooth in II, positive F in V1, ~0.25 mV in both); the classifier has no flutter label. */
 export const TEXTBOOK_FLUTTER_SEED = 39;
+/** Ventricular fibrillation preset (F5.6): coarse VF (0.6 mV RMS in II, 4.7 Hz). */
+export const TEXTBOOK_VF_SEED = 140;
 /** Ventricular rhythm presets (F5.5): a superior-axis, wide focus (−61°, 172 ms),
  * the classic VT picture, whose rate the frozen analyzer measures in VT, idioventricular,
  * AIVR and complete block with ventricular escape; the same patient gives the dissociated P. */
@@ -809,6 +811,7 @@ export function fromPreset(preset: Preset, view?: ECGCase["view"]): ECGCase {
       : c.rhythm === "flutter" ? TEXTBOOK_FLUTTER_SEED
       : learnedVentricularEctopy(c) ? TEXTBOOK_PVC_SEED : pacedVentricular(c) ? TEXTBOOK_PACED_SEED
       : ventricularRhythm(c) ? TEXTBOOK_VT_SEED : TEXTBOOK_SEED;
+  if (preset.patch.seed === undefined && c.rhythm === "vf") c.seed = TEXTBOOK_VF_SEED;
   c.presetId = preset.id;
   c.name = preset.name;
   if (view) c.view = { ...view };

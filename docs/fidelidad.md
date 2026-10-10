@@ -750,3 +750,32 @@ núcleos, ninguno; las EV aisladas, igual que en `main`. El primer paciente de l
 (semilla 292) daba 130 lpm en el RIVA de 78. Entre 400 semillas, solo 3 cumplen eje
 superior (−100° a −30°), QRS ≥ 150 ms y FC medida a ±3 lpm en los cuatro presets con
 adquisición ideal y realista; la 157 es la de eje más típico.
+
+## F5.6 · Fibrilación ventricular aprendida
+
+**Datos.** MIT-BIH Malignant Ventricular Ectopy (vfdb, 2 derivaciones) y Creighton
+University Ventricular Tachyarrhythmia (cudb, 1 derivación), PhysioNet, ODC-By 1.0,
+250 Hz (bajadas y verificadas con SHA-256; el lector WFDB aprendió el formato 212).
+Ventanas de 4 s dentro de episodios de FV o flutter ventricular (en cudb, entre
+los marcadores «[» y «]»), a lo sumo 20 por registro: 37 registros, 579 ventanas.
+Reserva: vfdb 425, 427, 430 y cudb cu10, cu20, cu30.
+
+**Modelo** (`scripts/fidelity/build_vf_model.py`). Por ventana: el espectro
+paramétrico de la FA (pico en la frecuencia dominante, ancho, armónico; sin el
+fondo) y la amplitud eficaz en 1–30 Hz. Población: gaussiana contraída.
+
+**Producto.** La FV es el vector cardiaco: tres fuentes con el espectro del
+paciente (filtro común con la FA, `spectral.ts`; la FA queda idéntica byte a byte)
+a lo largo de una orientación aleatoria con pesos 1 / 0,7 / 0,5, escalado para que
+II tenga la amplitud del paciente. Paciente de libro: semilla 140 (FV gruesa,
+0,6 mV en II, 4,7 Hz).
+
+**Resultado.** Población generada frente a las ventanas de entrenamiento: amplitud
+eficaz en II p10 / p50 / p90 0,20 / 0,56 / 1,45 mV (datos 0,20 / 0,56 / 1,28) y
+frecuencia dominante 2,9 / 4,6 / 6,2 Hz (datos 3,3 / 4,3 / 6,3).
+
+**Límites.** vfdb y cudb registran una o dos derivaciones: la distribución entre
+las 12 derivaciones es ilustrativa (orientación aleatoria), no aprendida; se
+desconoce qué derivación es la de vfdb (se asume tipo II). Proceso estacionario: sin
+la evolución de FV gruesa a fina ni la organización transitoria. La torsade de
+pointes sigue en núcleos.

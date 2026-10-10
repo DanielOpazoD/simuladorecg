@@ -12,9 +12,9 @@
  */
 import raw from "./af-model.json";
 import { normal, random } from "../random";
+import { filteredSources, peakSpectrumFir, upsampled } from "./spectral";
 
 const NL = 8;
-const TAPS = 257;
 
 function decode(b64: string): Float64Array {
   const bytes = Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0));
@@ -72,33 +72,16 @@ export const afMeanPatient = () => afPatientFromJoint(model().jointMean);
 /** Patient from a point of the joint (spectrum parameters, spatial modes, RR). */
 export function afPatientFromJoint(z: ArrayLike<number>): AfPatient {
   const m = model();
-  // Parametric spectrum (log10): background slope + dominant peak + harmonic.
+  // Parametric spectrum (log10): dominant peak + harmonic. Only the atrial peak and
+  // its harmonic are generated over a small floor (fine AF without an organized
+  // peak); the learned background slope is not: in the recordings it is mostly
+  // QRST-cancellation residue, which the synthetic beats already produce
+  // (generating it too lowered the measured dominant frequency from 5.5 to 4.0 Hz).
   const at = (name: string) => z[m.names.indexOf(name)];
-  const peak = Math.max(0, at("peak")), F = Math.min(9.5, Math.max(3, at("dominant_hz")));
-  const width = Math.min(2.5, Math.max(0.2, Math.exp(at("log_width")))), harmonic = Math.min(1, Math.max(0, at("harmonic")));
-  const g = (f: number, c: number, w: number) => Math.exp(-0.5 * ((f - c) / w) ** 2);
-  const [lo, hi] = m.band;
-  const amplitude = (f: number) => {
-    // Only the atrial peak and its harmonic, over a small floor (fine AF without an
-    // organized peak). The learned background slope is not generated: in the
-    // recordings it is mostly QRST-cancellation residue, which the synthetic
-    // beats already produce (generating it too lowered the measured dominant
-    // frequency from 5.5 to 4.0 Hz).
-    const psd = 10 ** (peak * (g(f, F, width) + harmonic * g(f, 2 * F, 1.5 * width))) - 1 + 0.02;
-    // Raised-cosine edges, 0.5 Hz wide, around the learned band.
-    const edge = (x: number) => (x <= 0 ? 0 : x >= 1 ? 1 : 0.5 - 0.5 * Math.cos(Math.PI * x));
-    return Math.sqrt(psd) * edge((f - (lo - 0.5)) / 0.5) * edge((hi + 0.5 - f) / 0.5);
-  };
-  let best = 0, dominantHz = lo;
-  for (let f = lo; f <= hi; f += 0.05) if (amplitude(f) > best) { best = amplitude(f); dominantHz = f; }
-  const fir = new Float64Array(TAPS), half = (TAPS - 1) / 2, df = 0.05;
-  for (let k = 0; k < TAPS; k++) {
-    let s = 0;
-    for (let f = lo - 0.5; f <= hi + 0.5; f += df) s += amplitude(f) * Math.cos((2 * Math.PI * f * (k - half)) / m.fs);
-    fir[k] = s * (0.5 - 0.5 * Math.cos((2 * Math.PI * k) / (TAPS - 1)));
-  }
-  const energy = Math.sqrt(fir.reduce((a, v) => a + v * v, 0));
-  for (let k = 0; k < TAPS; k++) fir[k] /= energy;
+  const { fir, dominantHz } = peakSpectrumFir({
+    peak: Math.max(0, at("peak")), F: Math.min(9.5, Math.max(3, at("dominant_hz"))),
+    width: Math.min(2.5, Math.max(0.2, Math.exp(at("log_width")))), harmonic: Math.min(1, Math.max(0, at("harmonic"))),
+  }, m.band[0], m.band[1], m.fs);
   // Spatial covariance from its log-Cholesky coordinates.
   const kv = m.spatial.k, nv = m.spatial.mean.length, chol = Float64Array.from(m.spatial.mean), v0 = m.names.indexOf("v0");
   for (let i = 0; i < kv; i++) for (let j = 0; j < nv; j++) chol[j] += m.spatial.basis[i * nv + j] * z[v0 + i];
@@ -116,18 +99,8 @@ export function afPatientFromJoint(z: ArrayLike<number>): AfPatient {
  */
 export function addFibrillationWaves(acc: Float64Array[], fs: number, seed: number, p: AfPatient = afPatient(seed)): void {
   const m = model(), n = acc[0].length, ratio = fs / m.fs;
-  const count = Math.ceil(n / ratio) + 3, warm = TAPS;
-  const rng = random(((seed ^ 0xf1b7) * 2246822519) >>> 0);
-  const src = Array.from({ length: NL }, () => new Float64Array(count));
-  const white = Array.from({ length: NL }, () => new Float64Array(warm + count));
-  // Interleaved draws keep each sample's noise independent of the buffer length.
-  for (let i = 0; i < warm + count; i++) for (let s = 0; s < NL; s++) white[s][i] = normal(rng);
-  for (let s = 0; s < NL; s++)
-    for (let i = 0; i < count; i++) {
-      let v = 0;
-      for (let k = 0; k < TAPS; k++) v += p.fir[k] * white[s][warm + i - k];
-      src[s][i] = v;
-    }
+  const count = Math.ceil(n / ratio) + 3;
+  const src = filteredSources(random(((seed ^ 0xf1b7) * 2246822519) >>> 0), NL, count, p.fir);
   const lead = new Float64Array(count);
   for (let a = 0; a < NL; a++) {
     for (let i = 0; i < count; i++) {
@@ -136,11 +109,6 @@ export function addFibrillationWaves(acc: Float64Array[], fs: number, seed: numb
       lead[i] = v;
     }
     const out = acc[a];
-    for (let i = 0; i < n; i++) {
-      // Catmull–Rom from the model rate to fs.
-      const x = i / ratio, j = Math.floor(x), f = x - j;
-      const p0 = lead[Math.max(0, j - 1)], p1 = lead[j], p2 = lead[j + 1], p3 = lead[j + 2];
-      out[i] += 0.5 * (2 * p1 + (-p0 + p2) * f + (2 * p0 - 5 * p1 + 4 * p2 - p3) * f * f + (-p0 + 3 * p1 - 3 * p2 + p3) * f * f * f);
-    }
+    for (let i = 0; i < n; i++) out[i] += upsampled(lead, i, ratio);
   }
 }

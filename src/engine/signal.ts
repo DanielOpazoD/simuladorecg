@@ -45,6 +45,7 @@ import { learnedEctopicModel } from "./realistic/scope";
 import { acquisitionFloor } from "./realistic/acquisition";
 import { addFibrillationWaves } from "./realistic/atrial-fibrillation";
 import { addFlutterWaves } from "./realistic/atrial-flutter";
+import { addVentricularFibrillation } from "./realistic/ventricular-fibrillation";
 const FS = 1000,
   OUT = 500,
   WARM = 4,
@@ -240,6 +241,8 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
   else if (track && c.rhythm === "flutter" && events.beats.length)
     // The learned phase refers to the QRS energy peak (≈ its middle), not its onset.
     addFlutterWaves(track.acc, FS, c.seed, c.atrialRate, events.beats[0].time + qrsDuration(c, events.beats[0]) / 2);
+  // Learned VF (F5.6): spectrum and amplitude from vfdb/cudb on the heart vector.
+  else if (c.rhythm === "vf" && options.learnedBase !== false) addVentricularFibrillation(xyz, FS, c.seed);
   else if (c.rhythm === "af" || c.rhythm === "flutter" || c.rhythm === "vf") {
     const r = random(c.seed + 11);
     let phase = 0,
