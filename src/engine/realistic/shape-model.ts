@@ -53,9 +53,11 @@ function decodeInt16(b64: string): Int16Array {
 
 /** Learned populations: the normal sinus beat (always bundled) and per-diagnosis
  * classes that the signal worker loads on demand (models.ts). */
-export type ModelCode = "NORM" | "CLBBB" | "CRBBB" | "IRBBB" | "LAFB" | "LVH" | "IMI" | "ASMI" | "PVC";
-/** Populations of the conducted (sinus/supraventricular) beat; PVC is an ectopic population. */
-export type BeatModelCode = Exclude<ModelCode, "PVC">;
+export type ModelCode = "NORM" | "CLBBB" | "CRBBB" | "IRBBB" | "LAFB" | "LVH" | "IMI" | "ASMI" | "PVC" | "VPACE";
+/** Ectopic populations: ventricular premature beats and ventricular paced beats. */
+export type EctopicModelCode = "PVC" | "VPACE";
+/** Populations of the conducted (sinus/supraventricular) beat. */
+export type BeatModelCode = Exclude<ModelCode, EctopicModelCode>;
 export type RawShapeModel = typeof raw;
 const registry = new Map<ModelCode, ShapeModel>();
 

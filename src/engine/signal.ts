@@ -4,6 +4,7 @@ import { ventricularSource } from "./ventricular-source";
 import { PRECORDIAL_LEADS } from "./lead-registry";
 import {
   constraints,
+  type Beat,
   type ECGCase,
   type Signal,
   type Lead,
@@ -39,8 +40,8 @@ import { assertRepresentableEvents, tWaveSupport } from "./constraints";
 import { median } from "./analysis/statistics";
 import { atrialVector, tWave } from "./morphology";
 import { regionalTerritory, regionalTCorrection } from "./regional-repolarization";
-import { learnPvcDurations, naturalTAxis, RealisticTrack, usesRealisticBase } from "./realistic/engine";
-import { learnedVentricularEctopy } from "./realistic/scope";
+import { learnEctopicDurations, naturalTAxis, RealisticTrack, usesRealisticBase } from "./realistic/engine";
+import { learnedEctopicModel } from "./realistic/scope";
 import { acquisitionFloor } from "./realistic/acquisition";
 import { addFibrillationWaves } from "./realistic/atrial-fibrillation";
 import { addFlutterWaves } from "./realistic/atrial-flutter";
@@ -61,7 +62,8 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
     n = Math.ceil((total + guard) * FS),
     events = generateEvents(c, total + guard);
   assignRepolarization(c, events.beats);
-  if (options.learnedBase !== false && usesRealisticBase(c) && learnedVentricularEctopy(c)) learnPvcDurations(c, events.beats);
+  if (options.learnedBase !== false && usesRealisticBase(c))
+    learnEctopicDurations(c, events.beats, (["pvc", "paced"] as const).filter((k) => learnedEctopicModel(c, k)));
   assertRepresentableEvents(c, events);
   const xyz = [new Float64Array(n), new Float64Array(n), new Float64Array(n)],
     corr: Partial<Record<Lead, Float64Array>> = {};
@@ -119,8 +121,8 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
       track.addBeat(b, qrsDuration(c, b));
       continue;
     }
-    if (track && b.kind === "pvc" && learnedVentricularEctopy(c)) {
-      track.addPvc(b, b.qrs!);
+    if (track && (b.kind === "pvc" || b.kind === "paced") && learnedEctopicModel(c, b.kind)) {
+      track.addEctopic(b as Beat & { kind: "pvc" | "paced" });
       continue;
     }
     const dur = qrsDuration(c, b),

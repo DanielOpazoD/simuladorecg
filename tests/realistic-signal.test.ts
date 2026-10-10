@@ -35,7 +35,11 @@ describe("alcance de la base aprendida (F2–F3)", () => {
       expect(realisticModelsFor(fromPreset(presetById(id)!))).toEqual(["NORM", "PVC"]);
     }
     expect(realisticModelFor({ ...fromPreset(presetById("pvc")!), ventricularSource: "rv_apical_pacing" })).toBeNull();
-    for (const id of ["vt", "vvi", "lpfb", "bifascicular", "wpw", "anterior", "inferior", "lateral", "sgarbossa", "rv_acute", "hyperk", "complete_v"])
+    // Pacing (F5.4): AAI conducts the learned beat; VVI and DDD add the learned paced complex.
+    expect(realisticModelsFor(fromPreset(presetById("aai")!))).toEqual(["NORM"]);
+    for (const id of ["vvi", "ddd"]) expect(realisticModelsFor(fromPreset(presetById(id)!))).toEqual(["NORM", "VPACE"]);
+    expect(realisticModelFor({ ...fromPreset(presetById("vvi")!), ventricularSource: "rv_apical_pacing" })).toBeNull();
+    for (const id of ["vt", "lpfb", "bifascicular", "wpw", "anterior", "inferior", "lateral", "sgarbossa", "rv_acute", "hyperk", "complete_v"])
       expect(model[id]).toBeNull();
     // Only the chronic phase of a territory with a learned old-infarction population.
     expect(realisticModelFor({ ...fromPreset(presetById("lateral")!), phase: "chronic" })).toBeNull();
