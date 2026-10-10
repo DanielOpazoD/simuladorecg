@@ -182,7 +182,7 @@ describe("Lesion intensity changes the supported regional repolarization", () =>
       expect(lesionControlEffect(c)).toBe("st-t");
       expect(
         maxDifference(
-          synthesize(c, 10),
+          synthesize(c, 10, { learnedBase: false }), // kernel lesion contract (F4: own test)
           synthesize({ ...c, ischemia: "none" }, 10, { learnedBase: false }),
         ),
       ).toBeLessThan(1e-12);

@@ -1,6 +1,7 @@
 import { WPW_REPOLARIZATION_LIMIT, SECONDARY_ST_RATIO_LIMIT } from "./teaching-limits";
 import { DEFAULT_CASE, NATURAL_CONTROLS, cloneCase, type ECGCase, type NaturalControl } from "../engine/types";
 import { withNaturalControls } from "../engine/realistic/natural";
+import { learnedIschemiaArtery, type Artery } from "../engine/realistic/ischemia";
 import { learnedVentricularEctopy, pacedVentricular, realisticModelFor, ventricularRhythm } from "../engine/realistic/scope";
 import type { BeatModelCode } from "../engine/realistic/shape-model";
 export interface Preset {
@@ -460,7 +461,7 @@ export const PRESETS: Preset[] = [
     "Inferior (CD)",
     "Isquemia y ST",
     { ischemia: "inferior_rca", st: 2 },
-    "Vector de lesión orientado hacia inferior y derecha.",
+    "Oclusión de la coronaria derecha aprendida de angioplastias con balón (STAFF III).",
     [
       "ST↑ II, III y aVF, III >II",
       "ST↓ recíproco en I y aVL",
@@ -473,7 +474,7 @@ export const PRESETS: Preset[] = [
     "Inferior (Cx)",
     "Isquemia y ST",
     { ischemia: "inferior_lcx", st: 2 },
-    "Vector de lesión inferior con mayor componente izquierdo.",
+    "Oclusión de la circunfleja aprendida de angioplastias con balón (STAFF III).",
     ["ST↑ II ≥III", "I isoeléctrica o elevada"],
   ),
   p(
@@ -504,7 +505,7 @@ export const PRESETS: Preset[] = [
     "Anterior",
     "Isquemia y ST",
     { ischemia: "anterior", st: 2 },
-    "Vector de lesión dirigido hacia la pared anterior.",
+    "Oclusión de la descendente anterior aprendida de angioplastias con balón (STAFF III).",
     [
       "Elevación ST precordial anterior",
       "Repolarización dependiente de la fase",
@@ -800,6 +801,13 @@ export const TEXTBOOK_VF_SEED = 140;
  * the classic VT picture, whose rate the frozen analyzer measures in VT, idioventricular,
  * AIVR and complete block with ventricular escape; the same patient gives the dissociated P. */
 export const TEXTBOOK_VT_SEED = 157;
+/** Acute occlusion presets (F4): patients whose learned STAFF III change is the classic
+ * picture of the preset, whose own normal values are normal and whose QRS the frozen
+ * analyzer delimits with realistic acquisition, so the practice can read ST from the
+ * samples (LAD: ST↑ V2–V4 with I/aVL and inferior reciprocity; RCA: III > II,
+ * reciprocal I/aVL, posterior V2–V3). LCx: no candidate the analyzer delimits;
+ * II ≥ III, I positive, ST↑ V5–V6, ↓ V1–V3. */
+export const TEXTBOOK_ISCHEMIA_SEEDS: Record<Artery, number> = { LAD: 36, RCA: 252, LCX: 5 };
 /** Ventricular pacing presets (F5.4): the seed also draws the paced complex and spike. */
 export const TEXTBOOK_PACED_SEED = 13;
 export const TEXTBOOK_SEEDS: Record<BeatModelCode, number> = { NORM: TEXTBOOK_SEED, CLBBB: 15, CRBBB: 276, IRBBB: 201, LAFB: 9, LVH: 154, IMI: 52, ASMI: 105 };
@@ -814,7 +822,8 @@ export function fromPreset(preset: Preset, view?: ECGCase["view"], options: { na
     if (preset.patch[control] !== undefined) c[flag] = false;
   const model = realisticModelFor(c);
   if (preset.patch.seed === undefined && model)
-    c.seed = model !== "NORM" ? TEXTBOOK_SEEDS[model] : c.rhythm === "af" ? TEXTBOOK_AF_SEED
+    c.seed = model !== "NORM" ? TEXTBOOK_SEEDS[model] : learnedIschemiaArtery(c) ? TEXTBOOK_ISCHEMIA_SEEDS[learnedIschemiaArtery(c)!]
+      : c.rhythm === "af" ? TEXTBOOK_AF_SEED
       : c.rhythm === "flutter" ? TEXTBOOK_FLUTTER_SEED
       : learnedVentricularEctopy(c) ? TEXTBOOK_PVC_SEED : pacedVentricular(c) ? TEXTBOOK_PACED_SEED
       : ventricularRhythm(c) ? TEXTBOOK_VT_SEED : TEXTBOOK_SEED;

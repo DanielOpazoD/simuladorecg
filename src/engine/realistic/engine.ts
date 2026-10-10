@@ -10,6 +10,7 @@ import { qrsAmplitudeScale, T_REFERENCE_AMPLITUDE } from "../morphology";
 import { dipoleOf, reconstruct, samplePatient, shapeModel, transform, type Patient } from "./shape-model";
 import { addAtrial, addVentricular, beatShapeState, beatTemplate, qrsOnsetLevel, type BeatShapeState } from "./beat";
 import { learnedSecondaryRepolarization, noConductedBeats, realisticModelFor } from "./scope";
+import { ischemiaDelta } from "./ischemia";
 
 export const P_REFERENCE_AMPLITUDE = 0.15;
 /** Horizontal heart rotation per unit of the transition control (degrees). */
@@ -110,7 +111,10 @@ export class RealisticTrack {
     this.patient = realisticPatient(c);
     this.atrial = beatShapeState(this.patient, random(((c.seed * 31) ^ 0xa7a1) >>> 0));
     this.ventricular = beatShapeState(this.patient, random(((c.seed * 37) ^ 0x7e57) >>> 0));
+    this.lesion = noConductedBeats(c) ? null : ischemiaDelta(c);
   }
+  /** Learned change of the conducted beat during acute occlusion (F4), or null. */
+  private lesion: Float64Array | null;
   private templates = new Map<number, Float64Array>();
   /** Inherited Ta level kept in a conducted beat: P gain relative to QRS gain, so
    * atrial repolarization follows the P wave (none without P). */
@@ -194,7 +198,13 @@ export class RealisticTrack {
   addBeat(b: Beat, qrsSeconds: number) {
     const qrsMs = qrsSeconds * 1000, sttMs = Math.max(80, b.qt! * 1000 - qrsMs);
     const key = this.key(b.time);
-    const x = this.templates.get(key) ?? beatTemplate(this.patient, this.ventricular, b.time, this.c.respiratoryRate);
+    let x = this.templates.get(key) ?? beatTemplate(this.patient, this.ventricular, b.time, this.c.respiratoryRate);
+    if (this.lesion) {
+      // The learned change covers the ventricular phases (QRS to post-T), in order.
+      x = Float64Array.from(x);
+      const o = this.patient.model.phases.qrs.offset * 8;
+      for (let j = 0; j < this.lesion.length; j++) x[o + j] += this.lesion[j];
+    }
     addVentricular(this.acc, this.fs, b.time, qrsMs, sttMs, x, this.patient, this.conducted.has(key) ? this.taKeep : 0);
   }
 }

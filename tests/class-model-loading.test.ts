@@ -37,3 +37,20 @@ describe("modelos de clase bajo demanda", () => {
     }
   });
 });
+
+describe("modelo de oclusión aguda (F4) bajo demanda", () => {
+  it("sin cargar, la lesión aprendida falla de forma explícita y el sinusal no lo necesita", async () => {
+    const { forgetIschemiaModel, hasIschemiaModel } = await import("../src/engine/realistic/ischemia");
+    const { ensureCaseModel, ensureIschemiaModel } = await import("../src/engine/realistic/models");
+    forgetIschemiaModel();
+    expect(() => synthesize(preset("anterior"), 4)).toThrow(/isquemia aguda no está cargado/);
+    for (const c of [preset("sinus"), { ...preset("anterior"), phase: "evolving" as const }, preset("lbbb")]) {
+      await ensureCaseModel(c);
+      expect(hasIschemiaModel()).toBe(false);
+    }
+    await ensureCaseModel(preset("inferior"));
+    expect(hasIschemiaModel()).toBe(true);
+    expect(() => synthesize(preset("anterior"), 4)).not.toThrow();
+    await ensureIschemiaModel();
+  });
+});

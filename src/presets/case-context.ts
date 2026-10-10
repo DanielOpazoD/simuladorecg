@@ -2,6 +2,7 @@ import { NATURAL_CONTROLS, normalizeCase, type ECGCase } from "../engine/types";
 import { repolarizationLimitations } from "./teaching-limits";
 import { fromPreset, presetById, type Preset } from "./catalog";
 import { realisticModelFor } from "../engine/realistic/scope";
+import { learnedIschemiaArtery } from "../engine/realistic/ischemia";
 
 /** Preset text describes physiology, not a case's free name or acquisition settings. */
 function physiology(c: ECGCase) {
@@ -70,6 +71,10 @@ export function caseContext(input: ECGCase): CaseContext {
   if ((learned === "IMI" || learned === "ASMI") && !["old_inferior", "old_anterior"].includes(c.presetId))
     warnings.push(
       "Fase crónica de lesión inferior o anterior: se muestra un infarto antiguo aprendido de pacientes reales (ondas Q). Los casos guardados antes de F3.2 mostraban ST resuelto sin Q.",
+    );
+  if (learned === "NORM" && learnedIschemiaArtery(c) && !["anterior", "inferior", "inferior_lcx"].includes(c.presetId))
+    warnings.push(
+      "Lesión aguda aprendida de oclusiones con balón (STAFF III): el cambio del ST es el de pacientes reales. Los casos guardados antes de F4 mostraban un vector de lesión dibujado.",
     );
   warnings.push(...repolarizationLimitations(c));
   return {

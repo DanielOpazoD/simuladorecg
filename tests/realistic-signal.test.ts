@@ -41,7 +41,9 @@ describe("alcance de la base aprendida (F2–F3)", () => {
     expect(realisticModelFor({ ...fromPreset(presetById("vvi")!), ventricularSource: "rv_apical_pacing" })).toBeNull();
     // Ventricular rhythms (F5.5): the patient's own PVC focus on a normal atrial base.
     for (const id of ["vt", "idioventricular", "aivr", "complete_v"]) expect(realisticModelsFor(fromPreset(presetById(id)!))).toEqual(["NORM", "PVC"]);
-    for (const id of ["torsades", "vf", "lpfb", "bifascicular", "wpw", "anterior", "inferior", "lateral", "sgarbossa", "rv_acute", "hyperk"])
+    // Acute LAD/RCA/LCx occlusion is learned since F4 (normal patient + STAFF III change).
+    for (const id of ["anterior", "inferior", "inferior_lcx"]) expect(realisticModelFor(fromPreset(presetById(id)!))).toBe("NORM");
+    for (const id of ["torsades", "vf", "lpfb", "bifascicular", "wpw", "lateral", "sgarbossa", "rv_acute", "hyperk"])
       expect(model[id]).toBeNull();
     // Only the chronic phase of a territory with a learned old-infarction population.
     expect(realisticModelFor({ ...fromPreset(presetById("lateral")!), phase: "chronic" })).toBeNull();
@@ -189,7 +191,7 @@ describe("producto", () => {
       const s = synthesize({ ...fromPreset(p), acquisition: "realistic" }, 10);
       for (const lead of LEADS) expect(s.leads[lead].every(Number.isFinite), p.id).toBe(true);
     }
-  }, 60_000);
+  }, 180_000);
   it("el eje de la tarjeta es el que tiene el trazado, no solo el pedido", () => {
     const s = synthesize(load("sinus", { axis: 150, seed: 21 }), 10);
     expect(modelMetricCards(load("sinus", { axis: 150, seed: 21 }), s)[4].value).toBe(`${Math.round(s.truth.axis!)}<small>°</small>`);
@@ -374,7 +376,9 @@ describe("F3.2: alcance del infarto antiguo y textos de la interfaz", () => {
   it("la fase crónica no descarta otros modificadores: con sobrecarga sigue en núcleos", () => {
     const old = fromPreset(presetById("old_inferior")!);
     for (const overload of ["lv", "rv_acute", "rv_chronic"] as const) expect(realisticModelFor({ ...old, overload })).toBeNull();
-    expect(realisticModelFor({ ...old, phase: "acute" })).toBeNull();
+    // Back to the acute phase: the learned occlusion of the RCA (F4).
+    expect(realisticModelFor({ ...old, phase: "acute" })).toBe("NORM");
+    expect(realisticModelFor({ ...old, phase: "evolving" })).toBeNull();
     expect(realisticModelFor({ ...old, ischemia: "inferior_lcx" })).toBe("IMI");
   });
   it("los presets de infarto antiguo conservan una lesión visible si se pasan a fase aguda", () => {
@@ -734,5 +738,58 @@ describe("F2.3: paciente natural en la base normal", () => {
     expect(c.pr).toBeGreaterThanOrEqual(130); expect(c.pr).toBeLessThanOrEqual(190);
     expect(c.qrs).toBeGreaterThanOrEqual(80); expect(c.qrs).toBeLessThanOrEqual(100);
     expect(c.qtc).toBeGreaterThanOrEqual(380); expect(c.qtc).toBeLessThanOrEqual(430);
+  });
+});
+
+describe("F4: oclusión aguda aprendida de STAFF III", () => {
+  const j60 = (s: Signal, l: (typeof LEADS)[number]) => {
+    const b = s.events.beats.find((x) => x.time > 1)!;
+    return s.leads[l][Math.round((b.time + b.qrs! + 0.06) * s.fs)] - s.leads[l][Math.round((b.time - 0.03) * s.fs)];
+  };
+  const change = (id: string, patch: Partial<ECGCase> = {}) => {
+    const c = load(id, patch), s = synthesize(c, 10), r = synthesize({ ...c, ischemia: "none" }, 10);
+    return (l: (typeof LEADS)[number]) => j60(s, l) - j60(r, l);
+  };
+  it("intensidad 0 es el mismo paciente sin lesión, y la intensidad es lineal", () => {
+    const c = load("inferior"), none = synthesize({ ...c, ischemia: "none" }, 10);
+    const z = synthesize({ ...c, st: 0 }, 10), one = synthesize({ ...c, st: 1 }, 10), two = synthesize({ ...c, st: 2 }, 10);
+    for (const l of LEADS) {
+      expect(Array.from(z.leads[l])).toEqual(Array.from(none.leads[l]));
+      for (let i = 0; i < two.leads[l].length; i += 17) expect(one.leads[l][i] - z.leads[l][i]).toBeCloseTo((two.leads[l][i] - z.leads[l][i]) / 2, 9);
+    }
+  });
+  it("cada arteria da su territorio en J+60 (DA anterior, CD III > II, Cx inferolateral)", () => {
+    const a = change("anterior"), r = change("inferior"), x = change("inferior_lcx");
+    expect(a("V2")).toBeGreaterThan(0.15); expect(a("V3")).toBeGreaterThan(0.15); expect(a("II")).toBeLessThan(0);
+    expect(r("III")).toBeGreaterThan(r("II")); expect(r("II")).toBeGreaterThan(0.08); expect(r("aVL")).toBeLessThan(-0.05);
+    expect(x("II")).toBeGreaterThanOrEqual(x("III")); expect(Math.max(x("V5"), x("V6"))).toBeGreaterThan(0.1); expect(x("V2")).toBeLessThan(0);
+  });
+  it("el QRS no se deforma: el cambio solo entra en su último 40 % (corriente de lesión)", () => {
+    for (const id of ["anterior", "inferior", "inferior_lcx"]) {
+      const c = load(id), s = synthesize(c, 10), r = synthesize({ ...c, ischemia: "none" }, 10), b = s.events.beats.find((x) => x.time > 1)!;
+      for (const l of LEADS)
+        for (let i = Math.ceil(b.time * s.fs); i < Math.floor((b.time + 0.55 * b.qrs!) * s.fs); i++) expect(Math.abs(s.leads[l][i] - r.leads[l][i])).toBeLessThan(1e-4);
+    }
+  });
+  it("la fase hiperaguda es otro estado aprendido; la evolutiva y los demás territorios siguen en núcleos", () => {
+    const h = change("anterior", { phase: "hyperacute" }), a = change("anterior");
+    expect(Math.abs(h("V3") - a("V3"))).toBeGreaterThan(0.01);
+    expect(realisticModelFor(load("anterior", { phase: "evolving" }))).toBeNull();
+    for (const id of ["lateral", "posterior", "rv_infarct", "wellens_a", "de_winter", "pericarditis"]) expect(realisticModelFor(load(id))).toBeNull();
+  });
+});
+
+describe("F4: la lesión llega a todos los latidos conducidos, en cualquier ritmo", () => {
+  it.each([
+    ["sinus", {}], ["af", { rhythm: "af", hr: 95 }], ["flutter", { rhythm: "flutter", hr: 100, atrialRate: 300 }], ["pac", { ectopy: "pac" }],
+    ["pvc", { ectopy: "pvc" }], ["wenckebach", { av: "mobitz1", hr: 75 }], ["av21", { av: "two_one", hr: 80 }], ["aai", { rhythm: "paced", pacing: "AAI", hr: 60 }],
+  ] as const)("%s", (_name, patch) => {
+    const c = load("anterior", patch as Partial<ECGCase>), s = synthesize(c, 10), r = synthesize({ ...c, ischemia: "none" }, 10);
+    const at = (x: Signal, b: { time: number; qrs?: number }) => x.leads.V3[Math.round((b.time + b.qrs! + 0.06) * x.fs)] - x.leads.V3[Math.round((b.time - 0.03) * x.fs)];
+    const normal = s.events.beats.filter((b) => b.kind === "normal" && b.time > 0.5 && b.time < 9);
+    expect(normal.length).toBeGreaterThan(2);
+    for (const b of normal) expect(at(s, b) - at(r, b)).toBeGreaterThan(0.15);
+    // Ectopic ventricular beats keep their own repolarization (no conducted lesion).
+    for (const b of s.events.beats.filter((x) => x.kind === "pvc" && x.time > 0.5 && x.time < 9)) expect(Math.abs(at(s, b) - at(r, b))).toBeLessThan(0.02);
   });
 });

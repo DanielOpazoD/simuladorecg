@@ -77,7 +77,8 @@ describe('Calibrated noise independent contracts',()=>{
   });
   it('native diagnostic preserves inferior ST within the existing 0.02mV review contract',()=>{
     const c=fromPreset(presetById('inferior')!);c.variability=0;c.filter='off';
-    const a=synthesize(c,14),b=synthesize({...c,filter:'diagnostic'},14),beat=a.events.beats.find(b=>b.time>6)!;
+    // Filter contract on the kernel lesion; the learned one is checked in fidelity.test.ts.
+    const a=synthesize(c,14,{learnedBase:false}),b=synthesize({...c,filter:'diagnostic'},14,{learnedBase:false}),beat=a.events.beats.find(b=>b.time>6)!;
     const on=beat.time,off=on+beat.qrs!,end=on+beat.qt!;
     const windows={baseline:[on-.035,on-.020] as const,qrs:[on,off] as const,t:[end-.16,end] as const};
     const r=compareMorphology(a,b,windows,p.reviewThresholds);

@@ -6,6 +6,7 @@
 import type { ECGCase } from "../types";
 import type { BeatModelCode, EctopicModelCode, ModelCode } from "./shape-model";
 import { regionalActivationState } from "../regional-activation";
+import { learnedIschemiaArtery } from "./ischemia";
 
 const SUPPORTED_ELECTROLYTES: readonly ECGCase["electrolyte"][] = ["none", "longqt", "shortqt", "lowvoltage"];
 
@@ -41,8 +42,13 @@ export function realisticModelFor(c: ECGCase): BeatModelCode | null {
   // from the normal population and conduction/overload do not apply.
   if (noConductedBeats(c)) return c.ischemia === "none" ? "NORM" : null;
   const conduction = CONDUCTION_MODELS[c.conduction] ?? null;
-  if (c.ischemia !== "none")
-    return c.phase === "chronic" && conduction === "NORM" && c.overload === "none" ? OLD_INFARCTION[c.ischemia] ?? null : null;
+  if (c.ischemia !== "none") {
+    if (conduction !== "NORM" || c.overload !== "none") return null;
+    // Old infarction: its own learned population. Acute occlusion of the LAD, RCA
+    // or LCx (F4): the normal patient plus the change learned in STAFF III.
+    if (c.phase === "chronic") return OLD_INFARCTION[c.ischemia] ?? null;
+    return learnedIschemiaArtery(c) ? "NORM" : null;
+  }
   if (c.overload === "none") return conduction;
   return c.overload === "lv" && conduction === "NORM" ? "LVH" : null;
 }
