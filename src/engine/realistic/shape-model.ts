@@ -407,6 +407,9 @@ export function samplePatient(t: PatientTargets): Patient {
   // and the horizontal rotation, never on the requested axes: moving an axis
   // control rotates the same person.
   const m = shapeModel(t.model);
+  // Without an axis control (ectopic beats keep their own axis) there is nothing
+  // to stabilize: the first draw is the patient, unbiased.
+  if (t.axis === null) return sampleCandidate(m, t, 0);
   let chosen = 0, bestMargin = -1;
   for (let attempt = 0; attempt < 16; attempt++) {
     const margin = axisMargin(m, reconstruct(m, candidateZ(m, t.seed, attempt).z), t.horizontalDeg);

@@ -786,7 +786,7 @@ export const TEXTBOOK_SEED = 1951;
  * irregularity; same rule as the classes (the analyzer does not measure QT in AF). */
 export const TEXTBOOK_AF_SEED = 251;
 /** Ventricular premature beat presets (F5.3): the seed also draws the PVC patient. */
-export const TEXTBOOK_PVC_SEED = 137;
+export const TEXTBOOK_PVC_SEED = 283;
 export const TEXTBOOK_SEEDS: Record<BeatModelCode, number> = { NORM: TEXTBOOK_SEED, CLBBB: 15, CRBBB: 276, IRBBB: 201, LAFB: 9, LVH: 154, IMI: 52, ASMI: 105 };
 
 export function fromPreset(preset: Preset, view?: ECGCase["view"]): ECGCase {

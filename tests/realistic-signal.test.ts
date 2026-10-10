@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { synthesize } from "../src/engine/signal";
 import { LEADS, type ECGCase, type Signal } from "../src/engine/types";
-import { fromPreset, presetById, PRESETS, TEXTBOOK_AF_SEED, TEXTBOOK_SEED, TEXTBOOK_SEEDS } from "../src/presets/catalog";
+import { fromPreset, presetById, PRESETS, TEXTBOOK_AF_SEED, TEXTBOOK_PVC_SEED, TEXTBOOK_SEED, TEXTBOOK_SEEDS } from "../src/presets/catalog";
 import { realisticModelFor, realisticModelsFor } from "../src/engine/realistic/scope";
 import { samplePatient } from "../src/engine/realistic/shape-model";
 
@@ -425,6 +425,7 @@ describe("F5.1: ondas f y RR de la FA aprendidos de PTB-XL", () => {
   });
   it("los presets de FA muestran su paciente de libro", () => {
     for (const id of ["af", "af_fast", "af_slow"]) expect(fromPreset(presetById(id)!).seed).toBe(TEXTBOOK_AF_SEED);
+    for (const id of ["pvc", "bigeminy", "trigeminy", "couplet"]) expect(fromPreset(presetById(id)!).seed).toBe(TEXTBOOK_PVC_SEED);
   });
 });
 
@@ -448,6 +449,25 @@ describe("F5.3: extrasístoles ventriculares aprendidas de PTB-XL", () => {
     const mean = sizes.reduce((a, b) => a + b, 0) / sizes.length;
     const cv = Math.sqrt(sizes.reduce((a, b) => a + (b - mean) ** 2, 0) / sizes.length) / mean;
     expect(cv).toBeGreaterThan(0.15);
+  });
+  it("su QT es propio (ST-T del paciente), marcado y sin aviso de recorte del modelo de QTc", async () => {
+    const { qtModelLimits } = await import("../src/ui/qt-model-limits");
+    const stts = new Set<number>();
+    for (let seed = 1; seed <= 10; seed++) {
+      const s = synthesize(load("pvc", { seed }), 10), b = s.events.beats.find((x) => x.kind === "pvc")!;
+      expect(b.ownDurations).toBe(true);
+      stts.add(Math.round((b.qt! - b.qrs!) * 1000));
+      expect(qtModelLimits(load("pvc", { seed }), s).join(" ")).not.toMatch(/Límite del generador/);
+    }
+    expect(stts.size).toBeGreaterThan(5);
+  });
+  it("su eje no obedece al control de eje y su ST-T sigue la ganancia de su QRS", async () => {
+    const { realisticPvcPatient } = await import("../src/engine/realistic/engine");
+    const a = realisticPvcPatient(load("pvc", { axis: 0 })), b = realisticPvcPatient(load("pvc", { axis: 90 }));
+    expect(a.achievedAxes.qrs).toBeCloseTo(b.achievedAxes.qrs, 9);
+    const g = realisticPvcPatient(load("pvc", { qrsAmp: 2 }));
+    expect(g.scales.t / g.scales.qrs).toBeCloseTo(1, 12);
+    expect(g.scales.qrs).toBeCloseTo(2 * a.scales.qrs, 12);
   });
   it("una fuente ventricular elegida vuelve a los núcleos con su ancho mínimo", () => {
     const s = synthesize(load("pvc", { ventricularSource: "representative_pvc" }), 10);

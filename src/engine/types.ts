@@ -141,6 +141,8 @@ export interface Beat {
   qrs?: number;
   qt?: number;
   adaptedRR?: number;
+  /** QRS/QT are the learned ectopic patient's own (F5.3), not the QTc model's. */
+  ownDurations?: true;
 }
 export interface EventSeries {
   atria: AtrialEvent[];

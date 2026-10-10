@@ -550,25 +550,29 @@ quitar el borde coseno de la banda (la integral del FIR ya la limita).
 ## F5.3 · Extrasístoles ventriculares aprendidas
 
 **Datos.** 1.143 registros de PTB-XL con PVC, BIGU o TRIGU (bajados y verificados
-con SHA-256); 442 pacientes de los pliegues 1–8 con una EV unifocal utilizable
-(`scripts/fidelity/build_pvc_model.py`). Por registro: latidos que difieren del
-dominante (correlación < 0,7 en ±80 ms) y son prematuros (RR previo < 0,92 del
-dominante); el grupo de morfología común más numeroso; su mediana; inicio y fin
-del QRS por la velocidad espacial, ápice y fin de T por la magnitud espacial. Las
+con SHA-256); 346 pacientes de los pliegues 1–8 con una EV unifocal utilizable
+(`scripts/fidelity/build_pvc_model.py --components 24`). Por registro: latidos que
+difieren del dominante (correlación < 0,7 en ±80 ms) y son prematuros (RR previo
+< 0,92 del dominante); el grupo de morfología común más numeroso; su mediana
+(ventana de 900 ms tras el pico); inicio y fin del QRS por la velocidad espacial,
+ápice y fin de T (15 % del ápice) por la magnitud espacial. Una plantilla cuyo fin
+de T llega al borde de la ventana o al latido siguiente se descarta: con 440 ms, el
+26 % quedaba censurado y su ST-T («p90 380 ms») era el tope, no fisiología. Las
 fases auriculares quedan en cero (sin P propia) y la población se ajusta con la
 misma función que las clases (`fit_and_write`, extraída de `build_shape_model.py`
-sin cambiar ningún modelo: NORM, CRBBB y LAFB regenerados idénticos). 24 modos
-(0,97 de la varianza): la mayoría de los registros tiene una sola EV y los modos
-finos serían ruido.
+sin cambiar ningún modelo: NORM, CRBBB, LAFB e IMI regenerados idénticos). 24 modos
+(0,975 de la varianza): la mayoría de los registros tiene una sola EV.
 
 **Producto.** Las EV con la fuente automática usan la población aprendida sobre la
 base sinusal aprendida (`learnedVentricularEctopy`); elegir una fuente docente
 concreta vuelve a los núcleos en todo el trazado. Cada paciente (semilla) tiene su
-EV: su eje (sin control), su ancho de QRS y su ST-T propios (antes 150 ms mínimos
-y el QT del latido conducido), su amplitud propia (`naturalAmplitude`: el control
-de amplitud la multiplica en vez de llevarla a la mediana) y repolarización
-secundaria ligada a su QRS. El laboratorio de activación muestra la EV aprendida.
-Paciente de libro de los presets de EV: semilla 137 (misma regla).
+EV: su eje (sin control; el primer sorteo, sin selección por margen de eje), su
+ancho de QRS y su ST-T propios (antes 150 ms mínimos y el QT del latido conducido;
+el evento queda marcado `ownDurations` y no cuenta como recorte del modelo de
+QTc), su amplitud propia (`naturalAmplitude`: el control la multiplica en vez de
+llevarla a la mediana) y repolarización secundaria ligada a su QRS. La validación
+del calendario usa ese QRS. El laboratorio de activación muestra la EV aprendida.
+Paciente de libro de los presets de EV: semilla 283 (misma regla).
 
 ### Resultado
 
@@ -577,23 +581,26 @@ reserva (pliegues 9–10):
 
 | Rasgo | Real p10 / p50 / p90 | Sintético | KS |
 |---|---|---|---|
-| QRS (ms) | 106 / 130 / 158 | 108 / 128 / 151 | 0,11 |
-| ST-T (ms) | 224 / 272 / 380 | 235 / 296 / 371 | 0,19 |
-| Eje (°) | −87 / 45 / 137 | −103 / 62 / 108 | 0,09 |
-| T discordante | 0,5 / 1 / 1 | 0,5 / 1 / 1 | 0,08 |
-| Magnitud QRS (mV) | 2,1 / 3,6 / 5,9 | 2,6 / 4,0 / 5,8 | 0,20 |
-| Magnitud T (mV) | 0,8 / 1,4 / 2,4 | 0,8 / 1,5 / 2,4 | 0,10 |
-| Acoplamiento | 0,51 / 0,64 / 0,79 | 0,57 / 0,60 / 0,64 | 0,38 |
+| QRS (ms) | 106 / 134 / 158 | 110 / 128 / 154 | 0,10 |
+| ST-T (ms) | 217 / 264 / 323 | 232 / 274 / 374 | 0,19 |
+| Eje (°) | −87 / 60 / 136 | −86 / 25 / 126 | 0,11 |
+| T discordante | 0,5 / 1 / 1 | 0,5 / 1 / 1 | 0,10 |
+| Magnitud QRS (mV) | 2,1 / 3,6 / 5,9 | 2,0 / 3,6 / 5,6 | 0,09 |
+| Magnitud T (mV) | 0,8 / 1,5 / 2,8 | 0,9 / 1,4 / 2,5 | 0,08 |
+| Acoplamiento | 0,50 / 0,64 / 0,78 | 0,57 / 0,60 / 0,64 | 0,41 |
 
 Antes de usar la duración y la amplitud propias, el QRS sintético salía de
 132–158 ms (KS 0,60) y la magnitud fija en la mediana (KS 0,45). El acoplamiento
 sigue siendo un control del caso (0,58 por defecto). El detector de latidos del
 extractor ni siquiera encuentra la EV histórica de núcleos (la toma por una
-pausa): no hay comparación posible. Clasificador diagnóstico: 90 % de la población
+pausa): no hay comparación posible. Clasificador diagnóstico: 85 % de la población
 sintética reconocida como PVC; presets EV, bigeminismo, trigeminismo y dupla de
-0,97–0,998 a 1,00.
+0,97–0,998 a 0,995–1,00.
 
-**Límites.** Una EV unifocal por paciente (sin EV multiformes); la TV, el ritmo
-idioventricular y el escape ventricular siguen en núcleos. En modo monitor, el
-paso alto de 0,5 Hz quita hasta ~25 % del área de la T de una EV grande (es el
-filtro); el contrato de fase cero corre esa EV sobre núcleos.
+**Límites.** Una EV unifocal por paciente (sin EV multiformes). Su QT no depende
+del QTc ni de la FC del caso (es el del paciente). La TV, el ritmo idioventricular
+y el escape ventricular siguen en núcleos. En modo monitor, el paso alto de 0,5 Hz
+desplaza más a una EV grande y ancha (J+60 hasta ~0,07 mV, área de T ~7 %) y su
+cola alcanza al latido siguiente: el contrato de fase cero escala sus tolerancias
+con el QRS y la T de cada complejo. Los casos guardados antes de F5.3 con EV
+automáticas cambian de morfología (ahora un paciente real) sin aviso propio.

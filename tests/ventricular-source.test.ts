@@ -37,7 +37,7 @@ describe("Ventricular source is independent of rhythm classification", () => {
       // The automatic source of a learned PVC keeps the patient's own QRS/QT
       // (F5.3); an explicit teaching source keeps the kernel durations. Every
       // time, kind and interval is identical either way.
-      const timing=(e:typeof a.events)=>({...e,beats:e.beats.map(({qrs,qt,...rest})=>rest)});
+      const timing=(e:typeof a.events)=>({...e,beats:e.beats.map(({qrs,qt,ownDurations,...rest})=>rest)});
       expect(timing(b.events)).toEqual(timing(a.events));
       if(preset!=="pvc")expect(b.events).toEqual(a.events);
       expect(lesionVector({...c,ventricularSource:id})).toEqual(lesionVector(c));

@@ -1,7 +1,7 @@
 """Modelo de forma de la extrasístole ventricular (EV), aprendido de PTB-XL
 (CC BY 4.0). Solo pliegues 1–8 (9–10: reserva del banco).
 
-Uso: python scripts/fidelity/build_pvc_model.py --data ~/datos/ecg-referencia \
+Uso: python scripts/fidelity/build_pvc_model.py --data ~/datos/ecg-referencia --components 24 \
         --out src/engine/realistic/models/PVC.json [--report informe.json]
 
 Por registro con PVC/BIGU/TRIGU (500 Hz, sin marcapasos):
@@ -26,7 +26,7 @@ from wfdb import read
 from features import detect_beats, INDEP, ms, FS
 from build_shape_model import PHASES, CLASS_POST_MS, fit_and_write
 
-PRE, POST = 320, 560  # ventana del latido alrededor del pico detectado (ms)
+PRE, POST = 320, 900  # ventana alrededor del pico: 900 ms para no recortar el fin de T
 
 
 def windows(x, pk):
@@ -72,13 +72,16 @@ def fiducials(t8):
     off = top + int(above.max()) + 1 if len(above) else top
     base = t8[max(0, on - ms(6)):on + 1].mean(0)
     mag = np.linalg.norm(t8 - base, axis=1)
-    s0, s1 = off + ms(60), min(len(t8) - ms(CLASS_POST_MS) - 1, off + ms(420))
+    s0, s1 = off + ms(60), min(len(t8) - ms(CLASS_POST_MS) - 1, off + ms(480))
     if s1 <= s0:
         return None
     apex = s0 + int(np.argmax(mag[s0:s1]))
     end = apex
     while end < len(t8) - ms(CLASS_POST_MS) - 1 and mag[end] > 0.15 * mag[apex]:
         end += 1
+    # Fin de T censurado por la ventana (o por el latido siguiente): no es fisiología.
+    if mag[end] > 0.15 * mag[apex]:
+        return None
     return on, off, apex, end, base
 
 

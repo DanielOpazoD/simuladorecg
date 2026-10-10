@@ -73,7 +73,7 @@ export const learnedPvcQrsSeconds = (c: ECGCase) => Math.min(0.2, Math.max(0.1, 
 export function learnPvcDurations(c: ECGCase, beats: Beat[]): void {
   const p = realisticPvcPatient(c), qrs = learnedPvcQrsSeconds(c);
   const stt = Math.min(0.5, Math.max(0.16, p.sttMs / 1000));
-  for (const b of beats) if (b.kind === "pvc") { b.qrs = qrs; b.qt = qrs + stt; }
+  for (const b of beats) if (b.kind === "pvc") { b.qrs = qrs; b.qt = qrs + stt; b.ownDurations = true; }
 }
 
 /** Accumulates realistic components for the eight independent leads at `fs`. */
