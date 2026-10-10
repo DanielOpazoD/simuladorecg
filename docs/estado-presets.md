@@ -64,8 +64,8 @@ Ningún patrón se presenta como validado clínicamente. La columna «Estrategia
 | Estimulación auricular AAI | aproximado | vectorial | Estimulación capturada a frecuencia fija; sensado, demanda y fallos pendientes. |
 | Estimulación ventricular VVI | aproximado | vectorial | Por defecto, estimulación fija capturada. VVI ofrece demanda idealizada y una variante sin captura total sin escape; no simula fusión ni fallos intermitentes. ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa. |
 | Estimulación secuencial DDD | aproximado | vectorial | Secuencia fija; no simula demanda, PVARP, seguimiento ni límite superior. ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa. |
-| Hiperpotasemia · T prominente | aproximado | vectorial | Sin relación concentración–ECG, ni evolución a onda sinusoidal. |
-| Hipopotasemia · onda U | aproximado | vectorial | El delineador puede confundir T y U; QT automático no fiable. |
+| Hiperpotasemia · T prominente | aproximado | vectorial | Patrón esquemático de libro. En pacientes reales el ECG no sigue al potasio de forma lineal: con K ≥ 5,5 solo 2 de 7 mostraron T más picuda que su propio ECG con K normal (demo de MIMIC-IV); influyen la cronicidad, el calcio y los fármacos. Sin relación concentración–ECG, ni evolución a onda sinusoidal. |
+| Hipopotasemia · onda U | aproximado | vectorial | Patrón esquemático de libro; en pacientes reales es variable (T aplanada en 3 de 4 con K ≤ 3,3 frente a su propio ECG con K normal, demo de MIMIC-IV). El delineador puede confundir T y U; QT automático no fiable. |
 | QT prolongado | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
 | QT corto | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
 | Bajo voltaje | aproximado | vectorial | La etiología y la alternancia eléctrica no están modeladas. |

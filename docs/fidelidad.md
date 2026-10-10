@@ -821,3 +821,22 @@ ruido, dinámica) basta por sí solo para la red. El analizador congelado rinde 
 sobre la población natural (sinusal, AAI y BAV 1.° 60/60; EV y bigeminia como en
 `main`). Límites: la pendiente en I sigue baja (truncado a 64 modos) y el ruido
 (AUC del grupo 0,98) queda para una etapa propia.
+
+## Electrolitos · por qué siguen como patrón de libro
+
+La respuesta del ECG al potasio no es una función de la concentración. En las demos
+abiertas de MIMIC-IV (ECG 0.1 y clínica 2.2, ODbL; 659 ECG de 92 pacientes) se
+comparó a cada paciente consigo mismo: su ECG con K alterado (a menos de 3 h del
+análisis, ritmo regular, QRS < 130 ms) frente a su ECG con K entre 3,5 y 5,0.
+
+- Hiperpotasemia (K ≥ 5,5, 7 pacientes): solo 2 tuvieron la T más picuda; el de K
+  7,6 la tuvo más baja que su basal; el de T más picuda tenía además Ca 6,2; los dos
+  K más altos tenían enfermedad renal crónica.
+- Hipopotasemia (K ≤ 3,3, 4 pacientes): 3 aplanaron la T (−51 a −64 %); uno, con
+  enfermedad renal crónica, la elevó.
+
+Son pocos pacientes y medidas automáticas, pero bastan para descartar un modelo
+«K → ECG». Los presets muestran el patrón esquemático clásico y lo declaran. Un
+modelo aprendido necesitaría MIMIC-IV acreditado y debería representar la
+sensibilidad de cada paciente, no una curva única. El producto no contiene datos
+ni coeficientes de MIMIC-IV.

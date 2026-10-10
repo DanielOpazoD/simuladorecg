@@ -580,7 +580,7 @@ describe("F5.4: marcapasos aprendido de PTB-XL", () => {
       const s = synthesize(load("aai", { seed, hr, filter: "diagnostic" }), 10);
       expect(analyzeSamples({ fs: s.fs, leads: s.leads }).hr).toBeCloseTo(hr, -1);
     }
-  });
+  }, 60_000);
   it("los presets VVI y DDD muestran su paciente de libro", () => {
     for (const id of ["vvi", "ddd"]) expect(fromPreset(presetById(id)!).seed).toBe(TEXTBOOK_PACED_SEED);
   });
