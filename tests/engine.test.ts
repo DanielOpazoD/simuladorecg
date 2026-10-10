@@ -19,6 +19,7 @@ import { PRESETS, fromPreset, presetById } from "../src/presets/catalog";
 import { calibrationGeometry, paperLayout } from "../src/render/ecg";
 import { encodeCase, decodeCase } from "../src/ui/persistence";
 import { expectCatalogFingerprint } from "./support/catalog-fingerprint";
+import { afPatient } from "../src/engine/realistic/atrial-fibrillation";
 const testCase = (patch: Partial<ECGCase> = {}) =>
   Object.assign(cloneCase(DEFAULT_CASE), patch);
 const load = (id: string) => fromPreset(presetById(id)!);
@@ -176,8 +177,9 @@ describe("Determinismo y catálogo", () => {
         // The old clipped-clock fingerprint remains stored as historical evidence.
         // Full waveform regression is now the mandatory frozen-source AF prediction.
         // This integration contract checks seeding, one draw per interval and warm-up.
-        const c=fromPreset(p),r=random(c.seed),times:number[]=[];
-        for(let t=.35;t<14;t+=afInterval(r,60/c.hr))if(t>=4)times.push(t-4);
+        // Learned base (F5.1): each patient keeps its own RR coefficient of variation.
+        const c=fromPreset(p),r=random(c.seed),times:number[]=[],cv=afPatient(c.seed).rrCv;
+        for(let t=.35;t<14;t+=afInterval(r,60/c.hr,cv))if(t>=4)times.push(t-4);
         expect(a.events.beats.map(b=>b.time)).toEqual(times);
         expect(a.events.atria).toHaveLength(0);expect(a.events.spikes).toHaveLength(0);
       } else if (fromPreset(p).conduction === 'wpw') {

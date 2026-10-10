@@ -52,6 +52,7 @@ import { icon, btn, esc, select, options } from "./ui/helpers";
 import { syncPauseControl } from "./ui/pause-control";
 import { controls, leadOptions, amplitudeControlState, tAxisControlState } from "./ui/controls";
 import { caseContext, caseReading, normalizeImportedCase } from "./presets/case-context";
+import { usesRealisticBase } from "./engine/realistic/scope";
 import {
   decodeCase,
   savedCaseState,
@@ -214,7 +215,9 @@ function renderInfo() {
   $("#limitation").innerHTML = concealed
     ? "El diagnóstico se mostrará al responder."
     : `<strong>${p?.strategy === "local" ? "Ajuste morfológico local" : "Modelo aproximado"}</strong><p>${esc(p?.limitation || "Sin validación clínica de este caso personalizado.")}</p>`;
-  $("#warnings").innerHTML = (concealed ? [] : [...context.warnings, ...(session.signal?.warnings || []), ...(c.rhythm === "af" ? ["FA representativa: intervalos RR positivos independientes (distribución gamma, CV 0,22). No simula memoria del nodo AV ni toda la variabilidad entre pacientes; la FC programada es una media de largo plazo."] : [])])
+  $("#warnings").innerHTML = (concealed ? [] : [...context.warnings, ...(session.signal?.warnings || []), ...(c.rhythm === "af" ? [usesRealisticBase(c)
+    ? "FA aprendida de pacientes reales (PTB-XL): ondas f e irregularidad del RR propias de cada paciente (CV del RR 0,10–0,35 según la semilla). Intervalos RR independientes (distribución gamma): no simula memoria del nodo AV ni cambios de organización de las ondas f dentro del trazado; la FC programada es una media de largo plazo."
+    : "FA representativa: intervalos RR positivos independientes (distribución gamma, CV 0,22). No simula memoria del nodo AV ni toda la variabilidad entre pacientes; la FC programada es una media de largo plazo."] : [])])
     .map((w) => `<p class="warning">${esc(w)}</p>`)
     .join("");
   $<HTMLButtonElement>('[data-action="export"]').disabled = !!concealed;

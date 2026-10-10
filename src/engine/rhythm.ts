@@ -1,4 +1,6 @@
 import {afInterval} from './af-rr';
+import { usesRealisticBase } from "./realistic/scope";
+import { afPatient } from "./realistic/atrial-fibrillation";
 import { isVviDemand, vviSettings, vviDemandEvents } from "./vvi-demand";
 import { flutterRatios, flutterMeanRatio } from "./flutter-conduction";
 import type { ECGCase, EventSeries, Beat } from "./types";
@@ -38,10 +40,13 @@ function buildEvents(c: ECGCase, duration: number): EventSeries {
   const spike = (time: number) => { if (time < duration) events.spikes.push(time); };
   if (c.rhythm === "vf" || c.rhythm === "asystole") return events;
   if (c.rhythm === "af") {
+    // On the learned base each patient keeps its own RR irregularity (PTB-XL AFIB,
+    // CV 0,12–0,30); the historical kernels keep the fixed representative CV.
+    const cv = usesRealisticBase(c) ? afPatient(c.seed).rrCv : undefined;
     let t = 0.35;
     while (t < duration) {
       beat(t);
-      t += afInterval(r, base);
+      t += afInterval(r, base, cv);
     }
     return events;
   }

@@ -4,9 +4,10 @@ export const AF_RR_CV=.22;
 /** Positive gamma renewal draw (Marsaglia–Tsang, shape>1), in seconds.
  * No clipping, lookahead, global state or per-record normalization.
  */
-export function afInterval(random:()=>number,meanSeconds:number):number {
+export function afInterval(random:()=>number,meanSeconds:number,cv=AF_RR_CV):number {
  if(!Number.isFinite(meanSeconds)||meanSeconds<=0)throw Error('Invalid AF mean RR');
- const shape=1/(AF_RR_CV*AF_RR_CV),d=shape-1/3,c=1/Math.sqrt(9*d);
+ if(!(cv>0&&cv<1))throw Error('Invalid AF RR variability');
+ const shape=1/(cv*cv),d=shape-1/3,c=1/Math.sqrt(9*d);
  for(let attempt=0;attempt<1000;attempt++){
   const x=normal(random),v=1+c*x;
   if(v<=0)continue;
