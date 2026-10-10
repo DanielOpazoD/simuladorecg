@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { synthesize } from "../src/engine/signal";
 import { LEADS, type ECGCase, type Signal } from "../src/engine/types";
-import { fromPreset, presetById, PRESETS, TEXTBOOK_AF_SEED, TEXTBOOK_FLUTTER_SEED, TEXTBOOK_PACED_SEED, TEXTBOOK_PVC_SEED, TEXTBOOK_SEED, TEXTBOOK_SEEDS, TEXTBOOK_VT_SEED } from "../src/presets/catalog";
+import { fromPreset, presetById, PRESETS, TEXTBOOK_AF_SEED, TEXTBOOK_FLUTTER_SEED, TEXTBOOK_PACED_SEED, TEXTBOOK_PVC_SEED, TEXTBOOK_SEED, TEXTBOOK_SEEDS, TEXTBOOK_VF_SEED, TEXTBOOK_VT_SEED } from "../src/presets/catalog";
 import { realisticModelFor, realisticModelsFor } from "../src/engine/realistic/scope";
 import { samplePatient } from "../src/engine/realistic/shape-model";
 
@@ -615,5 +615,43 @@ describe("F5.5: ritmos ventriculares con el foco aprendido del paciente", () => 
     const s = synthesize(load("complete_v"), 10);
     expect(s.events.atria.length).toBeGreaterThan(s.events.beats.length);
     expect(s.events.beats.every((b) => b.kind === "ventricular" && b.ownDurations)).toBe(true);
+  });
+});
+
+describe("F5.6: fibrilación ventricular aprendida (vfdb + cudb)", () => {
+  it("II tiene la amplitud eficaz y la frecuencia dominante del paciente", async () => {
+    const { vfPatient } = await import("../src/engine/realistic/ventricular-fibrillation");
+    for (const seed of [TEXTBOOK_VF_SEED, 7, 21]) {
+      const c = { ...load("vf"), seed, acquisition: "ideal" as const, filter: "off" as const }, s = synthesize(c, 20), p = vfPatient(seed);
+      const ii = Array.from(s.leads.II), mean = ii.reduce((a, b) => a + b, 0) / ii.length;
+      const rms = Math.sqrt(ii.reduce((a, b) => a + (b - mean) ** 2, 0) / ii.length);
+      expect(rms / p.rmsII).toBeGreaterThan(0.7);
+      expect(rms / p.rmsII).toBeLessThan(1.3);
+      // Dominant frequency by an averaged periodogram (2-s Hann segments, 0.5 Hz bins).
+      const N = 2 * s.fs, pow = new Float64Array(N / 2);
+      for (let st = 0; st + N <= ii.length; st += N / 2)
+        for (let k = 2; k < 30; k++) {
+          let re = 0, im = 0;
+          for (let t = 0; t < N; t += 2) { const w = 0.5 - 0.5 * Math.cos((2 * Math.PI * t) / (N - 1)), a = (2 * Math.PI * k * t) / N; re += w * (ii[st + t] - mean) * Math.cos(a); im -= w * (ii[st + t] - mean) * Math.sin(a); }
+          pow[k] += re * re + im * im;
+        }
+      let best = 2;
+      for (let k = 2; k < 30; k++) if (pow[k] > pow[best]) best = k;
+      expect(Math.abs(best * 0.5 - p.dominantHz)).toBeLessThanOrEqual(1);
+    }
+  });
+  it("la población sigue a vfdb/cudb: frecuencia dominante mediana 3,5–5,5 Hz y dispersión entre pacientes", async () => {
+    const { vfPatient } = await import("../src/engine/realistic/ventricular-fibrillation");
+    const fd = Array.from({ length: 30 }, (_, i) => vfPatient(i + 1).dominantHz).sort((a, b) => a - b);
+    const rms = Array.from({ length: 30 }, (_, i) => vfPatient(i + 1).rmsII).sort((a, b) => a - b);
+    expect(fd[15]).toBeGreaterThan(3.5);
+    expect(fd[15]).toBeLessThan(5.5);
+    expect(fd[26] - fd[3]).toBeGreaterThan(1.5); // training p10–p90: 3.3–6.3 Hz
+    expect(rms[26] / rms[3]).toBeGreaterThan(2.5); // training p10–p90: 0.20–1.28 mV
+  });
+  it("sin base aprendida conserva la FV histórica, y el preset muestra su paciente de libro", () => {
+    const c = load("vf");
+    expect(Array.from(synthesize(c, 4).leads.II)).not.toEqual(Array.from(synthesize(c, 4, { learnedBase: false }).leads.II));
+    expect(c.seed).toBe(TEXTBOOK_VF_SEED);
   });
 });
