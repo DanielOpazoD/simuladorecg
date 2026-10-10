@@ -23,4 +23,5 @@ export async function ensureCaseModel(c: ECGCase): Promise<void> {
   await Promise.all([...models.map(ensureShapeModel), ...(models.length && learnedIschemiaArtery(c) ? [ensureIschemiaModel()] : [])]);
 }
 export const CLASS_MODELS = Object.keys(LOADERS).map((k) => k.slice(9, -5) as ModelCode);
-export const ensureAllShapeModels = () => Promise.all(CLASS_MODELS.map(ensureShapeModel)).then(() => undefined);
+/** Every learned model, including the acute-occlusion change (F4): the activation lab. */
+export const ensureAllShapeModels = () => Promise.all([...CLASS_MODELS.map(ensureShapeModel), ensureIschemiaModel()]).then(() => undefined);

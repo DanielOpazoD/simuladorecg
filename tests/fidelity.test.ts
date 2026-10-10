@@ -64,12 +64,10 @@ describe("Repolarization and signal-chain acceptance", () => {
     const st = (s: typeof a, time: number) =>
       s.leads.II[index(time)] - s.leads.II[index(beat.time - 0.03)];
     expect(st(b, beat.time + beat.qrs!)).toBeGreaterThan(0.13);
-    expect(
-      Math.abs(
-        st(a, beat.time + beat.qrs! + 0.06) -
-          st(b, beat.time + beat.qrs! + 0.06),
-      ),
-    ).toBeLessThan(0.015);
+    // The 0.05 Hz high-pass shifts ST in proportion to the preceding area: a few
+    // percent of a real (learned, F4) lesion on top of 0.015 mV.
+    const j60 = st(a, beat.time + beat.qrs! + 0.06);
+    expect(Math.abs(j60 - st(b, beat.time + beat.qrs! + 0.06))).toBeLessThan(0.015 + 0.05 * Math.abs(j60));
   });
   it("starts de Winter depression at J, then rises", () => {
     const c = load("de_winter");

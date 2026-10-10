@@ -7,9 +7,12 @@ import { project } from '../src/engine/leads';
 import { LEADS, type Lead, type ECGCase } from '../src/engine/types';
 import { morphologyMetrics } from './support/morphology-metrics';
 const ids = ['inferior', 'inferior_lcx', 'anterior', 'lateral'];
-function load(id: string): ECGCase { return { ...fromPreset(presetById(id)!), variability: 0, hr: 72, filter: 'off' }; }
+// Contracts of the kernel lesion model (still used for the evolving phase and the
+// other territories); the learned acute occlusion (F4) has its own in realistic-signal.
+const K = { learnedBase: false };
+function load(id: string): ECGCase { return { ...fromPreset(presetById(id)!, undefined, { natural: false }), variability: 0, hr: 72, filter: 'off' }; }
 function inspect(c: ECGCase, lead: Lead, options?: { learnedBase?: boolean }) {
- const s = synthesize(c,10,options), b = s.events.beats.find(x=>x.time>3)!;
+ const s = synthesize(c,10,options ?? K), b = s.events.beats.find(x=>x.time>3)!;
  const tStart = b.qt! - Math.min(.22,(b.qt! - b.qrs!)*.68);
  return morphologyMetrics(s.leads[lead],s.fs,{baseline:[b.time-.04,b.time-.02],qrs:[b.time,b.time+b.qrs!],t:[b.time+tStart,b.time+b.qt!]});
 }
@@ -17,7 +20,7 @@ function difference(a: Float64Array,b: Float64Array) { let d=0; for(let i=0;i<a.
 describe('Scoped regional repolarization', () => {
  it.each(ids)('%s retains exact basal samples at zero intensity and resolved phase', id=>{
   const c=load(id); c.phase='hyperacute'; c.st=0;
-  const a=synthesize(c,10),b=synthesize({...c,ischemia:'none'},10,{learnedBase:false}); // same-model basal until ischemia migrates
+  const a=synthesize(c,10,K),b=synthesize({...c,ischemia:'none'},10,{learnedBase:false}); // same-model basal until ischemia migrates
   for(const l of LEADS) expect(a.leads[l]).toEqual(b.leads[l]);
   c.phase='chronic'; c.st=8;
   // On kernels the resolved phase is the basal trace; on the learned base the
@@ -26,7 +29,7 @@ describe('Scoped regional repolarization', () => {
  });
  it.each(ids)('%s preserves all T amplitude contracts and QRS/events', id=>{
   const c=load(id); c.phase='hyperacute'; c.tAmp=0;
-  const z=synthesize(c,10),h=synthesize({...c,tAmp:.14},10),f=synthesize({...c,tAmp:.28},10);
+  const z=synthesize(c,10,K),h=synthesize({...c,tAmp:.14},10,K),f=synthesize({...c,tAmp:.28},10,K);
   expect(z.events).toEqual(f.events);
   for(const l of LEADS) for(let i=0;i<f.leads[l].length;i+=13)
    expect(h.leads[l][i]-z.leads[l][i]).toBeCloseTo((f.leads[l][i]-z.leads[l][i])/2,12);
@@ -36,7 +39,7 @@ describe('Scoped regional repolarization', () => {
  it.each(ids)('%s preserves limb identities through filters and electrode reversal', id=>{
   for(const filter of ['off','diagnostic','monitor'] as const) for(const reversed of [false,true]) {
    const c=load(id); c.phase='evolving'; c.filter=filter; c.artifacts={...c.artifacts,reversed};
-   const s=synthesize(c,10);
+   const s=synthesize(c,10,K);
    for(let i=0;i<s.leads.I.length;i+=37) {
     const a=s.leads.I[i],b=s.leads.II[i];
     expect(Math.abs(s.leads.III[i]-(b-a))).toBeLessThan(1e-12);
@@ -68,7 +71,7 @@ describe('Scoped regional repolarization', () => {
   const c=load(id); c.phase='evolving'; const b={time:1,rr:1,kind:'normal' as const},v=project(tVector(c,b)).V3;
   for(const u of [0,1]) expect(regionalTCorrection(c,b,'V3',u,v,tWave(u))).toBe(0);
   for(const u of [1e-6,1-1e-6]) expect(Math.abs(regionalTCorrection(c,b,'V3',u,v,tWave(u))/1e-6)).toBeLessThan(.05);
-  const a=synthesize({...c,st:0},10),h=synthesize({...c,st:1},10),f=synthesize({...c,st:2},10);
+  const a=synthesize({...c,st:0},10,K),h=synthesize({...c,st:1},10,K),f=synthesize({...c,st:2},10,K);
   for(const l of LEADS) for(let i=0;i<a.leads[l].length;i+=19) expect(h.leads[l][i]-a.leads[l][i]).toBeCloseTo((f.leads[l][i]-a.leads[l][i])/2,12);
   expect(difference(a.leads.V3,f.leads.V3)).toBeGreaterThan(.01);
  });

@@ -840,3 +840,57 @@ Son pocos pacientes y medidas automáticas, pero bastan para descartar un modelo
 modelo aprendido necesitaría MIMIC-IV acreditado y debería representar la
 sensibilidad de cada paciente, no una curva única. El producto no contiene datos
 ni coeficientes de MIMIC-IV.
+
+## F4 · Oclusión coronaria aguda aprendida de STAFF III
+
+**Datos.** STAFF III (PhysioNet, ODC-By 1.0; bajada y verificada con SHA-256):
+angioplastia con balón en 104 pacientes, 12 derivaciones a 1000 Hz, arteria ocluida
+y tiempos de inflado anotados. Se usan los registros de inflado y una basal por
+paciente (149 de 152 inflados; 3 sin fiduciales fiables).
+
+**Extracción** (`scripts/fidelity/build_ischemia_model.py`). Latido basal (20 s
+previos al inflado o registro basal de la sala) y latidos medianos de cada ventana
+de 10 s de oclusión, alineados a la basal y referidos a su propio PR. Fin de T por
+el método de la tangente. El delta isquémico se segmenta en las fases del modelo
+normal (QRS, ST, T, post-T) con los fiduciales de la basal. Dos estados por inflado:
+hiperagudo (15–45 s) y agudo (últimos 30 s). Respondedores: algún |ST| ≥ 0,1 mV a
+J+60 (las colaterales protegen a muchos: 8/50 DA, 17/54 CD, 14/33 Cx sin respuesta).
+Por arteria, ACP sobre [agudo, hiperagudo] y gaussiana contraída; reserva: pacientes
+múltiplos de 5.
+
+**Un error medido y corregido.** Restar dos medianas desfasadas unos milisegundos
+deja un «delta» falso enorme en el QRS (sus pendientes son altas): la primera versión
+derrumbaba la R de V4–V5 y fundía el QRS con el ST, y el analizador congelado no
+encontraba su final. En minutos de oclusión el QRS apenas cambia: el delta del QRS es
+ahora una rampa en su último 40 % hasta el valor del punto J (la corriente de
+lesión). El muestreo se contrae a 0,7 (pocos pacientes por arteria).
+
+**Producto.** Lesión anterior (DA), inferior (CD) e inferior (Cx), en fase aguda e
+hiperaguda: el paciente normal de la semilla (F2.3) más el cambio de su arteria;
+la intensidad escala ese cambio (2 = el del paciente, 0 lo retira). La fase
+evolutiva y los demás territorios (lateral, posterior, VD, Wellens, de Winter,
+pericarditis) siguen en núcleos. Pacientes de libro: anterior 102 (ST↑ V2–V4, I/aVL,
+recíproco inferior), CD 40 (III > II, recíproco en aVL, imagen posterior) y Cx 44
+(II ≥ III, ST↑ V4–V6, ↓ V1–V3).
+
+### Resultado y límites
+
+Cambio del ST a J+60 (mV), mediana de los pacientes de entrenamiento frente a la
+población generada (200 semillas):
+
+| Arteria (n) | Derivación | Real | Sintético |
+|---|---|---|---|
+| DA (42) | V2 / V3 / V4 | 0,18 / 0,24 / 0,15 | 0,16 / 0,24 / 0,22 |
+| DA | II | −0,06 | −0,08 |
+| CD (31) | II / V2 / I | 0,08 / −0,16 / −0,06 | 0,13 / −0,17 / −0,07 |
+| Cx (11) | II / V2 / V6 | 0,17 / −0,21 / 0,13 | 0,17 / −0,28 / 0,19 |
+
+La Cx tiene solo 11 pacientes de entrenamiento y su población exagera V5–V6. La
+reserva (22 pacientes) muestra los mismos signos con ST mayores en la DA (V3 0,61),
+compatibles con la muestra pequeña. El clasificador diagnóstico no valida estos
+presets: PTB-XL casi no tiene IAM con ST elevado y no hay etiqueta de lesión inferior
+aguda (lee el anterior de libro como ritmo sinusal con ISCIN 0,46, y la Cx como ILMI 0,75). El analizador
+congelado delimita el QRS en un tercio a la mitad de los pacientes con lesión (28/30
+con los núcleos): el ST elevado se funde con el QRS, como en los ECG reales con
+IAM; los pacientes de libro de DA y CD se eligieron entre los que delimita, para que
+la práctica lea el ST de las muestras. Sin evolución temporal continua ni ondas Q.

@@ -223,16 +223,18 @@ describe("Medición independiente", () => {
     expect(Math.max(...cut("I"))).toBeGreaterThan(0.4);
   });
   it("reciprocidad inferior persiste en el trazado filtrado", () => {
-    const a = synthesize(load("sinus"), 10, { learnedBase: false }), // same-model basal until ischemia migrates
-      b = synthesize(load("inferior"), 10),
+    // F4: the same learned patient with and without its RCA occlusion, at J+60.
+    const c = load("inferior"),
+      a = synthesize({ ...c, ischemia: "none" }, 10),
+      b = synthesize(c, 10),
       beat = b.events.beats.find((b) => b.time > 0.4)!,
-      idx = Math.round((beat.time + 0.125) * 500);
+      idx = Math.round((beat.time + beat.qrs! + 0.06) * 500);
     const delta = (l: "I" | "II" | "III" | "aVL") =>
       b.leads[l][idx] - a.leads[l][idx];
     expect(delta("III")).toBeGreaterThan(delta("II"));
-    expect(delta("II")).toBeGreaterThan(0.1);
-    expect(delta("I")).toBeLessThan(-0.05);
-    expect(delta("aVL")).toBeLessThan(-0.1);
+    expect(delta("II")).toBeGreaterThan(0.08);
+    expect(delta("I")).toBeLessThan(-0.03);
+    expect(delta("aVL")).toBeLessThan(-0.08);
   });
   it("sinusal: FC, PR, QRS y QT dentro de tolerancias de la maqueta", () => {
     const c = load("sinus"),

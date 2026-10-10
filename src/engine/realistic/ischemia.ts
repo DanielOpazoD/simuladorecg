@@ -16,11 +16,11 @@ import { normal, random } from "../random";
 
 export type Artery = "LAD" | "RCA" | "LCX";
 interface RawArtery { n: number; k: number; mean: string; basis: string; basisScale: string; cholesky: number[] }
-export interface RawIschemiaModel { phases: { name: string; points: number }[]; leads: string[]; states: string[]; arteries: Partial<Record<Artery, RawArtery>> }
+export interface RawIschemiaModel { phases: { name: string; points: number }[]; leads: string[]; states: string[]; sampleScale?: number; arteries: Partial<Record<Artery, RawArtery>> }
 interface ArteryModel { k: number; dim: number; mean: Float64Array; basis: Float64Array; cholesky: Float64Array }
 
 const LOADERS = import.meta.glob<RawIschemiaModel>("./ischemia/*.json", { import: "default" });
-let model: { points: number; arteries: Partial<Record<Artery, ArteryModel>> } | null = null;
+let model: { points: number; scale: number; arteries: Partial<Record<Artery, ArteryModel>> } | null = null;
 
 function decodeF32(b64: string) {
   const bytes = Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0));
@@ -39,7 +39,7 @@ export function registerIschemiaModel(r: RawIschemiaModel): void {
     for (let i = 0; i < a.k; i++) for (let j = 0; j < dim; j++) basis[i * dim + j] = b16[i * dim + j] * scale[i];
     arteries[name] = { k: a.k, dim, mean, basis, cholesky: Float64Array.from(a.cholesky) };
   }
-  model = { points, arteries };
+  model = { points, scale: r.sampleScale ?? 1, arteries };
   deltas.clear();
 }
 export const hasIschemiaModel = () => model !== null;
@@ -80,7 +80,7 @@ export function ischemiaDelta(c: Pick<ECGCase, "ischemia" | "phase" | "seed" | "
   const key = [artery, c.phase, c.seed, c.st].join("|");
   const hit = deltas.get(key);
   if (hit) return hit;
-  const rng = random(((c.seed ^ 0x15c4) * 2246822519) >>> 0), e = Array.from({ length: a.k }, () => normal(rng)), z = new Float64Array(a.k);
+  const rng = random(((c.seed ^ 0x15c4) * 2246822519) >>> 0), e = Array.from({ length: a.k }, () => normal(rng) * model!.scale), z = new Float64Array(a.k);
   for (let i = 0, base = 0; i < a.k; base += ++i) for (let j = 0; j <= i; j++) z[i] += a.cholesky[base + j] * e[j];
   const half = a.dim / 2, off = c.phase === "hyperacute" ? half : 0, gain = Math.max(0, c.st) / 2, out = new Float64Array(half);
   for (let j = 0; j < half; j++) {

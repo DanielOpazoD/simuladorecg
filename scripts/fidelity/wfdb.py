@@ -19,7 +19,9 @@ def read(path):
         d=v[:n*nch].reshape(-1,nch)[:n].astype(np.float64)
     else:
         dt={'16':'<i2','32':'<i4'}[fmt]
-        d=np.fromfile(path+'.dat',dtype=dt,offset=skip)[:n*nch].reshape(n,nch).astype(np.float64)
+        raw=np.fromfile(path+'.dat',dtype=dt,offset=skip)
+        n=min(n,len(raw)//nch)  # some headers (STAFF III) declare more samples than the file holds
+        d=raw[:n*nch].reshape(n,nch).astype(np.float64)
     return fs,names,(d-np.array(bases))/np.array(gains)
 
 

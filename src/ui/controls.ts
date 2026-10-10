@@ -6,6 +6,7 @@ import { isNatural, LEADS, type ECGCase, type NaturalControl } from "../engine/t
 import { lesionControlEffect, tVector } from "../engine/morphology";
 import { range, select, toggle } from "./helpers";
 import { learnedSecondaryRepolarization, noConductedBeats, realisticModelFor } from "../engine/realistic/scope";
+import { learnedIschemiaArtery } from "../engine/realistic/ischemia";
 
 /** On the learned base, P and T follow the patient until their slider is moved. */
 function learnedNatural(c: ECGCase, wave: "p" | "t") {
@@ -23,6 +24,9 @@ const oldInfarction = (c: ECGCase) => {
   const model = realisticModelFor(c);
   return model === "IMI" || model === "ASMI";
 };
+/** Acute occlusion learned from STAFF III (F4) on the learned base. */
+const learnedLesion = (c: ECGCase) => realisticModelFor(c) === "NORM" && learnedIschemiaArtery(c) !== null;
+const ARTERY_NAME = { LAD: "descendente anterior", RCA: "coronaria derecha", LCX: "circunfleja" } as const;
 /** Learned populations whose whole ST-T is secondary (it follows the QRS gain). */
 const learnedSecondary = (c: ECGCase) => {
   const model = realisticModelFor(c);
@@ -37,6 +41,8 @@ export function amplitudeControlState(c: ECGCase) {
     ? "Sin complejos organizados: los controles de T y lesión ST–T no se aplican."
     : learnedSecondary(c)
       ? "ST–T secundaria del paciente (aprendida de ECG reales): sigue la amplitud del QRS; la amplitud de T no se aplica."
+    : learnedLesion(c)
+      ? `Lesión aguda aprendida de oclusiones con balón (STAFF III, ${ARTERY_NAME[learnedIschemiaArtery(c)!]}): intensidad 2 es el cambio del paciente, 0 lo retira; la morfología del ST es la del paciente.`
     : mutedT
       ? "Este patrón modifica la T. Reactiva Amplitud de T para ajustar su intensidad."
       : effect === "none"
@@ -234,6 +240,7 @@ export function controls(c: ECGCase) {
      ["convex", "Convexa"],
    ],
    c.stShape,
+   learnedLesion(c),
  )}
  ${select(
    "overload",

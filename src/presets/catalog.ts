@@ -1,6 +1,7 @@
 import { WPW_REPOLARIZATION_LIMIT, SECONDARY_ST_RATIO_LIMIT } from "./teaching-limits";
 import { DEFAULT_CASE, NATURAL_CONTROLS, cloneCase, type ECGCase, type NaturalControl } from "../engine/types";
 import { withNaturalControls } from "../engine/realistic/natural";
+import { learnedIschemiaArtery, type Artery } from "../engine/realistic/ischemia";
 import { learnedVentricularEctopy, pacedVentricular, realisticModelFor, ventricularRhythm } from "../engine/realistic/scope";
 import type { BeatModelCode } from "../engine/realistic/shape-model";
 export interface Preset {
@@ -800,6 +801,13 @@ export const TEXTBOOK_VF_SEED = 140;
  * the classic VT picture, whose rate the frozen analyzer measures in VT, idioventricular,
  * AIVR and complete block with ventricular escape; the same patient gives the dissociated P. */
 export const TEXTBOOK_VT_SEED = 157;
+/** Acute occlusion presets (F4): patients whose learned STAFF III change is the classic
+ * picture of the preset, whose own normal values are normal and whose QRS the frozen
+ * analyzer delimits with realistic acquisition, so the practice can read ST from the
+ * samples (anterior: ST↑ V2–V4 with I/aVL and inferior reciprocity, proximal LAD;
+ * RCA: III > II, reciprocal aVL, posterior V2–V3). LCx: no candidate the analyzer
+ * delimits; II ≥ III, I positive, ST↑ V4–V6, read ILMI 0.75 by the classifier. */
+export const TEXTBOOK_ISCHEMIA_SEEDS: Record<Artery, number> = { LAD: 102, RCA: 40, LCX: 44 };
 /** Ventricular pacing presets (F5.4): the seed also draws the paced complex and spike. */
 export const TEXTBOOK_PACED_SEED = 13;
 export const TEXTBOOK_SEEDS: Record<BeatModelCode, number> = { NORM: TEXTBOOK_SEED, CLBBB: 15, CRBBB: 276, IRBBB: 201, LAFB: 9, LVH: 154, IMI: 52, ASMI: 105 };
@@ -814,7 +822,8 @@ export function fromPreset(preset: Preset, view?: ECGCase["view"], options: { na
     if (preset.patch[control] !== undefined) c[flag] = false;
   const model = realisticModelFor(c);
   if (preset.patch.seed === undefined && model)
-    c.seed = model !== "NORM" ? TEXTBOOK_SEEDS[model] : c.rhythm === "af" ? TEXTBOOK_AF_SEED
+    c.seed = model !== "NORM" ? TEXTBOOK_SEEDS[model] : learnedIschemiaArtery(c) ? TEXTBOOK_ISCHEMIA_SEEDS[learnedIschemiaArtery(c)!]
+      : c.rhythm === "af" ? TEXTBOOK_AF_SEED
       : c.rhythm === "flutter" ? TEXTBOOK_FLUTTER_SEED
       : learnedVentricularEctopy(c) ? TEXTBOOK_PVC_SEED : pacedVentricular(c) ? TEXTBOOK_PACED_SEED
       : ventricularRhythm(c) ? TEXTBOOK_VT_SEED : TEXTBOOK_SEED;

@@ -34,10 +34,43 @@ sys.path.insert(0, os.path.dirname(__file__))
 from wfdb import read, read_ann
 from features import detect_beats, ms, FS
 from build_shape_model import PHASES, POST_MS
-from build_pvc_model import fiducials, PRE
+from build_pvc_model import PRE
 
 WINDOW_S = 10
-POST = 760  # ms tras el pico: fin de T más la cola post-T del modelo normal (260 ms)
+POST = 900  # ms tras el pico: fin de T más la cola post-T del modelo normal (260 ms)
+
+
+def fiducials_sinus(t8):
+    """Inicio/fin del QRS (energía, como las EV), ápice de T (máximo de la magnitud
+    espacial) y fin de T por el método de la tangente sobre esa magnitud: la recta de
+    máxima pendiente descendente tras el ápice, cortada con la línea de base."""
+    a = ms(PRE)
+    v = np.convolve(np.sqrt((np.diff(t8, axis=0) ** 2).sum(1)), np.ones(ms(8)) / ms(8), 'same')
+    lo, hi = a - ms(150), a + ms(220)
+    top = lo + int(np.argmax(v[lo:hi]))
+    thr = 0.12 * v[top]
+    on = top
+    while on > lo and v[on] > thr:
+        on -= 1
+    above = np.where(v[top:hi] > thr)[0]
+    off = top + int(above.max()) + 1 if len(above) else top
+    base = t8[max(0, on - ms(6)):on + 1].mean(0)
+    mag = np.convolve(np.linalg.norm(t8 - base, axis=1), np.ones(ms(10)) / ms(10), 'same')
+    s0, s1 = off + ms(60), min(len(mag) - ms(20), off + ms(480))
+    if s1 <= s0:
+        return None
+    apex = s0 + int(np.argmax(mag[s0:s1]))
+    seg = mag[apex:min(len(mag) - 1, apex + ms(250))]
+    if len(seg) < ms(30):
+        return None
+    d = np.diff(seg)
+    k = int(np.argmin(d))
+    if d[k] >= 0:
+        return None
+    end = apex + k + int(round(seg[k] / -d[k]))  # corte de la tangente con cero
+    if not (apex < end < len(t8) - ms(POST_MS) - 1) or (end - off) * 1000 / FS > 520:
+        return None
+    return on, off, apex, end, base
 
 
 def segment(t8, fid):
@@ -169,8 +202,8 @@ def process(root, a):
     base = median_at(src, pre)
     if base is None:
         return None, 'sin_basal'
-    fid = fiducials(base)
-    if fid is None or fid[3] + ms(POST_MS) >= len(base):
+    fid = fiducials_sinus(base)
+    if fid is None:
         return None, 'fiduciales'
     on, off, apex, end, _ = fid
     v0 = segment(base, fid)
@@ -183,7 +216,19 @@ def process(root, a):
             # Cada latido referido a su propio PR (fin del intervalo previo al QRS).
             m = m - m[max(0, on - ms(6)):on + 1].mean(0) + base[max(0, on - ms(6)):on + 1].mean(0)
             v = segment(m, fid)
-            wins.append({'t': round(t - t_in + WINDOW_S / 2, 1), 'delta': (v - v0)})
+            dv = (v - v0).reshape(-1, 8)
+            # QRS: la resta de dos medianas desfasadas unos milisegundos deja un
+            # «delta» falso enorme (pendientes del QRS). En minutos de oclusión el QRS
+            # apenas cambia: el delta sube suave en su último 40 % hasta el valor del
+            # punto J, como la corriente de lesión, y no se aprende la forma del QRS.
+            oq = sum(k for n, k in PHASES[:3]); nq = dict(PHASES)['qrs']
+            u = np.clip((np.arange(nq) / (nq - 1) - 0.6) / 0.4, 0, 1)
+            dv[oq:oq + nq] = (u * u * (3 - 2 * u))[:, None] * dv[oq + nq]
+            # El cambio isquémico termina con la repolarización: la cola post-T del
+            # delta baja a cero (evita arrastrar el latido siguiente si cambia la FC).
+            o = sum(k for n, k in PHASES[:6]); npost = dict(PHASES)['post']
+            dv[o:o + npost] *= 0.5 * (1 + np.cos(np.linspace(0, np.pi, npost)))[:, None]
+            wins.append({'t': round(t - t_in + WINDOW_S / 2, 1), 'delta': dv.reshape(-1)})
         t += WINDOW_S
     if not wins:
         return None, 'oclusion_corta'
@@ -249,6 +294,7 @@ def main():
     ap.add_argument('--out')
     ap.add_argument('--explore', help='JSON con el curso temporal por inflado (exploración)')
     ap.add_argument('--report')
+    ap.add_argument('--sample-scale', type=float, default=0.7, help='contracción del muestreo (pocos pacientes por arteria)')
     a = ap.parse_args()
     root = os.path.expanduser(a.data)
     ann = annotations(os.path.join(root, 'staffiii', 'STAFF-III-Database-Annotations.ods'))
@@ -271,7 +317,7 @@ def main():
         return
     rows = ventricular_rows()
     L = ['I', 'II', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6']
-    model = {'schema': 'ecg-lab-ischemia-model/1',
+    model = {'schema': 'ecg-lab-ischemia-model/1', 'sampleScale': a.sample_scale,
              'source': 'STAFF III 1.0.0 (PhysioNet, ODC-By 1.0), cambio del latido durante la oclusión con balón; pacientes no múltiplos de 5',
              'phases': [{'name': n, 'points': k} for n, k in PHASES if n in VENTRICULAR], 'leads': L,
              'states': ['acute', 'hyperacute'], 'arteries': {}}
