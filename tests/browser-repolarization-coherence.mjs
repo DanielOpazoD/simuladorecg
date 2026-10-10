@@ -1,5 +1,7 @@
 import { chooseCatalogPreset } from './support/catalog-navigation.mjs';
-/** Real worker -> A/B exports: potassium acts on rendered T, explicit ST limitation, scope errors recover. */
+import { openControlPanel } from './support/adjust-panel.mjs';
+import { installWorkerTap, settledTrace } from './support/worker-tap.mjs';
+/** Real worker replies: potassium acts on rendered T, explicit ST limitation, scope errors recover. */
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
@@ -12,6 +14,7 @@ try{
   const page=await browser.newPage({viewport:{width,height:width===390?844:1000}});
   page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());if(m.type()==='warning')warnings.push(m.text());});
   const ready=()=>page.locator('#signal-loading').waitFor({state:'hidden'});
+  await installWorkerTap(page);
   await page.goto(url);await ready();assert.match(await page.title(),/ECG/);
   if(width===390)await page.locator('[data-action="catalog"]').click();
   await chooseCatalogPreset(page, 'lbbb');await ready();
@@ -19,20 +22,29 @@ try{
   await page.locator('[data-action="json"]').click();const originalFile=resolve(out,`coherence-case-${width}.json`);
   await(await download).saveAs(originalFile);
   const original=JSON.parse(await readFile(originalFile,'utf8'));
-  const base={...original,hr:60,atrialRate:60,variability:0,filter:'off',qtc:600,ischemia:'none',st:0,pAmp:0,electrolyte:'none',tAmp:.28,tAxis:25};
-  const importCase=async(c,kind='changed')=>{
-   const previous=await page.locator('#ecg').evaluate(e=>e.toDataURL());
-   await page.locator('#file-input').setInputFiles({name:'coherence.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(c))});
-   if(kind==='scope'){await page.locator('#signal-loading.signal-unavailable').waitFor();return;}
-   if(kind==='unchanged')await page.waitForFunction(value=>Number(document.querySelector('[data-key="tAxis"]').value)===value,c.tAxis);
-   if(kind==='changed')await page.waitForFunction(p=>document.querySelector('#ecg').toDataURL()!==p,previous);
-   await ready();
+  // acquisition 'ideal': since F2 the default adds resting noise and quantization, which these exact-sample identities exclude.
+  const base={...original,hr:60,atrialRate:60,variability:0,filter:'off',qtc:600,ischemia:'none',st:0,pAmp:0,electrolyte:'none',tAmp:.28,tAxis:25,naturalPAxis:false,naturalTAxis:false,acquisition:'ideal'};
+  const fileOf=c=>({name:'coherence.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(c))});
+  // Import through the real file input and return the samples/events/case of the worker's reply.
+  const importCase=c=>settledTrace(page,()=>page.locator('#file-input').setInputFiles(fileOf(c)));
+  // Out-of-scope input: no reply with samples, a persistent explanation and nothing stale on screen.
+  const importScope=async c=>{await page.locator('#file-input').setInputFiles(fileOf(c));await page.locator('#signal-loading.signal-unavailable').waitFor();};
+  const assertNothingStale=async why=>{
+   assert.equal(await page.locator('#metrics .metric').count(),0,why+': no stale measurements');
+   assert.equal(await page.locator('#ecg').getAttribute('aria-label'),'Señal no disponible',why+': no stale trace');
+   await page.locator('[data-action="export"]').click();
+   assert.equal(await page.locator('[data-action="png"]').isDisabled(),true,why+': no stale PNG');
+   await page.locator('#dialog').evaluate(d=>d.close());
   };
-  await importCase(base);
-  await page.locator('[data-panel="st"]').click();
+  let shown=await importCase(base);
+  await openControlPanel(page,'st');
   const axisControl=page.locator('[data-key="tAxis"]');
   assert.equal(await axisControl.isDisabled(),true);
-  assert.equal(await axisControl.inputValue(),'25');
+  // Since F2.3 a learned secondary repolarization shows the patient's own T axis (derived from the QRS)
+  // in the inactive control and keeps the programmed 25 for a primary T.
+  assert.equal(shown.case.tAxis,25,'The programmed axis is conserved');
+  assert.equal(Number(await axisControl.inputValue()),Math.round(shown.truth.tAxis/5)*5,'The inactive control shows the derived axis');
+  assert.notEqual(await axisControl.inputValue(),'25');
   assert.equal(await axisControl.getAttribute('aria-describedby'),'t-axis-note');
   assert.ok(await axisControl.evaluate(e=>Number(getComputedStyle(e).opacity)<1));
   assert.match(await page.locator('#t-axis-note').innerText(),/Control inactivo/);
@@ -51,69 +63,67 @@ try{
   assert.equal(await axisControl.isDisabled(),true);assert.equal(await axisControl.inputValue(),'30');
   await changeWithKeyboard(page.locator('[data-key="tAmp"]'),'End');
   assert.equal(await axisControl.isDisabled(),false);assert.equal(await axisControl.inputValue(),'30');
-  await importCase(base);assert.equal(await axisControl.isDisabled(),true);assert.equal(await axisControl.inputValue(),'25');
+  const normal=await importCase(base);assert.equal(await axisControl.isDisabled(),true);assert.equal(Number(await axisControl.inputValue()),Math.round(normal.truth.tAxis/5)*5);
   await page.locator('#t-axis-note').scrollIntoViewIfNeeded();
   await page.screenshot({path:resolve(out,`t-axis-controls-${width}.png`)});
-  await page.locator('[data-action="compare"]').click();await page.locator('#compare-pin').click();
-  const exported=async name=>{const wait=page.waitForEvent('download');await page.locator('#compare-json').click();const file=resolve(out,`coherence-${name}-${width}.json`);await(await wait).saveAs(file);return JSON.parse(await readFile(file,'utf8'));};
-  const normal=await exported('normal');assert.deepEqual(normal.A.leads,normal.B.leads);
-  await importCase({...base,tAmp:0});const zero=await exported('zero');
-  const beat=zero.B.events.beats.find(b=>b.time>2),index=Math.round((beat.time+beat.qrs+.060)*zero.B.fs);
-  assert.ok(zero.B.leads.V2[index]>.005,'Discordant secondary ST remains represented with T amplitude zero');
-  await page.locator('[data-panel="st"]').click();
+  const zero=await importCase({...base,tAmp:0});
+  const beat=zero.events.beats.find(b=>b.time>2),index=Math.round((beat.time+beat.qrs+.060)*zero.fs);
+  assert.ok(zero.leads.V2[index]>.005,'Discordant secondary ST remains represented with T amplitude zero');
+  await openControlPanel(page,'st');
+  // The model's limits are a folded disclosure inside the tab; open it as a reader does.
+  await page.locator('[data-control-panel="st"] .control-limits > summary').click();
   assert.match(await page.locator('#secondary-repolarization-note').innerText(),/El ST secundario sigue esa misma fuente QRS/);
-  await importCase({...base,electrolyte:'hypokalemia'});const hypo=await exported('hypokalemia');
-  await page.locator('#compare-start').fill('2');await page.locator('#compare-start').press('Tab');
-  await page.locator('#compare-range').selectOption('2');
-  await page.locator('#comparison-lab').scrollIntoViewIfNeeded();
+  await importCase({...base,electrolyte:'hypokalemia'});
+  await page.locator('.trace-panel').scrollIntoViewIfNeeded();
   await page.screenshot({path:resolve(out,`coherence-view-${width}.png`)});
-  const png=page.waitForEvent('download');await page.locator('#compare-png').click();await(await png).saveAs(resolve(out,`coherence-trace-${width}.png`));
-  await importCase({...base,electrolyte:'hypokalemia',tAmp:0});const hypoZero=await exported('hypo-zero');
-  let checked=0,maxErrorMv=0;
-  for(const l of Object.keys(normal.A.leads))for(let i=0;i<normal.A.leads[l].length;i++){
-   const expected=.4*(normal.A.leads[l][i]-zero.B.leads[l][i]);
-   const actual=hypo.B.leads[l][i]-hypoZero.B.leads[l][i];
-   maxErrorMv=Math.max(maxErrorMv,Math.abs(actual-expected));checked++;
-  }
-  assert.ok(maxErrorMv<1e-12);assert.deepEqual(hypo.B.events,normal.A.events);
-  await importCase({...base,electrolyte:'hypokalemia',ischemia:'anterior',phase:'evolving',st:1},'scope');
+  await page.locator('#ecg').screenshot({path:resolve(out,`coherence-trace-${width}.png`)});
+  await importScope({...base,electrolyte:'hypokalemia',ischemia:'anterior',phase:'evolving',st:1});
   assert.match(await page.locator('#signal-loading').innerText(),/fuera de alcance/);
-  assert.equal(await page.locator('#compare-json').count(),0,'No stale export after unsupported input');
-  await importCase(base,'recovery');const recovered=await exported('recovered');
-  assert.deepEqual(recovered.A.leads,normal.A.leads);assert.deepEqual(recovered.B.leads,normal.A.leads);
-  await importCase({...base,conduction:'wpw',rhythm:'af'},'scope');
+  await assertNothingStale('unsupported input');
+  const recovered=await importCase(base);
+  assert.deepEqual(recovered.leads,normal.leads);
+  await importScope({...base,conduction:'wpw',rhythm:'af'});
   assert.match(await page.locator('#signal-loading').innerText(),/no representa esa conducción/);
   assert.match(await page.locator('#signal-loading').innerText(),/no una imposibilidad clínica/);
-  assert.equal(await page.locator('#compare-json').count(),0,'No pre-excited AF tracing is invented');
+  await assertNothingStale('pre-excited AF');
   assert.equal(await page.locator('#toast').textContent(),'','Persistent error must not have a duplicate overlay');
   await page.waitForFunction(()=>getComputedStyle(document.querySelector('#toast')).opacity==='0');
   await page.locator('#signal-loading').screenshot({path:resolve(out,`wpw-clock-scope-${width}.png`)});
-  await importCase(base,'recovery');const wpwRecovered=await exported('wpw-clock-recovered');
-  assert.deepEqual(wpwRecovered.B.leads,normal.A.leads);
-  // Full WPW worker/render/export route, including the secondary ST that remains
+  const wpwRecovered=await importCase(base);
+  assert.deepEqual(wpwRecovered.leads,normal.leads);
+  // Full WPW worker/render route, including the secondary ST that remains
   // when T gain is zero and the inactive primary T-axis control.
   const wpw={...base,conduction:'wpw',pr:100,qrs:135,axis:35};
-  await importCase(wpw);const wpwFull=await exported('wpw-full');
-  await page.locator('[data-panel="st"]').click();
+  const wpwFull=await importCase(wpw);
+  await openControlPanel(page,'st');
   assert.equal(await axisControl.isDisabled(),true);
   assert.match(await page.locator('#t-axis-note').innerText(),/delta/);
   await page.screenshot({path:resolve(out,`wpw-controls-${width}.png`)});
-  await importCase({...wpw,tAxis:-120},'unchanged');const wpwAxis=await exported('wpw-axis-inactive');
-  assert.deepEqual(wpwAxis.B.leads,wpwFull.B.leads);
-  await importCase({...wpw,tAmp:0});const wpwZero=await exported('wpw-zero');
-  const wb=wpwZero.B.events.beats.find(b=>b.time>2),wi=Math.round((wb.time+wb.qrs+.060)*wpwZero.B.fs);
-  assert.ok(wpwZero.B.leads.II[wi]<-.005,'Actual exported WPW has negative secondary ST');
-  await importCase({...wpw,tAmp:.56});const wpwDouble=await exported('wpw-double');
-  for(const lead of Object.keys(wpwFull.B.leads))for(let i=0;i<wpwFull.B.leads[lead].length;i++)
-    assert.ok(Math.abs((wpwDouble.B.leads[lead][i]-wpwZero.B.leads[lead][i])-2*(wpwFull.B.leads[lead][i]-wpwZero.B.leads[lead][i]))<1e-12);
-  await importCase(wpw);await page.locator('#comparison-lab').scrollIntoViewIfNeeded();
+  const wpwAxis=await importCase({...wpw,tAxis:-120});
+  assert.deepEqual(wpwAxis.leads,wpwFull.leads);
+  const wpwZero=await importCase({...wpw,tAmp:0});
+  const wb=wpwZero.events.beats.find(b=>b.time>2),wi=Math.round((wb.time+wb.qrs+.060)*wpwZero.fs);
+  assert.ok(wpwZero.leads.II[wi]<-.005,'WPW has negative secondary ST');
+  const wpwDouble=await importCase({...wpw,tAmp:.56});
+  for(const lead of Object.keys(wpwFull.leads))for(let i=0;i<wpwFull.leads[lead].length;i++)
+    assert.ok(Math.abs((wpwDouble.leads[lead][i]-wpwZero.leads[lead][i])-2*(wpwFull.leads[lead][i]-wpwZero.leads[lead][i]))<1e-12);
+  // Potassium acts on the rendered T with the same .4 response. Hypokalemia has no learned base (the case
+  // falls back to the parametric kernels), so the identity is exact only against a parametric reference: WPW.
+  const wpwHypo=await importCase({...wpw,electrolyte:'hypokalemia'}),wpwHypoZero=await importCase({...wpw,electrolyte:'hypokalemia',tAmp:0});
+  let checked=0,maxErrorMv=0,response=0;
+  for(const l of Object.keys(wpwFull.leads))for(let i=0;i<wpwFull.leads[l].length;i++){
+   const t=wpwFull.leads[l][i]-wpwZero.leads[l][i];response=Math.max(response,Math.abs(t));
+   maxErrorMv=Math.max(maxErrorMv,Math.abs((wpwHypo.leads[l][i]-wpwHypoZero.leads[l][i])-.4*t));checked++;
+  }
+  assert.ok(response>.01,'Fixture needs a measurable T');
+  assert.ok(maxErrorMv<1e-12,'Hypokalemic T response differs from .4 by '+maxErrorMv+' mV');assert.deepEqual(wpwHypo.events,wpwFull.events);
+  await importCase(wpw);await page.locator('.trace-panel').scrollIntoViewIfNeeded();
   await page.screenshot({path:resolve(out,`wpw-repolarization-${width}.png`)});
-  const wpwPng=page.waitForEvent('download');await page.locator('#compare-png').click();
-  await(await wpwPng).saveAs(resolve(out,`wpw-repolarization-trace-${width}.png`));
-  await importCase({...wpw,axis:-60});const rotated=await exported('wpw-activation-rotated');
-  assert.notDeepEqual(rotated.B.leads,wpwFull.B.leads);
+  await page.locator('#ecg').screenshot({path:resolve(out,`wpw-repolarization-trace-${width}.png`)});
+  const rotated=await importCase({...wpw,axis:-60});
+  assert.notDeepEqual(rotated.leads,wpwFull.leads);
   assert.equal(await page.locator('vite-error-overlay').count(),0);
-  checks.push({width,checked,maxErrorMv,isolatedST60V2Mv:zero.B.leads.V2[index],scopeRejection:true,exactRecovery:true,wpwClockScopeAndRecovery:true,tAxisApplicabilityAndRestoration:true,wpwFullRepolarizationAndExports:true});
+  checks.push({width,checked,maxErrorMv,isolatedST60V2Mv:zero.leads.V2[index],scopeRejection:true,exactRecovery:true,wpwClockScopeAndRecovery:true,tAxisApplicabilityAndRestoration:true,wpwFullRepolarizationAndExports:true});
   await page.close();
  }
  assert.deepEqual(errors,[]);assert.deepEqual(warnings,[]);

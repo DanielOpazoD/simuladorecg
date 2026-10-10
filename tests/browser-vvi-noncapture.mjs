@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {mkdir,writeFile,readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {chooseCatalogPreset} from './support/catalog-navigation.mjs';
+import {openControlPanel} from './support/adjust-panel.mjs';
 const url=process.env.ECG_TEST_URL||'http://127.0.0.1:5173/',out=resolve(process.env.ECG_EVIDENCE_DIR||'.sites-runtime/vvi-noncapture');
 await mkdir(out,{recursive:true});const results=[];
 for(const engine of [chromium,webkit,firefox]){
@@ -28,7 +29,7 @@ for(const engine of [chromium,webkit,firefox]){
    await page.goto(url);await ready();
    const build=await(await page.request.get(new URL('build-info.json',url).href)).json();
    assert.equal(build.dirty,false);if(process.env.ECG_EXPECT_COMMIT)assert.equal(build.commit,process.env.ECG_EXPECT_COMMIT);
-   await chooseCatalogPreset(page,'vvi');await ready();await page.locator('[data-panel=conduction]').click();
+   await chooseCatalogPreset(page,'vvi');await ready();await openControlPanel(page,'conduction');
    await page.locator('[data-key=pacingBehavior]').selectOption('demand');await ready();
    const captured=await observed();assert.ok(captured.beats>5);assert.equal(captured.status,'usable');
    const rate=await page.locator('[data-key=hr]').inputValue();
@@ -78,9 +79,9 @@ for(const engine of [chromium,webkit,firefox]){
    await set('intrinsicRate',30);await page.locator('#signal-loading.signal-unavailable').waitFor({state:'visible'});
    assert.match(await page.locator('#signal-loading').innerText(),/fuera de alcance/);
    await set('intrinsicRate',0);await ready();assert.equal((await observed()).beats,0);
-   await page.locator('[data-panel=base]').click();await set('hr',90);await ready();assert.equal((await observed()).beats,0);
+   await openControlPanel(page,'base');await set('hr',90);await ready();assert.equal((await observed()).beats,0);
    assert.equal((await observed()).status,'unavailable');await set('hr',rate);await ready();
-   await page.locator('[data-panel=conduction]').click();await page.locator('[data-key=pacingBehavior]').selectOption('demand');await ready();
+   await openControlPanel(page,'conduction');await page.locator('[data-key=pacingBehavior]').selectOption('demand');await ready();
    assert.deepEqual(await observed(),captured,'Restored capture must recover exact samples and event counts');
    assert.deepEqual(errors,[]);assert.deepEqual(warnings,[]);results.push({engine:engine.name(),width,build,stimuliWithoutVentricularEvents:true,visibleUnavailableRate:true,frozenUnavailableRate:true,pointerTargetSurvivesRedraw:true,jsonAndPngDownloaded:true,unsupportedEscapeRejected:true,exactRecovery:true});
   }catch(e){await page.screenshot({path:resolve(out,tag+'-failure.png')}).catch(()=>{});await writeFile(resolve(out,tag+'-failure.json'),JSON.stringify({error:String(e.stack),errors,warnings},null,2));throw e;}

@@ -1,4 +1,5 @@
 import { chooseCatalogPreset } from './support/catalog-navigation.mjs';
+import { openControlPanel } from './support/adjust-panel.mjs';
 /** Real Chromium checks. Run against the built dist (vite preview): ECG_TEST_URL=http://127.0.0.1:5173.
  * Outputs outside source by default; no patient data, diagnostic labels or network AI.
  * npm ci
@@ -23,8 +24,9 @@ page.on('pageerror',e=>errors.push(e.message));
 page.on('console',m=>{if(m.type()==='error')errors.push(m.text());else if(m.type()==='warning')warnings.push(m.text());});
 const ready=()=>page.locator('#signal-loading').waitFor({state:'hidden'});
 async function select(id){await chooseCatalogPreset(page, id);await ready();}
-async function phase(value){await page.locator('[data-panel="st"]').click();await page.locator('[data-key="phase"]').selectOption(value);await ready();}
-const scale=()=>page.locator('.beat-plot').evaluate(e=>[e.dataset.scaleMin,e.dataset.scaleMax]);
+async function phase(value){await openControlPanel(page,'st');await page.locator('[data-key="phase"]').selectOption(value);await ready();}
+const paper=()=>page.locator('#ecg').evaluate(c=>c.toDataURL());
+const toolVisible=name=>page.locator(`[data-action="${name}"]`).evaluate(e=>e.getClientRects().length>0&&!e.hidden);
 try {
  await page.goto(url);await ready();
  assert.equal(await page.locator('[data-product-version]').getAttribute('data-product-version'),productionInfo.packageVersion,'visible version differs from build');
@@ -39,33 +41,51 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
   assert.ok(await page.locator('#ecg').evaluate(c=>c.width>0&&c.height>0));
  }
  await page.locator('[data-key="view.format"]').selectOption('3x4+1');
- await page.locator('[data-panel="signal"]').click();
- await page.locator('[data-key="view.cabrera"]').check();
- await page.screenshot({path:path.join(out,'p7-cabrera.png')});
- await page.locator('[data-key="view.cabrera"]').uncheck();
+ await page.screenshot({path:path.join(out,'p7-format.png')});
+ // The simplified interface keeps one reading order and one simultaneous-or-not layout;
+ // the removed view controls (Cabrera, precordial gain, fit, calibration) are not offered.
+ await openControlPanel(page,'signal');
+ for(const key of ['view.cabrera','view.chestGain','view.fit','view.pxPerMm','view.timing','seed','mainsFrequency','notch','acquisition','respiratoryRate'])
+  assert.equal(await page.locator(`[data-key="${key}"]`).count(),0,key+' control must not be offered');
  await page.locator('[data-mode="monitor"]').click();
  for (const lead of ['II','V1','aVR']) {
   await page.locator('[data-key="view.lead"]').selectOption(lead);
   assert.match(await page.locator('#ecg').getAttribute('aria-label'),new RegExp(lead));
  }
  await page.locator('[data-mode="paper"]').click();
- checks.push('P7: five paper formats, Cabrera and physical monitor lead selection');
+ checks.push('P7: five paper formats and physical monitor lead selection; retired view controls absent');
  for(const id of ['inferior','anterior','lateral']) {
-  await select(id);await phase('hyperacute');
-  const fixed=await scale();assert.ok(fixed.every(Boolean));
-  for(const lead of ['II','V3','V5']) {await page.locator('#detail-lead').selectOption(lead);assert.deepEqual(await scale(),fixed);}
-  await page.locator('[data-action="next-beat"]').click();assert.deepEqual(await scale(),fixed);
-  await page.locator('#beat-detail').screenshot({path:path.join(out,`${id}-hyperacute.png`)});
-  await phase('evolving');await page.locator('#beat-detail').screenshot({path:path.join(out,`${id}-evolving.png`)});
+  await select(id);
+  // An acute lesion offers the OMI lenses (previous ECG, only the change); they appear with the lesion.
+  assert.equal(await toolVisible('lens-previous'),true,id+': previous-ECG lens offered with an acute lesion');
+  assert.equal(await toolVisible('lens-change'),true,id+': only-the-change lens offered with an acute lesion');
+  await phase('hyperacute');const hyperacute=await paper();
+  assert.equal(await page.locator('[data-key="phase"]').inputValue(),'hyperacute');
+  await page.locator('.trace-panel').screenshot({path:path.join(out,`${id}-hyperacute.png`)});
+  await phase('evolving');
+  await page.waitForFunction(before=>document.querySelector('#ecg').toDataURL()!==before,hyperacute);
+  assert.equal(await page.locator('[data-key="phase"]').inputValue(),'evolving');
+  await page.locator('.trace-panel').screenshot({path:path.join(out,`${id}-evolving.png`)});
  }
- checks.push('regional phase controls and fixed scale across three leads / next beat');
- await select('sinus');await page.locator('[data-mode="monitor"]').click();await page.locator('[data-action="pause"]').click();
+ await select('sinus');
+ assert.equal(await toolVisible('lens-previous'),false,'No previous-ECG lens without an acute lesion');
+ assert.equal(await toolVisible('lens-change'),false,'No only-the-change lens without an acute lesion');
+ assert.equal(await toolVisible('lens-st'),true);
+ checks.push('regional phase controls change the paper; OMI lenses follow the acute lesion');
+ // Freeze exists only on the monitor; calipers and waves only on the paper (and the rhythm strip for calipers' absence).
+ await select('sinus');assert.equal(await toolVisible('pause'),false,'Freeze is hidden outside the monitor');
+ assert.equal(await toolVisible('caliper'),true);assert.equal(await toolVisible('annotations'),true);
+ await page.locator('[data-mode="monitor"]').click();
+ assert.equal(await toolVisible('pause'),true);assert.equal(await toolVisible('caliper'),false,'Calipers are hidden on the monitor');
+ assert.equal(await toolVisible('annotations'),false,'Waves are hidden outside the paper');
+ await page.locator('[data-action="pause"]').click();
  assert.equal(await page.locator('#monitor-state').innerText(),'CONGELADO');
  await select('brady');assert.equal(await page.locator('#monitor-state').innerText(),'REPRODUCCIÓN');
  await page.locator('[data-mode="paper"]').click();await page.locator('[data-action="caliper"]').click();
  assert.equal(await page.locator('[data-action="caliper"]').getAttribute('aria-pressed'),'true');
  await page.locator('[data-mode="monitor"]').click();await page.locator('[data-mode="paper"]').click();
- assert.equal(await page.locator('[data-action="caliper"]').getAttribute('aria-pressed'),'false');checks.push('pause and caliper regression');
+ assert.equal(await page.locator('[data-action="caliper"]').getAttribute('aria-pressed'),'false');
+ assert.equal(await toolVisible('pause'),false);checks.push('pause and caliper regression; tools follow the view');
  // Use the real JSON import path, not DOM injection of a synthetic title.
  await select('inferior');
  await page.locator('[data-action="export"]').click();
@@ -94,7 +114,7 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  // P6: invalidate synchronously during a real slider input; no stale export window.
  await select('sinus');await page.locator('[data-mode="monitor"]').click();
  await page.locator('[data-action="pause"]').click();
- await page.locator('[data-panel="base"]').click();
+ await openControlPanel(page,'base');
  const retired=await page.locator('[data-key="hr"]').evaluate(el=>{
   el.value='90';el.dispatchEvent(new Event('input',{bubbles:true}));
   document.querySelector('[data-action="export"]').click();
@@ -139,7 +159,7 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  await page.locator('#quiz-panel').screenshot({path:path.join(out,'p8-feedback.png')});
  await page.locator('[data-key="view.gain"]').selectOption('5');
  assert.equal(await page.locator('#quiz-panel').isVisible(),true);
- await page.locator('[data-panel="base"]').click();
+ await openControlPanel(page,'base');
  await page.locator('[data-key="hr"]').evaluate(el=>{el.value=Number(el.value)===80?'90':'80';el.dispatchEvent(new Event('input',{bubbles:true}));});
  assert.equal(await page.locator('#quiz-panel').isVisible(),false);await ready();
  checks.push('P8: real question, separate reference/estimates, view retained and physiology exits practice');
@@ -172,9 +192,6 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  checks.push('P9: keyboard calipers, native numeric equivalent, live output and no form shortcut collision');
  // Direct pointer path at known physical geometry; source modules are never imported.
  await page.locator('[data-key="view.format"]').selectOption('3x4');
- await page.locator('[data-panel="signal"]').click();
- await page.locator('#inspector [data-key="view.fit"]').uncheck();
- await page.locator('[data-key="view.pxPerMm"]').evaluate(el=>{el.value='10';el.dispatchEvent(new Event('input',{bubbles:true}));});
  await page.locator('[data-key="view.speed"]').selectOption('50');
  await page.locator('[data-key="view.gain"]').selectOption('20');
  await page.locator('#caliper-segment').selectOption('1');
@@ -185,10 +202,13 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  await page.locator('#caliper-time').fill('400');await page.keyboard.press('Tab');
  await page.locator('#caliper-voltage').fill('0');await page.keyboard.press('Tab');
  const referenceManual=await manual();
+ // The caliper marks are thin blue lines (grid is pink, trace is grey) anti-aliased over the grid at
+ // the fitted scale: find them by hue and take the intensity-weighted centre of each stripe.
  const marks=await page.locator('#ecg').evaluate(c=>{
-   const {data}=c.getContext('2d').getImageData(0,0,c.width,c.height),xs=new Uint32Array(c.width),ys=new Uint32Array(c.height);
-   for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){const i=(y*c.width+x)*4;if(data[i]<80&&data[i+1]>100&&data[i+1]<185&&data[i+2]>140&&data[i+2]<200){xs[x]++;ys[y]++;}}
-   const centers=a=>{const max=Math.max(...a),groups=[];for(let i=0;i<a.length;i++)if(a[i]>max*.6){if(!groups.length||i>groups.at(-1).at(-1)+1)groups.push([]);groups.at(-1).push(i);}return groups.map(g=>g.reduce((s,x)=>s+x,0)/g.length);};
+   const {data}=c.getContext('2d').getImageData(0,0,c.width,c.height),xs=new Float64Array(c.width),ys=new Float64Array(c.height);
+   for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){const i=(y*c.width+x)*4,blue=data[i+2]-data[i];if(blue>25&&data[i+2]>=data[i+1]){xs[x]+=blue;ys[y]+=blue;}}
+   const centers=a=>{const max=Math.max(...a),groups=[];for(let i=0;i<a.length;i++)if(a[i]>max*.3){if(!groups.length||i>groups.at(-1).at(-1)+1)groups.push([]);groups.at(-1).push(i);}
+     return groups.map(g=>(g.reduce((s,x)=>s+(x+.5)*a[x],0)/g.reduce((s,x)=>s+a[x],0)));};
    return {xs:centers(xs),ys:centers(ys),width:c.width,height:c.height};
  });
  assert.equal(marks.xs.length,2);assert.equal(marks.ys.length,2);
@@ -198,17 +218,20 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
    r=c.getBoundingClientRect();return {a:{x:r.left+marks.xs[0]/marks.width*r.width,y:r.top+marks.ys[0]/marks.height*r.height},b:{x:r.left+marks.xs[1]/marks.width*r.width,y:r.top+marks.ys[1]/marks.height*r.height}};
  },marks);
  await page.mouse.move(points.a.x,points.a.y);await page.mouse.down();await page.mouse.move(points.b.x,points.b.y,{steps:4});await page.mouse.up();
- const pointerManual=await manual();assert.ok(Math.abs(pointerManual.ms-referenceManual.ms)<=2.00001,JSON.stringify(pointerManual));assert.ok(Math.abs(pointerManual.mv-referenceManual.mv)<=.010001,JSON.stringify(pointerManual));
- accessibility.push({keyboardNative:native,pointerReference:referenceManual,pointer: pointerManual});
- await page.locator('#inspector [data-key="view.fit"]').check();
- await page.locator('[data-key="view.pxPerMm"]').evaluate(el=>{el.value=String(96/25.4);el.dispatchEvent(new Event('input',{bubbles:true}));});
+ const pointerManual=await manual();
+ // The paper always fits the page width now, so a pointer cannot be finer than one canvas
+ // pixel: the allowance is that pixel in ms and mV (the former fixed 10 px/mm gave 2 ms / 0.01 mV).
+ const pxPerMm=(marks.xs[1]-marks.xs[0])/10,msPerPx=1000/(50*pxPerMm),mvPerPx=1/(20*pxPerMm);
+ assert.ok(Math.abs(pointerManual.ms-referenceManual.ms)<=Math.max(2,msPerPx)+1e-5,JSON.stringify({pointerManual,referenceManual,msPerPx}));
+ assert.ok(Math.abs(pointerManual.mv-referenceManual.mv)<=Math.max(.01,mvPerPx)+1e-5,JSON.stringify({pointerManual,referenceManual,mvPerPx}));
+ accessibility.push({keyboardNative:native,pointerReference:referenceManual,pointer: pointerManual,canvasPxPerMm:pxPerMm});
  await page.locator('[data-key="view.speed"]').selectOption('25');await page.locator('[data-key="view.gain"]').selectOption('10');
  await caliperButton.click();
  for(const theme of ['light','dark']) {
    if(theme==='dark')await page.locator('[data-action="theme"]').click();
    const ratios=await page.evaluate(()=>{
      const lum=rgb=>{const a=rgb.match(/[\d.]+/g).slice(0,3).map(Number).map(n=>n/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return a[0]*.2126+a[1]*.7152+a[2]*.0722;};
-     return ['.workspace-footer','.trace-caption','.keyboard-help','.caliper-readout'].map(selector=>{const el=document.querySelector(selector);let p=el,bg;while(p){bg=getComputedStyle(p).backgroundColor;if(bg!=='rgba(0, 0, 0, 0)'&&bg!=='transparent')break;p=p.parentElement;}const fg=getComputedStyle(el).color,a=lum(fg),b=lum(bg);return {selector,fg,bg,ratio:(Math.max(a,b)+.05)/(Math.min(a,b)+.05)};});
+     return ['.workspace-footer','.caliper-readout','.case-group-count','.case-subgroup','.adjust-panel summary small','.reading-guide .section-label'].map(selector=>{const el=document.querySelector(selector);let p=el,bg;while(p){bg=getComputedStyle(p).backgroundColor;if(bg!=='rgba(0, 0, 0, 0)'&&bg!=='transparent')break;p=p.parentElement;}const fg=getComputedStyle(el).color,a=lum(fg),b=lum(bg);return {selector,fg,bg,ratio:(Math.max(a,b)+.05)/(Math.min(a,b)+.05)};});
    });
    for(const r of ratios)assert.ok(r.ratio>=4.5,JSON.stringify(r));accessibility.push({theme,ratios});
  }
@@ -262,7 +285,7 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  await page.setViewportSize({width:390,height:844});await page.goto(url);await ready();
  assert.ok(await page.locator('#ecg').isVisible());assert.match(await page.locator('#case-title').innerText(),/sinusal/i);
  await page.locator('[data-action="catalog"]').click();await select('anterior');await phase('hyperacute');
- await page.locator('#beat-detail').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(out,'mobile.png')});checks.push('390x844 emulated viewport: catalog / phase / trace');
+ await page.locator('.trace-panel').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(out,'mobile.png')});checks.push('390x844 emulated viewport: catalog / phase / trace');
  await page.locator('[data-action="caliper"]').click();
  assert.equal(await page.locator('#caliper-editor').isVisible(),true);
  const mobileEditor=await page.locator('#caliper-editor').evaluate(e=>({width:e.getBoundingClientRect().width,scroll:e.scrollWidth,client:e.clientWidth,minControl:Math.min(...Array.from(e.querySelectorAll('input,select,button'),x=>x.getBoundingClientRect().height))}));

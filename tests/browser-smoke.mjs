@@ -4,6 +4,8 @@
 import { chromium } from "playwright";
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
+import { chooseCatalogPreset } from "./support/catalog-navigation.mjs";
+import { openControlPanel } from "./support/adjust-panel.mjs";
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
 const errors = [];
@@ -13,18 +15,24 @@ await mkdir("docs/browser-captures", { recursive: true });
 const ready = () =>
   page.locator("#signal-loading").waitFor({ state: "hidden" });
 const field = (key) => page.locator(`[data-key="${key}"]`);
+// View tabs (12 derivaciones / Monitor / Tira de ritmo) by their visible name.
 const panel = (name) => page.getByRole("tab", { name, exact: true }).click();
-async function selectCase(name) {
-  await page.getByRole("button", { name, exact: true }).click();
+// Parameter tabs live in the folded «Ajustar el caso»: Ritmo, Intervalos, ST y ondas, Señal.
+const adjust = (name) => openControlPanel(page, name);
+// Cases are chosen through the library by example id (searching opens its family).
+async function selectCase(id) {
+  await chooseCatalogPreset(page, id);
   await ready();
 }
+// By attribute: on the monitor the button is hidden, which role queries (rightly) exclude.
+const calipers = () => page.locator('[data-action="caliper"]');
 async function rangeEnd(key, end) {
   // Exercise the browser's range input and the application's real input handler.
   await field(key).focus();
   await field(key).press(end === "min" ? "Home" : "End");
 }
 async function assertCalipers(active) {
-  const button = page.getByRole("button", { name: "Calibres", exact: true });
+  const button = calipers();
   assert.equal(await button.getAttribute("aria-pressed"), String(active));
   assert.equal(
     await button.evaluate((el) => el.classList.contains("active")),
@@ -61,30 +69,23 @@ try {
     await page.locator("#ecg").evaluate((c) => c.width > 0 && c.height > 0),
   );
   await page.screenshot({ path: "docs/browser-captures/papel.png" });
-  await page.getByRole("button", { name: "Ampliar", exact: true }).click();
-  await page
-    .getByLabel("Derivación ampliada", { exact: true })
-    .selectOption("V1");
-  assert.match(
-    await page.locator(".beat-plot").getAttribute("aria-label"),
-    /V1/,
-  );
-  await page
-    .getByLabel("Registro", { exact: true })
-    .selectOption("simultaneous");
-  await page.getByLabel("Formato", { exact: true }).selectOption("6x2");
-  await page.getByLabel("Velocidad", { exact: true }).selectOption("50");
-  await page.getByLabel("Ganancia", { exact: true }).selectOption("5");
-  await page.getByRole("button", { name: "BRD", exact: true }).click();
-  await page.locator("#signal-loading").waitFor({ state: "hidden" });
+  await field("view.format").selectOption("6x2");
+  await field("view.speed").selectOption("50");
+  await field("view.gain").selectOption("5");
+  await selectCase("rbbb");
   assert.match(await page.locator("#case-title").innerText(), /rama derecha/);
+  assert.equal(
+    await page.getByRole("button", { name: "Congelar", exact: true }).isHidden(),
+    true,
+    "Freeze exists only on the monitor",
+  );
   await page.getByRole("tab", { name: "Monitor", exact: true }).click();
   await page.getByRole("button", { name: "Congelar", exact: true }).click();
   assert.match(await page.locator("#monitor-state").innerText(), /CONGELADO/);
   await page.screenshot({ path: "docs/browser-captures/monitor.png" });
 
   // Regression: loading another case must reset both pause label and monitor state.
-  await selectCase("Bradicardia");
+  await selectCase("brady");
   assert.equal(
     await page.locator("#monitor-state").innerText(),
     "REPRODUCCIÓN",
@@ -98,24 +99,19 @@ try {
 
   // Regression: pressed/active/measuring must agree across view and case changes.
   await panel("12 derivaciones");
-  await page.getByRole("button", { name: "Calibres", exact: true }).click();
+  await calipers().click();
   await assertCalipers(true);
   await panel("Monitor");
   await assertCalipers(false);
-  assert.equal(
-    await page
-      .getByRole("button", { name: "Calibres", exact: true })
-      .isEnabled(),
-    false,
-  );
+  assert.equal(await calipers().isHidden(), true, "Calipers are hidden on the monitor");
   await panel("12 derivaciones");
   await assertCalipers(false);
-  await page.getByRole("button", { name: "Calibres", exact: true }).click();
-  await selectCase("Sinusal");
+  await calipers().click();
+  await selectCase("sinus");
   await assertCalipers(false);
 
   // The selector must configure the substrate promised by the existing example.
-  await panel("ST y morfología");
+  await adjust("st");
   await field("ischemia").selectOption("sgarbossa");
   await ready();
   assert.equal(await field("conduction").inputValue(), "lbbb");
@@ -123,7 +119,7 @@ try {
   assert.equal(await field("axis").inputValue(), "-15");
   assert.equal(await field("st").inputValue(), "3");
   assert.equal(await field("septalQ").isChecked(), false);
-  await panel("Conducción");
+  await adjust("conduction");
   await field("conduction").selectOption("normal");
   await ready();
   assert.equal(await field("qrs").inputValue(), "90");
@@ -133,9 +129,9 @@ try {
   );
 
   // Rendered changes are wiring checks, not independent clinical morphology validation.
-  for (const name of ["Wellens A", "De Winter"]) {
+  for (const name of ["wellens_a", "de_winter"]) {
     await selectCase(name);
-    await panel("ST y morfología");
+    await adjust("st");
     assert.equal(await field("st").isEnabled(), true);
     await rangeEnd("st", "min");
     await ready();
@@ -173,8 +169,8 @@ try {
     /ST resuelto/,
   );
 
-  await selectCase("Wellens A");
-  await panel("ST y morfología");
+  await selectCase("wellens_a");
+  await adjust("st");
   await rangeEnd("tAmp", "min");
   await ready();
   assert.equal(await field("st").isEnabled(), false);
@@ -186,8 +182,14 @@ try {
   await ready();
   assert.equal(await field("st").isEnabled(), true);
 
-  await selectCase("BRD");
-  await panel("ST y morfología");
+  // A learned bundle-branch pattern has a secondary ST-T that follows the QRS: T amplitude does not apply.
+  await selectCase("rbbb");
+  await adjust("st");
+  assert.equal(await field("tAmp").isDisabled(), true);
+  assert.match(await page.locator("#amplitude-note").innerText(), /ST–T secundaria del paciente/);
+  // Where T amplitude applies (normal rhythm), it must reach the paper.
+  await selectCase("sinus");
+  await adjust("st");
   await rangeEnd("tAmp", "min");
   await ready();
   const withoutT = await page.locator("#ecg").evaluate((c) => c.toDataURL());
@@ -199,14 +201,20 @@ try {
   );
 
   // An unsupported combination must remove the old trace and remain recoverable.
-  await selectCase("Sinusal");
-  await panel("Conducción");
+  await selectCase("sinus");
+  await adjust("conduction");
+  // The coupling control only acts with ectopy: set it while an isolated ectopic beat is chosen, then
+  // clear the ectopy (the value is kept) and push the rate beyond the model.
+  await field("ectopy").selectOption("pvc");
+  await ready();
   await rangeEnd("coupling", "min");
   await ready();
-  await panel("Fisiología");
+  await field("ectopy").selectOption("none");
+  await ready();
+  await adjust("base");
   await rangeEnd("hr", "max");
   await ready();
-  await panel("Conducción");
+  await adjust("conduction");
   await field("ectopy").selectOption("couplet");
   await page.waitForFunction(() =>
     document
@@ -234,12 +242,7 @@ try {
     "Out-of-scope state must not retain pixels from the previous ECG",
   );
   await assertCalipers(false);
-  assert.equal(
-    await page
-      .getByRole("button", { name: "Calibres", exact: true })
-      .isEnabled(),
-    false,
-  );
+  assert.equal(await calipers().isEnabled(), false);
   await page.screenshot({ path: "docs/browser-captures/fuera-de-alcance.png" });
   await page.getByRole("button", { name: "Exportar", exact: true }).click();
   assert.equal(
@@ -261,12 +264,7 @@ try {
   await page.getByRole("button", { name: "Restablecer", exact: true }).click();
   await ready();
   assert.equal(await page.locator("#case-title").innerText(), "Ritmo sinusal");
-  assert.equal(
-    await page
-      .getByRole("button", { name: "Calibres", exact: true })
-      .isEnabled(),
-    true,
-  );
+  assert.equal(await calipers().isEnabled(), true);
 
   // A legacy JSON with false preset metadata must retain VF, not sinus findings.
   await importJSON({
@@ -284,7 +282,7 @@ try {
     await page.locator("#findings").innerText(),
     /PR constante|P positiva/,
   );
-  await panel("ST y morfología");
+  await adjust("st");
   assert.equal(await field("st").isEnabled(), false);
   assert.equal(await field("tAmp").isEnabled(), false);
   await page.getByRole("button", { name: "Exportar", exact: true }).click();
@@ -302,10 +300,10 @@ try {
     .getByRole("dialog")
     .getByRole("button", { name: "Cerrar", exact: true })
     .click();
-  await selectCase("Sinusal");
+  await selectCase("sinus");
 
   await page.getByRole("tab", { name: "Tira de ritmo", exact: true }).click();
-  await page.getByLabel("Duración", { exact: true }).selectOption("60");
+  await field("view.duration").selectOption("60");
   await page.screenshot({ path: "docs/browser-captures/tira.png" });
   await page.getByRole("button", { name: "Exportar", exact: true }).click();
   const pngPromise = page.waitForEvent("download");
@@ -322,7 +320,8 @@ try {
     await page.locator("#case-title").innerText(),
     /Interpreta este ECG/,
   );
-  assert.equal(await page.locator("#beat-detail").isVisible(), false);
+  assert.equal(await page.locator("#adjust").isVisible(), false);
+  assert.equal(await page.locator("[data-action=parameters]").isDisabled(), true);
   assert.equal(
     await page
       .getByRole("button", { name: "Exportar", exact: true })
@@ -341,7 +340,7 @@ try {
   await page.screenshot({ path: "docs/browser-captures/movil.png" });
   assert.deepEqual(errors, []);
   console.log(
-    "Smoke UI completado: vistas/escalas, pausa/calibres, Sgarbossa, controles ST/T, rechazo y recuperación, importación/exportación, PNG, quiz y viewport móvil. No valida fidelidad clínica ni hardware móvil.",
+    "Smoke UI completado: vistas/escalas, herramientas según la vista, pausa/calibres, Sgarbossa, controles ST/T, rechazo y recuperación, importación/exportación, PNG, quiz y viewport móvil. No valida fidelidad clínica ni hardware móvil.",
   );
 } finally {
   await browser.close();
