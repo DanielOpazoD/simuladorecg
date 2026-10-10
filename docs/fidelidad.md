@@ -546,3 +546,54 @@ independiente del modelo: covarianza medida frente a L·Lᵀ derivación por
 derivación, espectro (pico, ancho a media potencia, armónico, bandas) y ruido
 independiente entre semillas. Detectan 9 de 10 mutaciones dirigidas; sobrevive
 quitar el borde coseno de la banda (la integral del FIR ya la limita).
+
+## F5.3 · Extrasístoles ventriculares aprendidas
+
+**Datos.** 1.143 registros de PTB-XL con PVC, BIGU o TRIGU (bajados y verificados
+con SHA-256); 442 pacientes de los pliegues 1–8 con una EV unifocal utilizable
+(`scripts/fidelity/build_pvc_model.py`). Por registro: latidos que difieren del
+dominante (correlación < 0,7 en ±80 ms) y son prematuros (RR previo < 0,92 del
+dominante); el grupo de morfología común más numeroso; su mediana; inicio y fin
+del QRS por la velocidad espacial, ápice y fin de T por la magnitud espacial. Las
+fases auriculares quedan en cero (sin P propia) y la población se ajusta con la
+misma función que las clases (`fit_and_write`, extraída de `build_shape_model.py`
+sin cambiar ningún modelo: NORM, CRBBB y LAFB regenerados idénticos). 24 modos
+(0,97 de la varianza): la mayoría de los registros tiene una sola EV y los modos
+finos serían ruido.
+
+**Producto.** Las EV con la fuente automática usan la población aprendida sobre la
+base sinusal aprendida (`learnedVentricularEctopy`); elegir una fuente docente
+concreta vuelve a los núcleos en todo el trazado. Cada paciente (semilla) tiene su
+EV: su eje (sin control), su ancho de QRS y su ST-T propios (antes 150 ms mínimos
+y el QT del latido conducido), su amplitud propia (`naturalAmplitude`: el control
+de amplitud la multiplica en vez de llevarla a la mediana) y repolarización
+secundaria ligada a su QRS. El laboratorio de activación muestra la EV aprendida.
+Paciente de libro de los presets de EV: semilla 137 (misma regla).
+
+### Resultado
+
+Mismo extractor sobre 300 pacientes sintéticos (preset EV) y las EV reales de la
+reserva (pliegues 9–10):
+
+| Rasgo | Real p10 / p50 / p90 | Sintético | KS |
+|---|---|---|---|
+| QRS (ms) | 106 / 130 / 158 | 108 / 128 / 151 | 0,11 |
+| ST-T (ms) | 224 / 272 / 380 | 235 / 296 / 371 | 0,19 |
+| Eje (°) | −87 / 45 / 137 | −103 / 62 / 108 | 0,09 |
+| T discordante | 0,5 / 1 / 1 | 0,5 / 1 / 1 | 0,08 |
+| Magnitud QRS (mV) | 2,1 / 3,6 / 5,9 | 2,6 / 4,0 / 5,8 | 0,20 |
+| Magnitud T (mV) | 0,8 / 1,4 / 2,4 | 0,8 / 1,5 / 2,4 | 0,10 |
+| Acoplamiento | 0,51 / 0,64 / 0,79 | 0,57 / 0,60 / 0,64 | 0,38 |
+
+Antes de usar la duración y la amplitud propias, el QRS sintético salía de
+132–158 ms (KS 0,60) y la magnitud fija en la mediana (KS 0,45). El acoplamiento
+sigue siendo un control del caso (0,58 por defecto). El detector de latidos del
+extractor ni siquiera encuentra la EV histórica de núcleos (la toma por una
+pausa): no hay comparación posible. Clasificador diagnóstico: 90 % de la población
+sintética reconocida como PVC; presets EV, bigeminismo, trigeminismo y dupla de
+0,97–0,998 a 1,00.
+
+**Límites.** Una EV unifocal por paciente (sin EV multiformes); la TV, el ritmo
+idioventricular y el escape ventricular siguen en núcleos. En modo monitor, el
+paso alto de 0,5 Hz quita hasta ~25 % del área de la T de una EV grande (es el
+filtro); el contrato de fase cero corre esa EV sobre núcleos.

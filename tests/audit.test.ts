@@ -10,8 +10,8 @@ import {
 } from "../src/engine/analysis/statistics";
 import { fromPreset, presetById } from "../src/presets/catalog";
 
-const caseData = (id: string) => {
-  const signal = synthesize(fromPreset(presetById(id)!), 10);
+const caseData = (id: string, learnedBase = true) => {
+  const signal = synthesize(fromPreset(presetById(id)!), 10, { learnedBase });
   return { signal, raw: measure(signal) };
 };
 describe("Audit identities and the actual contributing population", () => {
@@ -51,7 +51,9 @@ describe("Audit identities and the actual contributing population", () => {
     expect(raw.hr).toBe(originalHR);
   });
   it("rejects a P/PR candidate assigned to a ventricular ectopic without AV association", () => {
-    const { signal, raw } = caseData("pvc");
+    // Audit logic on a frozen-analyzer fixture: it needs a measured PR, which the
+    // analyzer rarely finds on the subtle learned P waves (docs/fidelidad.md).
+    const { signal, raw } = caseData("pvc", false);
     expect(auditMeasurement(signal, raw).pr).toBe(raw.pr);
     const ectopic = referenceForMeasurement(signal, raw).pairs.find(
       ({ source }) => source.pr === undefined,

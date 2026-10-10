@@ -175,18 +175,19 @@ describe.each(["off", "diagnostic"] as const)(
     });
 
     it("PVC changes ventricular morphology and repolarization in opposite directions", () => {
+      // Learned PVC (F5.3): a real patient's ectopic beat, so no fixed lead
+      // pattern; in the leads where its QRS is largest, T is discordant.
       const s = signal("pvc", 20);
       for (const b of interior(s, "pvc")) {
-        // Interior QRS/T windows compare signs within the same beat, without
-        // assuming that a premature complex has an isoelectric PR segment.
-        const qrs = (lead: Lead) =>
-          mean(samples(s, lead, b.time + 0.025, b.time + 0.13));
-        const t = (lead: Lead) =>
-          mean(samples(s, lead, b.time + 0.28, b.time + 0.35));
-        expect(qrs("V1")).toBeLessThan(-0.2);
-        expect(t("V1")).toBeGreaterThan(0.08);
-        expect(qrs("V6")).toBeGreaterThan(0.1);
-        expect(t("V6")).toBeLessThan(-0.04);
+        expect(b.qrs!).toBeGreaterThanOrEqual(0.1);
+        const area = (lead: Lead, a: number, z: number) => mean(samples(s, lead, b.time + a, b.time + z));
+        const leads = (["I", "II", "V1", "V2", "V3", "V4", "V5", "V6"] as Lead[])
+          .map((l) => ({ l, q: area(l, 0.01, b.qrs! - 0.01) }))
+          .sort((x, y) => Math.abs(y.q) - Math.abs(x.q)).slice(0, 3);
+        for (const { l, q } of leads) {
+          expect(Math.abs(q)).toBeGreaterThan(0.1);
+          expect(Math.sign(area(l, b.qrs! + 0.04, b.qt!))).toBe(-Math.sign(q));
+        }
       }
     });
 

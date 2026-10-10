@@ -24,7 +24,7 @@ describe("modelos de clase bajo demanda", () => {
     vi.stubGlobal("self", worker);
     try {
       await import("../src/engine/worker");
-      for (const [id, code] of [["lbbb", "CLBBB"], ["irbbb", "IRBBB"], ["lafb", "LAFB"], ["lvh", "LVH"]] as const) {
+      for (const [id, code] of [["lbbb", "CLBBB"], ["irbbb", "IRBBB"], ["lafb", "LAFB"], ["lvh", "LVH"], ["pvc", "PVC"]] as const) {
         expect(hasShapeModel(code)).toBe(false);
         await worker.onmessage({ data: { id: 1, ecg: preset(id), duration: 4 } } as MessageEvent);
         const r = messages.at(-1)!;

@@ -1,7 +1,7 @@
 import { WPW_REPOLARIZATION_LIMIT, SECONDARY_ST_RATIO_LIMIT } from "./teaching-limits";
 import { DEFAULT_CASE, cloneCase, type ECGCase } from "../engine/types";
-import { realisticModelFor } from "../engine/realistic/scope";
-import type { ModelCode } from "../engine/realistic/shape-model";
+import { learnedVentricularEctopy, realisticModelFor } from "../engine/realistic/scope";
+import type { BeatModelCode } from "../engine/realistic/shape-model";
 export interface Preset {
   id: string;
   name: string;
@@ -785,13 +785,17 @@ export const TEXTBOOK_SEED = 1951;
 /** Atrial fibrillation presets (F5.1): the patient also defines the f waves and RR
  * irregularity; same rule as the classes (the analyzer does not measure QT in AF). */
 export const TEXTBOOK_AF_SEED = 251;
-export const TEXTBOOK_SEEDS: Record<ModelCode, number> = { NORM: TEXTBOOK_SEED, CLBBB: 15, CRBBB: 276, IRBBB: 201, LAFB: 9, LVH: 154, IMI: 52, ASMI: 105 };
+/** Ventricular premature beat presets (F5.3): the seed also draws the PVC patient. */
+export const TEXTBOOK_PVC_SEED = 137;
+export const TEXTBOOK_SEEDS: Record<BeatModelCode, number> = { NORM: TEXTBOOK_SEED, CLBBB: 15, CRBBB: 276, IRBBB: 201, LAFB: 9, LVH: 154, IMI: 52, ASMI: 105 };
 
 export function fromPreset(preset: Preset, view?: ECGCase["view"]): ECGCase {
   const c = cloneCase(DEFAULT_CASE);
   Object.assign(c, preset.patch);
   const model = realisticModelFor(c);
-  if (preset.patch.seed === undefined && model) c.seed = model === "NORM" && c.rhythm === "af" ? TEXTBOOK_AF_SEED : TEXTBOOK_SEEDS[model];
+  if (preset.patch.seed === undefined && model)
+    c.seed = model !== "NORM" ? TEXTBOOK_SEEDS[model] : c.rhythm === "af" ? TEXTBOOK_AF_SEED
+      : learnedVentricularEctopy(c) ? TEXTBOOK_PVC_SEED : TEXTBOOK_SEED;
   c.presetId = preset.id;
   c.name = preset.name;
   if (view) c.view = { ...view };

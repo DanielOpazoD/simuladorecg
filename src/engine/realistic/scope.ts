@@ -4,7 +4,7 @@
  * ask without loading any model.
  */
 import type { ECGCase } from "../types";
-import type { ModelCode } from "./shape-model";
+import type { BeatModelCode, ModelCode } from "./shape-model";
 import { regionalActivationState } from "../regional-activation";
 
 const SUPPORTED_ELECTROLYTES: readonly ECGCase["electrolyte"][] = ["none", "longqt", "shortqt", "lowvoltage"];
@@ -15,12 +15,12 @@ const SUPPORTED_ELECTROLYTES: readonly ECGCase["electrolyte"][] = ["none", "long
 const SUPPORTED_RHYTHMS: readonly ECGCase["rhythm"][] = ["sinus", "af", "flutter", "junctional"];
 
 /** Conduction disorders learned from their own PTB-XL patients (stage F3). */
-const CONDUCTION_MODELS: Partial<Record<ECGCase["conduction"], ModelCode>> = {
+const CONDUCTION_MODELS: Partial<Record<ECGCase["conduction"], BeatModelCode>> = {
   normal: "NORM", lbbb: "CLBBB", rbbb: "CRBBB", irbbb: "IRBBB", lafb: "LAFB",
 };
 /** Old infarction (resolved ST, chronic phase) of a territory with its own
  * learned population: Q waves and T changes of real patients (F3.2). */
-const OLD_INFARCTION: Partial<Record<ECGCase["ischemia"], ModelCode>> = {
+const OLD_INFARCTION: Partial<Record<ECGCase["ischemia"], BeatModelCode>> = {
   inferior_rca: "IMI", inferior_lcx: "IMI", anterior: "ASMI",
 };
 
@@ -29,9 +29,9 @@ const OLD_INFARCTION: Partial<Record<ECGCase["ischemia"], ModelCode>> = {
  * are not stacked across populations (LVH with a bundle-branch block stays on
  * kernels until a joint model exists). An experimental regional activation that
  * actually applies keeps its own kernels; a request it cannot honor does not. */
-export function realisticModelFor(c: ECGCase): ModelCode | null {
+export function realisticModelFor(c: ECGCase): BeatModelCode | null {
   if (!(SUPPORTED_RHYTHMS.includes(c.rhythm) && !(c.av === "complete" && c.escape === "ventricular") &&
-    (c.ectopy === "none" || c.ectopy === "pac") &&
+    (c.ectopy === "none" || c.ectopy === "pac" || learnedVentricularEctopy(c)) &&
     SUPPORTED_ELECTROLYTES.includes(c.electrolyte) && !regionalActivationState(c).active)) return null;
   const conduction = CONDUCTION_MODELS[c.conduction] ?? null;
   if (c.ischemia !== "none")
@@ -45,3 +45,16 @@ export function realisticModelFor(c: ECGCase): ModelCode | null {
  * scales ST-T, so ST/QRS ratios are preserved. */
 export const learnedSecondaryRepolarization = (m: ModelCode) => m === "CLBBB" || m === "CRBBB" || m === "IRBBB" || m === "LVH";
 export const usesRealisticBase = (c: ECGCase) => realisticModelFor(c) !== null;
+
+const VENTRICULAR_ECTOPY: readonly ECGCase["ectopy"][] = ["pvc", "bigeminy", "trigeminy", "couplet"];
+/** Ventricular premature beats with the automatic (representative) source use the
+ * learned PVC population (F5.3); an explicitly chosen teaching source keeps its
+ * kernels, and so does the whole trace (one style per trace). */
+export const learnedVentricularEctopy = (c: ECGCase) =>
+  VENTRICULAR_ECTOPY.includes(c.ectopy) && (c.ventricularSource ?? "auto") === "auto";
+/** Every learned population a case needs (the worker loads them before synthesis). */
+export function realisticModelsFor(c: ECGCase): ModelCode[] {
+  const base = realisticModelFor(c);
+  if (!base) return [];
+  return learnedVentricularEctopy(c) ? [base, "PVC"] : [base];
+}

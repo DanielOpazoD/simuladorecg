@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { synthesize } from "../src/engine/signal";
 import { LEADS, type ECGCase, type Signal } from "../src/engine/types";
 import { fromPreset, presetById, PRESETS, TEXTBOOK_AF_SEED, TEXTBOOK_SEED, TEXTBOOK_SEEDS } from "../src/presets/catalog";
-import { realisticModelFor } from "../src/engine/realistic/scope";
+import { realisticModelFor, realisticModelsFor } from "../src/engine/realistic/scope";
 import { samplePatient } from "../src/engine/realistic/shape-model";
 
 function load(id: string, patch: Partial<ECGCase> = {}): ECGCase {
@@ -29,7 +29,13 @@ describe("alcance de la base aprendida (F2–F3)", () => {
       expect(model[id]).toBe("NORM");
     expect([model.lbbb, model.irbbb, model.lafb, model.lvh]).toEqual(["CLBBB", "IRBBB", "LAFB", "LVH"]);
     expect([model.rbbb, model.old_inferior, model.old_anterior]).toEqual(["CRBBB", "IMI", "ASMI"]);
-    for (const id of ["pvc", "vt", "vvi", "lpfb", "bifascicular", "wpw", "anterior", "inferior", "lateral", "sgarbossa", "rv_acute", "hyperk", "complete_v"])
+    // Ventricular premature beats ride on the learned sinus base with the learned PVC (F5.3).
+    for (const id of ["pvc", "bigeminy", "trigeminy", "couplet"]) {
+      expect(model[id]).toBe("NORM");
+      expect(realisticModelsFor(fromPreset(presetById(id)!))).toEqual(["NORM", "PVC"]);
+    }
+    expect(realisticModelFor({ ...fromPreset(presetById("pvc")!), ventricularSource: "rv_apical_pacing" })).toBeNull();
+    for (const id of ["vt", "vvi", "lpfb", "bifascicular", "wpw", "anterior", "inferior", "lateral", "sgarbossa", "rv_acute", "hyperk", "complete_v"])
       expect(model[id]).toBeNull();
     // Only the chronic phase of a territory with a learned old-infarction population.
     expect(realisticModelFor({ ...fromPreset(presetById("lateral")!), phase: "chronic" })).toBeNull();
@@ -419,5 +425,40 @@ describe("F5.1: ondas f y RR de la FA aprendidos de PTB-XL", () => {
   });
   it("los presets de FA muestran su paciente de libro", () => {
     for (const id of ["af", "af_fast", "af_slow"]) expect(fromPreset(presetById(id)!).seed).toBe(TEXTBOOK_AF_SEED);
+  });
+});
+
+describe("F5.3: extrasístoles ventriculares aprendidas de PTB-XL", () => {
+  const pvcBeats = (seed: number) => {
+    const s = synthesize(load("pvc", { seed }), 10);
+    return { s, beats: s.events.beats.filter((b) => b.kind === "pvc") };
+  };
+  it("cada paciente conserva su ancho de QRS y su amplitud (no la mediana de la población)", () => {
+    const widths = new Set<number>(), sizes: number[] = [];
+    for (let seed = 1; seed <= 12; seed++) {
+      const { s, beats } = pvcBeats(seed), b = beats[1];
+      expect(b.qrs!).toBeGreaterThanOrEqual(0.1);
+      expect(b.qrs!).toBeLessThanOrEqual(0.2);
+      widths.add(Math.round(b.qrs! * 1000));
+      let peak = 0;
+      for (const l of LEADS) for (let i = Math.round(b.time * s.fs); i < Math.round((b.time + b.qrs!) * s.fs); i++) peak = Math.max(peak, Math.abs(s.leads[l][i]));
+      sizes.push(peak);
+    }
+    expect(widths.size).toBeGreaterThan(6);
+    const mean = sizes.reduce((a, b) => a + b, 0) / sizes.length;
+    const cv = Math.sqrt(sizes.reduce((a, b) => a + (b - mean) ** 2, 0) / sizes.length) / mean;
+    expect(cv).toBeGreaterThan(0.15);
+  });
+  it("una fuente ventricular elegida vuelve a los núcleos con su ancho mínimo", () => {
+    const s = synthesize(load("pvc", { ventricularSource: "representative_pvc" }), 10);
+    expect(s.events.beats.find((b) => b.kind === "pvc")!.qrs).toBeCloseTo(0.15, 9);
+  });
+  it("el laboratorio de activación muestra la extrasístole aprendida, con su ancho", async () => {
+    const { sampleActivation } = await import("../src/ui/activation-model");
+    const c = fromPreset(presetById("pvc")!), b = synthesize(c, 10).events.beats.find((x) => x.kind === "pvc")!;
+    const t = sampleActivation(c, b);
+    expect(t.timing.label).toBe("Extrasístole aprendida (PTB-XL)");
+    expect(t.durationMs).toBeCloseTo(b.qrs! * 1000, 6);
+    expect(Math.max(...t.xyz.map((v) => Math.hypot(...v)))).toBeGreaterThan(0.3);
   });
 });
