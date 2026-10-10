@@ -557,7 +557,9 @@ difieren del dominante (correlación < 0,7 en ±80 ms) y son prematuros (RR prev
 (ventana de 900 ms tras el pico); inicio y fin del QRS por la velocidad espacial,
 ápice y fin de T (15 % del ápice) por la magnitud espacial. Una plantilla cuyo fin
 de T llega al borde de la ventana o al latido siguiente se descarta: con 440 ms, el
-26 % quedaba censurado y su ST-T («p90 380 ms») era el tope, no fisiología. Las
+26 % quedaba censurado y su ST-T («p90 380 ms») era el tope, no fisiología. El
+descarte cuesta un 22 % de los registros y sesga algo contra RR cortos y T muy
+largas (la EV seguida de cerca por el latido siguiente). Las
 fases auriculares quedan en cero (sin P propia) y la población se ajusta con la
 misma función que las clases (`fit_and_write`, extraída de `build_shape_model.py`
 sin cambiar ningún modelo: NORM, CRBBB, LAFB e IMI regenerados idénticos). 24 modos

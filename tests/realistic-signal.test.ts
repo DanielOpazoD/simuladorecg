@@ -452,10 +452,13 @@ describe("F5.3: extrasístoles ventriculares aprendidas de PTB-XL", () => {
   });
   it("su QT es propio (ST-T del paciente), marcado y sin aviso de recorte del modelo de QTc", async () => {
     const { qtModelLimits } = await import("../src/ui/qt-model-limits");
+    const { realisticPvcPatient } = await import("../src/engine/realistic/engine");
     const stts = new Set<number>();
     for (let seed = 1; seed <= 10; seed++) {
-      const s = synthesize(load("pvc", { seed }), 10), b = s.events.beats.find((x) => x.kind === "pvc")!;
+      const c = load("pvc", { seed }), s = synthesize(c, 10), b = s.events.beats.find((x) => x.kind === "pvc")!;
       expect(b.ownDurations).toBe(true);
+      // QT = own QRS + the patient's own ST-T (not the QTc model).
+      expect(b.qt! - b.qrs!).toBeCloseTo(Math.min(0.5, Math.max(0.16, realisticPvcPatient(c).sttMs / 1000)), 12);
       stts.add(Math.round((b.qt! - b.qrs!) * 1000));
       expect(qtModelLimits(load("pvc", { seed }), s).join(" ")).not.toMatch(/Límite del generador/);
     }
@@ -463,11 +466,17 @@ describe("F5.3: extrasístoles ventriculares aprendidas de PTB-XL", () => {
   });
   it("su eje no obedece al control de eje y su ST-T sigue la ganancia de su QRS", async () => {
     const { realisticPvcPatient } = await import("../src/engine/realistic/engine");
-    const a = realisticPvcPatient(load("pvc", { axis: 0 })), b = realisticPvcPatient(load("pvc", { axis: 90 }));
+    // Different QRS gains bust the patient cache; the natural axis must not move.
+    const a = realisticPvcPatient(load("pvc", { axis: 0 })), b = realisticPvcPatient(load("pvc", { axis: 90, qrsAmp: 1.1 }));
     expect(a.achievedAxes.qrs).toBeCloseTo(b.achievedAxes.qrs, 9);
     const g = realisticPvcPatient(load("pvc", { qrsAmp: 2 }));
     expect(g.scales.t / g.scales.qrs).toBeCloseTo(1, 12);
     expect(g.scales.qrs).toBeCloseTo(2 * a.scales.qrs, 12);
+  });
+  it("el QRS «verdadero» del trazado usa los anchos propios de las EV", () => {
+    const s = synthesize(load("bigeminy"), 10), widths = s.events.beats.map((b) => b.qrs! * 1000).sort((a, b) => a - b);
+    expect(s.truth.qrs).toBe(widths[Math.floor(widths.length / 2)]);
+    expect(s.events.beats.some((b) => b.kind === "pvc" && Math.abs(b.qrs! - 0.15) > 1e-6)).toBe(true);
   });
   it("una fuente ventricular elegida vuelve a los núcleos con su ancho mínimo", () => {
     const s = synthesize(load("pvc", { ventricularSource: "representative_pvc" }), 10);
