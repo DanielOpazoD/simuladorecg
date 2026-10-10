@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { chooseCatalogPreset } from "./support/catalog-navigation.mjs";
 import { openControlPanel } from "./support/adjust-panel.mjs";
+import {openPaper} from './support/adjust-panel.mjs';
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
 const errors = [];
@@ -69,9 +70,9 @@ try {
     await page.locator("#ecg").evaluate((c) => c.width > 0 && c.height > 0),
   );
   await page.screenshot({ path: "docs/browser-captures/papel.png" });
-  await field("view.format").selectOption("6x2");
-  await field("view.speed").selectOption("50");
-  await field("view.gain").selectOption("5");
+  await openPaper(page);await field("view.format").selectOption("6x2");
+  await openPaper(page);await field("view.speed").selectOption("50");
+  await openPaper(page);await field("view.gain").selectOption("5");
   await selectCase("rbbb");
   assert.match(await page.locator("#case-title").innerText(), /rama derecha/);
   assert.equal(
@@ -303,7 +304,7 @@ try {
   await selectCase("sinus");
 
   await page.getByRole("tab", { name: "Tira de ritmo", exact: true }).click();
-  await field("view.duration").selectOption("60");
+  await openPaper(page);await field("view.duration").selectOption("60");
   await page.screenshot({ path: "docs/browser-captures/tira.png" });
   await page.getByRole("button", { name: "Exportar", exact: true }).click();
   const pngPromise = page.waitForEvent("download");

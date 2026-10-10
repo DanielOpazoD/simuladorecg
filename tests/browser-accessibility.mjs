@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {isLocalGet} from './support/browser-request-policy.mjs';
-import {openAdjust,openControlPanel} from './support/adjust-panel.mjs';
+import {openAdjust,openControlPanel,openPaper} from './support/adjust-panel.mjs';
 import {readMeasurements} from './support/measurement-dialog.mjs';
 const url=process.env.ECG_TEST_URL||'http://127.0.0.1:5173/';
 const origin=new URL(url).origin;
@@ -60,9 +60,9 @@ for(const engine of engines) {
         await page.keyboard.press('End');await active('[data-panel=signal]');await page.keyboard.press('Home');await active('[data-panel=conduction]');
         assert.equal(await page.locator('.control-tabs [tabindex="0"]').count(),1);
         assert.equal(await page.locator('#control-panel-conduction').isVisible(),true);
-        await page.locator('#scale-toolbar [data-key="view.gain"]').focus();await page.locator('#scale-toolbar [data-key="view.gain"]').selectOption('5');
+        await openPaper(page);await page.locator('#scale-toolbar [data-key="view.gain"]').focus();await openPaper(page);await page.locator('#scale-toolbar [data-key="view.gain"]').selectOption('5');
         await active('#scale-toolbar [data-key="view.gain"]');
-        await page.locator('#scale-toolbar [data-key="view.gain"]').selectOption('10');
+        await openPaper(page);await page.locator('#scale-toolbar [data-key="view.gain"]').selectOption('10');
         // Pick the normal rhythm through the library by keyboard (searching opens every family, so the entry is reachable).
         const chooseSinus=async()=>{
           if(width===390)await key('[data-action=catalog]');
