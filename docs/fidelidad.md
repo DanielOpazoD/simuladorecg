@@ -642,9 +642,12 @@ F positiva en V1, ~0,25 mV en ambas). Núcleos: diente de sierra histórico.
 
 ### Resultado y límites
 
-Población generada frente a los 29 pacientes: negativas en II 62 % frente a 55 %;
-amplitud en II mediana 158 frente a 165 µV; V1 positiva 56 % frente a 82 % (la
-gaussiana sobre tan pocos pacientes mezcla subtipos). A nivel de trazado no hay
+Población generada frente a los 29 pacientes (3000 semillas, medido por el
+revisor): negativas en II 63 % frente a 55 % (16/29); amplitud en II mediana 161
+frente a 167 µV; V1 positiva 58 % frente a 79 % (23/29): la gaussiana sobre tan
+pocos pacientes mezcla subtipos. La prueba de fase usa la misma convención (mitad
+del QRS) que el motor; la ida y vuelta con el extractor (60 trazados 4:1 a 300
+lpm: desfase medio −0,006 ciclos, máximo 0,041) es una comprobación manual. A nivel de trazado no hay
 comparación posible: la reserva deja 4 registros utilizables, y el clasificador
 diagnóstico no tiene etiqueta de flutter (menos de 100 registros en PTB-XL). El
 criterio de calidad es débil: probado con trazados sintéticos de ciclo conocido,
