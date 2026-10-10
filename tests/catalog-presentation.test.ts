@@ -1,10 +1,11 @@
 import { describe, it } from 'vitest';
 import assert from 'node:assert/strict';
 import { PRESETS, type Preset } from '../src/presets/catalog';
-import { catalogFamilies, catalogLabel, familyLabel, searchText } from '../src/ui/catalog-presentation';
+import { catalogFamilies, catalogGroup, catalogGroups, catalogLabel, familyGuide, familyLabel, OMI_FAMILIES, searchText } from '../src/ui/catalog-presentation';
 
+// Each preset's own place; cross-listed imitators (also shown under «Imitadores») excluded.
 const flatten = (query = '', group = '') => catalogFamilies(PRESETS, query, group)
-  .flatMap(family => family.sections.flatMap(section => section.presets));
+  .flatMap(family => family.sections.filter(section => !section.crossListed).flatMap(section => section.presets));
 const ids = (query = '', group = '') => flatten(query, group).map(p => p.id).sort();
 
 describe('Catalog presentation never changes clinical presets', () => {
@@ -31,9 +32,28 @@ describe('Catalog presentation never changes clinical presets', () => {
     assert.ok(pending.every(p => p.strategy === 'pending'));
     assert.equal(catalogFamilies(PRESETS, '', 'Pendientes')[0].available, 0);
   });
-  it.each([...new Set(PRESETS.map(p => p.group))])('retains the stable category value %s', group => {
-    assert.deepEqual(ids('', group), PRESETS.filter(p => p.group === group).map(p => p.id).sort());
+  it.each(catalogGroups(PRESETS))('retains the stable category value %s', group => {
+    assert.deepEqual(ids('', group), PRESETS.filter(p => catalogGroup(p) === group).map(p => p.id).sort());
     assert.equal(catalogFamilies(PRESETS, '', group)[0].id, group);
+  });
+  it('replaces «Isquemia y ST» by the four OMI families, in its place, with their guideline names', () => {
+    const groups = catalogGroups(PRESETS), first = groups.indexOf('OMI evidente');
+    assert.deepEqual(groups.slice(first, first + 4), ['OMI evidente', 'OMI sutil', 'NOMI', 'Imitadores']);
+    assert.ok(!groups.includes('Isquemia y ST'));
+    for (const p of PRESETS.filter(p => p.group === 'Isquemia y ST'))
+      assert.equal(OMI_FAMILIES.filter(f => f.sections.some(s => !s.crossListed && s.ids.includes(p.id))).length, 1, p.id);
+    assert.equal(familyGuide('OMI evidente'), 'En las guías: STEMI');
+    assert.equal(familyGuide('NOMI'), 'En las guías: SCASEST sin oclusión');
+    assert.equal(familyGuide('Ritmos'), '');
+    assert.equal(catalogGroup(PRESETS.find(p => p.id === 'wellens_a')!), 'NOMI');
+    // The data is untouched: only the library place moves.
+    assert.equal(PRESETS.find(p => p.id === 'anterior')!.group, 'Isquemia y ST');
+  });
+  it('shows imitators that live in another family also under «Imitadores», marked as such', () => {
+    const imit = catalogFamilies(PRESETS, '', 'Imitadores')[0];
+    const cross = imit.sections.find(s => s.crossListed)!;
+    assert.deepEqual(cross.presets.map(p => p.id).sort(), ['hyperk', 'lvh', 'rv_acute']);
+    assert.equal(catalogGroup(PRESETS.find(p => p.id === 'lvh')!), 'Sobrecarga');
   });
   it('uses presentation labels without rewriting original groups', () => {
     assert.equal(familyLabel('Ectopia'), 'Extrasístoles');

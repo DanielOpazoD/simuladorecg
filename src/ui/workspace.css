@@ -45,6 +45,7 @@
 .case-group + .case-group { margin-top:16px; padding-top:10px; border-top:1px solid var(--line); }
 .case-group h3 { display:flex; justify-content:space-between; align-items:baseline; gap:8px; padding:14px 8px 10px; text-transform:none; font-size:13px; letter-spacing:0; font-weight:650; color:var(--ink); }
 .case-group h3 > span { font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums; font-weight:450; }
+.case-group-guide { margin:-6px 8px 4px; font-size:11px; line-height:1.4; color:var(--muted); }
 .case-subgroup { font-size:11px; font-weight:500; color:var(--muted); margin:13px 8px 5px; line-height:1.5; }
 .case-button { min-height:44px; padding:11px 10px; border-radius:7px; font-size:13px; line-height:1.45; gap:8px; margin-block:2px; }
 .case-button > span { overflow-wrap:anywhere; }

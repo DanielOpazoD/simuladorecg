@@ -23,7 +23,6 @@ export const DIAGNOSIS_GROUPS: readonly DiagnosisGroup[] = [
   group('rbbb', 'Bloqueo de rama derecha', [['rbbb', 'Completo'], ['irbbb', 'Incompleto']]),
   group('lafb', 'Hemibloqueos izquierdos', [['lafb', 'Anterior'], ['lpfb', 'Posterior']]),
   group('bifascicular', 'Bloqueo bifascicular', [['bifascicular', 'BRD + HBAI'], ['bifascicular_pr', 'Con PR prolongado']]),
-  group('inferior', 'Lesión inferior', [['inferior', 'Predominio en III'], ['inferior_lcx', 'Predominio en II']]),
   group('old_inferior', 'Infarto antiguo', [['old_inferior', 'Inferior'], ['old_anterior', 'Anteroseptal']]),
   group('wellens_a', 'Patrón de Wellens', [['wellens_a', 'Tipo A'], ['wellens_b', 'Tipo B']]),
   group('rv_acute', 'Sobrecarga del ventrículo derecho', [['rv_acute', 'Aguda'], ['rv_chronic', 'Hipertrofia']]),
@@ -44,7 +43,7 @@ export interface DiagnosisEntry {
 export interface DiagnosisFamily extends Omit<CatalogFamily, 'sections'> {
   entryCount: number;
   availableEntries: number;
-  sections: { title: string; entries: DiagnosisEntry[] }[];
+  sections: { title: string; entries: DiagnosisEntry[]; crossListed?: boolean }[];
 }
 
 /** Collapse only AFTER searching individual presets: specific variants stay discoverable.
@@ -74,7 +73,7 @@ export function diagnosisFamilies(presets: readonly Preset[], query = '', catego
           ? entry.matches.find(p => p.id === queryId)
           : entry.matches.find(p => p.id === selectedId)) ?? entry.matches[0];
       }
-      return { title: section.title, entries };
+      return { title: section.title, entries, ...(section.crossListed ? { crossListed: true } : {}) };
     });
     const entries = sections.flatMap(s => s.entries);
     return { ...family, sections, entryCount: entries.length,

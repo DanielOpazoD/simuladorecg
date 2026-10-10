@@ -5,7 +5,7 @@ import { regionalActivationControls } from "./ui/regional-activation";
 import "./style.css";
 import { APP_VERSION } from "./ui/version";
 import { ActivationLab, type ActivationApplyResult } from "./ui/activation-lab";
-import { familyLabel } from "./ui/catalog-presentation";
+import { catalogGroup, catalogGroups, familyGuide, familyLabel } from "./ui/catalog-presentation";
 import { metricsHtml, modelMetricCards } from "./ui/metric-cards";
 import { openDialog, closeDialog } from "./ui/dialog";
 import { exportDialogHtml } from "./ui/export-dialog";
@@ -92,7 +92,7 @@ try {
 applyTheme(readTheme());
 const root = $("#app");
 root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="ECG Lab, inicio">${icon("pulse")}<span>ECG<span class="brand-light">lab</span></span><span class="brand-divider"></span><small>Explora la electrocardiografía</small></a><nav aria-label="Herramientas"><button class="btn mobile-cases" data-action="catalog">${icon("menu")}<span>Casos</span></button>${btn("quiz", "Practicar", "quiz")}${btn("about", "Guía", "book")}${btn("theme", "Tema", "sun", "icon-button")}${btn("export", "Exportar", "download", "primary")}</nav></header>
- <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><div><h2>Biblioteca de patrones</h2><span>${PRESETS.filter((x) => x.strategy !== "pending").length} ejemplos · agrupados por patrón</span></div>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Patrón, sigla o palabra…" aria-label="Buscar caso"/></label><label class="category-select"><span class="sr-only">Categoría</span><select id="category">${options([["", "Todas las familias"], ...Array.from(new Set(PRESETS.map((x) => x.group))).map((x) => [x, familyLabel(x)] as [string, string])], "")}</select></label><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div><div class="sidebar-footer">${icon("pulse")}<div>Señal sintética aprendida de ECG reales<small data-product-version="${APP_VERSION}">Modelo educativo · v${APP_VERSION}</small></div></div></aside>
+ <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><div><h2>Biblioteca de patrones</h2><span>${PRESETS.filter((x) => x.strategy !== "pending").length} ejemplos · agrupados por patrón</span></div>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Patrón, sigla o palabra…" aria-label="Buscar caso"/></label><label class="category-select"><span class="sr-only">Categoría</span><select id="category">${options([["", "Todas las familias"], ...catalogGroups(PRESETS).map((x) => [x, familyLabel(x)] as [string, string])], "")}</select></label><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div><div class="sidebar-footer">${icon("pulse")}<div>Señal sintética aprendida de ECG reales<small data-product-version="${APP_VERSION}">Modelo educativo · v${APP_VERSION}</small></div></div></aside>
  <main class="workspace"><nav class="workspace-nav" aria-label="Espacios de trabajo"><span class="workspace-current" aria-current="page">${icon("pulse")}Simulador</span>${workspaceButton("external", "Abrir señal", "Abrir", "book")}${workspaceButton("compare", "Comparar A/B", "Comparar", "strip")}${workspaceButton("activation", "Activación QRS", "Activación", "pulse")}${workspaceButton("parameters", "Ajustar el caso", "Ajustar", "settings", "workspace-adjust")}</nav><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><p id="case-subtitle">Activación auricular sinusal seguida de conducción AV 1:1.</p><div id="exploration-context" class="exploration-context" hidden></div></div><div class="case-state"><span class="status-label">Ejemplo sintético</span>${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
  <section id="diagnosis-navigation" class="diagnosis-navigation" aria-label="Variantes del patrón" hidden></section>
  <div id="diagnosis-content">
@@ -195,7 +195,7 @@ function renderInfo() {
   $("#case-category").textContent = concealed
     ? "PRÁCTICA"
     : customExploration ? "EXPLORACIÓN"
-    : p ? familyLabel(p.group) : "Caso personalizado";
+    : p ? [familyLabel(catalogGroup(p)), familyGuide(catalogGroup(p))].filter(Boolean).join(" · ") : "Caso personalizado";
   $("#case-subtitle").textContent = concealed
     ? "Identifica el patrón. Puedes cambiar la vista y utilizar los calibres."
     : customExploration ? "Interpreta la señal actual; el origen solo indica procedencia." : reading.subtitle;
