@@ -61,6 +61,17 @@ export function afPatient(seed: number): AfPatient {
     for (let b = 0; b <= a; b++) v += m.jointCholesky[base + b] * e[b];
     z[a] = v;
   }
+  const p = afPatientFromJoint(z);
+  if (patients.size > 64) patients.clear();
+  patients.set(seed, p);
+  return p;
+}
+/** Population-mean patient (tests compare it with an independent decoding). */
+export const afMeanPatient = () => afPatientFromJoint(model().jointMean);
+
+/** Patient from a point of the joint (spectrum parameters, spatial modes, RR). */
+export function afPatientFromJoint(z: ArrayLike<number>): AfPatient {
+  const m = model();
   // Parametric spectrum (log10): background slope + dominant peak + harmonic.
   const at = (name: string) => z[m.names.indexOf(name)];
   const peak = Math.max(0, at("peak")), F = Math.min(9.5, Math.max(3, at("dominant_hz")));
@@ -95,10 +106,7 @@ export function afPatient(seed: number): AfPatient {
   for (let a = 0, p = 0; a < NL; a++)
     for (let b = 0; b <= a; b++, p++) mixing[a * NL + b] = a === b ? Math.exp(chol[p]) : chol[p];
   const rrCv = Math.min(0.4, Math.max(0.08, Math.exp(z[m.names.indexOf("log_rr_cv")])));
-  const p: AfPatient = { mixing, fir, rrCv, dominantHz };
-  if (patients.size > 64) patients.clear();
-  patients.set(seed, p);
-  return p;
+  return { mixing, fir, rrCv, dominantHz };
 }
 
 /**
@@ -106,8 +114,8 @@ export function afPatient(seed: number): AfPatient {
  * are generated at the model rate from the case seed (with a warm-up so the
  * first sample is already stationary) and interpolated to `fs`.
  */
-export function addFibrillationWaves(acc: Float64Array[], fs: number, seed: number): void {
-  const m = model(), p = afPatient(seed), n = acc[0].length, ratio = fs / m.fs;
+export function addFibrillationWaves(acc: Float64Array[], fs: number, seed: number, p: AfPatient = afPatient(seed)): void {
+  const m = model(), n = acc[0].length, ratio = fs / m.fs;
   const count = Math.ceil(n / ratio) + 3, warm = TAPS;
   const rng = random(((seed ^ 0xf1b7) * 2246822519) >>> 0);
   const src = Array.from({ length: NL }, () => new Float64Array(count));

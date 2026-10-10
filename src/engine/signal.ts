@@ -223,6 +223,10 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
     }
   }
   // Learned f waves (F5.1) go straight to the eight independent leads.
+  // The true QRS axis is the ventricular component's: measured before the f waves.
+  const learnedAxis = track && events.beats.some((b) => b.kind === "normal")
+    ? track.measuredQrsAxis(events.beats.filter((b) => b.time >= WARM && b.time < total))
+    : null;
   if (track && c.rhythm === "af") addFibrillationWaves(track.acc, FS, c.seed);
   else if (c.rhythm === "af" || c.rhythm === "flutter" || c.rhythm === "vf") {
     const r = random(c.seed + 11);
@@ -367,7 +371,7 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
       qt: bs.length ? median(bs.map((b) => b.qt! * 1000)) : null,
       axis: bs.length
         ? track && bs.some((b) => b.kind === "normal")
-          ? track.measuredQrsAxis(events.beats.filter((b) => b.time >= WARM && b.time < total))
+          ? learnedAxis
           : c.rhythm === "torsades"
           ? null
           : allV

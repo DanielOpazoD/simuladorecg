@@ -531,4 +531,18 @@ organización transitoria ni las fases de FA gruesa/fina dentro de un trazado. L
 amplitud en II queda algo alta en los pacientes de ondas pequeñas. El RR sigue
 siendo una renovación gamma (sin la autocorrelación negativa leve de los reales).
 Los casos de FA sobre núcleos (con extrasístoles ventriculares, por ejemplo)
-conservan las ondas f históricas.
+conservan las ondas f históricas. El FIR de 257 coeficientes con ventana de Hann
+ensancha algo los picos más estrechos (0,2–0,6 Hz). El eje QRS «verdadero» se mide
+sobre el componente ventricular, antes de sumar las ondas f.
+
+**Analizador congelado en FA.** `scripts/validate-af-clock.mjs` (manual, ya en
+rojo en main) pasa de 2 a 4 FC marcadas «utilizables» con error: la semilla 73 a
+160 lpm (7,0 lpm de error) y a 200 lpm (24,6 lpm). Las ondas f reales, más
+grandes que las históricas a frecuencias altas, confunden al detector congelado;
+las tarjetas muestran los valores del modelo.
+
+**Pruebas del generador** (`tests/af-model.test.ts`), contra una decodificación
+independiente del modelo: covarianza medida frente a L·Lᵀ derivación por
+derivación, espectro (pico, ancho a media potencia, armónico, bandas) y ruido
+independiente entre semillas. Detectan 9 de 10 mutaciones dirigidas; sobrevive
+quitar el borde coseno de la banda (la integral del FIR ya la limita).
