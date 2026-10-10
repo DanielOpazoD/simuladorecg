@@ -448,9 +448,10 @@ export function normalizeCase(input: unknown): ECGCase {
   // Cases saved before natural P/T axes existed keep an axis they had changed.
   if (s.naturalPAxis === undefined) c.naturalPAxis = s.pAxis === undefined || s.pAxis === DEFAULT_CASE.pAxis;
   if (s.naturalTAxis === undefined) c.naturalTAxis = s.tAxis === undefined || s.tAxis === DEFAULT_CASE.tAxis;
-  // Likewise for the controls that became natural in F2.3.
-  for (const [control, flag] of Object.entries(NATURAL_CONTROLS) as [NaturalControl, (typeof NATURAL_CONTROLS)[NaturalControl]][])
-    if (s[flag] === undefined) c[flag] = s[control] === undefined || s[control] === DEFAULT_CASE[control];
+  // Cases saved before F2.3 carry none of these flags: they keep the values they
+  // were saved with (their physiology must not change on reopening).
+  const legacy = Object.values(NATURAL_CONTROLS).every((flag) => s[flag] === undefined);
+  for (const flag of Object.values(NATURAL_CONTROLS)) if (s[flag] === undefined) c[flag] = !legacy;
   c.flutterRatio = Math.round(c.flutterRatio);
   for (const k of ["presetId", "name"] as const)
     if (typeof s[k] === "string") c[k] = s[k].slice(0, 100);

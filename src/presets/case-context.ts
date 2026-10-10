@@ -1,4 +1,4 @@
-import { normalizeCase, type ECGCase } from "../engine/types";
+import { NATURAL_CONTROLS, normalizeCase, type ECGCase } from "../engine/types";
 import { repolarizationLimitations } from "./teaching-limits";
 import { fromPreset, presetById, type Preset } from "./catalog";
 import { realisticModelFor } from "../engine/realistic/scope";
@@ -15,6 +15,7 @@ function physiology(c: ECGCase) {
     filter,
     notch,
     mainsFrequency,
+    naturalAxis, naturalPr, naturalQrs, naturalQt, naturalPAmp, naturalQrsAmp, naturalTAmp,
     ...parameters
   } = c;
   return parameters;
@@ -43,7 +44,10 @@ export function caseContext(input: ECGCase): CaseContext {
       );
     } else {
       const current = physiology(c),
-        expected = physiology(normalizeCase(fromPreset(declared)));
+        // A case whose controls all were fixed (saved before F2.3) matches the preset's
+        // control defaults; otherwise the textbook patient's own values.
+        natural = Object.values(NATURAL_CONTROLS).some((flag) => c[flag] !== false),
+        expected = physiology(normalizeCase(fromPreset(declared, undefined, { natural })));
       const matches = (Object.keys(current) as (keyof typeof current)[]).every(
         (key) => current[key] === expected[key],
       );

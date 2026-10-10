@@ -107,6 +107,11 @@ export function changeCase(
     c.name = "Caso personalizado";
     c.presetId = "custom";
   }
+  if (key.startsWith("view.")) return normalizeCase(c);
+  // A natural control this transition sets (the user's slider, or a value implied by
+  // another choice such as first-degree block's PR) becomes an exact target.
+  for (const [control, flag] of Object.entries(NATURAL_CONTROLS) as [NaturalControl, (typeof NATURAL_CONTROLS)[NaturalControl]][])
+    if (key !== "seed" && c[control] !== previous[control]) c[flag] = false;
   // Controls not yet set follow the (possibly new) patient: seed, rotation, rhythm.
   return withNaturalControls(normalizeCase(c));
 }

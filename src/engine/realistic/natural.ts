@@ -24,7 +24,7 @@ export function naturalControlValues(c: ECGCase): Partial<Record<NaturalControl,
   // The same person the axis control rotates (stable candidate), unrotated and at
   // the population-median gains: its scales give its own sizes relative to them.
   const p = samplePatient({ model: "NORM", seed: c.seed, axis: null, pAxis: null, tAxis: null, pScale: 1, qrsScale: 1, tScale: 1, horizontalDeg: TRANSITION_DEG * c.transition, stableCandidate: true });
-  const r = (v: number, lo: number, hi: number, step: number) => Math.round(Math.min(hi, Math.max(lo, v)) / step) * step;
+  const r = (v: number, lo: number, hi: number, step: number) => +(Math.round(Math.min(hi, Math.max(lo, v)) / step) * step).toFixed(3);
   const out = {
     axis: r(p.achievedAxes.qrs, -180, 180, 1),
     pr: r(p.pMs + p.pqMs, 80, 400, 1),

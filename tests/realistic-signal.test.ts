@@ -696,9 +696,36 @@ describe("F2.3: paciente natural en la base normal", () => {
     const { normalizeCase } = await import("../src/engine/types");
     const av1 = fromPreset(presetById("av1")!);
     expect(av1.pr).toBe(260); expect(av1.naturalPr).toBe(false); expect(av1.naturalAxis).toBe(true);
-    expect(normalizeCase({ version: 1 }).naturalQrs).toBe(true);
-    expect(normalizeCase({ version: 1, qrs: 120 }).naturalQrs).toBe(false);
-    expect(normalizeCase({ version: 1, qrs: 120, naturalQrs: true }).naturalQrs).toBe(true);
+    // Saved before F2.3 (no flags): every value stays as saved, even on a view change.
+    const { changeCase } = await import("../src/ui/case-state");
+    const old = normalizeCase({ version: 1, presetId: "sinus", name: "Ritmo sinusal", seed: 1951 });
+    expect(old.naturalQrs).toBe(false);
+    const viewed = changeCase(old, "view.speed", 50);
+    for (const k of ["axis", "pr", "qrs", "qtc", "pAmp", "qrsAmp", "tAmp"] as const) expect(viewed[k]).toBe(old[k]);
+    expect(normalizeCase({ version: 1, qrs: 120, naturalQrs: true, naturalPr: true }).naturalQrs).toBe(true);
+    expect(normalizeCase({ version: 1, qrs: 120, naturalQrs: true }).naturalPr).toBe(true);
+  });
+  it("un valor implícito en otra elección se fija: BAV de 1.er grado lleva su PR", async () => {
+    const { changeCase } = await import("../src/ui/case-state");
+    const c = changeCase(fromPreset(presetById("sinus")!), "av", "first");
+    expect(c.pr).toBe(260); expect(c.naturalPr).toBe(false);
+    expect(synthesize(c, 10).truth.pr).toBe(260);
+  });
+  it("los casos de preset guardados, antes y después de F2.3, conservan su patrón", async () => {
+    const { normalizeCase } = await import("../src/engine/types");
+    const { caseContext } = await import("../src/presets/case-context");
+    for (const id of ["sinus", "brady", "av1", "longqt", "pac"]) {
+      const now = normalizeCase(JSON.parse(JSON.stringify(fromPreset(presetById(id)!))));
+      expect(caseContext(now).preset?.id).toBe(id);
+      const before = JSON.parse(JSON.stringify(fromPreset(presetById(id)!, undefined, { natural: false })));
+      for (const flag of ["naturalAxis", "naturalPr", "naturalQrs", "naturalQt", "naturalPAmp", "naturalQrsAmp", "naturalTAmp"]) delete before[flag];
+      expect(caseContext(normalizeCase(before)).preset?.id).toBe(id);
+    }
+  });
+  it("rotar el corazón (transición precordial) no cambia de persona", async () => {
+    const { changeCase } = await import("../src/ui/case-state");
+    const c = fromPreset(presetById("sinus")!), r = changeCase(c, "transition", 0.5);
+    for (const k of ["pr", "qrs", "qtc"] as const) expect(r[k]).toBe(c[k]);
   });
   it("el paciente de libro es normal con sus valores propios", () => {
     const c = fromPreset(presetById("sinus")!);

@@ -20,7 +20,9 @@ import { captureTrace } from "./ui/comparison-model";
 import { ExternalLab } from "./ui/external-lab";
 import {
   cloneCase,
+  NATURAL_CONTROLS,
   type ECGCase,
+  type NaturalControl,
   type Signal,
   type Measurement,
 } from "./engine/types";
@@ -593,11 +595,18 @@ document.addEventListener("input", (e) => {
   }
   const key = el.dataset.key;
   if (!key || el.type !== "range") return;
+  const before = c;
   setValue(key, Number(el.value));
-  // Moving an axis slider fixes it: drop the "natural" hint without re-rendering.
-  if (key === "pAxis" || key === "tAxis") {
-    const text = el.closest("label")?.querySelector("span")?.firstChild;
-    if (text?.nodeType === Node.TEXT_NODE) text.textContent = key === "pAxis" ? "Eje de P" : "Eje de T";
+  // Moving a slider fixes it: drop the "natural" hint without re-rendering.
+  const text = el.closest("label")?.querySelector("span")?.firstChild;
+  if (text?.nodeType === Node.TEXT_NODE) text.textContent = (text.textContent ?? "").replace(" (natural del paciente)", "");
+  // Controls that still follow the patient may change with it (F2.3: e.g. the
+  // precordial rotation picks the person): refresh their sliders in place.
+  for (const k of Object.keys(NATURAL_CONTROLS) as NaturalControl[]) {
+    if (k === key || c[k] === before[k]) continue;
+    const slider = document.querySelector<HTMLInputElement>(`input[type=range][data-key="${k}"]`), out = document.querySelector(`[data-output="${k}"]`);
+    if (slider) slider.value = String(c[k]);
+    if (out) out.innerHTML = `${c[k]} <small>${out.querySelector("small")?.textContent || ""}</small>`;
   }
   if (!key.startsWith("view.")) syncAmplitudeControls();
   const output = document.querySelector(`[data-output="${key}"]`);

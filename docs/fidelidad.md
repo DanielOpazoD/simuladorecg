@@ -779,3 +779,45 @@ las 12 derivaciones es ilustrativa (orientación aleatoria), no aprendida; se
 desconoce qué derivación es la de vfdb (se asume tipo II). Proceso estacionario: sin
 la evolución de FV gruesa a fina ni la organización transitoria. La torsade de
 pointes sigue en núcleos.
+
+## F2.3 · Paciente natural en la base normal
+
+**Qué delataba al sintético.** La línea base del discriminador profundo (2.000
+sintéticos de entrenamiento y 600 de prueba frente a PTB-XL) dio AUC 0,998 con la
+señal completa, 0,9995 en la banda de 0,5–40 Hz (sin deriva ni ruido fino) y 0,990
+con solo el latido mediano repetido. Ni el ruido ni la dinámica explicaban el
+resto: la morfología bastaba. En el banco, la pendiente máxima del QRS salía un
+18 % baja. Separando causas sobre los vectores de entrenamiento: la rejilla de
+fases pierde un 3 %, el truncado a 64 modos un 11 % (256 modos lo recuperarían),
+el muestreo de la mezcla nada más, y el motor apenas un 4 %. El resto venía de
+otra cosa: todos los pacientes se forzaban al eje (55°), QRS (90 ms), PR, QTc y
+tamaños de onda por defecto, y el banco exportaba valores al azar independientes
+de la morfología del paciente.
+
+**Producto.** En la base normal, cada semilla trae su eje QRS, el tamaño de P, QRS
+y T, su PR, su QRS y su QTc (su QT a su RR, corregido con Fridericia como el
+motor). Mientras un preset o el usuario no fijen un control, el caso lleva el valor
+del paciente (`src/engine/realistic/natural.ts`): trazado, analizador, tarjetas y
+demás vistas ven el mismo número, y el control lo señala «(natural del paciente)».
+Mover un control lo fija; un valor implícito en otra elección (el PR de 260 ms del
+BAV de 1.er grado) también. El paciente natural es el mismo que rota el control de
+eje, y la rotación precordial ya no cambia de persona (la elección del candidato
+estable no depende de ella). Los casos guardados antes conservan sus valores y su
+patrón. Solo la base normal: los modelos por clase se cargan en el worker.
+
+**Paciente de libro.** 12066, el más cercano a la media entre los 6 de 20.000 que
+cumplen los criterios clásicos con sus valores propios (eje 30–75°, PR 130–190 ms,
+QRS 80–100 ms, QTc 380–430 ms). La 1951, con su PR natural de 227 ms, era un BAV de
+1.er grado: el clasificador diagnóstico la leía 1AVB 0,34; la 12066, NORM 0,999.
+
+| Banco (600 frente a 600) | Antes | F2.3 |
+|---|---|---|
+| AUC morfología (GB / RL) | 0,93 / 0,86 | 0,86 / 0,81 |
+| KS pendiente QRS I / II / V5 | 0,23 / 0,24 / 0,17 | 0,21 / 0,09 / 0,05 |
+| Discriminador, latido mediano (AUC) | 0,990 | 0,974 |
+
+El discriminador de señal completa sigue en 0,999: cada componente (morfología,
+ruido, dinámica) basta por sí solo para la red. El analizador congelado rinde igual
+sobre la población natural (sinusal, AAI y BAV 1.° 60/60; EV y bigeminia como en
+`main`). Límites: la pendiente en I sigue baja (truncado a 64 modos) y el ruido
+(AUC del grupo 0,98) queda para una etapa propia.
