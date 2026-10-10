@@ -10,3 +10,33 @@ def read(path):
     dt={'16':'<i2','32':'<i4'}[fmt]
     d=np.fromfile(path+'.dat',dtype=dt)[:n*nch].reshape(n,nch).astype(np.float64)
     return fs,names,(d-np.array(bases))/np.array(gains)
+
+
+MIT_CODES = {1: 'N', 2: 'L', 3: 'R', 4: 'a', 5: 'V', 6: 'F', 7: 'J', 8: 'A', 9: 'S', 10: 'E', 11: 'j', 12: '/', 13: 'Q',
+             14: '~', 16: '|', 18: 's', 19: 'T', 20: '*', 21: 'D', 22: '"', 23: '=', 24: 'p', 25: 'B', 26: '^', 27: 't',
+             28: '+', 29: 'u', 30: '?', 31: '!', 32: '[', 33: ']', 34: 'e', 35: 'n', 36: '@', 37: 'x', 38: 'f', 39: '(',
+             40: ')', 41: 'r'}
+
+
+def read_ann(path, ext='atr'):
+    """Minimal MIT-format annotation reader. Returns (samples, symbols, aux texts)."""
+    b = np.fromfile(path + '.' + ext, dtype='<u2')
+    i, t, samples, symbols, aux = 0, 0, [], [], []
+    while i < len(b):
+        w = int(b[i]); code, d = w >> 10, w & 0x3FF; i += 1
+        if code == 0 and d == 0:
+            break
+        if code == 59:  # SKIP: 32-bit interval, high word first
+            t += (int(b[i]) << 16) | int(b[i + 1]); i += 2
+            continue
+        if code in (60, 61, 62):  # NUM, SUB, CHN
+            continue
+        if code == 63:  # AUX of the previous annotation: d bytes
+            raw = b[i:i + (d + 1) // 2].astype('<u2').tobytes()[:d]
+            if aux:
+                aux[-1] = raw.decode('latin-1').rstrip('\x00')
+            i += (d + 1) // 2
+            continue
+        t += d
+        samples.append(t); symbols.append(MIT_CODES.get(code, '?')); aux.append('')
+    return np.array(samples), symbols, aux

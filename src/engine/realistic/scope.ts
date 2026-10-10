@@ -12,7 +12,7 @@ const SUPPORTED_ELECTROLYTES: readonly ECGCase["electrolyte"][] = ["none", "long
 /** Rhythms whose conducted beats and sinus P waves use the learned base in this
  * stage. Ventricular, paced and ventricular-ectopy rhythms keep the historical
  * kernels until their own migration, so a single trace never mixes both styles. */
-const SUPPORTED_RHYTHMS: readonly ECGCase["rhythm"][] = ["sinus", "af", "flutter", "junctional", "paced"];
+const SUPPORTED_RHYTHMS: readonly ECGCase["rhythm"][] = ["sinus", "af", "flutter", "junctional", "paced", "vt", "idioventricular"];
 
 /** Conduction disorders learned from their own PTB-XL patients (stage F3). */
 const CONDUCTION_MODELS: Partial<Record<ECGCase["conduction"], BeatModelCode>> = {
@@ -32,13 +32,14 @@ const OLD_INFARCTION: Partial<Record<ECGCase["ischemia"], BeatModelCode>> = {
 export function realisticModelFor(c: ECGCase): BeatModelCode | null {
   // Paced rhythms (F5.4): atrial pacing conducts the learned beat; ventricular
   // pacing uses the learned paced complex unless a teaching source is chosen.
-  if (c.rhythm === "paced" && c.pacing !== "AAI" && (c.ventricularSource ?? "auto") !== "auto") return null;
-  if (!(SUPPORTED_RHYTHMS.includes(c.rhythm) && !(c.av === "complete" && c.escape === "ventricular") &&
+  // Ventricular rhythms (F5.5) likewise use the learned ectopic complex.
+  if (noConductedBeats(c) && (c.ventricularSource ?? "auto") !== "auto") return null;
+  if (!(SUPPORTED_RHYTHMS.includes(c.rhythm) &&
     (c.ectopy === "none" || c.ectopy === "pac" || learnedVentricularEctopy(c)) &&
     SUPPORTED_ELECTROLYTES.includes(c.electrolyte) && !regionalActivationState(c).active)) return null;
-  // Ventricular pacing never conducts a supraventricular beat: the atrial activity
-  // comes from the normal population and conduction/overload do not apply.
-  if (pacedVentricular(c)) return c.ischemia === "none" ? "NORM" : null;
+  // Without conducted beats (ventricular pacing or rhythm) the atrial activity comes
+  // from the normal population and conduction/overload do not apply.
+  if (noConductedBeats(c)) return c.ischemia === "none" ? "NORM" : null;
   const conduction = CONDUCTION_MODELS[c.conduction] ?? null;
   if (c.ischemia !== "none")
     return c.phase === "chronic" && conduction === "NORM" && c.overload === "none" ? OLD_INFARCTION[c.ischemia] ?? null : null;
@@ -53,6 +54,11 @@ export const learnedSecondaryRepolarization = (m: ModelCode) => m === "CLBBB" ||
 export const usesRealisticBase = (c: ECGCase) => realisticModelFor(c) !== null;
 /** VVI/DDD: every ventricular complex is paced (no conducted beat). */
 export const pacedVentricular = (c: ECGCase) => c.rhythm === "paced" && c.pacing !== "AAI";
+/** VT, idioventricular rhythm and complete AV block with a ventricular escape. */
+export const ventricularRhythm = (c: ECGCase) =>
+  c.rhythm === "vt" || c.rhythm === "idioventricular" || (c.rhythm === "sinus" && c.av === "complete" && c.escape === "ventricular");
+/** Every ventricular complex is paced or ventricular: no conducted beat. */
+export const noConductedBeats = (c: ECGCase) => pacedVentricular(c) || ventricularRhythm(c);
 
 const VENTRICULAR_ECTOPY: readonly ECGCase["ectopy"][] = ["pvc", "bigeminy", "trigeminy", "couplet"];
 /** Ventricular premature beats with the automatic (representative) source use the
@@ -65,6 +71,9 @@ export function learnedEctopicModel(c: ECGCase, kind: "normal" | "pvc" | "ventri
   if (!realisticModelFor(c)) return null;
   if (kind === "pvc" && learnedVentricularEctopy(c)) return "PVC";
   if (kind === "paced" && c.rhythm === "paced" && c.pacing !== "AAI") return "VPACE";
+  // A ventricular rhythm is the patient's own ectopic focus: its learned PVC
+  // (INCART: run complexes correlate 0.87 with the same patient's isolated PVC).
+  if (kind === "ventricular" && ventricularRhythm(c)) return "PVC";
   return null;
 }
 /** Every learned population a case needs (the worker loads them before synthesis). */
@@ -72,7 +81,7 @@ export function realisticModelsFor(c: ECGCase): ModelCode[] {
   const base = realisticModelFor(c);
   if (!base) return [];
   const out: ModelCode[] = [base];
-  if (learnedVentricularEctopy(c)) out.push("PVC");
+  if (learnedVentricularEctopy(c) || learnedEctopicModel(c, "ventricular")) out.push("PVC");
   // Every paced rhythm draws the recorded spike learned with the paced population.
   if (c.rhythm === "paced") out.push("VPACE");
   return out;

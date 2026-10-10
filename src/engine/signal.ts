@@ -40,7 +40,7 @@ import { assertRepresentableEvents, tWaveSupport } from "./constraints";
 import { median } from "./analysis/statistics";
 import { atrialVector, tWave } from "./morphology";
 import { regionalTerritory, regionalTCorrection } from "./regional-repolarization";
-import { learnEctopicDurations, naturalTAxis, RealisticTrack, usesRealisticBase } from "./realistic/engine";
+import { learnEctopicDurations, naturalTAxis, RealisticTrack, realisticEctopicPatient, usesRealisticBase } from "./realistic/engine";
 import { learnedEctopicModel } from "./realistic/scope";
 import { acquisitionFloor } from "./realistic/acquisition";
 import { addFibrillationWaves } from "./realistic/atrial-fibrillation";
@@ -63,7 +63,7 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
     events = generateEvents(c, total + guard);
   assignRepolarization(c, events.beats);
   if (options.learnedBase !== false && usesRealisticBase(c))
-    learnEctopicDurations(c, events.beats, (["pvc", "paced"] as const).filter((k) => learnedEctopicModel(c, k)));
+    learnEctopicDurations(c, events.beats, (["pvc", "paced", "ventricular"] as const).filter((k) => learnedEctopicModel(c, k)));
   assertRepresentableEvents(c, events);
   const xyz = [new Float64Array(n), new Float64Array(n), new Float64Array(n)],
     corr: Partial<Record<Lead, Float64Array>> = {};
@@ -121,8 +121,8 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
       track.addBeat(b, qrsDuration(c, b));
       continue;
     }
-    if (track && (b.kind === "pvc" || b.kind === "paced") && learnedEctopicModel(c, b.kind)) {
-      track.addEctopic(b as Beat & { kind: "pvc" | "paced" });
+    if (track && b.kind !== "normal" && learnedEctopicModel(c, b.kind)) {
+      track.addEctopic(b as Beat & { kind: "pvc" | "paced" | "ventricular" });
       continue;
     }
     const dur = qrsDuration(c, b),
@@ -393,7 +393,9 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
           : c.rhythm === "torsades"
           ? null
           : allV
-            ? ventricularSource(c, bs[0])!.axis
+            ? track && bs[0].kind !== "normal" && learnedEctopicModel(c, bs[0].kind)
+              ? realisticEctopicPatient(c, bs[0].kind as "paced" | "ventricular").achievedAxes.qrs
+              : ventricularSource(c, bs[0])!.axis
             : c.axis
         : null,
       ...(track && c.naturalPAxis !== false ? { pAxis: track.patient.achievedAxes.p } : {}),
