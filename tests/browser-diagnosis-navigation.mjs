@@ -10,7 +10,7 @@ const engines=process.env.ECG_GROUP_ENGINES==='all'?[chromium,webkit,firefox]:[c
 const groups=[['sinus',['sinus','brady','tachy','rsa']],['af',['af','af_fast','af_slow']],['flutter',['flutter','flutter3']],
  ['pvc',['pvc','bigeminy','trigeminy','couplet']],['idioventricular',['idioventricular','aivr']],['vt',['vt','torsades']],
  ['complete',['complete','complete_v']],['rbbb',['rbbb','irbbb']],['lafb',['lafb','lpfb']],
- ['bifascicular',['bifascicular','bifascicular_pr']],['inferior',['inferior','inferior_lcx']],
+ ['bifascicular',['bifascicular','bifascicular_pr']],['inferior',['inferior','inferior_lcx']],['old_inferior',['old_inferior','old_anterior']],
  ['wellens_a',['wellens_a','wellens_b']],['rv_acute',['rv_acute','rv_chronic']],['aai',['aai','vvi','ddd']],['longqt',['longqt','shortqt']]];
 const results=[],failures=[];
 for(const engine of engines){
