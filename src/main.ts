@@ -1,10 +1,9 @@
-import { workspaceButton } from "./ui/workspace-button";
 import { applyTheme, currentTheme, readTheme } from "./ui/theme";
 import { aboutDialogHtml } from "./ui/about-dialog";
 import { regionalActivationControls } from "./ui/regional-activation";
 import "./style.css";
 import { APP_VERSION } from "./ui/version";
-import { catalogGroup, catalogGroups, familyGuide, familyLabel } from "./ui/catalog-presentation";
+import { catalogGroup, familyGuide, familyLabel } from "./ui/catalog-presentation";
 import { lesionBaseline } from "./engine/lesion-baseline";
 import { differenceSignal } from "./render/st-lens";
 import { omiSheetHtml, structuredDescriptionHtml } from "./ui/omi-sheet";
@@ -49,7 +48,7 @@ import {
   type Layout,
   type Caliper,
 } from "./render/ecg";
-import { icon, btn, esc, select, options } from "./ui/helpers";
+import { icon, btn, esc, select } from "./ui/helpers";
 import { syncPauseControl } from "./ui/pause-control";
 import { controls, leadOptions, amplitudeControlState, tAxisControlState } from "./ui/controls";
 import { caseContext, caseReading, normalizeImportedCase } from "./presets/case-context";
@@ -80,7 +79,7 @@ let annotations = false,
   audioContext: AudioContext | null = null,
   lastBeep = -1;
 let timer = 0,
-  activePanel = "base",
+  activePanel = "conduction",
   search = "",
   group = "",
   quiz: PracticeState | null = null;
@@ -94,18 +93,19 @@ try {
 applyTheme(readTheme());
 const root = $("#app");
 root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="ECG Lab, inicio">${icon("pulse")}<span>ECG<span class="brand-light">lab</span></span><span class="brand-divider"></span><small>Explora la electrocardiografía</small></a><nav aria-label="Herramientas"><button class="btn mobile-cases" data-action="catalog">${icon("menu")}<span>Casos</span></button>${btn("quiz", "Practicar", "quiz")}${btn("about", "Guía", "book")}${btn("theme", "Tema", "sun", "icon-button")}${btn("export", "Exportar", "download", "primary")}</nav></header>
- <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><div><h2>Biblioteca de patrones</h2><span>${PRESETS.filter((x) => x.strategy !== "pending").length} ejemplos · agrupados por patrón</span></div>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Patrón, sigla o palabra…" aria-label="Buscar caso"/></label><label class="category-select"><span class="sr-only">Categoría</span><select id="category">${options([["", "Todas las familias"], ...catalogGroups(PRESETS).map((x) => [x, familyLabel(x)] as [string, string])], "")}</select></label><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div><div class="sidebar-footer">${icon("pulse")}<div>Señal sintética aprendida de ECG reales<small data-product-version="${APP_VERSION}">Modelo educativo · v${APP_VERSION}</small></div></div></aside>
- <main class="workspace"><nav class="workspace-nav" aria-label="Espacios de trabajo"><span class="workspace-current" aria-current="page">${icon("pulse")}Simulador</span>${workspaceButton("parameters", "Ajustar el caso", "Ajustar", "settings", "workspace-adjust")}</nav><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><p id="case-subtitle">Activación auricular sinusal seguida de conducción AV 1:1.</p><div id="exploration-context" class="exploration-context" hidden></div></div><div class="case-state"><span class="status-label">Ejemplo sintético</span>${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
+ <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><h2>Biblioteca de patrones</h2>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Patrón, sigla o palabra…" aria-label="Buscar caso"/></label><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div></aside>
+ <main class="workspace"><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><p id="case-subtitle">Activación auricular sinusal seguida de conducción AV 1:1.</p><div id="exploration-context" class="exploration-context" hidden></div></div><div class="case-state">${btn("parameters", "Ajustar", "settings", "subtle")}${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
  <section id="diagnosis-navigation" class="diagnosis-navigation" aria-label="Variantes del patrón" hidden></section>
  <div id="diagnosis-content">
  <section id="metrics" class="metrics" aria-label="Medidas del ECG"><div class="loading-metrics">Generando señal…</div></section>
  <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><div class="trace-tools">${btn("caliper", "Calibres", "ruler")}${btn("annotations", "Ondas", "eye")}<span class="lens-tools" role="group" aria-label="Lentes OMI">${btn("lens-previous", "ECG previo", "strip")}${btn("lens-change", "Solo el cambio", "pulse")}${btn("lens-st", "Punto J y ST", "ruler")}</span>${btn("pause", "Congelar", "pause")}</div></div>
  <div id="quiz-panel" hidden></div><div id="caliper-editor" class="caliper-editor" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small id="monitor-rate-note">No estimable</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
  <div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div>
- <div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><div class="scale-toolbar" id="scale-toolbar"></div><div class="trace-caption"><span id="trace-caption">10 s · Columnas secuenciales</span><span id="signal-state">Señal sintética · 500 muestras/s</span></div><details class="keyboard-help"><summary>Teclado y calibres</summary><p id="trace-keyboard-help">Con foco en el trazado: M/P/R cambia vista, V/G cambia escala, C activa calibres y espacio congela el monitor. Calibres: flechas mueven el extremo seleccionado una muestra horizontal o 0,01 mV vertical; Mayús mueve diez pasos. También puedes usar los campos de tiempo y amplitud. Tab sale del trazado.</p></details></section>
+ <div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><div class="scale-toolbar" id="scale-toolbar"></div><p id="trace-keyboard-help" class="sr-only">Con foco en el trazado: M, P y R cambian la vista; V y G, la escala; C activa los calibres y espacio congela el monitor. Con calibres, las flechas mueven el extremo seleccionado; Mayús mueve diez pasos.</p></section>
  </div>
- <section class="lower-grid"><div id="inspector" class="inspector"></div><aside class="interpretation"><div class="section-label">Guía de lectura</div><h2 id="finding-title">Hallazgos esperados</h2><ul id="findings"></ul><div id="omi-sheet"></div><div id="structured-description"></div><div id="limitation" class="model-note"></div><div id="warnings"></div><button class="text-button" data-action="measurements">Ver medidas y valores del modelo ${icon("chevron")}</button><button class="text-button" data-action="about">Estado y referencias ${icon("chevron")}</button></aside></section>
- <footer class="workspace-footer"><span>ECG Lab · Laboratorio de electrocardiografía</span><span>Morfología normal aprendida de <a href="https://physionet.org/content/ptb-xl/1.0.3/" target="_blank" rel="noopener">PTB-XL</a> y <a href="https://physionet.org/content/ptb-xl-plus/1.0.1/" target="_blank" rel="noopener">PTB-XL+</a> (Wagner et al. 2020; Strodthoff et al. 2023), <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>; se distribuyen solo coeficientes derivados.</span><span>Uso educativo. Sin validación clínica.</span></footer></main></div>
+ <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><div class="section-label">Guía de lectura</div><h2 id="finding-title">Hallazgos esperados</h2><ul id="findings"></ul><div id="structured-description"></div></div><div class="guide-side"><div id="omi-sheet"></div><div id="limitation" class="model-note"></div><div id="warnings"></div><div class="guide-links"><button class="text-button" data-action="measurements">Medidas y valores del modelo ${icon("chevron")}</button><button class="text-button" data-action="about">Estado y referencias ${icon("chevron")}</button></div></div></section>
+ <details id="adjust" class="adjust-panel"><summary><span>Ajustar el caso</span><small>Parámetros del modelo</small></summary><div id="inspector" class="inspector"></div></details>
+ <footer class="workspace-footer"><span>ECG Lab · Laboratorio de electrocardiografía</span><span>Morfología normal aprendida de <a href="https://physionet.org/content/ptb-xl/1.0.3/" target="_blank" rel="noopener">PTB-XL</a> y <a href="https://physionet.org/content/ptb-xl-plus/1.0.1/" target="_blank" rel="noopener">PTB-XL+</a> (Wagner et al. 2020; Strodthoff et al. 2023), <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>; se distribuyen solo coeficientes derivados.</span><span>Uso educativo. Sin validación clínica. <span data-product-version="${APP_VERSION}">v${APP_VERSION}</span></span></footer></main></div>
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
 
 const variantNavigation = new VariantNavigation($("#diagnosis-navigation"), $("#diagnosis-content"));
@@ -133,8 +133,16 @@ if (!location.hash) { const p=presetById(c.presetId); if(p) explorationOrigin=cr
 function currentPreset() {
   return caseContext(c).preset;
 }
+/** Library families the reader opened (the family of the case shown opens by itself). */
+const openFamilies = new Set<string>();
+// From the reader's click, not the toggle event: re-rendered open families also fire it.
+document.addEventListener("click", (e) => {
+  const family = (e.target as Element).closest(".case-group > summary")?.parentElement as HTMLDetailsElement | undefined;
+  if (!family || search) return;
+  if (family.open) openFamilies.delete(family.dataset.family!); else openFamilies.add(family.dataset.family!);
+});
 function renderCatalog() {
-  const view = catalogView(PRESETS, search, group, currentPreset()?.id);
+  const view = catalogView(PRESETS, search, group, currentPreset()?.id, openFamilies);
   $("#catalog-count").textContent = view.count;
   $("[data-action=clear-search]").hidden = !view.clearFiltersVisible;
   $("#case-list").innerHTML = view.html;
@@ -209,7 +217,7 @@ function renderInfo() {
     .map((w) => `<p class="warning">${esc(w)}</p>`)
     .join("");
   $<HTMLButtonElement>('[data-action="export"]').disabled = !!concealed;
-  $("#inspector").hidden = !!concealed;
+  $("#adjust").hidden = !!concealed;
   $<HTMLButtonElement>('[data-action="parameters"]').disabled = !!concealed;
   $("#catalog").classList.toggle("quiz-concealed", !!concealed);
 }
@@ -300,18 +308,6 @@ function renderScales() {
         )
       : leadOptions(c)
   }${
-    paper
-      ? select(
-          "view.timing",
-          "Registro",
-          [
-            ["sequential", "Secuencial"],
-            ["simultaneous", "Simultáneo"],
-          ],
-          c.view.timing,
-        )
-      : ""
-  }${
     c.view.mode === "rhythm"
       ? select(
           "view.duration",
@@ -323,7 +319,7 @@ function renderScales() {
           c.view.duration,
         )
       : ""
-  }<div class="scale-toggles"><label class="toggle"><input type="checkbox" data-key="view.grid" ${c.view.grid ? "checked" : ""}/>Grilla</label>${!monitorMode ? `<label class="toggle"><input type="checkbox" data-key="view.fit" ${c.view.fit ? "checked" : ""}/>Ajustar al ancho</label>` : ""}</div>`;
+  }<div class="scale-toggles"><label class="toggle"><input type="checkbox" data-key="view.grid" ${c.view.grid ? "checked" : ""}/>Grilla</label></div>`;
   document
     .querySelectorAll("[data-mode]")
     .forEach((el) =>
@@ -343,6 +339,9 @@ function syncTraceTools() {
     measuring = ready && !monitorMode && session.caliperOn;
   const pause = $<HTMLButtonElement>('[data-action="pause"]');
   syncPauseControl(pause, session.paused, monitorMode && ready);
+  // Tools that do not apply to this view or case are hidden, not greyed out.
+  pause.hidden = !monitorMode;
+  $(".lens-tools").hidden = !paper;
   $("#monitor-state").textContent = !ready ? "SIN SEÑAL" : session.paused ? "CONGELADO" : "REPRODUCCIÓN";
   const waves = $<HTMLButtonElement>('[data-action="annotations"]');
   waves.disabled = !paper || !ready;
@@ -354,7 +353,7 @@ function syncTraceTools() {
     b.disabled = !paper || !ready || !enabled;
     b.classList.toggle("active", active);
     b.setAttribute("aria-pressed", String(active));
-    b.title = enabled ? "" : "Sin ECG previo: el caso no tiene una lesión aguda sobre el mismo paciente";
+    b.hidden = !enabled;
   }
   $('[data-action="theme"]').setAttribute("aria-pressed", String(currentTheme() === "dark"));
   const caliperButton = $<HTMLButtonElement>('[data-action="caliper"]');
@@ -380,7 +379,6 @@ function publishSignal(next: Signal, measured: Measurement, requestId: number, c
       representativeBeat(audited, visibleSegmentEnd()))) return;
     resetTracePresentation();
     $("#signal-loading").hidden = true;
-    $("#signal-state").textContent = "500 muestras/s · análisis independiente";
     renderMetrics();
     syncNaturalAxes(next);
     renderQuiz();
@@ -401,9 +399,6 @@ const controller = new SignalController(
     showUnavailableSignal(message, true);
     $("#metrics").innerHTML =
       '<div class="loading-metrics">Medidas no disponibles</div>';
-    $("#signal-state").textContent = message.startsWith("Fuera del alcance del modelo:")
-      ? "Combinación fuera del alcance del modelo"
-      : "No se pudo actualizar la señal";
     renderInfo();
   },
 );
@@ -428,7 +423,6 @@ function showUnavailableSignal(message: string, unavailable = false) {
     loading.replaceChildren(text);
   } else loading.textContent = message;
   loading.hidden = false;
-  $("#signal-state").textContent = "Generando…";
   $("#metrics").innerHTML = '<div class="loading-metrics">Generando señal…</div>';
   $("#monitor-rate").textContent = "—";
   $("#monitor-rate-note").textContent = "No estimable";
@@ -487,12 +481,6 @@ function draw() {
     "monitor-canvas",
     c.view.mode === "monitor",
   );
-  $("#trace-caption").textContent =
-    c.view.mode === "paper"
-      ? `10 s · ${c.view.timing === "simultaneous" ? "Segmentos simultáneos" : "Columnas secuenciales"} · ${c.view.fit ? "Papel ajustado al ancho" : "Escala física calibrada"}`
-      : c.view.mode === "rhythm"
-        ? `${c.view.duration} s · Tiras sucesivas de 10 s`
-        : "Barrido continuo · reproducción de señal sintética";
   if (caliper && layout && session.caliperOn) drawCaliper(canvas, layout, caliper, c);
   caliperEditor.update({active:session.caliperOn, layout, caliper, view:c.view, fs:session.signal.fs});
 }
@@ -595,11 +583,6 @@ document.addEventListener("input", (e) => {
   if (output)
     output.innerHTML = `${el.value} <small>${output.querySelector("small")?.textContent || ""}</small>`;
   if (key.startsWith("view.")) {
-    if (key === "view.pxPerMm")
-      $(".physical-ruler").setAttribute(
-        "style",
-        `width:${c.view.pxPerMm * 50}px`,
-      );
     draw();
   } else {
     invalidateSignal();
@@ -609,11 +592,6 @@ document.addEventListener("input", (e) => {
 });
 document.addEventListener("change", (e) => {
   const el = e.target as HTMLInputElement | HTMLSelectElement;
-  if (el.id === "category") {
-    group = el.value;
-    renderCatalog();
-    return;
-  }
   const key = el.dataset.key;
   if (!key) return;
   if ((el as HTMLInputElement).type === "range") return;
@@ -742,11 +720,11 @@ document.addEventListener("click", async (e) => {
   if (action === "clear-search") {
     search = ""; group = "";
     $<HTMLInputElement>("#case-search").value = "";
-    $<HTMLSelectElement>("#category").value = "";
     renderCatalog(); $("#case-search").focus();
   }
   if(action==="exploration-changes") showExplorationChanges();
   if(action==="restore-origin"&&explorationOrigin){c=restoreExplorationOrigin(explorationOrigin,c);caliper=null;session.resetTools();annotations=false;renderCatalog();renderControls();renderInfo();generate();toast("Origen restaurado; se conserva la vista actual.")}
+  if (action === "parameters" && !(quiz && !quiz.answer)) $<HTMLDetailsElement>("#adjust").open = true;
   if (workspaceNavigation.handle(action, !!quiz && !quiz.answer)) return;
   if (action === "pause") {
     if (!session.signal || c.view.mode !== "monitor") return;

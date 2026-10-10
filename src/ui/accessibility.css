@@ -27,7 +27,7 @@ summary { min-height:44px; align-content:center; }
   .view-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); width:100%; }
   .view-tabs button { min-width:0; white-space:normal; }
   .case-state .btn { min-width:44px; width:44px; min-height:44px; }
-  .scale-toolbar input, .scale-toolbar select, .control-panel select, .search-box input, .category-select select { font-size:16px; min-height:44px; }
+  .scale-toolbar input, .scale-toolbar select, .control-panel select, .search-box input{ font-size:16px; min-height:44px; }
   .control-note { font-size:13px; line-height:1.6; }
   .range-field input[type=range] { min-height:32px; }
   .toggle, .scale-toggles label { min-height:44px; }
@@ -48,7 +48,6 @@ summary { min-height:44px; align-content:center; }
   .control-tabs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; }
   .control-tabs button { font-size:13px; white-space:normal; text-align:left; }
   .field-grid, .range-grid { grid-template-columns:minmax(0,1fr); }
-  .inline-fields { grid-template-columns:minmax(0,1fr); }
   #dialog-content { padding:18px 16px; }
   .dialog-head { gap:10px; align-items:flex-start; }
   .dialog-head .btn { flex-shrink:0; }

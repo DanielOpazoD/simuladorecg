@@ -107,7 +107,7 @@ function stLine(m: LeadMeasure[], wide: boolean): { text: string; up: boolean; d
   if (up.length) {
     const p = largest(up, (r) => r.j0), where = `${mm(p.j0)} en J y ${mm(p.j60)} a J+60, en ${p.lead}`;
     parts.push(sdst ? `SDST en ${leadList(up.map((r) => r.lead))} (máx. ${where})`
-      : `Punto J elevado en ${leadList(up.map((r) => r.lead))} (máx. ${where}), bajo el criterio de las guías (1 mm en dos derivaciones contiguas; 1,5 a 2,5 mm en V2–V3 según sexo y edad)` +
+      : `Punto J elevado en ${leadList(up.map((r) => r.lead))} (máx. ${where}), bajo el criterio de las guías` +
         (!wide && up.every((r) => /^V[1-4]$/.test(r.lead)) ? ", habitual en V1–V3" : ""));
   }
   if (down.length) {
