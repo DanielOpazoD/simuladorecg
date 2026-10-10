@@ -321,6 +321,8 @@ export interface Patient {
   /** The patient's own QRS and ST-T durations (ms) in the learned population. */
   qrsMs: number;
   sttMs: number;
+  /** The patient's own RR (ms) at which its durations were measured. */
+  rrMs: number;
   /** Net-area frontal axes the template actually has (equal to the targets
    * unless a dominant non-dipolar residual makes a target unreachable). */
   achievedAxes: { p: number; qrs: number; t: number };
@@ -498,6 +500,6 @@ function sampleCandidate(m: ShapeModel, t: PatientTargets, attempt: number): Pat
   return {
     model: m, z, ops, rotations, scales, achievedAxes: achieved, pMs: Math.exp(s.log_p), pqMs: Math.exp(s.log_pq),
     tApexFraction: Math.min(0.9, Math.max(0.35, 1 / (1 + Math.exp(-s.logit_t_apex)))),
-    qrsMs: Math.exp(s.log_qrs), sttMs: Math.exp(s.log_stt),
+    qrsMs: Math.exp(s.log_qrs), sttMs: Math.exp(s.log_stt), rrMs: Math.exp(s.log_rr),
   };
 }

@@ -1,5 +1,6 @@
 // Exporta ECG sintéticos del motor actual para el banco de realismo.
-// Uso: node scripts/fidelity/export-synthetic.mjs <dir-salida> [n=300] [preset=sinus|catalog] [ideal|realistic] [desplazamiento=0]
+// Uso: node scripts/fidelity/export-synthetic.mjs <dir-salida> [n=300] [preset=sinus|catalog] [ideal|realistic|natural] [desplazamiento=0]
+// natural (F2.3, experimental): cada paciente con su eje, amplitudes, QRS, PR y FC propios.
 // "catalog" exporta cada preset activo una vez con su caso por defecto.
 // "ideal" desactiva el ruido de adquisición para aislar la morfología.
 // Escribe <dir>/index.json y un .f32 por ECG (5000 × 12, mV, orden de LEADS).
@@ -22,7 +23,8 @@ await build({
     contents: `export { synthesize } from "./src/engine/signal.ts";
 export { PRESETS, fromPreset } from "./src/presets/catalog.ts";
 export { LEADS } from "./src/engine/lead-registry.ts";
-export { registerShapeModel } from "./src/engine/realistic/shape-model.ts";`,
+export { registerShapeModel } from "./src/engine/realistic/shape-model.ts";
+export { realisticPatient } from "./src/engine/realistic/engine.ts";`,
     resolveDir: root,
     loader: "ts",
   },
@@ -32,7 +34,7 @@ export { registerShapeModel } from "./src/engine/realistic/shape-model.ts";`,
   outfile: bundle,
   logLevel: "error",
 });
-const { synthesize, PRESETS, fromPreset, LEADS, registerShapeModel } = await import(pathToFileURL(bundle).href);
+const { synthesize, PRESETS, fromPreset, LEADS, registerShapeModel, realisticPatient } = await import(pathToFileURL(bundle).href);
 await rm(tmp, { recursive: true, force: true });
 // Modelos por clase: en la app los carga el worker bajo demanda (import.meta.glob);
 // aquí se registran desde el disco.
@@ -88,6 +90,11 @@ for (let i = 0; i < n; i++) {
       // Variabilidad RR individual: lognormal alrededor de la mediana de reposo.
       variability: 0.035 * Math.exp(0.6 * Math.sqrt(-2 * Math.log(r() || 1e-9)) * Math.cos(2 * Math.PI * r())),
     });
+  }
+  if (mode === "natural") {
+    c.naturalPatient = true;
+    const p = realisticPatient(c);
+    Object.assign(c, process.env.NATURAL_HR === "0" ? { pr: p.pMs + p.pqMs } : { hr: 60000 / p.rrMs, pr: p.pMs + p.pqMs });
   }
   await write(c, `syn_${String(i).padStart(4, "0")}.f32`, { preset: presetId, params: { hr: c.hr, axis: c.axis, qrs: c.qrs } });
 }

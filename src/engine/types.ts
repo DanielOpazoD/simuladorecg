@@ -106,6 +106,10 @@ export interface ECGCase {
   /** Learned base: P and T keep the patient's own axes and turn with the heart
    * unless the user sets them (then pAxis/tAxis are exact targets). Missing = natural. */
   naturalPAxis?: boolean;
+  /** Experimental (F2.3): the learned sinus patient keeps its own QRS axis, wave
+   * sizes and QRS/ST-T durations; the axis, amplitude and interval controls do not
+   * apply. Not set by the product. */
+  naturalPatient?: boolean;
   naturalTAxis?: boolean;
   /** Resting noise floor measured in real recordings; missing means "realistic". */
   acquisition?: "realistic" | "ideal";

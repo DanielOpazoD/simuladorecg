@@ -31,10 +31,13 @@ export function realisticPatient(c: ECGCase): Patient {
   if (!model) throw new Error("El caso no usa el modelo aprendido.");
   const pAxis = c.naturalPAxis === false ? c.pAxis : null;
   const tAxis = naturalTAxis(c) ? null : c.tAxis;
-  const key = [model, c.seed, c.axis, pAxis, tAxis, c.pAmp, qrsAmplitudeScale(c), c.tAmp, c.transition].join("|");
+  const natural = c.naturalPatient === true && !noConductedBeats(c);
+  const key = [model, c.seed, natural, c.axis, pAxis, tAxis, c.pAmp, qrsAmplitudeScale(c), c.tAmp, c.transition].join("|");
   let p = patients.get(key);
   if (!p) {
-    p = samplePatient({
+    p = natural ? samplePatient({
+      model, seed: c.seed, axis: null, pAxis: null, tAxis: null, pScale: 1, qrsScale: 1, tScale: 1, horizontalDeg: 0, naturalAmplitude: true,
+    }) : samplePatient({
       // Without conducted beats (VVI/DDD) the QRS axis control does not apply: the
       // atrial patient keeps its natural axes.
       model, seed: c.seed, axis: noConductedBeats(c) ? null : c.axis, pAxis, tAxis,
@@ -87,6 +90,15 @@ export function learnedEctopicQrsSeconds(c: ECGCase, kind: EctopicKind): number 
   return Math.min(hi, Math.max(lo, realisticEctopicPatient(c, kind).qrsMs / 1000));
 }
 export const learnedPvcQrsSeconds = (c: ECGCase) => learnedEctopicQrsSeconds(c, "pvc");
+/** Natural patient (F2.3): conducted beats take the patient's own QRS and its ST-T
+ * adapted to each cycle with the cube root of RR (measured at its own RR). */
+export function learnNaturalDurations(c: ECGCase, beats: Beat[]): void {
+  const p = realisticPatient(c), qrs = p.qrsMs / 1000;
+  for (const b of beats) if (b.kind === "normal") {
+    const stt = (p.sttMs / 1000) * Math.cbrt(Math.max(0.3, b.adaptedRR ?? 60 / c.hr) / (p.rrMs / 1000));
+    b.qrs = qrs; b.qt = qrs + Math.min(0.5, Math.max(0.12, stt)); b.ownDurations = true;
+  }
+}
 export function learnEctopicDurations(c: ECGCase, beats: Beat[], kinds: readonly EctopicKind[]): void {
   for (const kind of kinds) {
     const qrs = learnedEctopicQrsSeconds(c, kind), own = realisticEctopicPatient(c, kind).sttMs / 1000;
