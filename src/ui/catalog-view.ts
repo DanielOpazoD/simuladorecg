@@ -3,20 +3,25 @@ import { diagnosisFamilies, diagnosisForPreset } from "./diagnosis-navigation";
 import { esc, icon } from "./helpers";
 import { catalogGroup, familyLabel } from "./catalog-presentation";
 
+/** The library as an accordion: every family fits on one line, so all of them are
+ * visible at once; the family of the case shown opens, plus those the reader opened
+ * (`open`), and all of them while searching or filtering. */
 export function catalogView(
   presets: readonly Preset[],
   search = "",
   group = "",
   selectedId?: string,
+  open: ReadonlySet<string> = new Set(),
 ) {
-  const families = diagnosisFamilies(presets, search, group, selectedId);
+  // Examples not yet available stay out of the library.
+  const families = diagnosisFamilies(presets.filter(p => p.strategy !== "pending"), search, group, selectedId);
   // Cross-listed entries (imitators also shown in their own family) count once.
   const own = families.flatMap(f => f.sections.filter(s => !s.crossListed).flatMap(s => s.entries));
   const available = own.reduce((sum, e) => sum + e.matches.filter(p => p.strategy !== "pending").length, 0);
   const entries = own.filter(e => e.target.strategy !== "pending").length;
   const count = `${entries} ${entries === 1 ? "patrón" : "patrones"} · ${available} ${available === 1 ? "ejemplo" : "ejemplos"}`;
   const html = families.map(family =>
-    `<section class="case-group"><h3>${esc(family.label)}<span>${family.entryCount}</span></h3>${family.guide ? `<p class="case-group-guide">${esc(family.guide)}</p>` : ""}${family.sections.map(section =>
+    `<details class="case-group" data-family="${esc(family.id)}"${search || group || open.has(family.id) || family.sections.some(sec => !sec.crossListed && sec.entries.some(e => e.selected)) ? " open" : ""}><summary><span>${esc(family.label)}</span><span class="case-group-count">${family.entryCount}</span></summary>${family.guide ? `<p class="case-group-guide">${esc(family.guide)}</p>` : ""}${family.sections.map(section =>
       `${section.title ? `<h4 class="case-subgroup">${esc(section.title)}</h4>` : ""}${section.entries.map(entry => {
         const {diagnosis, target, selected, matches} = entry;
         const pending = target.strategy === "pending";
@@ -26,7 +31,7 @@ export function catalogView(
           : multiple ? `${diagnosis.variants.length} variantes` : "";
         return `<button type="button" class="case-button ${selected ? "selected" : ""}" data-diagnosis="${esc(diagnosis.id)}" data-preset="${esc(target.id)}" title="${esc(target.name)}" aria-label="${esc(diagnosis.title)}${detail ? ` · ${esc(detail)}` : ""}" ${pending ? "disabled" : ""} ${selected ? 'aria-current="true"' : ""}><span>${esc(diagnosis.title)}${detail ? `<small class="case-variants-count">${esc(detail)}</small>` : ""}</span>${selected ? icon("check") : multiple ? icon("chevron") : ""}</button>`;
       }).join("")}`
-    ).join("")}</section>`
+    ).join("")}</details>`
   ).join("") || '<div class="catalog-empty"><strong>No encontramos ese patrón</strong><p>Prueba con el nombre completo o una sigla como FA, BRI o WPW.</p></div>';
   return { count, html, clearFiltersVisible: !!search || !!group };
 }

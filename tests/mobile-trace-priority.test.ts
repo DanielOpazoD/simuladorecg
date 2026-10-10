@@ -1,11 +1,6 @@
 import {it,expect} from 'vitest';
-import {workspaceButton} from '../src/ui/workspace-button';
 import {explorationContextHtml,createExplorationOrigin,explorationChanges} from '../src/ui/exploration-origin';
 import {PRESETS,fromPreset} from '../src/presets/catalog';
-it('short labels retain complete accessible names without duplicate speech',()=>{
- const html=workspaceButton('parameters','Ajustar el caso','Ajustar','settings');
- expect(html).toContain('aria-label="Ajustar el caso"');expect(html).toContain('workspace-label-short" aria-hidden="true"');expect(html).toContain('type="button"');
-});
 it('provenance remains explicit outside a closed disclosure, with its actions',()=>{
  const p=PRESETS[0],c=fromPreset(p),origin=createExplorationOrigin(p,c),changes=explorationChanges(origin,{...c,hr:c.hr+1});
  const html=explorationContextHtml(origin,changes,false);

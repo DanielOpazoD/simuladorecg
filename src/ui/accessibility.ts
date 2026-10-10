@@ -17,11 +17,18 @@ function selectorFor(el: HTMLElement): string | null {
   const attrs = identityAttributes.filter(a => el.hasAttribute(a));
   return attrs.length ? el.tagName.toLowerCase() + attrs.map(a => `[${a}="${CSS.escape(el.getAttribute(a)!)}"]`).join('') : null;
 }
+/** Inside a closed <details> only its summary is reachable (Chromium still gives the
+ * folded content boxes). */
+function folded(el: HTMLElement): boolean {
+  for (let d = el.closest('details'); d; d = d.parentElement?.closest('details') ?? null)
+    if (!d.open && !d.querySelector(':scope > summary')?.contains(el)) return true;
+  return false;
+}
 function available(el: HTMLElement | null): el is HTMLElement {
-  return !!el && el.isConnected && !el.matches(':disabled') && !el.closest('[inert],[hidden]') && el.getClientRects().length > 0 && getComputedStyle(el).visibility === 'visible';
+  return !!el && el.isConnected && !el.matches(':disabled') && !el.closest('[inert],[hidden]') && !folded(el) && el.getClientRects().length > 0 && getComputedStyle(el).visibility === 'visible';
 }
 function focusable(root: HTMLElement): HTMLElement[] {
-  return [...root.querySelectorAll<HTMLElement>('button,input,select,textarea,a[href],[tabindex]')]
+  return [...root.querySelectorAll<HTMLElement>('button,input,select,textarea,a[href],summary,[tabindex]')]
     .filter(el => available(el) && el.tabIndex >= 0);
 }
 

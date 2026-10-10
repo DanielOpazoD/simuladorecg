@@ -1,4 +1,5 @@
 import { chooseCatalogPreset } from './support/catalog-navigation.mjs';
+import { openControlPanel } from './support/adjust-panel.mjs';
 /** Browser plugin absent: use the repository's established Playwright/Chromium production test. */
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
@@ -21,7 +22,7 @@ try {
     await chooseCatalogPreset(page, preset);
     await page.locator('#signal-loading').waitFor({state: 'hidden'});
     assert.ok(await page.locator('#ecg').evaluate(c => c.width > 0 && c.height > 0));
-    await page.locator('[data-panel="st"]').click();
+    await openControlPanel(page, 'st');
     const gain = page.locator('[data-key="qrsAmp"]');
     await page.evaluate(() => document.fonts.ready);
     const setGain = async value => {

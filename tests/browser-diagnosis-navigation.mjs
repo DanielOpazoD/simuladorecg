@@ -4,13 +4,15 @@ import assert from 'node:assert/strict';
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {chooseCatalogPreset} from './support/catalog-navigation.mjs';
+import {openControlPanel} from './support/adjust-panel.mjs';
+import {installWorkerTap,readTrace,waitForReply,workerReplies} from './support/worker-tap.mjs';
 const url=process.env.ECG_TEST_URL||'http://127.0.0.1:5173/';
 const out=resolve(process.env.ECG_EVIDENCE_DIR||'.sites-runtime/browser');await mkdir(out,{recursive:true});
 const engines=process.env.ECG_GROUP_ENGINES==='all'?[chromium,webkit,firefox]:[chromium];
 const groups=[['sinus',['sinus','brady','tachy','rsa']],['af',['af','af_fast','af_slow']],['flutter',['flutter','flutter3']],
  ['pvc',['pvc','bigeminy','trigeminy','couplet']],['idioventricular',['idioventricular','aivr']],['vt',['vt','torsades']],
  ['complete',['complete','complete_v']],['rbbb',['rbbb','irbbb']],['lafb',['lafb','lpfb']],
- ['bifascicular',['bifascicular','bifascicular_pr']],['inferior',['inferior','inferior_lcx']],['old_inferior',['old_inferior','old_anterior']],
+ ['bifascicular',['bifascicular','bifascicular_pr']],['old_inferior',['old_inferior','old_anterior']],
  ['wellens_a',['wellens_a','wellens_b']],['rv_acute',['rv_acute','rv_chronic']],['aai',['aai','vvi','ddd']],['longqt',['longqt','shortqt']]];
 const results=[],failures=[];
 for(const engine of engines){
@@ -21,20 +23,24 @@ for(const engine of engines){
   page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());if(m.type()==='warning')warnings.push(m.text());});
   const ready=()=>page.locator('#signal-loading').waitFor({state:'hidden'});
   const focus=async id=>assert.equal(await page.locator(id).evaluate(e=>e===document.activeElement),true,id+' focus');
-  const exported=async name=>{const wait=page.waitForEvent('download');await page.locator('#compare-json').click();const file=resolve(out,`${stem}-${name}.json`);await(await wait).saveAs(file);return JSON.parse(await readFile(file,'utf8'));};
+  // Case, samples, events and measurement as the worker last produced them (the A/B export is gone).
+  const trace=async()=>{await ready();return readTrace(page);};
   const choose=async id=>{await chooseCatalogPreset(page,id);await ready();};
   const tab=async id=>{await page.locator(`[data-variant="${id}"]`).click();await ready();assert.equal(await page.locator(`[data-variant="${id}"]`).getAttribute('aria-selected'),'true');};
   try{
+   await installWorkerTap(page);
    await page.addInitScript(()=>{const Native=window.Worker;window.__variantGenerations=0;window.Worker=class extends Native{postMessage(...args){window.__variantGenerations++;return super.postMessage(...args);}};});
    await page.goto(url);await ready();assert.match(await page.title(),/ECG/);assert.equal(await page.locator('vite-error-overlay').count(),0);
    const build=await(await page.request.get(new URL('build-info.json',url).href)).json();
    if(process.env.ECG_EXPECT_COMMIT)assert.equal(build.commit,process.env.ECG_EXPECT_COMMIT);assert.equal(build.dirty,false);
-   assert.equal(await page.locator('#case-list [data-diagnosis]').count(),46);
-   assert.equal(await page.locator('#case-list [data-diagnosis]:disabled').count(),5);
+   // 42 patterns, listed once per family they belong to (imitators and the electrolyte pattern are cross-listed): 45 entries.
+   assert.equal(await page.locator('#case-list [data-diagnosis]').count(),45);
+   assert.equal(await page.locator('#case-list [data-diagnosis]:disabled').count(),0,'Examples not yet available are not listed');
+   assert.equal(await page.locator('#catalog-count').textContent(),'42 patrones · 63 ejemplos');
    assert.equal(await page.locator('#diagnosis-navigation [role=tab]').count(),4);
    assert.equal(await page.locator('#diagnosis-navigation [tabindex="0"]').count(),1);
    assert.equal(await page.locator('#diagnosis-content').getAttribute('aria-labelledby'),'variant-tab-sinus');
-   await page.locator('[data-action=compare]').click();await page.locator('#compare-pin').click();const original=await exported('original');
+   const original=await trace();assert.equal(original.case.presetId,'sinus');
    await page.locator('#variant-tab-sinus').focus();const generation=await page.evaluate(()=>window.__variantGenerations);
    await page.keyboard.press('ArrowRight');await focus('#variant-tab-brady');
    assert.equal(await page.locator('#variant-tab-sinus').getAttribute('aria-selected'),'true');
@@ -42,24 +48,27 @@ for(const engine of engines){
    await page.keyboard.press('Enter');await ready();await focus('#variant-tab-brady');
    assert.equal(await page.locator('#case-title').textContent(),'Ritmo sinusal');
    assert.equal(await page.locator('#case-variant-title').textContent(),'Bradicardia sinusal');
-   const brady=await exported('brady');assert.equal(brady.B.case.presetId,'brady');assert.deepEqual(brady.A,original.A);
+   const brady=await trace();assert.equal(brady.case.presetId,'brady');assert.notDeepEqual(brady.leads,original.leads);
    await page.locator('#variant-tab-brady').focus();await page.keyboard.press('End');await focus('#variant-tab-rsa');
    await page.keyboard.press(' ');await ready();assert.equal(await page.locator('#variant-tab-rsa').getAttribute('aria-selected'),'true');
    await page.keyboard.press('Home');await focus('#variant-tab-sinus');await page.keyboard.press('Enter');await ready();
-   assert.deepEqual((await exported('restored')).B,original.B,'Returning to normal restores the complete case, samples and measurements');
+   const normal=await trace();
+   assert.deepEqual(normal.case,original.case,'Returning to normal restores the case');assert.deepEqual(normal.leads,original.leads,'Returning to normal restores the samples');
+   assert.deepEqual(normal.events,original.events);assert.deepEqual(normal.measurement,original.measurement,'Returning to normal restores the measurements');
    // Every grouped member is reached via visible internal tabs, not test-only DOM proxies.
+   // (The inferior occlusions are two patterns of their own in the OMI library, RCA and Cx: no tabs.)
    let variants=0;
    for(const [parent,ids] of groups){
     await choose(parent);
     assert.deepEqual(await page.locator('#diagnosis-navigation [data-variant]').evaluateAll(es=>es.map(e=>e.dataset.variant)),ids);
     for(const id of ids){await tab(id);assert.equal(await page.locator('#diagnosis-navigation [aria-selected=true]').count(),1);variants++;}
    }
-   assert.equal(variants,38);
+   assert.equal(variants,36);
    await choose('af');await tab('af_fast');
    assert.equal(await page.locator('#case-title').textContent(),'Fibrilación auricular');
    assert.match(await page.locator('#warnings').innerText(),/FA (representativa|aprendida)/);
    await page.locator('#ecg').screenshot({path:resolve(out,`af-gamma-${engine.name()}-${width}.png`)});
-   const fast=await exported('af-fast');assert.equal(fast.B.case.presetId,'af_fast');assert.equal(fast.B.case.hr,145);assert.deepEqual(fast.A,original.A);
+   const fast=await trace();assert.equal(fast.case.presetId,'af_fast');assert.equal(fast.case.hr,145);
    if(width<=800)await page.locator('[data-action=catalog]').click();
    await page.locator('[data-action=clear-search]').click();
    assert.equal(await page.locator('[data-diagnosis=af]').getAttribute('data-preset'),'af_fast');
@@ -72,8 +81,8 @@ for(const engine of engines){
    await page.locator('#case-search').fill('FA lenta');await page.locator('[data-preset=af_slow]').click();await ready();
    assert.equal(await page.locator('#variant-tab-af_slow').getAttribute('aria-selected'),'true');
    assert.equal(await page.locator('#diagnosis-navigation [role=tab]').count(),3,'Specific search does not remove siblings');
-   const slow=await exported('af-slow');assert.equal(slow.B.case.hr,48);
-   await choose('flutter');await tab('flutter3');const flutter=await exported('flutter3');assert.equal(flutter.B.case.flutterRatio,3);
+   const slow=await trace();assert.equal(slow.case.hr,48);
+   await choose('flutter');await tab('flutter3');const flutter=await trace();assert.equal(flutter.case.flutterRatio,3);
    await choose('sinus');await page.locator('#case-title').scrollIntoViewIfNeeded();
    await page.screenshot({path:resolve(out,`${stem}-sinus.png`)});
    await choose('af');await tab('af_fast');await page.locator('#case-title').scrollIntoViewIfNeeded();
@@ -83,18 +92,19 @@ for(const engine of engines){
    assert.ok(geometry.page<=width+1);assert.ok(geometry.tabs.every(t=>t.height>=44&&t.left>=0&&t.right<=width+1));
    if(width<=800)await page.locator('[data-action=catalog]').click();await page.locator('[data-action=clear-search]').click();
    await page.screenshot({path:resolve(out,`${stem}-catalog.png`)});
-   await page.locator('#case-search').fill('Brugada');assert.equal(await page.locator('#case-list button:disabled').count(),1);
+   // A pattern whose example does not exist yet is not offered: the library says so instead of listing a disabled entry.
+   await page.locator('#case-search').fill('Brugada');assert.equal(await page.locator('.catalog-empty').isVisible(),true);assert.equal(await page.locator('#case-list [data-preset]').count(),0);
    await choose('sinus');
-   await page.locator('[data-panel=base]').click();
+   await openControlPanel(page,'base');
    // The panel click rebuilds its controls. Drive the live native input, not
    // a programmatic event on an element handle that may have been detached.
    const rate=page.locator('#inspector [data-key=hr]');
    assert.equal(await rate.inputValue(),'72');
-   const beforeEdit=await page.evaluate(()=>window.__variantGenerations);
+   const beforeEdit=await page.evaluate(()=>window.__variantGenerations),repliesBefore=await workerReplies(page);
    await rate.focus();
    for(let step=0;step<9;step++)await rate.press('ArrowRight');
    await page.waitForFunction(()=>document.querySelector('#inspector [data-key=hr]')?.value==='81');
-   await ready();
+   await waitForReply(page,repliesBefore);
    assert.ok(await page.evaluate(n=>window.__variantGenerations>n,beforeEdit),'Editing must reach the signal worker');
    assert.equal(await page.locator('#diagnosis-navigation').isVisible(),false,'Edited case must not retain an unverified diagnosis tab');
    assert.equal(await page.locator('#case-title').textContent(),'Exploración personalizada');
@@ -102,8 +112,8 @@ for(const engine of engines){
    assert.match(await page.locator('#exploration-context').textContent(),/Origen:.*Ritmo sinusal/);
    assert.match(await page.locator('.exploration-count').textContent(),/1 ajuste/);
    assert.match(await page.locator('#exploration-context').textContent(),/no diagnostica/i);
-   const custom=await exported('custom');assert.equal(custom.B.case.presetId,'custom');
-   assert.equal(custom.B.case.hr,81,'Export must reflect the actual native input');
+   const custom=await trace();assert.equal(custom.case.presetId,'custom');
+   assert.equal(custom.case.hr,81,'The worker must receive the actual native input');
    await page.locator('#case-title').scrollIntoViewIfNeeded();
    await page.screenshot({path:resolve(out,`${stem}-native-edit.png`)});
    await page.locator('#exploration-context summary').click();
@@ -112,20 +122,17 @@ for(const engine of engines){
      ['Frecuencia base (lpm)','72Frecuencia base','81Frecuencia base'],
      'History must show the actual programmed values and the meaning in each state');
    await page.locator('[data-action=close-dialog]').click();
-   await page.locator('[data-action=compare-origin]').click();
-   const originComparison=await exported('origin-comparison');
-   assert.equal(originComparison.A.case.presetId,'sinus');assert.equal(originComparison.A.case.hr,72);
-   assert.equal(originComparison.B.case.presetId,'custom');assert.equal(originComparison.B.case.hr,81);
+   assert.equal(await page.locator('[data-action=compare-origin]').count(),0,'The origin cannot be compared any more; only changes can be listed and the origin restored');
    await page.locator('[data-action=restore-origin]').click();await ready();
    assert.equal(await page.locator('#case-title').textContent(),'Ritmo sinusal');
    assert.equal(await page.locator('#exploration-context').isVisible(),false);
-   const restoredOrigin=await exported('origin-restored');
-   assert.equal(restoredOrigin.B.case.presetId,'sinus');assert.equal(restoredOrigin.B.case.hr,72);
+   const restoredOrigin=await trace();
+   assert.equal(restoredOrigin.case.presetId,'sinus');assert.equal(restoredOrigin.case.hr,72);assert.deepEqual(restoredOrigin.leads,original.leads,'Restoring the origin restores the original trace exactly');
    await choose('sinus');await page.locator('[data-action=quiz]').click();await ready();
    assert.equal(await page.locator('#diagnosis-navigation').isVisible(),false);assert.equal(await page.locator('#diagnosis-navigation [data-variant]').count(),0);
    assert.equal(await page.locator('#case-variant-title').textContent(),'');assert.equal(await page.locator('#case-title').textContent(),'Interpreta este ECG');
    assert.deepEqual(errors,[]);assert.deepEqual(warnings,[]);
-   results.push({engine:engine.name(),version:browser.version(),width,variants,sidebarEntries:45,activeExamples:61,manualActivation:true,search:true,customAndQuizIsolation:true,geometry,build,errors,warnings});
+   results.push({engine:engine.name(),version:browser.version(),width,variants,sidebarEntries:45,activeExamples:63,manualActivation:true,search:true,customAndQuizIsolation:true,geometry,build,errors,warnings});
   }catch(error){failures.push({engine:engine.name(),width,error:String(error.stack),errors,warnings});await page.screenshot({path:resolve(out,`${stem}-failure.png`)}).catch(()=>{});}
   finally{await page.close();}
  }}finally{await browser.close();}

@@ -34,6 +34,8 @@ const ready = async (label) => {
 const diagnoses = await page.locator(".case-button:not([disabled])").evaluateAll((es) => es.map((e) => e.dataset.diagnosis));
 let checked = 0, expected = 0;
 for (const diagnosis of diagnoses) {
+  // The library is an accordion: open the family that holds the entry first.
+  await page.evaluate((d) => { const b = document.querySelector(`.case-button[data-diagnosis="${d}"]`); b?.closest("details")?.setAttribute("open", ""); }, diagnosis);
   await page.locator(`.case-button[data-diagnosis="${diagnosis}"]`).first().click();
   await ready(diagnosis);
   const variants = await page.locator(".variant-tabs [data-variant]").evaluateAll((es) => es.map((e) => e.dataset.variant));

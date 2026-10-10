@@ -3,15 +3,23 @@ import { PRESETS, presetById } from "../src/presets/catalog";
 import { catalogView, VariantNavigation } from "../src/ui/catalog-view";
 
 describe("catalog presentation", () => {
-  it("keeps all collapsed entries and disables only the five pending examples", () => {
+  it("lists every available entry, leaves out the pending examples and opens only the active family", () => {
     const before = JSON.stringify(PRESETS);
     const view = catalogView(PRESETS);
     expect(view.count).toBe("42 patrones · 63 ejemplos");
-    // 47 entries plus three imitators also shown under «Imitadores».
-    expect(view.html.match(/data-diagnosis=/g)).toHaveLength(50);
+    // 42 entries plus three imitators also shown under «Imitadores».
+    expect(view.html.match(/data-diagnosis=/g)).toHaveLength(45);
     expect(view.html.match(/<small class="case-variants-count">También en /g)).toHaveLength(3);
     expect(view.html).toContain("En las guías: STEMI");
-    expect(view.html.match(/ disabled /g)).toHaveLength(5);
+    expect(view.html).not.toMatch(/ disabled /);
+    expect(view.html).not.toContain("Aún no disponibles");
+    // Accordion: one line per family; with nothing selected none is open.
+    expect(view.html.match(/<details class="case-group"/g)!.length).toBeGreaterThan(10);
+    expect(view.html).not.toMatch(/<details class="case-group"[^>]* open>/);
+    const active = catalogView(PRESETS, "", "", "anterior", new Set(["Marcapasos"]));
+    expect(active.html.match(/<details class="case-group"[^>]* open>/g)).toHaveLength(2);
+    expect(active.html).toMatch(/data-family="OMI evidente" open/);
+    expect(catalogView(PRESETS, "FA").html).not.toMatch(/<details class="case-group"[^>]*"(?! open)>/);
     expect(view.clearFiltersVisible).toBe(false);
     expect(JSON.stringify(PRESETS)).toBe(before);
   });

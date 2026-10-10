@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {isLocalGet} from './support/browser-request-policy.mjs';
+import {openAdjust,openControlPanel} from './support/adjust-panel.mjs';
+import {readMeasurements} from './support/measurement-dialog.mjs';
 const url=process.env.ECG_TEST_URL||'http://127.0.0.1:5173/';
 const origin=new URL(url).origin;
 const out=resolve(process.env.ECG_EVIDENCE_DIR||'.sites-runtime/accessibility');
@@ -11,13 +13,9 @@ await mkdir(out,{recursive:true});
 const info=JSON.parse(await readFile('dist/build-info.json','utf8'));
 assert.equal(info.dirty,false);
 if(process.env.ECG_EXPECT_COMMIT)assert.equal(info.commit,process.env.ECG_EXPECT_COMMIT);
-const names=['I','II','III','aVR','aVL','aVF','V1','V2','V3','V4','V5','V6'];
-const fixture='tests/reference/ludb/fixtures/development/';
-const meta=JSON.parse(await readFile(fixture+'1.json','utf8')),bytes=await readFile(fixture+'1.dat');
-const leads=Object.fromEntries(meta.channels.map((c,j)=>[c.lead,Array.from({length:5000},(_,i)=>(bytes.readInt16LE((i*12+j)*2)-c.baseline)/c.adcGain)]));
-const csv=Buffer.from(['# ECG-LAB CSV 1; fs=500; units=mV','time_s,'+names.join(','),...Array.from({length:5000},(_,i)=>[i/500,...names.map(l=>leads[l][i])].join(','))].join('\n'));
 const results=[],failures=[];
-for(const engine of [chromium,webkit,firefox]) {
+const engines=process.env.ECG_ACCESSIBILITY_ENGINES==='chromium'?[chromium]:[chromium,webkit,firefox];
+for(const engine of engines) {
   const browser=await engine.launch({headless:true});
   try {
     for(const width of [1440,390]) {
@@ -30,13 +28,12 @@ for(const engine of [chromium,webkit,firefox]) {
       const ready=()=>page.locator('#signal-loading').waitFor({state:'hidden'});
       const key=async selector=>{await page.locator(selector).focus();await page.keyboard.press('Enter');};
       const active=async selector=>assert.equal(await page.locator(selector).evaluate(e=>e===document.activeElement),true,selector+' must keep/receive focus');
-      const field=async(id,n)=>{await page.locator('#'+id).fill(String(n));await page.locator('#'+id).press('Tab');};
       const file=async(selector,name)=>{
         const waiting=page.waitForEvent('download');await key(selector);const p=resolve(out,`${stem}-${name}`);await(await waiting).saveAs(p);return readFile(p);
       };
       const fits=async scope=>{
         const proof=await page.locator(scope).evaluate(root=>({width:root.clientWidth,scroll:root.scrollWidth,
-          controls:[...root.querySelectorAll('button,input:not([type=checkbox]):not([type=range]),select')].filter(e=>e.getClientRects().length&&!e.closest('[hidden],.external-table,.measurement-table-wrap')).map(e=>{
+          controls:[...root.querySelectorAll('button,input:not([type=checkbox]):not([type=range]),select')].filter(e=>e.checkVisibility()&&!e.closest('[hidden],.measurement-table-wrap')).map(e=>{
             const b=e.getBoundingClientRect(),p=e.parentElement.getBoundingClientRect();return {id:e.id||e.textContent.trim(),height:b.height,left:b.left,right:b.right,pl:p.left,pr:p.right};
           })}));
         assert.ok(proof.scroll<=proof.width+1,scope+' must not scroll sideways: '+JSON.stringify(proof));
@@ -53,24 +50,41 @@ for(const engine of [chromium,webkit,firefox]) {
         assert.equal(await page.locator('[data-mode=monitor]').getAttribute('aria-selected'),'true');
         await page.keyboard.press('End');await active('[data-mode=rhythm]');await page.keyboard.press('Home');await active('[data-mode=paper]');
         assert.equal(await page.locator('.view-tabs [tabindex="0"]').count(),1);
-        await page.locator('[data-panel=base]').focus();await page.keyboard.press('ArrowRight');await active('[data-panel=conduction]');
-        assert.equal(await page.locator('#control-panel-conduction').isVisible(),true);
-        await page.keyboard.press('End');await active('[data-panel=signal]');await page.keyboard.press('Home');await active('[data-panel=base]');
+        // «Ajustar el caso» is a native disclosure folded at the end of the page: Enter opens it and focus stays on its summary.
+        assert.equal(await page.locator('#adjust').evaluate(e=>e.open),false);
+        await key('#adjust > summary');assert.equal(await page.locator('#adjust').evaluate(e=>e.open),true);await active('#adjust > summary');
+        // Ritmo is the first and default tab; the order is Ritmo, Intervalos, ST y ondas, Señal.
+        assert.equal(await page.locator('[data-panel=conduction]').getAttribute('aria-selected'),'true');
+        await page.locator('[data-panel=conduction]').focus();await page.keyboard.press('ArrowRight');await active('[data-panel=base]');
+        assert.equal(await page.locator('#control-panel-base').isVisible(),true);assert.equal(await page.locator('#control-panel-conduction').isHidden(),true);
+        await page.keyboard.press('End');await active('[data-panel=signal]');await page.keyboard.press('Home');await active('[data-panel=conduction]');
         assert.equal(await page.locator('.control-tabs [tabindex="0"]').count(),1);
+        assert.equal(await page.locator('#control-panel-conduction').isVisible(),true);
         await page.locator('#scale-toolbar [data-key="view.gain"]').focus();await page.locator('#scale-toolbar [data-key="view.gain"]').selectOption('5');
         await active('#scale-toolbar [data-key="view.gain"]');
         await page.locator('#scale-toolbar [data-key="view.gain"]').selectOption('10');
+        // Pick the normal rhythm through the library by keyboard (searching opens every family, so the entry is reachable).
+        const chooseSinus=async()=>{
+          if(width===390)await key('[data-action=catalog]');
+          await page.locator('#case-search').fill('sinusal');
+          await key('[data-preset=sinus]');await ready();
+        };
         // Mobile off-canvas navigation is truly absent from keyboard/AT until opened.
         if(width===390) {
           assert.equal(await page.locator('#catalog').evaluate(e=>e.inert),true);
           await key('[data-action=catalog]');await page.getByRole('dialog',{name:'Biblioteca de patrones'}).waitFor();await active('#case-search');
           assert.equal(await page.locator('.workspace').evaluate(e=>e.inert),true);
+          // Focus is contained in the dialog and wraps in both directions over what a keyboard can really reach:
+          // the examples of a folded family are not reachable, its summary is.
+          const onLastReachable=()=>page.locator('#catalog').evaluate(root=>{
+            const reachable=[...root.querySelectorAll('button,input,select,textarea,a[href],summary,[tabindex]')].filter(e=>!e.disabled&&e.tabIndex>=0&&e.checkVisibility());
+            return reachable.at(-1)===document.activeElement;
+          });
           await page.locator('[data-action=close-catalog]').focus();await page.keyboard.press('Shift+Tab');
-          assert.equal(await page.locator('#catalog .case-button:not(:disabled)').last().evaluate(e=>e===document.activeElement),true);
+          assert.equal(await onLastReachable(),true,'Shift+Tab from the first control must wrap to the last reachable control of the library');
           await page.keyboard.press('Tab');await active('[data-action=close-catalog]');
           await page.keyboard.press('Escape');await active('[data-action=catalog]');
-          await key('[data-action=catalog]');await page.locator('#case-search').fill('sinusal');
-          await key('[data-preset=sinus]');await ready();await active('#case-title');
+          await chooseSinus();await active('#case-title');
           assert.equal(await page.locator('#catalog').evaluate(e=>e.inert),true);
         }
         await page.locator('#case-title').scrollIntoViewIfNeeded();await page.screenshot({path:resolve(out,stem+'-main.png')});
@@ -95,7 +109,13 @@ for(const engine of [chromium,webkit,firefox]) {
         await key('[data-control-details="conduction"] > summary');
         assert.equal(await inactive.evaluate(e=>e.open),false);
         await flutterPattern.selectOption('2-3');await ready();
-        await fits('#control-panel-conduction');
+        const conductionFit=await fits('#control-panel-conduction');
+        // The model's limits are a native disclosure of their own, keyboard operable and closed by default.
+        const limits=page.locator('#control-panel-conduction .control-limits');
+        assert.equal(await limits.evaluate(e=>e.open),false);
+        await key('#control-panel-conduction .control-limits > summary');assert.equal(await limits.evaluate(e=>e.open),true);
+        assert.match(await limits.innerText(),/secuencias variables del flutter/);
+        await key('#control-panel-conduction .control-limits > summary');assert.equal(await limits.evaluate(e=>e.open),false);
         await page.locator('#case-title').scrollIntoViewIfNeeded();
         // Native disclosure keeps provenance available without burying the mobile trace.
         const summary=page.locator('#exploration-context summary');
@@ -114,27 +134,28 @@ for(const engine of [chromium,webkit,firefox]) {
         await page.screenshot({path:resolve(out,stem+'-flutter-variable.png')});
         await flutterPattern.selectOption('fixed');await ready();
         assert.equal(await page.locator('[data-key="flutterRatio"]').isDisabled(),false);
-        await key('[data-panel=base]');
-        if(width===390) await key('[data-action=catalog]');
-        await key('[data-preset=sinus]');await ready();
+        await chooseSinus();
 
-        // Quality must follow known acquisition filtering, including the large monitor number.
+        // The cards show the model; what the sample analyzer can say lives in the measurements dialog and
+        // must follow the known acquisition filtering (and the monitor keeps the model rate, labelled as such).
         await key('[data-panel=signal]');
         await page.locator('[data-key="filter"]').selectOption('aggressive');await ready();
-        assert.equal(await page.locator('#metrics .quality-dot.usable').count(),0);
-        assert.ok((await page.locator('#metrics .metric strong').allTextContents()).every(t=>t.trim()==='—'));
+        let measured=await readMeasurements(page);
+        assert.ok(Object.values(measured).every(m=>m.status==='unavailable'),'A 2 Hz high-pass leaves no certified measurement: '+JSON.stringify(measured));
         await key('[data-mode=monitor]');
-        assert.equal(await page.locator('#monitor-rate').innerText(),'—');
-        assert.equal(await page.locator('#monitor-rate-note').innerText(),'No estimable');
+        assert.notEqual(await page.locator('#monitor-rate').innerText(),'—');
+        assert.equal(await page.locator('#monitor-rate-note').innerText(),'lpm · modelo');
         await page.locator('#monitor-rate').scrollIntoViewIfNeeded();
         await page.screenshot({path:resolve(out,stem+'-filter-scope.png')});
         await page.locator('[data-key="filter"]').selectOption('monitor');await ready();
-        assert.equal(await page.locator('#monitor-rate-note').innerText(),'lpm · revisar');
+        measured=await readMeasurements(page);
+        assert.ok(Object.values(measured).every(m=>m.status!=='usable'),'The 0.5-40 Hz monitor filter may distort limits: nothing is certified: '+JSON.stringify(measured));
+        assert.equal(measured.hr.status,'review');
         await page.locator('[data-key="filter"]').selectOption('diagnostic');await ready();
-        assert.notEqual(await page.locator('#monitor-rate').innerText(),'—');
-        await key('[data-mode=paper]');await key('[data-panel=base]');
+        measured=await readMeasurements(page);
+        assert.equal(measured.hr.status,'usable');assert.ok(measured.hr.value>0);
+        await key('[data-mode=paper]');await key('[data-panel=conduction]');
         // Demand VVI: an intrinsic source faster than the lower rate inhibits pacing.
-        await key('[data-panel=conduction]');
         await page.locator('[data-key="rhythm"]').selectOption('paced');await ready();
         await page.locator('[data-key="pacing"]').selectOption('VVI');await ready();
         await page.locator('[data-key="pacingBehavior"]').selectOption('demand');await ready();
@@ -151,102 +172,37 @@ for(const engine of [chromium,webkit,firefox]) {
         await page.locator('#ecg').screenshot({path:resolve(out,stem+'-vvi-demand-trace.png')});
         await page.locator('[data-key="pacingBehavior"]').selectOption('fixed');await ready();
         assert.equal(await page.locator('[data-key="intrinsicRate"]').isDisabled(),true);
-        if(width===390) await key('[data-action=catalog]');
-        await key('[data-preset=sinus]');await ready();
+        await chooseSinus();
         await key('.topbar [data-action=about]');await page.getByRole('dialog',{name:'Modelo, alcance y referencias'}).waitFor();
         await page.keyboard.press('Escape');await page.locator('#dialog').waitFor({state:'hidden'});await active('.topbar [data-action=about]');
+        // From here on every request must be a local read: no data upload, no third-party request.
         page.on('request',r=>requests.push({method:r.method(),url:r.url()}));
-        // File choice is a test fixture; OS file-picker accessibility is a physical checklist item.
-        await key('[data-action=external]');await page.getByRole('dialog',{name:'Explorar una señal'}).waitFor();
-        await page.locator('#external-files').setInputFiles({name:'development.csv',mimeType:'text/csv',buffer:csv});
-        await key('[data-external=load]');await page.locator('#external-aptitude').waitFor();
-        const before=JSON.parse((await file('[data-external=json]','before.json')).toString());assert.deepEqual(before.leads,leads);
-        await key('[data-review=new]');await field('manual-start-sample',640);await field('manual-end-sample',680);
-        await page.locator('#manual-range').focus();await page.locator('#manual-range').selectOption('4');await active('#manual-range');
-        await key('[data-review=focus]');await active('#manual-canvas');await page.keyboard.press('ArrowRight');
-        assert.equal(await page.locator('#manual-end-sample').inputValue(),'681');await page.keyboard.press('ArrowLeft');
-        await page.locator('#manual-canvas').scrollIntoViewIfNeeded();
-        // Send an integer viewport pixel, then predict its nearest sample BEFORE input.
-        // A narrow trace can contain more samples than pixels: keyboard/fields retain
-        // one-sample precision; touch must obey its actual pixel grid, not a fictitious
-        // fractional pixel chosen by a mouse-only test. No production geometry import.
-        const point=await page.locator('#manual-canvas').evaluate(c=>{
-          const w=parseFloat(c.style.width),b=c.getBoundingClientRect();
-          const x=Math.round(b.left+(38+685/799*(w-54))*b.width/w),y=Math.round(b.top+b.height/2);
-          const sample=Math.round(((x-b.left)*w/b.width-38)/(w-54)*799);
-          return {x,y,sample};
-        });
-        if(width===390&&engine.name()!=='firefox')await page.touchscreen.tap(point.x,point.y);else await page.mouse.click(point.x,point.y);
-        assert.equal(Number(await page.locator('#manual-end-sample').inputValue()),point.sample);
-        assert.equal(Number(await page.locator('#manual-readout').getAttribute('data-ms')),(point.sample-640)*2);
-        await key('[data-review=save]');await active('[data-review=new]');
-        const sidecar=JSON.parse((await file('[data-review=export]','review.json')).toString());
-        assert.equal(sidecar.annotations.length,1);assert.equal(sidecar.annotations[0].endSample,point.sample);
-        const after=JSON.parse((await file('[data-external=json]','after.json')).toString());
-        assert.deepEqual(after.leads,before.leads);assert.deepEqual(after.measurement,before.measurement);
-        await page.locator('#external-review').scrollIntoViewIfNeeded();await page.screenshot({path:resolve(out,stem+'-manual.png')});
-        const externalFit=await fits('#external-lab');
-        // Full CSV and PNG downloads, not only a button click.
-        assert.equal((await file('[data-external=csv]','samples.csv')).length>10000,true);
-        assert.equal((await file('[data-external=png]','trace.png')).subarray(1,4).toString(),'PNG');
-        await key('[data-external=compare-a]');await page.locator('#external-lab').waitFor({state:'hidden'});
-        await key('[data-compare=reader]');assert.equal(await page.locator('#manual-annotations tbody tr').count(),1);
-        await key('[data-external=compare-b]');await page.locator('#external-lab').waitFor({state:'hidden'});
-        const pair=JSON.parse((await file('#compare-json','comparison.json')).toString());
-        assert.deepEqual(pair.A.leads,leads);assert.deepEqual(pair.B.leads,leads);
-        assert.ok(pair.sampledDifferences.every(r=>r.maxAbsMv===0));
-        const comparisonFit=await fits('#comparison-lab');
+        // Measurements dialog: opened from a card by keyboard, its table keeps rows/columns and is keyboard-scrollable.
+        await key('.main-metric');const measurementsDialog=page.getByRole('dialog',{name:'Medidas, límites y consistencia'});await measurementsDialog.waitFor();
+        const measurementTable=measurementsDialog.getByRole('table');
+        assert.equal(await measurementTable.getByRole('columnheader').count(),4);assert.equal(await measurementTable.getByRole('cell').count(),20);
+        assert.deepEqual(await measurementsDialog.locator('.measurement-table-wrap').first().evaluate(w=>({tab:w.tabIndex,role:w.getAttribute('role'),scopes:[...w.querySelectorAll('thead th')].every(th=>th.getAttribute('scope')==='col')})),{tab:0,role:'region',scopes:true});
+        await page.keyboard.press('Escape');await measurementsDialog.waitFor({state:'hidden'});await active('.main-metric');
+        // Export by keyboard: real downloads (case JSON and a PNG), the dialog stays operable and focus returns to its opener.
+        await key('.topbar [data-action=export]');await page.getByRole('dialog',{name:'Exportar y guardar'}).waitFor();
+        const savedCase=JSON.parse((await file('[data-action=json]','case.json')).toString());
+        assert.equal(savedCase.presetId,'sinus');assert.equal(savedCase.filter,'diagnostic');
+        assert.equal((await file('[data-action=png]','trace.png')).subarray(1,4).toString(),'PNG');
+        await page.keyboard.press('Escape');await page.locator('#dialog').waitFor({state:'hidden'});await active('.topbar [data-action=export]');
+        // Reflow: the folded panel, its tabs and the page itself must not scroll sideways at narrow widths.
         const layouts=[];
         for(const w of [320,720]) {
           await page.setViewportSize({width:w,height:900});
-          await page.locator('#comparison-lab').scrollIntoViewIfNeeded();
-          layouts.push({viewport:w,comparison:await fits('#comparison-lab')});
+          await openAdjust(page);await page.locator('#adjust').scrollIntoViewIfNeeded();
           assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'page reflow '+w);
-          await key('[data-compare=reader]');await page.locator('#external-lab').waitFor();
-          layouts.at(-1).external=await fits('#external-lab');
-          await key('[data-external=compare-b]');
+          layouts.push({viewport:w,adjust:await fits('#adjust')});
         }
         await page.setViewportSize({width,height:width===390?844:1000});
-        await page.locator('#comparison-lab').scrollIntoViewIfNeeded();await page.screenshot({path:resolve(out,stem+'-comparison.png')});
-        await key('[data-compare=reader]');await key('[data-external=close]');await page.locator('#external-review').waitFor({state:'detached'});
-        await active('[data-compare=reader]');
-        // Repeated open/close cannot leave modal background inert or retain the cleared editor.
-        for(let n=0;n<2;n++){await key('[data-action=external]');await page.keyboard.press('Escape');await page.locator('#external-lab').waitFor({state:'hidden'});await active('[data-action=external]');}
-        // Independent smooth impulse train: no case metadata or generator truth enters analysis.
-        const weights=[1,1.3,.3,-1.15,.35,.8,-.8,-.4,.2,.6,1.1,.9];
-        const impulseCsv=Buffer.from(['# ECG-LAB CSV 1; fs=500; units=mV','time_s,'+names.join(','),
-          ...Array.from({length:5000},(_,i)=>{const t=i/500,v=Math.exp(-.5*(((t+.5)%1-.5)/.006)**2)+1e-6*Math.sin(2*Math.PI*.7*t);return[t,...weights.map(w=>w*v)].join(',');})].join('\n'));
-        await key('[data-action=external]');
-        await page.locator('#external-files').setInputFiles({name:'isolated-impulses.csv',mimeType:'text/csv',buffer:impulseCsv});
-        await key('[data-external=load]');await page.locator('#external-aptitude').waitFor();
-        assert.equal(await page.locator('#external-aptitude').getAttribute('data-status'),'exploratory');
-        await page.locator('#external-metrics').waitFor();
-        const pulseReport=JSON.parse((await file('[data-external=json]','impulse-analysis.json')).toString());
-        assert.equal(pulseReport.measurement.evidence.hr.status,'unavailable');
-        assert.ok(pulseReport.measurement.hr>0,'Raw candidate is retained, not replaced with a fictitious zero');
-        assert.equal((await page.locator('#external-metrics tbody tr').first().locator('td').nth(1).innerText()).trim(),'— lpm');
-        assert.equal(await page.locator('#external-metrics tbody tr').first().locator('td').nth(2).innerText(),'No estimable');
-        await page.locator('#external-metrics').scrollIntoViewIfNeeded();
-        await page.screenshot({path:resolve(out,stem+'-impulse-confidence.png')});
-        await page.keyboard.press('Escape');await page.locator('#external-lab').waitFor({state:'hidden'});
-        const alternatingCsv=Buffer.from(['# ECG-LAB CSV 1; fs=500; units=mV','time_s,'+names.join(','),
-          ...Array.from({length:5000},(_,i)=>{const t=i/500;let v=0;for(let b=.5;b<10;b+=.84)v+=Math.exp(-.5*((t-b)/.014)**2)-.9*Math.exp(-.5*((t-b-.22)/.016)**2);return[t,...weights.map(w=>w*v)].join(',');})].join('\n'));
-        await key('[data-action=external]');
-        await page.locator('#external-files').setInputFiles({name:'opposite-short-long.csv',mimeType:'text/csv',buffer:alternatingCsv});
-        await key('[data-external=load]');await page.locator('#external-aptitude').waitFor();
-        assert.equal(await page.locator('#external-aptitude').getAttribute('data-status'),'exploratory');
-        await page.locator('#external-metrics').waitFor();
-        const alternatingReport=JSON.parse((await file('[data-external=json]','alternating-analysis.json')).toString());
-        assert.equal(alternatingReport.measurement.evidence.hr.status,'review');
-        assert.ok(alternatingReport.measurement.hr>130,'No fictitious automatic halving');
-        assert.match(await page.locator('#external-metrics tbody tr').first().innerText(),/doble conteo QRS\/T/);
-        await page.locator('#external-metrics').scrollIntoViewIfNeeded();
-        await page.screenshot({path:resolve(out,stem+'-alternating-confidence.png')});
-        await page.keyboard.press('Escape');await page.locator('#external-lab').waitFor({state:'hidden'});
+        await page.locator('#adjust').scrollIntoViewIfNeeded();await page.screenshot({path:resolve(out,stem+'-adjust.png')});
         assert.equal(await page.locator('.workspace').evaluate(e=>e.inert),false);
         assert.deepEqual(requests.filter(r=>!isLocalGet(r,origin)),[],'No data upload or third-party request; local blob downloads are reads');
         assert.deepEqual(errors,[]);assert.deepEqual(warnings,[]);
-        results.push({engine:engine.name(),version:browser.version(),width,build:info,firstViewport,externalFit,comparisonFit,layouts,samplesVerified:120000,keyboard:true,pointer:width===390&&engine.name()!=='firefox'?'emulated-touch':'mouse',stepMs:2,pointerSample:point.sample,manualMs:(point.sample-640)*2,downloads:8,errors,warnings});
+        results.push({engine:engine.name(),version:browser.version(),width,build:info,firstViewport,conductionFit,layouts,keyboard:true,pointer:'not exercised (the signal reader was retired)',downloads:3,errors,warnings});
         await writeFile(resolve(out,'accessibility-results.json'),JSON.stringify({results,physicalDevice:false,screenReaderTested:false,zoomNote:'320/720 CSS-pixel reflow; not native browser zoom',wcagCertification:false},null,2));
       } catch(e) {
         await page.screenshot({path:resolve(out,stem+'-failure.png')}).catch(()=>{});
@@ -259,7 +215,7 @@ for(const engine of [chromium,webkit,firefox]) {
     }
   } finally {await browser.close();}
 }
-await writeFile(resolve(out,'accessibility-summary.json'),JSON.stringify({results,failures,expectedFlows:6,physicalDevice:false,screenReaderTested:false,wcagCertification:false},null,2));
+await writeFile(resolve(out,'accessibility-summary.json'),JSON.stringify({results,failures,expectedFlows:engines.length*2,physicalDevice:false,screenReaderTested:false,wcagCertification:false},null,2));
 assert.equal(failures.length,0,JSON.stringify(failures));
-assert.equal(results.length,6,'Every engine/viewport flow must complete');
+assert.equal(results.length,engines.length*2,'Every engine/viewport flow must complete');
 console.log(JSON.stringify({accessibilityFlows:results.length,engines:[...new Set(results.map(r=>r.engine))],physicalDevice:false}));
