@@ -125,7 +125,7 @@ try {
   await ready();
   assert.equal(await field("qrs").inputValue(), "90");
   assert.match(
-    await page.locator("#warnings").innerText(),
+    await page.locator("#warnings").textContent(),
     /requiere conducción BRI/,
   );
 

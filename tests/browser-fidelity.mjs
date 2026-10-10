@@ -98,18 +98,18 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  assert.equal(await page.locator('#case-title').innerText(),'Registro con brazos invertidos');
  assert.equal(await page.locator('#finding-title').innerText(),'Transformación de la adquisición');
  assert.doesNotMatch(await page.locator('#findings').innerText(),/III\s*>\s*II|ST↓ recíproco en I/);
- assert.match(await page.locator('#warnings').innerText(),/inversión de electrodos de brazos/i);
+ assert.match(await page.locator('#warnings').textContent(),/inversión de electrodos de brazos/i);
  assert.match(await page.locator('#ecg').getAttribute('aria-label'),/Registro con brazos invertidos/);
  await page.screenshot({path:path.join(out,'inverted-electrodes.png')});
  checks.push('P1: actual JSON import preserves reversed acquisition and retires basal observations');
  for(const id of ['wpw','lbbb','vvi','ddd']) {
   await select(id);
-  const message=await page.locator('#warnings').innerText();
+  const message=await page.locator('#warnings').textContent();
   assert.match(message,id==='wpw'?/ST y T siguen la activación QRS incluida la onda delta/:/relación ST\/QRS no están calibradas clínicamente/);
-  assert.match(await page.locator('#limitation').innerText(),id==='wpw'?/Amplitudes no calibradas/:/no están calibradas clínicamente/);
+  assert.match(await page.locator('#limitation').textContent(),id==='wpw'?/Amplitudes no calibradas/:/no están calibradas clínicamente/);
  }
  await page.screenshot({path:path.join(out,'secondary-repolarization-limit.png')});
- await select('aai');assert.doesNotMatch(await page.locator('#warnings').innerText(),/ST\/QRS/);
+ await select('aai');assert.doesNotMatch(await page.locator('#warnings').textContent(),/ST\/QRS/);
  checks.push('P2: WPW / LBBB / VVI / DDD warnings visible; AAI alone excluded');
  // P6: invalidate synchronously during a real slider input; no stale export window.
  await select('sinus');await page.locator('[data-mode="monitor"]').click();
