@@ -8,6 +8,8 @@ import { ActivationLab, type ActivationApplyResult } from "./ui/activation-lab";
 import { catalogGroup, catalogGroups, familyGuide, familyLabel } from "./ui/catalog-presentation";
 import { lesionBaseline } from "./engine/lesion-baseline";
 import { differenceSignal } from "./render/st-lens";
+import { omiSheetHtml, structuredDescriptionHtml } from "./ui/omi-sheet";
+import { structuredDescription } from "./ui/structured-description";
 import { metricsHtml, modelMetricCards } from "./ui/metric-cards";
 import { openDialog, closeDialog } from "./ui/dialog";
 import { exportDialogHtml } from "./ui/export-dialog";
@@ -110,7 +112,7 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  <section id="beat-detail" class="beat-detail" aria-label="Ampliación del latido"><div class="detail-empty">Preparando análisis…</div></section>
  </div>
  <section id="comparison-lab" class="comparison-lab" aria-label="Laboratorio comparativo A/B"></section>
- <section class="lower-grid"><div id="inspector" class="inspector"></div><aside class="interpretation"><div class="section-label">Guía de lectura</div><h2 id="finding-title">Hallazgos esperados</h2><ul id="findings"></ul><div id="limitation" class="model-note"></div><div id="warnings"></div><button class="text-button" data-action="measurements">Ver medidas y valores del modelo ${icon("chevron")}</button><button class="text-button" data-action="about">Estado y referencias ${icon("chevron")}</button></aside></section>
+ <section class="lower-grid"><div id="inspector" class="inspector"></div><aside class="interpretation"><div class="section-label">Guía de lectura</div><h2 id="finding-title">Hallazgos esperados</h2><ul id="findings"></ul><div id="omi-sheet"></div><div id="structured-description"></div><div id="limitation" class="model-note"></div><div id="warnings"></div><button class="text-button" data-action="measurements">Ver medidas y valores del modelo ${icon("chevron")}</button><button class="text-button" data-action="about">Estado y referencias ${icon("chevron")}</button></aside></section>
  <footer class="workspace-footer"><span>ECG Lab · Laboratorio de electrocardiografía</span><span>Morfología normal aprendida de <a href="https://physionet.org/content/ptb-xl/1.0.3/" target="_blank" rel="noopener">PTB-XL</a> y <a href="https://physionet.org/content/ptb-xl-plus/1.0.1/" target="_blank" rel="noopener">PTB-XL+</a> (Wagner et al. 2020; Strodthoff et al. 2023), <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>; se distribuyen solo coeficientes derivados.</span><span>Uso educativo. Sin validación clínica.</span></footer></main></div>
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
 
@@ -220,6 +222,10 @@ function renderInfo() {
   )
     .map((f) => `<li>${esc(f)}</li>`)
     .join("");
+  // OMI families (A3): case sheet with expert notes and support; and, for any case,
+  // the structured description read from the trace shown.
+  $("#omi-sheet").innerHTML = !concealed && p && !customExploration ? omiSheetHtml(p.id) : "";
+  $("#structured-description").innerHTML = !concealed && session.signal ? structuredDescriptionHtml(structuredDescription(c, session.signal)) : "";
   $("#limitation").innerHTML = concealed
     ? "El diagnóstico se mostrará al responder."
     : `<strong>${p?.strategy === "local" ? "Ajuste morfológico local" : "Modelo aproximado"}</strong><p>${esc(p?.limitation || "Sin validación clínica de este caso personalizado.")}</p>`;

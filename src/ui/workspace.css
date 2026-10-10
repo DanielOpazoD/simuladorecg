@@ -228,3 +228,30 @@ dialog.external-lab { border-radius:12px; }
   .variant-heading > small { flex-basis:100%; }
 }
 @media print { .diagnosis-navigation { display:none!important; } }
+
+/* OMI case sheet and structured description (A3) */
+.omi-sheet { margin-top:18px; display:grid; gap:12px; }
+.omi-sheet h3 { font-size:13px; font-weight:650; color:var(--ink); text-transform:none; letter-spacing:0; }
+.omi-sheet-rows { display:grid; gap:8px; margin:0; }
+.omi-sheet-rows div { display:grid; gap:2px; }
+.structured-description dl div { display:grid; grid-template-columns:40px minmax(0,1fr); gap:8px; }
+.omi-sheet-rows dt, .structured-description dt { font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; padding-top:2px; }
+.omi-sheet-rows dd, .structured-description dd { margin:0; font-size:13px; line-height:1.5; color:var(--ink); }
+.omi-notes { display:grid; gap:8px; }
+.omi-note { border:1px solid var(--line); border-radius:8px; padding:9px 11px; }
+.omi-note span { font-size:11px; font-weight:650; text-transform:uppercase; letter-spacing:.05em; }
+.omi-note p { margin:3px 0 0; font-size:13px; line-height:1.5; }
+.omi-note-perla span { color:#2f7d4f; }
+.omi-note-trampa span { color:#c2183a; }
+.omi-note-consejo span { color:#1f5fa8; }
+.dark .omi-note-perla span { color:#5cc98a; }
+.dark .omi-note-trampa span { color:#ff6b86; }
+.dark .omi-note-consejo span { color:#7fb4ff; }
+.omi-refs summary, .structured-description summary { cursor:pointer; font-size:13px; font-weight:600; color:var(--ink); }
+.omi-refs ol { margin:8px 0 0; padding-left:18px; display:grid; gap:7px; font-size:12px; line-height:1.5; color:var(--muted); }
+.omi-refs a { color:var(--accent); }
+.ref-level { display:inline-block; font-size:10.5px; padding:1px 7px; border-radius:99px; background:var(--soft); color:var(--ink); margin-right:4px; }
+.structured-description { margin-top:16px; }
+.structured-description dl { display:grid; gap:6px; margin:10px 0 0; }
+.present-30 { margin:10px 0 0; font-size:13px; line-height:1.55; }
+.description-note { margin:6px 0 0; font-size:11px; color:var(--muted); }
