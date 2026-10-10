@@ -6,6 +6,8 @@ import "./style.css";
 import { APP_VERSION } from "./ui/version";
 import { ActivationLab, type ActivationApplyResult } from "./ui/activation-lab";
 import { catalogGroup, catalogGroups, familyGuide, familyLabel } from "./ui/catalog-presentation";
+import { lesionBaseline } from "./engine/lesion-baseline";
+import { differenceSignal } from "./render/st-lens";
 import { metricsHtml, modelMetricCards } from "./ui/metric-cards";
 import { openDialog, closeDialog } from "./ui/dialog";
 import { exportDialogHtml } from "./ui/export-dialog";
@@ -69,6 +71,10 @@ const session = new TraceSession();
 let c = fromPreset(presetById("sinus")!),
   layout: Layout | null = null,
   monitor: Monitor | null = null;
+/** OMI lenses on the 12-lead paper: the same patient's previous ECG (grey), the
+ * lesion alone (this trace minus that one) and the J point with SDST/IDST. */
+const lens = { previous: false, change: false, st: false };
+let previousSignal: Signal | null = null;
 let annotations = false,
   caliper: Caliper | null = null,
   dragging = false,
@@ -97,7 +103,7 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  <section id="diagnosis-navigation" class="diagnosis-navigation" aria-label="Variantes del patrón" hidden></section>
  <div id="diagnosis-content">
  <section id="metrics" class="metrics" aria-label="Medidas del ECG"><div class="loading-metrics">Generando señal…</div></section>
- <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><div class="trace-tools">${btn("caliper", "Calibres", "ruler")}${btn("annotations", "Ondas", "eye")}${btn("focus", "Ampliar", "search")}${btn("pause", "Congelar", "pause")}</div></div>
+ <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><div class="trace-tools">${btn("caliper", "Calibres", "ruler")}${btn("annotations", "Ondas", "eye")}<span class="lens-tools" role="group" aria-label="Lentes OMI">${btn("lens-previous", "ECG previo", "strip")}${btn("lens-change", "Solo el cambio", "pulse")}${btn("lens-st", "Punto J y ST", "ruler")}</span>${btn("focus", "Ampliar", "search")}${btn("pause", "Congelar", "pause")}</div></div>
  <div id="quiz-panel" hidden></div><div id="caliper-editor" class="caliper-editor" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small id="monitor-rate-note">No estimable</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
  <div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div>
  <div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><div class="scale-toolbar" id="scale-toolbar"></div><div class="trace-caption"><span id="trace-caption">10 s · Columnas secuenciales</span><span id="signal-state">Señal sintética · 500 muestras/s</span></div><details class="keyboard-help"><summary>Teclado y calibres</summary><p id="trace-keyboard-help">Con foco en el trazado: M/P/R cambia vista, V/G cambia escala, C activa calibres y espacio congela el monitor. Calibres: flechas mueven el extremo seleccionado una muestra horizontal o 0,01 mV vertical; Mayús mueve diez pasos. También puedes usar los campos de tiempo y amplitud. Tab sale del trazado.</p></details></section>
@@ -373,6 +379,14 @@ function syncTraceTools() {
   waves.disabled = !paper || !ready;
   waves.classList.toggle("active", ready && paper && annotations);
   waves.setAttribute("aria-pressed", String(ready && paper && annotations));
+  const lesion = !!lesionBaseline(c) && !(quiz && !quiz.answer);
+  for (const [action, on, enabled] of [["lens-previous", lens.previous, lesion], ["lens-change", lens.change, lesion], ["lens-st", lens.st, true]] as const) {
+    const b = $<HTMLButtonElement>(`[data-action="${action}"]`), active = ready && paper && enabled && on;
+    b.disabled = !paper || !ready || !enabled;
+    b.classList.toggle("active", active);
+    b.setAttribute("aria-pressed", String(active));
+    b.title = enabled ? "" : "Sin ECG previo: el caso no tiene una lesión aguda sobre el mismo paciente";
+  }
   $<HTMLButtonElement>('[data-action="focus"]').disabled = !ready;
   $<HTMLButtonElement>('[data-action="compare"]').disabled = !!quiz && !quiz.answer;
   $<HTMLButtonElement>('[data-action="external"]').disabled = !!quiz && !quiz.answer;
@@ -413,7 +427,10 @@ function publishSignal(next: Signal, measured: Measurement, requestId: number, c
     renderDetail();
 }
 const controller = new SignalController(
-  (next, measured, requestId) => publishSignal(next, measured, requestId),
+  (next, measured, requestId, previous) => {
+    if (session.isCurrentRequest(requestId)) previousSignal = previous ?? null;
+    publishSignal(next, measured, requestId);
+  },
   (message, requestId) => {
     if (!session.fail(requestId)) return;
     // The persistent live region below carries the error. A duplicate long
@@ -473,7 +490,8 @@ function generate() {
   timer = 0;
   invalidateSignal();
   // Worker messages are asynchronous; register the returned ID before delivery.
-  session.expectRequest(controller.request(c));
+  previousSignal = null;
+  session.expectRequest(controller.request(c, 65, { previous: (lens.previous || lens.change) && !!lesionBaseline(c) }));
 }
 function draw() {
   c.view.palette = currentTheme() === "dark" ? "dark" : "paper";
@@ -487,12 +505,17 @@ function draw() {
   );
   if (c.view.mode === "paper") {
     monitor = null;
-    layout = renderPaper(canvas, session.signal, c, width, {
-      annotations,
+    const practice = !!quiz && !quiz.answer, prior = !practice && lesionBaseline(c) ? previousSignal : null;
+    const change = !!prior && lens.change;
+    layout = renderPaper(canvas, change ? differenceSignal(session.signal, prior) : session.signal, c, width, {
+      annotations: annotations && !change,
       measurement: session.measurement ?? undefined,
       selectedBeat: session.selectedBeat,
-      hideName: !!quiz && !quiz.answer,
+      hideName: practice,
       displayName: caseReading(c).title,
+      previous: prior && lens.previous && !change ? prior : undefined,
+      stLens: lens.st && !practice,
+      traceNote: change ? "solo el cambio: este trazado menos el ECG previo del mismo paciente" : prior && lens.previous ? "gris: ECG previo del mismo paciente" : undefined,
     });
   } else if (c.view.mode === "rhythm") {
     monitor = null;
@@ -813,6 +836,13 @@ document.addEventListener("click", async (e) => {
   if (action === "annotations") {
     annotations = !annotations;
     draw();
+  }
+  if (action === "lens-previous" || action === "lens-change" || action === "lens-st") {
+    const key = action === "lens-previous" ? "previous" : action === "lens-change" ? "change" : "st";
+    lens[key] = !lens[key];
+    // The previous ECG comes with the trace from the worker; ask for it once.
+    if ((lens.previous || lens.change) && lesionBaseline(c) && !previousSignal) generate();
+    else draw();
   }
   if (action === "sound") {
     audioOn = !audioOn;

@@ -1,6 +1,7 @@
 import { monitorClock } from './monitor-clock';
 import { traceSampleIndices } from './trace-samples';
 import { caliperMeasurement } from "./caliper-geometry";
+import { stMarks } from "./st-lens";
 import { orderedLeads, displayPolarity, leadGain } from "../engine/lead-registry";
 import {
   LEADS,
@@ -41,6 +42,11 @@ const palettes = {
     bold: "#dfb7bf",
     trace: "#22353c",
     text: "#514950",
+    ghost: "#a3abb3",
+    sdst: "#c2183a",
+    sdstFill: "rgba(194, 24, 58, 0.16)",
+    idst: "#1f5fa8",
+    idstFill: "rgba(31, 95, 168, 0.16)",
   },
   dark: {
     bg: "#081811",
@@ -48,6 +54,11 @@ const palettes = {
     bold: "#244333",
     trace: "#70ef9c",
     text: "#97b9a4",
+    ghost: "#4f6b5c",
+    sdst: "#ff6b86",
+    sdstFill: "rgba(255, 107, 134, 0.22)",
+    idst: "#7fb4ff",
+    idstFill: "rgba(127, 180, 255, 0.22)",
   },
 };
 export function calibrationGeometry(
@@ -210,6 +221,13 @@ export function renderPaper(
     selectedBeat?: number;
     hideName?: boolean;
     displayName?: string;
+    /** OMI lens: the same patient's previous ECG, drawn in grey behind the trace. */
+    previous?: Signal;
+    /** OMI lens: J point (end of the generated QRS) and ST from J to J+80 ms against
+     * the PR segment, red when elevated (SDST) and blue when depressed (IDST). */
+    stLens?: boolean;
+    /** Caption of a derived trace (e.g. the lesion alone). */
+    traceNote?: string;
   } = {},
 ): Layout {
   let amplitude = 0;
@@ -251,6 +269,12 @@ export function renderPaper(
     ctx.beginPath();
     ctx.rect(seg.x - 1, seg.y, seg.width + 1, seg.height);
     ctx.clip();
+    if (options.previous) {
+      ctx.strokeStyle = palette.ghost;
+      trace(ctx, options.previous, seg, c, layout.pxPerMm * ratio);
+      ctx.strokeStyle = palette.trace;
+    }
+    if (options.stLens) drawStLens(ctx, s, seg, c, palette);
     trace(
       ctx,
       s,
@@ -295,7 +319,7 @@ export function renderPaper(
         ? "segmentos simultáneos"
         : "columnas secuenciales") +
       " · " +
-      (c.view.cabrera ? "orden de Cabrera" : "orden estándar") + " · sin validación clínica",
+      (c.view.cabrera ? "orden de Cabrera" : "orden estándar") + " · sin validación clínica" + (options.traceNote ? ` · ${options.traceNote}` : ""),
     5,
     layout.heightMm - 3,
   );
@@ -309,6 +333,50 @@ export function renderPaper(
     );
   return layout;
 }
+/** OMI lens marks on one segment: a tick at each J point and the ST segment, filled
+ * against its PR level when it deviates by at least 0.5 mm. */
+function drawStLens(ctx: CanvasRenderingContext2D, s: Signal, seg: Segment, c: ECGCase, palette: (typeof palettes)["paper"]) {
+  const a = s.leads[seg.lead], gain = leadGain(seg.lead, c.view) * seg.polarity, scale = c.view.speed;
+  const X = (t: number) => seg.x + (t - seg.start) * scale, Y = (v: number) => seg.baseline - v * gain;
+  const marks = stMarks(s, seg.lead, seg.start, seg.start + seg.duration);
+  marks.forEach((m, k) => {
+    const i0 = Math.round(m.jTime * s.fs), i1 = Math.round(m.endTime * s.fs);
+    if (m.kind) {
+      ctx.fillStyle = m.kind === "SDST" ? palette.sdstFill : palette.idstFill;
+      ctx.beginPath();
+      ctx.moveTo(X(m.jTime), Y(m.prLevel));
+      for (let i = i0; i <= i1; i++) ctx.lineTo(X(i / s.fs), Y(a[i]));
+      ctx.lineTo(X(m.endTime), Y(m.prLevel));
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = m.kind === "SDST" ? palette.sdst : palette.idst;
+      ctx.lineWidth = 0.55;
+      ctx.beginPath();
+      for (let i = i0; i <= i1; i++) (i === i0 ? ctx.moveTo : ctx.lineTo).call(ctx, X(i / s.fs), Y(a[i]));
+      ctx.stroke();
+      if (k === 0) {
+        ctx.fillStyle = ctx.strokeStyle;
+        ctx.font = "600 2.3px ui-monospace,monospace";
+        const mm = m.j60 * 10; // standard calibration (1 mm = 0.1 mV), whatever the display gain
+        ctx.fillText(`${m.kind} ${mm > 0 ? "+" : ""}${mm.toFixed(1).replace(".", ",")} mm`, X(m.endTime) + 0.8, Y(a[i1]) + (m.kind === "SDST" ? -1 : 2.6));
+      }
+    }
+    ctx.strokeStyle = palette.text;
+    ctx.lineWidth = 0.25;
+    ctx.beginPath();
+    ctx.moveTo(X(m.jTime), Y(a[i0]) - 1.6);
+    ctx.lineTo(X(m.jTime), Y(a[i0]) + 1.6);
+    ctx.stroke();
+    if (k === 0) {
+      ctx.fillStyle = palette.text;
+      ctx.font = "600 2.2px ui-monospace,monospace";
+      ctx.fillText("J", X(m.jTime) - 0.7, Y(a[i0]) - 2.1);
+    }
+  });
+  ctx.strokeStyle = palette.trace;
+  ctx.lineWidth = 0.29;
+}
+
 /** The overlay receives only measured sample-domain boundaries, never source events. */
 function drawAnnotations(
   ctx: CanvasRenderingContext2D,

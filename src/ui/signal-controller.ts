@@ -28,7 +28,7 @@ export class SignalController {
   } | null = null;
 
   constructor(
-    private readonly onResult: (signal: Signal, measurement: Measurement, requestId: number) => void,
+    private readonly onResult: (signal: Signal, measurement: Measurement, requestId: number, previous?: Signal) => void,
     private readonly onError: (message: string, requestId: number) => void,
     options: { timeoutMs?: number } = {},
   ) {
@@ -37,9 +37,9 @@ export class SignalController {
       throw new Error("Invalid worker timeout");
   }
 
-  request(ecg: ECGCase, duration = 65): number {
+  request(ecg: ECGCase, duration = 65, options: { previous?: boolean } = {}): number {
     this.cancelEvaluation();
-    const request = this.createRequest(ecg, duration);
+    const request = { ...this.createRequest(ecg, duration), ...(options.previous ? { previous: true } : {}) };
     this.enqueue(request);
     return request.id;
   }
@@ -92,7 +92,7 @@ export class SignalController {
         ? { status: "error", message: result.error }
         : { status: "ready", signal: result.signal, measurement: result.measurement, requestId: result.id });
     } else if ("error" in result) this.onError(result.error, result.id);
-    else this.onResult(result.signal, result.measurement, result.id);
+    else this.onResult(result.signal, result.measurement, result.id, result.previous);
   }
 
   dispose(): void {
