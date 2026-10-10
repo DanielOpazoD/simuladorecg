@@ -377,3 +377,26 @@ h1 { font-size:32px; line-height:1.2; letter-spacing:-1px; font-weight:600; text
 
 /* Native selects ignore min-height in WebKit; a drawn chevron keeps 44 px in every engine. */
 .field select { -webkit-appearance:none; appearance:none; padding-right:30px; background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%); background-position:right 15px center,right 10px center; background-size:5px 5px; background-repeat:no-repeat; }
+
+/* ST zoom, J-point explanation and hexaxial axis diagram (UI · 5). */
+:root { --hex-normal:#cfe9df; --hex-left:#f6e2bd; --hex-right:#d6e2f6; --hex-extreme:#f4d0d0; }
+:root.dark { --hex-normal:#21483d; --hex-left:#4e4126; --hex-right:#26384f; --hex-extreme:#4d2a2a; }
+.st-zoom-leads { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:10px; }
+.st-zoom-leads .btn { min-height:32px; padding:4px 10px; font-size:var(--text-xs); }
+.st-zoom-canvas { display:block; max-width:100%; border:1px solid var(--line); border-radius:6px; cursor:crosshair; touch-action:none; }
+.st-zoom-scale { font-size:var(--text-xs); color:var(--muted); margin:8px 0 4px; }
+.st-zoom-readout { display:block; min-height:40px; font-size:var(--text-sm); font-variant-numeric:tabular-nums; color:var(--ink); }
+.info-more { margin:6px 0 12px; }
+.info-more > summary { cursor:pointer; font-weight:600; font-size:var(--text-sm); min-height:32px; color:var(--accent); }
+.hexaxial { display:block; width:100%; max-width:340px; margin:8px auto 4px; }
+.hex-ring { fill:none; stroke:var(--line); stroke-width:1.5; }
+.hex-lead { stroke:var(--muted); stroke-width:1; }
+.hex-lead-label { font:600 13px "DM Sans", sans-serif; fill:var(--ink); }
+.hex-degree { font:10px "DM Sans", sans-serif; fill:var(--muted); }
+.hex-axis { stroke:var(--accent); stroke-width:3.5; }
+.hex-head { fill:var(--accent); }
+.hex-axis-label { font:700 14px "DM Sans", sans-serif; fill:var(--accent); }
+.hex-legend { display:flex; flex-wrap:wrap; gap:6px 16px; justify-content:center; list-style:none; padding:0; margin:0 0 12px; font-size:var(--text-xs); color:var(--muted); }
+.hex-legend i { display:inline-block; width:12px; height:12px; border-radius:3px; margin-right:6px; vertical-align:-1px; }
+.structured-description > summary .present-30-button { margin-left:8px; vertical-align:middle; }
+.structured-description > summary .present-30-button svg, .info-ref svg { width:15px; height:15px; vertical-align:-2px; }

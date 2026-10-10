@@ -11,6 +11,8 @@ import { omiSheetHtml, structuredDescriptionHtml } from "./ui/omi-sheet";
 import { structuredDescription, type DescriptionInfo, type StructuredDescription } from "./ui/structured-description";
 import { descriptionInfoHtml, descriptionInfoTitle } from "./ui/description-info";
 import { concealMetricCards, metricsHtml, modelMetricCards } from "./ui/metric-cards";
+import { defaultZoomLead, mountStZoom, stZoomHtml } from "./ui/st-zoom";
+import type { Lead } from "./engine/types";
 import { openDialog, closeDialog } from "./ui/dialog";
 import { exportDialogHtml } from "./ui/export-dialog";
 import { handleExportAction } from "./ui/export-actions";
@@ -46,6 +48,7 @@ import {
   renderPaper,
   renderPaperSkeleton,
   renderRhythm,
+  palettes,
   drawCaliper,
   Monitor,
   type Layout,
@@ -185,7 +188,8 @@ document.addEventListener("toggle", (e) => {
 let description: StructuredDescription | null = null;
 function renderDescription() {
   const concealed = quiz && !quiz.answer;
-  description = !concealed && session.signal ? structuredDescription(c, session.signal) : null;
+  const preset = caseContext(c).preset;
+  description = !concealed && session.signal ? structuredDescription(c, session.signal, preset && !c.artifacts.reversed ? caseReading(c).title : undefined) : null;
   $("#structured-description").innerHTML = description ? structuredDescriptionHtml(description, descriptionOpen) : "";
 }
 function renderInfo() {
@@ -265,12 +269,24 @@ function renderControls() {
     group.open = openGroups.includes(group.dataset.controlDetails);
   }
   setPanel(previous);
+  hideInactiveControls();
   if (focused) {
     const field = Array.from(inspector.querySelectorAll<HTMLInputElement | HTMLSelectElement>("[data-key]"))
       .find(el => el.dataset.key === focused);
     if (field && !field.disabled) field.focus({ preventScroll: true });
   }
   renderScales();
+}
+/** Controls with no effect in the current rhythm or pattern are not shown (their
+ * value is kept for other rhythms); so are their notes. */
+function hideInactiveControls() {
+  for (const field of $("#inspector").querySelectorAll<HTMLElement>(".range-field, .field")) {
+    const input = field.querySelector<HTMLInputElement | HTMLSelectElement>("[data-key]");
+    if (input) field.hidden = input.disabled;
+  }
+  const tAxis = document.querySelector<HTMLInputElement>('[data-key="tAxis"]');
+  const tNote = document.querySelector<HTMLElement>("#t-axis-note");
+  if (tAxis && tNote) tNote.hidden = tAxis.disabled;
 }
 function syncAmplitudeControls() {
   const state = amplitudeControlState(c);
@@ -281,6 +297,7 @@ function syncAmplitudeControls() {
   $<HTMLInputElement>('[data-key="tAxis"]').disabled = direction.disabled;
   $("#t-axis-note").textContent = direction.reason;
   $("#regional-activation-controls").innerHTML = regionalActivationControls(c);
+  hideInactiveControls();
 }
 function setPanel(name: string) {
   activePanel = name;
@@ -734,6 +751,13 @@ function toggleLens(key: keyof typeof lens) {
   else draw();
 }
 /** Buttons ([data-action]) owned here; workspace navigation and export have their own. */
+/** Magnified beat for reading J and the ST by hand (not during practice). */
+function openStZoom(lead?: Lead) {
+  if (!session.signal || (quiz && !quiz.answer)) return;
+  const chosen = lead ?? defaultZoomLead(session.signal);
+  openDialog("ST ampliado: punto J y medición manual", stZoomHtml(chosen));
+  mountStZoom($("#dialog-content .st-zoom"), session.signal, chosen, palettes[currentTheme() === "dark" ? "dark" : "paper"]);
+}
 const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
   "clear-search": () => {
     search = ""; group = "";
@@ -744,7 +768,12 @@ const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
   "description-info": (target) => {
     if (!description) return;
     const kind = target.closest<HTMLElement>("[data-info]")!.dataset.info as DescriptionInfo;
-    openDialog(descriptionInfoTitle(kind), descriptionInfoHtml(kind, description.measures));
+    openDialog(descriptionInfoTitle(kind), descriptionInfoHtml(kind, description.measures, description.axis));
+  },
+  "st-zoom": () => openStZoom(),
+  "present-30": () => {
+    if (!description) return;
+    openDialog("Presentación en 30 s", `<p class="dialog-lead">${esc(description.summary)}</p><p class="control-note">Orden: técnica, ritmo y frecuencia, intervalos, eje, ST, onda T y ondas Q, y conclusión.</p>`);
   },
   "restore-origin": () => { if (explorationOrigin) restoreOrigin(explorationOrigin); },
   pause: () => {
@@ -833,8 +862,12 @@ document.addEventListener("click", async (e) => {
     openCase(selected);
     return;
   }
+  const zoomLead = target.closest<HTMLElement>("[data-zoom-lead]")?.dataset.zoomLead as Lead | undefined;
+  if (zoomLead) { openStZoom(zoomLead); return; }
   const action = target.closest<HTMLElement>("[data-action]")?.dataset.action;
   if (!action) return;
+  // The 30-second button sits inside the description's <summary>: do not toggle it.
+  if (action === "present-30") e.preventDefault();
   if (action === "parameters" && !(quiz && !quiz.answer)) $<HTMLDetailsElement>("#adjust").open = true;
   if (workspaceNavigation.handle(action, !!quiz && !quiz.answer)) return;
   if (Object.hasOwn(ACTIONS, action)) await ACTIONS[action](target);

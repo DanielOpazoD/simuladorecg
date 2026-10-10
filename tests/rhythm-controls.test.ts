@@ -70,9 +70,9 @@ describe('Control applicability agrees with sampled effects',()=>{
 });
 
 describe('Native contextual conduction disclosure',()=>{
-  it('groups inactive fields once, preserves their values, and leaves rhythm selectable',()=>{
+  it('keeps inactive fields once, hidden, with their values, and leaves rhythm selectable',()=>{
     const c={...cloneCase(DEFAULT_CASE),rhythm:'af' as const,av:'complete' as const};
-    const html=controls(c),start=html.indexOf('<details class="inactive-controls"'),end=html.indexOf('</details>',start);
+    const html=controls(c),start=html.indexOf('<div class="inactive-controls" data-control-details="conduction" hidden>'),end=html.indexOf('</div></div>',start);
     expect(start).toBeGreaterThan(0);
     expect(html.slice(start,end)).toContain('data-key="escape" disabled');
     expect(html.slice(start,end)).toContain('data-key="av" disabled');

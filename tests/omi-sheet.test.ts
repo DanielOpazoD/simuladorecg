@@ -66,6 +66,8 @@ describe("descripción estructurada", () => {
     expect(line(d, "T")).toBe("Onda T normal.");
     expect(line(d, "Q")).toBe("Sin ondas Q patológicas.");
     expect(d.summary).not.toMatch(/J\+60|T\/QRS/);
+    expect(structuredDescription(preset("sinus"), synthesize(preset("sinus"), 10), "Ritmo sinusal").summary)
+      .toMatch(/^Electrocardiograma de 12 derivaciones \(25 mm\/s, 10 mm\/mV\) en ritmo sinusal, frecuencia 72 lpm, con PR de \d+ ms, QRS de \d+ ms y QTc de \d+ ms, y eje QRS normal \(\d+°\)\. Sin alteraciones del ST\. .* En suma: ritmo sinusal\.$/);
   });
   it("De Winter: descenso ascendente y T prominentes; Wellens: T bifásicas o invertidas", () => {
     const d = read("de_winter");
@@ -110,7 +112,16 @@ describe("descripción estructurada", () => {
   });
   it("cada línea clínica abre sus criterios, referencias y valores medidos", () => {
     const d = read("old_inferior"), html = structuredDescriptionHtml(d);
-    expect(html.match(/data-action="description-info"/g)).toHaveLength(3);
+    expect(html.match(/data-action="description-info"/g)).toHaveLength(4);
+    expect(html).toContain('data-action="st-zoom"');
+    expect(html).toContain('data-action="present-30"');
+    const axis = descriptionInfoHtml("axis", d.measures, d.axis);
+    expect(axis).toContain("<svg class=\"hexaxial\"");
+    expect(axis).toContain("De −30° a +90°");
+    expect(axis).toContain("10.1161/CIRCULATIONAHA.106.180200");
+    const st = descriptionInfoHtml("st", d.measures);
+    expect(st).toContain("¿Punto J, J+60 o J+80?");
+    expect(st).toContain("10.1161/01.cir.0000034670.06526.15");
     const q = descriptionInfoHtml("q", d.measures);
     expect(q).toContain("Cuarta definición universal");
     expect(q).toContain("https://doi.org/10.1161/CIR.0000000000000617");
