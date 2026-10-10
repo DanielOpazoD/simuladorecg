@@ -1,4 +1,3 @@
-/// <reference types="vite/client" />
 /**
  * Acute coronary occlusion learned from STAFF III (PhysioNet, ODC-By 1.0; balloon
  * angioplasty, scripts/fidelity/build_ischemia_model.py).
@@ -19,7 +18,6 @@ interface RawArtery { n: number; k: number; mean: string; basis: string; basisSc
 export interface RawIschemiaModel { phases: { name: string; points: number }[]; leads: string[]; states: string[]; sampleScale?: number; arteries: Partial<Record<Artery, RawArtery>> }
 interface ArteryModel { k: number; dim: number; mean: Float64Array; basis: Float64Array; cholesky: Float64Array }
 
-const LOADERS = import.meta.glob<RawIschemiaModel>("./ischemia/*.json", { import: "default" });
 let model: { points: number; scale: number; arteries: Partial<Record<Artery, ArteryModel>> } | null = null;
 
 function decodeF32(b64: string) {
@@ -43,12 +41,8 @@ export function registerIschemiaModel(r: RawIschemiaModel): void {
   deltas.clear();
 }
 export const hasIschemiaModel = () => model !== null;
-export async function ensureIschemiaModel(): Promise<void> {
-  if (model) return;
-  const load = LOADERS["./ischemia/ischemia-model.json"];
-  if (!load) throw new Error("No existe el modelo aprendido de isquemia aguda.");
-  registerIschemiaModel(await load());
-}
+/** Tests: drop the loaded model to exercise on-demand loading. */
+export function forgetIschemiaModel(): void { model = null; deltas.clear(); }
 /** Scripts in Node (not the test runner) read the model from disk, like the class models. */
 function fromDisk(): boolean {
   const host = (globalThis as { process?: { env?: Record<string, string | undefined>; cwd?: () => string; getBuiltinModule?: (id: string) => unknown } }).process;

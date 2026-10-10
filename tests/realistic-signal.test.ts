@@ -778,3 +778,18 @@ describe("F4: oclusión aguda aprendida de STAFF III", () => {
     for (const id of ["lateral", "posterior", "rv_infarct", "wellens_a", "de_winter", "pericarditis"]) expect(realisticModelFor(load(id))).toBeNull();
   });
 });
+
+describe("F4: la lesión llega a todos los latidos conducidos, en cualquier ritmo", () => {
+  it.each([
+    ["sinus", {}], ["af", { rhythm: "af", hr: 95 }], ["flutter", { rhythm: "flutter", hr: 100, atrialRate: 300 }], ["pac", { ectopy: "pac" }],
+    ["pvc", { ectopy: "pvc" }], ["wenckebach", { av: "mobitz1", hr: 75 }], ["av21", { av: "two_one", hr: 80 }], ["aai", { rhythm: "paced", pacing: "AAI", hr: 60 }],
+  ] as const)("%s", (_name, patch) => {
+    const c = load("anterior", patch as Partial<ECGCase>), s = synthesize(c, 10), r = synthesize({ ...c, ischemia: "none" }, 10);
+    const at = (x: Signal, b: { time: number; qrs?: number }) => x.leads.V3[Math.round((b.time + b.qrs! + 0.06) * x.fs)] - x.leads.V3[Math.round((b.time - 0.03) * x.fs)];
+    const normal = s.events.beats.filter((b) => b.kind === "normal" && b.time > 0.5 && b.time < 9);
+    expect(normal.length).toBeGreaterThan(2);
+    for (const b of normal) expect(at(s, b) - at(r, b)).toBeGreaterThan(0.15);
+    // Ectopic ventricular beats keep their own repolarization (no conducted lesion).
+    for (const b of s.events.beats.filter((x) => x.kind === "pvc" && x.time > 0.5 && x.time < 9)) expect(Math.abs(at(s, b) - at(r, b))).toBeLessThan(0.02);
+  });
+});

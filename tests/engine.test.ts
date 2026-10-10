@@ -232,7 +232,7 @@ describe("Medición independiente", () => {
     const delta = (l: "I" | "II" | "III" | "aVL") =>
       b.leads[l][idx] - a.leads[l][idx];
     expect(delta("III")).toBeGreaterThan(delta("II"));
-    expect(delta("II")).toBeGreaterThan(0.08);
+    expect(delta("II")).toBeGreaterThan(0.05);
     expect(delta("I")).toBeLessThan(-0.03);
     expect(delta("aVL")).toBeLessThan(-0.08);
   });

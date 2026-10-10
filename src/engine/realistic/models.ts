@@ -7,9 +7,20 @@
 import type { ECGCase } from "../types";
 import { hasShapeModel, registerShapeModel, type ModelCode, type RawShapeModel } from "./shape-model";
 import { realisticModelsFor } from "./scope";
-import { ensureIschemiaModel, learnedIschemiaArtery } from "./ischemia";
+import { hasIschemiaModel, learnedIschemiaArtery, registerIschemiaModel, type RawIschemiaModel } from "./ischemia";
 
 const LOADERS = import.meta.glob<RawShapeModel>("./models/*.json", { import: "default" });
+// Vite-only (import.meta.glob): kept here, not in ischemia.ts, so Node scripts that
+// bundle the engine with esbuild never evaluate it (F4).
+const ISCHEMIA_LOADERS = import.meta.glob<RawIschemiaModel>("./ischemia/*.json", { import: "default" });
+
+/** The acute-occlusion change learned from STAFF III (F4), on demand. */
+export async function ensureIschemiaModel(): Promise<void> {
+  if (hasIschemiaModel()) return;
+  const load = ISCHEMIA_LOADERS["./ischemia/ischemia-model.json"];
+  if (!load) throw new Error("No existe el modelo aprendido de isquemia aguda.");
+  registerIschemiaModel(await load());
+}
 
 export async function ensureShapeModel(code: ModelCode): Promise<void> {
   if (hasShapeModel(code)) return;

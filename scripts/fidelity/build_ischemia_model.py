@@ -3,7 +3,7 @@
 III y V1–V6 registradas), arteria ocluida y tiempos de inflado anotados.
 
 Uso: python scripts/fidelity/build_ischemia_model.py --data ~/datos/ecg-referencia \
-        --out src/engine/realistic/ischemia-model.json [--report informe.json]
+        --out src/engine/realistic/ischemia/ischemia-model.json [--report informe.json]
 
 Por inflado (registro BI con su anotación de inflado y desinflado):
   1. Remuestreo a 500 Hz; las 8 derivaciones independientes del motor (I, II,
@@ -21,7 +21,8 @@ Por inflado (registro BI con su anotación de inflado y desinflado):
      de oclusión) e hiperagudo (ventanas entre 15 y 45 s). Respondedor: algún
      |ST| a J+60 ≥ 0,1 mV en el estado agudo (las colaterales protegen a muchos).
   6. Por arteria (DA, CD, Cx), con los respondedores de entrenamiento (pacientes
-     con número no múltiplo de 5; los múltiplos de 5 son la reserva): ACP sobre
+     con número no múltiplo de 5; los múltiplos de 5 son la reserva), con los
+     inflados de un mismo paciente promediados: ACP sobre
      [agudo, hiperagudo] concatenados (un paciente tiene ambos de forma coherente)
      y gaussiana contraída (Ledoit-Wolf) de los coeficientes.
 Sin trazados ni registros individuales en el producto.
@@ -162,11 +163,12 @@ def median_at(x8, pk, ref=None):
     return np.median(np.stack(out), 0)
 
 
-def j60(v):
-    """ST a J+60 ms por derivación en el vector de fases (≈ 40 % del tramo ST)."""
+def j60(v, frac):
+    """ST a J+60 ms por derivación en el vector de fases; `frac` es la fracción del
+    tramo ST (fin del QRS → ápice de T de la basal) que corresponde a 60 ms."""
     o = sum(n for name, n in PHASES[:4])
     n = dict(PHASES)['st']
-    return v.reshape(-1, 8)[o + int(0.4 * n)]
+    return v.reshape(-1, 8)[o + int(round(frac * (n - 1)))]
 
 
 def process(root, a):
@@ -226,14 +228,17 @@ def process(root, a):
             dv[oq:oq + nq] = (u * u * (3 - 2 * u))[:, None] * dv[oq + nq]
             # El cambio isquémico termina con la repolarización: la cola post-T del
             # delta baja a cero (evita arrastrar el latido siguiente si cambia la FC).
+            # Llega a cero en el primer 40 % de la cola (≈ 100 ms tras el fin de T): a FC
+            # alta la cola se solapaba con el latido siguiente.
             o = sum(k for n, k in PHASES[:6]); npost = dict(PHASES)['post']
-            dv[o:o + npost] *= 0.5 * (1 + np.cos(np.linspace(0, np.pi, npost)))[:, None]
+            dv[o:o + npost] *= 0.5 * (1 + np.cos(np.pi * np.clip(np.arange(npost) / (0.4 * (npost - 1)), 0, 1)))[:, None]
             wins.append({'t': round(t - t_in + WINDOW_S / 2, 1), 'delta': dv.reshape(-1)})
         t += WINDOW_S
     if not wins:
         return None, 'oclusion_corta'
     return {'artery': artery_class(a['artery']), 'arteryText': a['artery'], 'record': rec, 'patient': a['patient'],
             'duration': t_out - t_in, 'qrsMs': (off - on) * 1000 / FS, 'sttMs': (end - off) * 1000 / FS,
+            'stFrac': min(0.9, ms(60) / max(1, apex - off)),
             'base': v0, 'windows': wins}, None
 
 
@@ -282,10 +287,10 @@ def fit_artery(X):
             'basisScale': f32(scale), 'cholesky': [round(float(v), 6) for i, row in enumerate(chol) for v in row[:i + 1]]}
 
 
-def j60_ventricular(v):
+def j60_ventricular(v, frac):
     """J+60 por derivación en el bloque ventricular (puntos qrs..post, 8)."""
     nq, ns = dict(PHASES)['qrs'], dict(PHASES)['st']
-    return v[nq + int(0.4 * ns)]
+    return v[nq + int(round(frac * (ns - 1)))]
 
 
 def main():
@@ -309,8 +314,8 @@ def main():
     if a.explore:
         out = []
         for r in res:
-            st = [np.round(j60(w['delta']), 3).tolist() for w in r['windows']]
-            out.append({k: r[k] for k in ('artery', 'arteryText', 'record', 'patient', 'duration', 'qrsMs', 'sttMs')} |
+            st = [np.round(j60(w['delta'], r['stFrac']), 3).tolist() for w in r['windows']]
+            out.append({k: r[k] for k in ('artery', 'arteryText', 'record', 'patient', 'duration', 'qrsMs', 'sttMs', 'stFrac')} |
                        {'t': [w['t'] for w in r['windows']], 'st': st})
         json.dump(out, open(a.explore, 'w'))
     if not a.out:
@@ -323,7 +328,9 @@ def main():
              'states': ['acute', 'hyperacute'], 'arteries': {}}
     rep = {'rechazos': rej, 'arterias': {}}
     for art in ['LAD', 'RCA', 'LCX']:
-        tr, ho, nonresp = [], [], 0
+        # Un paciente puede tener varios inflados de la misma arteria: se promedian, para
+        # que la población cuente pacientes y no repeticiones del mismo.
+        per, nonresp, infl = {}, 0, {'tr': 0, 'ho': 0}
         for r in res:
             if r['artery'] != art:
                 continue
@@ -331,19 +338,24 @@ def main():
             if st is None:
                 continue
             acute, hyper = st[0][rows], st[1][rows]
-            if np.abs(j60_ventricular(acute)).max() < 0.1:
+            if np.abs(j60_ventricular(acute, r['stFrac'])).max() < 0.1:
                 nonresp += 1
                 continue
-            (ho if r['patient'] % 5 == 0 else tr).append(np.concatenate([acute.reshape(-1), hyper.reshape(-1)]))
+            per.setdefault(r['patient'], []).append((np.concatenate([acute.reshape(-1), hyper.reshape(-1)]), r['stFrac']))
+            infl['ho' if r['patient'] % 5 == 0 else 'tr'] += 1
+        tr, ho, frs = [], [], {'tr': [], 'ho': []}
+        for pid, items in per.items():
+            k = 'ho' if pid % 5 == 0 else 'tr'
+            (ho if k == 'ho' else tr).append(np.mean([v for v, _ in items], 0)); frs[k].append(float(np.mean([f for _, f in items])))
         if len(tr) < 6:
             print(f'{art}: {len(tr)} respondedores, insuficiente', file=sys.stderr)
             continue
         model['arteries'][art] = fit_artery(np.array(tr))
         half = len(rows) * 8
-        q = lambda X: {l: [round(float(v), 3) for v in np.percentile([j60_ventricular(x[:half].reshape(-1, 8))[i] for x in X], [10, 50, 90])] for i, l in enumerate(L)}
-        rep['arterias'][art] = {'entrenamiento': len(tr), 'reserva': len(ho), 'no_respondedores': nonresp,
-                                'st_j60_entrenamiento_p10_50_90': q(tr), **({'st_j60_reserva_p10_50_90': q(ho)} if ho else {})}
-        print(f"{art}: {len(tr)} entrenamiento, {len(ho)} reserva, {nonresp} sin respuesta; k={model['arteries'][art]['k']}", file=sys.stderr)
+        q = lambda X, F: {l: [round(float(v), 3) for v in np.percentile([j60_ventricular(x[:half].reshape(-1, 8), f)[i] for x, f in zip(X, F)], [10, 50, 90])] for i, l in enumerate(L)}
+        rep['arterias'][art] = {'pacientes_entrenamiento': len(tr), 'inflados_entrenamiento': infl['tr'], 'pacientes_reserva': len(ho), 'inflados_reserva': infl['ho'],
+                                'inflados_sin_respuesta': nonresp, 'st_j60_entrenamiento_p10_50_90': q(tr, frs['tr']), **({'st_j60_reserva_p10_50_90': q(ho, frs['ho'])} if ho else {})}
+        print(f"{art}: {len(tr)} pacientes ({infl['tr']} inflados) de entrenamiento, {len(ho)} ({infl['ho']}) de reserva, {nonresp} inflados sin respuesta; k={model['arteries'][art]['k']}", file=sys.stderr)
     json.dump(model, open(a.out, 'w'), separators=(',', ':'))
     if a.report:
         json.dump(rep, open(a.report, 'w'), indent=1)
