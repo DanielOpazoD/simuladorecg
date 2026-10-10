@@ -43,22 +43,27 @@ describe('Replayed monitor phase and preservation, no generator reference in fil
   });
   it.each(['sinus','inferior','lbbb','hyperk','pvc'])('preserves native %s landmarks and signal relationships',id=>{
     const c=fromPreset(presetById(id)!);Object.assign(c,{filter:'off',notch:0,variability:0});
+    // A large, wide learned PVC is shifted more by the 0.5 Hz monitor high-pass
+    // (the filter's real behaviour, measured in F5.3: J+60 up to ~0.07 mV, T area
+    // ~7%), and its high-pass tail reaches the next beat; in that case the
+    // tolerances scale with each complex's own QRS and T.
+    const ectopic=id==='pvc';
     const clean=synthesize(c,14),mon=synthesize({...c,filter:'monitor'},14);
     expect(mon.events).toEqual(clean.events);assertIdentities(mon);
     for(const kind of new Set(clean.events.beats.map(b=>b.kind))) {
       const b=clean.events.beats.find(b=>b.kind===kind&&b.time>=5&&b.time+b.qt!<12)!;
       const w={baseline:[b.time-.035,b.time-.020] as const,qrs:[b.time,b.time+b.qrs!] as const,t:[b.time+tWaveSupport(c,b.qrs!,b.qt!).start,b.time+b.qt!] as const};
       for(const l of LEADS){const r=morphologyMetrics(clean.leads[l],500,w),m=morphologyMetrics(mon.leads[l],500,w);
-        expect(Math.abs(m.j60Mv-r.j60Mv)).toBeLessThan(.025);
+        expect(Math.abs(m.j60Mv-r.j60Mv)).toBeLessThan(.025+(ectopic?.03*r.qrsPeakToPeakMv:0));
         // Monitor band-limiting trims a few percent off a real QRS's sharp peaks
         // (learned base); an absolute 0.05 mV only suited the smooth kernel QRS.
         expect(Math.abs(m.qrsPeakToPeakMv-r.qrsPeakToPeakMv)).toBeLessThan(.05+.06*r.qrsPeakToPeakMv);
-        expect(Math.abs(m.tAbsoluteAreaMvS-r.tAbsoluteAreaMvS)).toBeLessThan(.004);
+        expect(Math.abs(m.tAbsoluteAreaMvS-r.tAbsoluteAreaMvS)).toBeLessThan(.004+(ectopic?.1*r.tAbsoluteAreaMvS:0));
         // A nearly biphasic wave can exchange its largest signed peak. Compare
         // BOTH extrema instead of treating that argmax switch as a 0.4mV error.
         const extrema=(a:Float64Array,base:number)=>{const t=a.slice(Math.ceil(w.t[0]*500),Math.floor(w.t[1]*500)+1);return [Math.min(...t)-base,Math.max(...t)-base];};
         const rb=extrema(clean.leads[l],r.baselineMv),mb=extrema(mon.leads[l],m.baselineMv);
-        expect(Math.max(...mb.map((v,i)=>Math.abs(v-rb[i])))).toBeLessThan(.04);
+        expect(Math.max(...mb.map((v,i)=>Math.abs(v-rb[i])))).toBeLessThan(.04+(ectopic?.06*Math.max(...rb.map(Math.abs)):0));
       }
     }
   });

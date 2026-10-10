@@ -49,6 +49,33 @@ export function realisticPatient(c: ECGCase): Patient {
   return p;
 }
 
+const pvcPatients = new Map<string, Patient>();
+/** The case's learned ventricular premature beat (F5.3): its own patient, drawn
+ * from the PVC population with the case seed, with its natural axis (no control)
+ * and secondary repolarization that follows its QRS gain. */
+export function realisticPvcPatient(c: ECGCase): Patient {
+  const gain = qrsAmplitudeScale(c), key = [c.seed, gain].join("|");
+  let p = pvcPatients.get(key);
+  if (!p) {
+    p = samplePatient({
+      model: "PVC", seed: (c.seed * 7919 + 13) >>> 0, axis: null, pAxis: null, tAxis: null,
+      pScale: 0, qrsScale: gain, tScale: gain, horizontalDeg: 0, naturalAmplitude: true,
+    });
+    if (pvcPatients.size > 64) pvcPatients.clear();
+    pvcPatients.set(key, p);
+  }
+  return p;
+}
+
+/** Learned PVCs keep their own QRS width (PTB-XL 106–158 ms) and ST-T instead of
+ * the teaching source's minimum width and the conducted-beat QT model. */
+export const learnedPvcQrsSeconds = (c: ECGCase) => Math.min(0.2, Math.max(0.1, realisticPvcPatient(c).qrsMs / 1000));
+export function learnPvcDurations(c: ECGCase, beats: Beat[]): void {
+  const p = realisticPvcPatient(c), qrs = learnedPvcQrsSeconds(c);
+  const stt = Math.min(0.5, Math.max(0.16, p.sttMs / 1000));
+  for (const b of beats) if (b.kind === "pvc") { b.qrs = qrs; b.qt = qrs + stt; b.ownDurations = true; }
+}
+
 /** Accumulates realistic components for the eight independent leads at `fs`. */
 export class RealisticTrack {
   readonly acc: Float64Array[];
@@ -109,6 +136,17 @@ export class RealisticTrack {
     }
     return i1 === 0 && avf === 0 ? null : (Math.atan2(avf, i1) * 180) / Math.PI;
   }
+  private pvc: { patient: Patient; state: BeatShapeState } | null = null;
+  /** A learned ventricular premature beat, warped to the event's QRS and QT
+   * (the patient's own durations, set on the events by `learnPvcDurations`). */
+  addPvc(b: Beat, qrsSeconds: number) {
+    if (!this.pvc) {
+      const patient = realisticPvcPatient(this.c);
+      this.pvc = { patient, state: beatShapeState(patient, random(((this.c.seed * 41) ^ 0x9cf) >>> 0)) };
+    }
+    const { patient, state } = this.pvc, qrsMs = qrsSeconds * 1000, sttMs = Math.max(80, b.qt! * 1000 - qrsMs);
+    addVentricular(this.acc, this.fs, b.time, qrsMs, sttMs, beatTemplate(patient, state, b.time, this.c.respiratoryRate), patient, 0);
+  }
   /** QRS, ST-T and post-T of a normally conducted beat, warped to its QRS and QT. */
   addBeat(b: Beat, qrsSeconds: number) {
     const qrsMs = qrsSeconds * 1000, sttMs = Math.max(80, b.qt! * 1000 - qrsMs);
@@ -122,9 +160,9 @@ export class RealisticTrack {
  * (no respiration or beat jitter): the activation lab's view of this base. The
  * loop is detrended between its endpoints, so it starts and ends at the origin
  * like the kernel loops (the Ta offset and the J-point level are not activation). */
-export function realisticQrsVector(c: ECGCase, u: number): [number, number, number] {
+export function realisticQrsVector(c: ECGCase, u: number, kind: "normal" | "pvc" = "normal"): [number, number, number] {
   if (!(u > 0 && u < 1)) return [0, 0, 0];
-  const p = realisticPatient(c), m = p.model, key = "qrsTemplate";
+  const p = kind === "pvc" ? realisticPvcPatient(c) : realisticPatient(c), m = p.model, key = "qrsTemplate";
   const cache = p as Patient & { [key]?: Float64Array };
   // The lab shows activation alone: no hand-over to the repolarization operator.
   const x = cache[key] ?? (cache[key] = transform(m, reconstruct(m, p.z), p.ops, false));

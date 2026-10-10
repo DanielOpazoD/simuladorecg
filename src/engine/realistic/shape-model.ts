@@ -53,7 +53,9 @@ function decodeInt16(b64: string): Int16Array {
 
 /** Learned populations: the normal sinus beat (always bundled) and per-diagnosis
  * classes that the signal worker loads on demand (models.ts). */
-export type ModelCode = "NORM" | "CLBBB" | "CRBBB" | "IRBBB" | "LAFB" | "LVH" | "IMI" | "ASMI";
+export type ModelCode = "NORM" | "CLBBB" | "CRBBB" | "IRBBB" | "LAFB" | "LVH" | "IMI" | "ASMI" | "PVC";
+/** Populations of the conducted (sinus/supraventricular) beat; PVC is an ectopic population. */
+export type BeatModelCode = Exclude<ModelCode, "PVC">;
 export type RawShapeModel = typeof raw;
 const registry = new Map<ModelCode, ShapeModel>();
 
@@ -289,7 +291,8 @@ export interface PatientTargets {
   seed: number;
   /** Frontal axes (degrees, net area) of QRS, P and T; null for P or T keeps the
    * patient's own axis relative to the QRS (it turns with the heart). */
-  axis: number;
+  /** null keeps the patient's own QRS axis (ectopic beats have no axis control). */
+  axis: number | null;
   pAxis: number | null;
   tAxis: number | null;
   /** Multipliers of the population-median wave magnitudes. */
@@ -298,6 +301,9 @@ export interface PatientTargets {
   tScale: number;
   /** Horizontal-plane rotation of the whole heart vector, degrees. */
   horizontalDeg: number;
+  /** Scales multiply the patient's own wave sizes instead of setting them to
+   * the population median (ectopic beats keep their real amplitude spread). */
+  naturalAmplitude?: boolean;
 }
 export interface Patient {
   model: ShapeModel;
@@ -306,6 +312,9 @@ export interface Patient {
   pqMs: number;
   /** Fraction of the ST-T interval at which the spatial T apex occurs. */
   tApexFraction: number;
+  /** The patient's own QRS and ST-T durations (ms) in the learned population. */
+  qrsMs: number;
+  sttMs: number;
   /** Net-area frontal axes the template actually has (equal to the targets
    * unless a dominant non-dipolar residual makes a target unreachable). */
   achievedAxes: { p: number; qrs: number; t: number };
@@ -398,6 +407,9 @@ export function samplePatient(t: PatientTargets): Patient {
   // and the horizontal rotation, never on the requested axes: moving an axis
   // control rotates the same person.
   const m = shapeModel(t.model);
+  // Without an axis control (ectopic beats keep their own axis) there is nothing
+  // to stabilize: the first draw is the patient, unbiased.
+  if (t.axis === null) return sampleCandidate(m, t, 0);
   let chosen = 0, bestMargin = -1;
   for (let attempt = 0; attempt < 16; attempt++) {
     const margin = axisMargin(m, reconstruct(m, candidateZ(m, t.seed, attempt).z), t.horizontalDeg);
@@ -461,11 +473,12 @@ function sampleCandidate(m: ShapeModel, t: PatientTargets, attempt: number): Pat
   const unit = {} as Record<PhaseName, Float64Array>;
   for (const ph of Object.keys(rotations) as PhaseName[]) unit[ph] = leadOperator(rotations[ph]);
   const rotated = transform(m, base, unit, false);
-  const tGain = (pop[2] * t.tScale) / Math.max(1e-6, phaseMagnitude(m, rotated, ["st", "t"]));
-  const pGain = (pop[0] * t.pScale) / Math.max(1e-6, phaseMagnitude(m, rotated, "p"));
+  const own = t.naturalAmplitude === true;
+  const tGain = own ? t.tScale : (pop[2] * t.tScale) / Math.max(1e-6, phaseMagnitude(m, rotated, ["st", "t"]));
+  const pGain = own ? t.pScale : (pop[0] * t.pScale) / Math.max(1e-6, phaseMagnitude(m, rotated, "p"));
   const scales: Record<PhaseName, number> = {
     pre: pGain, p: pGain, pq: pGain,
-    qrs: (pop[1] * t.qrsScale) / Math.max(1e-6, phaseMagnitude(m, rotated, "qrs")),
+    qrs: own ? t.qrsScale : (pop[1] * t.qrsScale) / Math.max(1e-6, phaseMagnitude(m, rotated, "qrs")),
     st: tGain, t: tGain, post: tGain,
   };
   const ops = {} as Record<PhaseName, Float64Array>;
@@ -479,5 +492,6 @@ function sampleCandidate(m: ShapeModel, t: PatientTargets, attempt: number): Pat
   return {
     model: m, z, ops, rotations, scales, achievedAxes: achieved, pMs: Math.exp(s.log_p), pqMs: Math.exp(s.log_pq),
     tApexFraction: Math.min(0.9, Math.max(0.35, 1 / (1 + Math.exp(-s.logit_t_apex)))),
+    qrsMs: Math.exp(s.log_qrs), sttMs: Math.exp(s.log_stt),
   };
 }

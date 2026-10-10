@@ -240,9 +240,19 @@ def main():
     RR = np.array(rrs)
     n = len(V)
     print(f'Latidos usados: {n}; rechazos: {rejected}')
+    fit_and_write(V, D, RR, rejected, a.code, a.components, a.sample_scale,
+                  POST_MS if a.code == 'NORM' else CLASS_POST_MS,
+                  f'PTB-XL 1.0.3 + PTB-XL+ 1.0.1 (CC BY 4.0), latidos medianos {"de registros crudos alineados a 12SL" if a.source == "raw" else "12SL"}, pliegues 1-8, {a.code}', a.out, a.report)
+
+
+def fit_and_write(V, D, RR, rejected, code, components, sample_scale, post_ms, source, out, report=None):
+    """ACP, población conjunta y serialización del modelo (normal, clases, extrasístoles).
+    V: (n, puntos·8) vectores por fases; D: (n, 5) duraciones P, PQ, QRS, ST-T y
+    fracción del ápice de T; RR: (n,) s."""
+    n = len(V)
 
     # Clases pequeñas: no más modos que una décima parte de los pacientes.
-    k = min(a.components, max(8, n // 10))
+    k = min(components, max(8, n // 10))
     # Casos atípicos (mediana mal alineada, latido contaminado): fuera antes del
     # ACP definitivo, para que el modelo no aprenda ni muestree formas imposibles.
     m0 = V.mean(0)
@@ -256,12 +266,12 @@ def main():
     mean = V.mean(0)
     U, S, Wt = np.linalg.svd(V - mean, full_matrices=False)
     var = S ** 2 / (n - 1)
-    if a.code != 'NORM':
+    if code != 'NORM':
         # Clases pequeñas: con n/10 modos el BRD completo (54 pacientes) solo
         # explicaba el 84 % y perdía las muescas. Se admiten los modos del 95 % de
         # la varianza, sin pasar de n/3; la gaussiana conjunta se contrae (abajo).
         k95 = int(np.searchsorted(np.cumsum(var) / var.sum(), 0.95)) + 1
-        k = min(a.components, max(k, min(k95, n // 3)))
+        k = min(components, max(k, min(k95, n // 3)))
     explained = float(var[:k].sum() / var.sum())
     comps = Wt[:k]                      # (k, dim)
     scores = (V - mean) @ comps.T       # (n, k)
@@ -272,7 +282,7 @@ def main():
     ax = np.array([qrs_axis(v.reshape(-1, 8)) for v in V])
     mags = np.array([magnitudes(v.reshape(-1, 8)) for v in V])
     frac = D[:, 4]
-    cond = np.column_stack([np.log(D[:, :4]), np.log(frac / (1 - frac)), np.log(RR), np.cos(np.radians(ax)), np.sin(np.radians(ax)), np.log(mags)])
+    cond = np.column_stack([np.log(D[:, :4]), np.log(frac / (1 - frac)), np.log(RR), np.cos(np.radians(ax)), np.sin(np.radians(ax)), np.log(np.maximum(mags, 1e-6))])  # EV: sin P
     cond_names = ['log_p', 'log_pq', 'log_qrs', 'log_stt', 'logit_t_apex', 'log_rr', 'axis_cos', 'axis_sin', 'log_p_mag', 'log_qrs_mag', 'log_t_mag']
     J = np.column_stack([z, cond])
     mu = J.mean(0)
@@ -282,12 +292,13 @@ def main():
     # separa las de una mezcla de 8 gaussianas. El motor muestrea de esa mezcla.
     from sklearn.mixture import GaussianMixture
     gm = GaussianMixture(min(8, max(1, n // 200)), covariance_type='full', reg_covar=1e-4, random_state=0).fit(J)
-    if a.code != 'NORM' and gm.n_components == 1:
+    if code != 'NORM' and gm.n_components == 1:
         # Una sola gaussiana con pocos pacientes por dimensión: covarianza contraída
         # (Ledoit-Wolf) sobre variables estandarizadas, para no muestrear
         # direcciones que la muestra no sostiene.
         from sklearn.covariance import LedoitWolf
         sdJ = J.std(0, ddof=1)
+        sdJ = np.where(sdJ > 0, sdJ, 1.0)  # columnas constantes (EV: P y PQ nominales)
         C = LedoitWolf().fit((J - mu) / sdJ).covariance_ * np.outer(sdJ, sdJ)
         gm.means_, gm.covariances_ = mu[None], C[None]
     chol = np.stack([np.linalg.cholesky(c) for c in gm.covariances_])
@@ -304,16 +315,16 @@ def main():
     q = lambda x: [round(float(v), 6) for v in np.ravel(x)]
     model = {
         'schema': 'ecg-lab-shape-model/2',
-        'source': f'PTB-XL 1.0.3 + PTB-XL+ 1.0.1 (CC BY 4.0), latidos medianos {"de registros crudos alineados a 12SL" if a.source == "raw" else "12SL"}, pliegues 1-8, {a.code}',
-        'diagnosis': a.code,
+        'source': source,
+        'diagnosis': code,
         'leads': INDEP,
         'phases': [{'name': nme, 'points': pts} for nme, pts in PHASES],
-        'postMs': POST_MS if a.code == 'NORM' else CLASS_POST_MS,
+        'postMs': post_ms,
         'preMs': PRE_MS,
         'subjects': n,
         'components': k,
         'explainedVariance': round(explained, 4),
-        **({'sampleScale': a.sample_scale} if a.sample_scale != 1 else {}),
+        **({'sampleScale': sample_scale} if sample_scale != 1 else {}),
         'mean': f32(mean),
         'basis': base64.b64encode(b16.tobytes()).decode(),
         'basisScale': f32(scale),  # float32: un redondeo a 6 decimales anulaba los modos finos
@@ -328,16 +339,17 @@ def main():
             'magnitudesP50': q(np.median(mags, 0)),
         },
     }
-    os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
-    json.dump(model, open(a.out, 'w'), separators=(',', ':'))
+    os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
+    json.dump(model, open(out, 'w'), separators=(',', ':'))
     rep = {'subjects': n, 'rejected': rejected, 'explained': explained,
            'explained_curve': [round(float(var[:i].sum() / var.sum()), 4) for i in (4, 8, 12, 16, 20, 24, 28, 32, 40, 48)],
            'recon_rms_mV_p50': float(np.median(rms)), 'recon_rms_mV_p95': float(np.percentile(rms, 95)),
            'durations_p50': np.median(D, 0).tolist(), 'axis_p50': float(np.median(ax)),
-           'bytes': os.path.getsize(a.out)}
+           'bytes': os.path.getsize(out)}
     print(json.dumps(rep, indent=1))
-    if a.report:
-        json.dump(rep, open(a.report, 'w'), indent=1)
+    if report:
+        json.dump(rep, open(report, 'w'), indent=1)
+    return model, rep
 
 
 if __name__ == '__main__':

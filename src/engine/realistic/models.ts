@@ -6,7 +6,7 @@
  */
 import type { ECGCase } from "../types";
 import { hasShapeModel, registerShapeModel, type ModelCode, type RawShapeModel } from "./shape-model";
-import { realisticModelFor } from "./scope";
+import { realisticModelsFor } from "./scope";
 
 const LOADERS = import.meta.glob<RawShapeModel>("./models/*.json", { import: "default" });
 
@@ -18,8 +18,7 @@ export async function ensureShapeModel(code: ModelCode): Promise<void> {
 }
 /** Loads the learned model the case needs, if any. */
 export async function ensureCaseModel(c: ECGCase): Promise<void> {
-  const code = realisticModelFor(c);
-  if (code) await ensureShapeModel(code);
+  await Promise.all(realisticModelsFor(c).map(ensureShapeModel));
 }
 export const CLASS_MODELS = Object.keys(LOADERS).map((k) => k.slice(9, -5) as ModelCode);
 export const ensureAllShapeModels = () => Promise.all(CLASS_MODELS.map(ensureShapeModel)).then(() => undefined);

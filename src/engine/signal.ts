@@ -39,7 +39,8 @@ import { assertRepresentableEvents, tWaveSupport } from "./constraints";
 import { median } from "./analysis/statistics";
 import { atrialVector, tWave } from "./morphology";
 import { regionalTerritory, regionalTCorrection } from "./regional-repolarization";
-import { naturalTAxis, RealisticTrack, usesRealisticBase } from "./realistic/engine";
+import { learnPvcDurations, naturalTAxis, RealisticTrack, usesRealisticBase } from "./realistic/engine";
+import { learnedVentricularEctopy } from "./realistic/scope";
 import { acquisitionFloor } from "./realistic/acquisition";
 import { addFibrillationWaves } from "./realistic/atrial-fibrillation";
 const FS = 1000,
@@ -59,6 +60,7 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
     n = Math.ceil((total + guard) * FS),
     events = generateEvents(c, total + guard);
   assignRepolarization(c, events.beats);
+  if (options.learnedBase !== false && usesRealisticBase(c) && learnedVentricularEctopy(c)) learnPvcDurations(c, events.beats);
   assertRepresentableEvents(c, events);
   const xyz = [new Float64Array(n), new Float64Array(n), new Float64Array(n)],
     corr: Partial<Record<Lead, Float64Array>> = {};
@@ -114,6 +116,10 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
   for (const b of events.beats) {
     if (track && b.kind === "normal") {
       track.addBeat(b, qrsDuration(c, b));
+      continue;
+    }
+    if (track && b.kind === "pvc" && learnedVentricularEctopy(c)) {
+      track.addPvc(b, b.qrs!);
       continue;
     }
     const dur = qrsDuration(c, b),
@@ -352,7 +358,7 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
   const hasPR =
     (c.rhythm === "sinus" && c.av !== "complete") ||
     (c.rhythm === "paced" && c.pacing !== "VVI");
-  const widths = bs.map((b) => qrsDuration(c, b) * 1000).sort((a, b) => a - b);
+  const widths = bs.map((b) => (b.qrs ?? qrsDuration(c, b)) * 1000).sort((a, b) => a - b);
   const allV = bs.length > 0 && bs.every((b) => b.kind !== "normal");
   return {
     fs: OUT,

@@ -6,7 +6,8 @@ import type { ECGCase, Signal } from '../engine/types';
 export function qtModelLimits(c: Pick<ECGCase, 'qtc'>, signal: Pick<Signal, 'events'>): string[] {
   let lower=0,upper=0;
   for(const b of signal.events.beats) {
-    if(b.qt === undefined || b.adaptedRR === undefined || b.qrs === undefined)continue;
+    // Learned ectopic beats carry their own QT (F5.3): not a QTc-model clipping.
+    if(b.qt === undefined || b.adaptedRR === undefined || b.qrs === undefined || b.ownDurations)continue;
     const requested=c.qtc/1000*Math.cbrt(b.adaptedRR);
     // Nanosecond tolerance identifies algebraic clipping, not clinical precision.
     if(b.qt-requested>1e-9)lower++;

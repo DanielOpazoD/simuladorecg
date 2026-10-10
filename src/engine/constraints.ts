@@ -74,7 +74,7 @@ export function assertRepresentableEvents(
     const previous = events.beats[i - 1],
       current = events.beats[i],
       interval = current.time - previous.time,
-      qrs = qrsDuration(c, previous);
+      qrs = previous.qrs ?? qrsDuration(c, previous); // learned ectopic beats: own width
 
     if (interval < qrs - TIME_EPSILON)
       throw new ModelScopeError(
