@@ -606,3 +606,53 @@ desplaza más a una EV grande y ancha (J+60 hasta ~0,07 mV, área de T ~7 %) y s
 cola alcanza al latido siguiente: el contrato de fase cero escala sus tolerancias
 con el QRS y la T de cada complejo. Los casos guardados antes de F5.3 con EV
 automáticas cambian de morfología (ahora un paciente real) sin aviso propio.
+
+## F5.2 · Flutter auricular: ondas F aprendidas
+
+**Datos y descartes.**
+- PTB-XL tiene 73 flutter, casi todos 2:1 a ~145 lpm: las ondas F caen enganchadas
+  al QRS y a la T, y una cancelación del QRST las borra con él.
+- La etiqueta de flutter de Chapman-Ningbo (PhysioNet ecg-arrhythmia 1.0.0, 8.060
+  registros, más que la FA) resultó ser en su mayoría fibrilación auricular a la
+  vista: se descartó.
+- Georgia (PhysioNet Challenge 2021, CC BY 4.0): 171 flutter sin FA (bajados y
+  verificados con SHA-256); con PTB-XL (pliegues 1–8), 29 pacientes con FC ≤ 100
+  (conducción 3:1, 4:1 o variable) cuya onda plegada explica ≥ 20 % de la señal
+  libre y cuya autocorrelación (Pearson, en [−1, 1]) supera 0,2.
+
+**Extracción** (`scripts/fidelity/build_flutter_model.py`). QRS-T enmascarado
+(−80 ms … +min(450 ms, 0,55·RR)) y la señal original plegada por el ciclo
+auricular, sin cancelar latidos. El ciclo se estima por autocorrelación y se
+refina en pasos de 0,2 ms maximizando la varianza explicada (en 10 s caben ~50
+ciclos: 3 ms de error emborronaban el plegado). Por paciente: un ciclo de onda F
+(64 puntos × 8 derivaciones) y la fase en que cae el pico de energía del QRS (con
+su concentración R). Los ciclos se alinean en la población por correlación
+circular con la media: alinearlos al nadir de II hacía que la media heredara un
+valle afilado y que la población generada saliera negativa en II en el 79–91 %
+(pacientes: 55 %). Población: ACP (9 modos) y gaussiana contraída con el ciclo,
+sin acotar el muestreo. La fase del QRS se resume aparte como distribución
+circular de los 17 pacientes con conducción fija (R ≥ 0,6): en los demás es casi
+ruido.
+
+**Producto.** Con base aprendida, el flutter dibuja el ciclo del paciente a la
+frecuencia auricular del caso (control), anclado a la mitad (pico de energía) de
+cada QRS conducido: anclar su inicio desplazaba la relación QRS–onda F ~0,2 ciclos.
+Paciente de libro: semilla 39, flutter típico antihorario (sierra negativa en II,
+F positiva en V1, ~0,25 mV en ambas). Núcleos: diente de sierra histórico.
+
+### Resultado y límites
+
+Población generada frente a los 29 pacientes (3000 semillas, medido por el
+revisor): negativas en II 63 % frente a 55 % (16/29); amplitud en II mediana 161
+frente a 167 µV; V1 positiva 58 % frente a 79 % (23/29): la gaussiana sobre tan
+pocos pacientes mezcla subtipos. La prueba de fase usa la misma convención (mitad
+del QRS) que el motor; la ida y vuelta con el extractor (60 trazados 4:1 a 300
+lpm: desfase medio −0,006 ciclos, máximo 0,041) es una comprobación manual. A nivel de trazado no hay
+comparación posible: la reserva deja 4 registros utilizables, y el clasificador
+diagnóstico no tiene etiqueta de flutter (menos de 100 registros en PTB-XL). El
+criterio de calidad es débil: probado con trazados sintéticos de ciclo conocido,
+aceptó 6 de 40 y uno de ellos con el ciclo equivocado, así que el ciclo de algún
+paciente puede no ser el real. El modelo se aprendió entre 171 y 330 lpm
+auriculares; el control llega de 40 a 350 y fuera de ese rango estira el ciclo
+sin respaldo. Como en la FA, el bajo voltaje no escala las ondas F. Es el modelo
+aprendido con menos respaldo del ciclo.

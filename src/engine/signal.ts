@@ -43,6 +43,7 @@ import { learnPvcDurations, naturalTAxis, RealisticTrack, usesRealisticBase } fr
 import { learnedVentricularEctopy } from "./realistic/scope";
 import { acquisitionFloor } from "./realistic/acquisition";
 import { addFibrillationWaves } from "./realistic/atrial-fibrillation";
+import { addFlutterWaves } from "./realistic/atrial-flutter";
 const FS = 1000,
   OUT = 500,
   WARM = 4,
@@ -234,6 +235,9 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
     ? track.measuredQrsAxis(events.beats.filter((b) => b.time >= WARM && b.time < total))
     : null;
   if (track && c.rhythm === "af") addFibrillationWaves(track.acc, FS, c.seed);
+  else if (track && c.rhythm === "flutter" && events.beats.length)
+    // The learned phase refers to the QRS energy peak (≈ its middle), not its onset.
+    addFlutterWaves(track.acc, FS, c.seed, c.atrialRate, events.beats[0].time + qrsDuration(c, events.beats[0]) / 2);
   else if (c.rhythm === "af" || c.rhythm === "flutter" || c.rhythm === "vf") {
     const r = random(c.seed + 11);
     let phase = 0,
