@@ -66,7 +66,7 @@ for(const engine of engines){
    assert.equal(variants,36);
    await choose('af');await tab('af_fast');
    assert.equal(await page.locator('#case-title').textContent(),'Fibrilación auricular');
-   assert.match(await page.locator('#warnings').innerText(),/FA (representativa|aprendida)/);
+   assert.match(await page.locator('#warnings').textContent(),/FA (representativa|aprendida)/);
    await page.locator('#ecg').screenshot({path:resolve(out,`af-gamma-${engine.name()}-${width}.png`)});
    const fast=await trace();assert.equal(fast.case.presetId,'af_fast');assert.equal(fast.case.hr,145);
    if(width<=800)await page.locator('[data-action=catalog]').click();
@@ -89,7 +89,8 @@ for(const engine of engines){
    await page.screenshot({path:resolve(out,`${stem}-af.png`)});
    const geometry=await page.locator('#diagnosis-navigation').evaluate(root=>({width:innerWidth,page:document.documentElement.scrollWidth,
     tabs:[...root.querySelectorAll('[role=tab]')].map(e=>{const b=e.getBoundingClientRect();return{label:e.textContent,left:b.left,right:b.right,height:b.height};})}));
-   assert.ok(geometry.page<=width+1);assert.ok(geometry.tabs.every(t=>t.height>=44&&t.left>=0&&t.right<=width+1));
+   assert.ok(geometry.page<=width+1);// Touch widths keep 44 px targets; desktop pills are compact but above the 24 px minimum.
+   assert.ok(geometry.tabs.every(t=>t.height>=(width<=800?44:24)&&t.left>=0&&t.right<=width+1));
    if(width<=800)await page.locator('[data-action=catalog]').click();await page.locator('[data-action=clear-search]').click();
    await page.screenshot({path:resolve(out,`${stem}-catalog.png`)});
    // A pattern whose example does not exist yet is not offered: the library says so instead of listing a disabled entry.

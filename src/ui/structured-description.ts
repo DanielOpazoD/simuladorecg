@@ -23,10 +23,9 @@ const CONTIGUOUS: readonly (readonly [Lead, Lead])[] = [
   ["I", "aVL"], ["II", "aVF"], ["III", "aVF"], ["II", "III"], ["I", "V6"],
   ["V1", "V2"], ["V2", "V3"], ["V3", "V4"], ["V4", "V5"], ["V5", "V6"],
 ];
-const mm = (mv: number) => `${mv > 0 ? "+" : "−"}${Math.abs(mv * 10).toFixed(1).replace(".", ",")} mm`;
+export const mm = (mv: number) => `${mv > 0 ? "+" : "−"}${Math.abs(mv * 10).toFixed(1).replace(".", ",")} mm`;
 const n0 = (v: number) => Math.round(v).toString();
-const dec = (v: number) => v.toFixed(1).replace(".", ",");
-const ms = (s: number) => `${Math.round(s * 1000)} ms`;
+export const ms = (s: number) => `${Math.round(s * 1000)} ms`;
 
 /** Lead list; runs of three or more consecutive precordials compress ("V2–V4"). */
 export function leadList(leads: readonly Lead[]): string {
@@ -92,64 +91,89 @@ export function leadMeasures(s: Pick<Signal, "fs" | "leads" | "events">): LeadMe
 /** Leads of `set` that belong to a contiguous pair inside it. */
 const contiguous = (set: ReadonlySet<Lead>) => ST_ORDER.filter((l) => CONTIGUOUS.some((p) => p.includes(l) && set.has(p[0]) && set.has(p[1])));
 const largest = (rs: LeadMeasure[], value: (r: LeadMeasure) => number) => rs.reduce((a, b) => (Math.abs(value(b)) > Math.abs(value(a)) ? b : a));
+const absMm = (mv: number) => `${Math.abs(mv * 10).toFixed(1).replace(".", ",")} mm`;
 
-function stLine(m: LeadMeasure[], wide: boolean): { text: string; up: boolean; down: boolean } {
+/** The clinical reading of each component (what a clinician would write) and the
+ * leads behind it; the measured values and criteria live in the info dialogs. */
+export interface StFindings { elevation: LeadMeasure[]; mild: LeadMeasure[]; depression: LeadMeasure[]; rising: boolean; avr: LeadMeasure; meetsCriterion: boolean }
+/** Guideline threshold at J. The case has no sex or age: V2–V3 take the most quoted
+ * value, 2 mm (men ≥ 40); the lowest (1.5 mm, women) flags normal early repolarization. */
+export const elevationThreshold = (lead: Lead) => (lead === "V2" || lead === "V3" ? 0.2 : 0.1);
+export function stFindings(m: LeadMeasure[]): StFindings {
   const leads = m.filter((r) => r.lead !== "aVR");
-  const up = leads.filter((r) => r.j0 >= ST_LENS.thresholdMv), down = leads.filter((r) => r.j0 <= -ST_LENS.thresholdMv);
-  const avr = m.find((r) => r.lead === "aVR")!;
-  if (!up.length && !down.length) return { text: "Sin desviación del ST de 0,5 mm o más en el punto J.", up: false, down: false };
+  const up = leads.filter((r) => r.j0 >= ST_LENS.thresholdMv);
+  const down = leads.filter((r) => r.j0 <= -ST_LENS.thresholdMv), downPairs = contiguous(new Set(down.map((r) => r.lead)));
+  // Guideline criterion at J: 1 mm in two contiguous leads (2 mm in V2–V3, see above).
+  const meetingPairs = contiguous(new Set(up.filter((r) => r.j0 >= elevationThreshold(r.lead)).map((r) => r.lead)));
+  const meetsCriterion = meetingPairs.length > 0;
+  // Depression: ≥ 0.5 mm in two contiguous leads; next to an elevation, an isolated
+  // reciprocal depression (III in a high lateral occlusion) also counts.
+  const depression = down.filter((r) => meetsCriterion || downPairs.includes(r.lead));
+  // Below the criterion, an elevation is worth naming only beyond the physiological
+  // V1–V3 pattern and in contiguous leads (a residual elevation, for instance).
+  const mildLeads = contiguous(new Set(up.map((r) => r.lead)));
+  const mild = !meetsCriterion && up.some((r) => !/^V[1-3]$/.test(r.lead)) ? up.filter((r) => mildLeads.includes(r.lead)) : [];
+  return { elevation: up.filter((r) => meetingPairs.includes(r.lead)), mild, depression, rising: depression.length > 0 && median(depression.map((r) => (r.j60 - r.j0) / Math.abs(r.j0))) >= 0.5, avr: m.find((r) => r.lead === "aVR")!, meetsCriterion };
+}
+function stLine(f: StFindings): string {
   const parts: string[] = [];
-  // Guideline criterion at J: 1 mm in two contiguous leads; in V2–V3 1.5 mm (women),
-  // 2 mm (men ≥ 40) or 2.5 mm (men < 40). The case has no sex or age, so an elevation
-  // is called sub-threshold only when it misses even the lowest of them.
-  const meets = new Set(up.filter((r) => r.j0 >= (r.lead === "V2" || r.lead === "V3" ? 0.15 : 0.1)).map((r) => r.lead));
-  const sdst = contiguous(meets).length > 0;
-  if (up.length) {
-    const p = largest(up, (r) => r.j0), where = `${mm(p.j0)} en J y ${mm(p.j60)} a J+60, en ${p.lead}`;
-    parts.push(sdst ? `SDST en ${leadList(up.map((r) => r.lead))} (máx. ${where})`
-      : `Punto J elevado en ${leadList(up.map((r) => r.lead))} (máx. ${where}), bajo el criterio de las guías` +
-        (!wide && up.every((r) => /^V[1-4]$/.test(r.lead)) ? ", habitual en V1–V3" : ""));
-  }
-  if (down.length) {
-    const p = largest(down, (r) => r.j0), rising = median(down.map((r) => (r.j60 - r.j0) / Math.abs(r.j0))) >= 0.5;
-    parts.push(`IDST ${rising ? "ascendente desde J" : "horizontal o descendente"} en ${leadList(down.map((r) => r.lead))} (máx. ${mm(p.j0)} en J, en ${p.lead})`);
-  }
-  if (Math.abs(avr.j0) >= ST_LENS.thresholdMv) parts.push(`aVR ${mm(avr.j0)}`);
-  return { text: `${parts.join("; ")}.`, up: sdst, down: down.length > 0 };
+  if (f.elevation.length) { const p = largest(f.elevation, (r) => r.j0); parts.push(`Elevación del ST en ${leadList(f.elevation.map((r) => r.lead))}, máxima en ${p.lead} (${absMm(p.j0)})`); }
+  if (f.mild.length) parts.push(`elevación leve del ST en ${leadList(f.mild.map((r) => r.lead))}, bajo el criterio de las guías`);
+  if (f.depression.length) { const p = largest(f.depression, (r) => r.j0); parts.push(`descenso del ST ${f.rising ? "con pendiente ascendente" : "horizontal o descendente"} en ${leadList(f.depression.map((r) => r.lead))}, máximo en ${p.lead} (${absMm(p.j0)})`); }
+  if (f.avr.j0 >= ST_LENS.thresholdMv) parts.push(`elevación del ST en aVR (${absMm(f.avr.j0)})`);
+  else if (f.avr.j0 <= -ST_LENS.thresholdMv) parts.push(`descenso del ST en aVR (${absMm(f.avr.j0)})`);
+  if (!parts.length) return "Sin alteraciones del ST.";
+  const text = parts.join("; ");
+  return `${text[0].toUpperCase()}${text.slice(1)}.`;
 }
 
-function tLine(m: LeadMeasure[]): string {
+export interface TFindings { inverted: LeadMeasure[]; biphasic: LeadMeasure[]; flat: LeadMeasure[]; prominent: LeadMeasure[] }
+export function tFindings(m: LeadMeasure[]): TFindings {
   const leads = m.filter((r) => r.lead !== "aVR");
   const biphasic = leads.filter((r) => r.tMax >= 0.1 && r.tMin <= -0.1 && Math.min(r.tMax, -r.tMin) >= 0.3 * Math.max(r.tMax, -r.tMin));
-  const inverted = leads.filter((r) => !biphasic.includes(r) && r.tMin <= -0.1 && -r.tMin > r.tMax);
+  const negative = leads.filter((r) => !biphasic.includes(r) && r.tMin <= -0.1 && -r.tMin > r.tMax);
+  // Normal variants: an inverted T in V1, or in III alone, is common in healthy adults.
+  const inferiorToo = negative.some((r) => r.lead === "II" || r.lead === "aVF");
+  const inverted = negative.filter((r) => r.lead !== "V1" && (r.lead !== "III" || inferiorToo));
+  // Flat: under 1 mm where the T is normally upright (I, II, V3–V6; aVF may be flat in
+  // healthy adults), in two contiguous leads.
+  const flatCandidates = leads.filter((r) => /^(I|II|V[3-6])$/.test(r.lead) && !biphasic.includes(r) && !negative.includes(r) && r.tMax < 0.1);
+  const flatPairs = contiguous(new Set(flatCandidates.map((r) => r.lead)));
+  const flat = flatCandidates.filter((r) => flatPairs.includes(r.lead));
+  // Prominent: ≥ 10 mm, or ≥ 7 mm and at least 80 % of a QRS of ≥ 8 mm (a small QRS
+  // alone does not make a normal T «large for its QRS»).
+  const prominent = leads.filter((r) => !biphasic.includes(r) && (r.tMax >= 1 || (r.tMax >= 0.7 && r.qrs >= 0.8 && r.tMax / r.qrs >= 0.8)));
+  return { inverted, biphasic, flat, prominent };
+}
+function tLine(f: TFindings, wide: boolean): string {
+  // With a wide QRS the T is secondary: its size says nothing about ischaemia.
+  if (wide) f = { ...f, prominent: [] };
   const parts: string[] = [];
-  if (inverted.length) parts.push(`T negativas en ${leadList(inverted.map((r) => r.lead))} (máx. ${mm(largest(inverted, (r) => r.tMin).tMin)})`);
-  for (const positiveFirst of [true, false]) {
-    const group = biphasic.filter((r) => r.tPositiveFirst === positiveFirst);
-    if (group.length) parts.push(`T bifásicas ${positiveFirst ? "positiva-negativa" : "negativa-positiva"} en ${leadList(group.map((r) => r.lead))}`);
-  }
-  const tall = largest(leads, (r) => r.tMax);
-  if (tall.tMax >= 0.1) parts.push(`T más alta ${mm(tall.tMax)} en ${tall.lead} (T/QRS ${dec(tall.tMax / Math.max(tall.qrs, 0.01))})`);
-  return parts.length ? `${parts.join("; ")}.` : "T de bajo voltaje en todas las derivaciones.";
+  if (f.inverted.length) parts.push(`Ondas T invertidas en ${leadList(f.inverted.map((r) => r.lead))}`);
+  if (f.biphasic.length) parts.push(`ondas T bifásicas en ${leadList(f.biphasic.map((r) => r.lead))}`);
+  if (f.flat.length) parts.push(`ondas T aplanadas en ${leadList(f.flat.map((r) => r.lead))}`);
+  if (f.prominent.length) parts.push(`ondas T prominentes, grandes para su QRS, en ${leadList(f.prominent.map((r) => r.lead))}`);
+  if (!parts.length) return "Onda T normal.";
+  const text = parts.join("; ");
+  return `${text[0].toUpperCase()}${text.slice(1)}.`;
 }
 
-function qLine(m: LeadMeasure[]): string {
-  // Fourth Universal Definition: Q ≥ 30 ms and ≥ 0.1 mV deep (or QS) in two contiguous
-  // leads; in V2–V3 any Q ≥ 20 ms or QS. aVR stays out.
+/** Fourth Universal Definition: Q ≥ 30 ms and ≥ 0.1 mV deep (or QS) in two contiguous
+ * leads; in V2–V3 any Q ≥ 20 ms or QS. aVR stays out. */
+export function pathologicalQ(m: LeadMeasure[]): LeadMeasure[] {
   const isQ = (r: LeadMeasure) => r.lead !== "aVR" && (r.qs || (r.lead === "V2" || r.lead === "V3" ? r.qDur >= 0.02 : r.qDur >= 0.03 && r.qDepth <= -0.1));
-  const q = m.filter(isQ), set = new Set(q.map((r) => r.lead)), pairs = contiguous(set);
-  const shown = q.filter((r) => pairs.includes(r.lead) || r.lead === "V2" || r.lead === "V3");
-  if (!shown.length) return "Sin Q patológicas.";
-  const p = largest(shown, (r) => r.qDepth);
-  return `Q patológicas en ${leadList(shown.map((r) => r.lead))} (máx. ${mm(p.qDepth)} y ${ms(p.qDur)}${p.qs ? ", QS" : ""}, en ${p.lead}).`;
+  const q = m.filter(isQ), pairs = contiguous(new Set(q.map((r) => r.lead)));
+  return q.filter((r) => pairs.includes(r.lead) || r.lead === "V2" || r.lead === "V3");
 }
+const qLine = (q: LeadMeasure[]) => q.length ? `Ondas Q patológicas en ${leadList(q.map((r) => r.lead))}.` : "Sin ondas Q patológicas.";
 
 function atrialRate(s: Signal): number | null {
   const t = s.events.atria.map((a) => a.time);
   return t.length < 3 ? null : 60 / median(t.slice(1).map((v, i) => v - t[i]));
 }
 
-export interface StructuredDescription { lines: { key: string; text: string }[]; summary: string }
+export type DescriptionInfo = "st" | "t" | "q";
+export interface StructuredDescription { lines: { key: string; text: string; info?: DescriptionInfo }[]; summary: string; measures: LeadMeasure[] }
 export function structuredDescription(c: ECGCase, s: Signal): StructuredDescription {
   const t = s.truth, rr = t.hr > 0 ? 60 / t.hr : null;
   const qtc = t.qt && rr ? t.qt / Math.cbrt(rr) : null;
@@ -161,11 +185,15 @@ export function structuredDescription(c: ECGCase, s: Signal): StructuredDescript
     (atrial ? `, ondas P a ${n0(atrial)}/min` : "");
   const dominant = dominantBeats(s), dominantQrs = dominant.length ? median(dominant.map((i) => s.events.beats[i].qrs!)) * 1000 : null;
   const qrs = dominantQrs ?? t.qrs;
-  const intervals = [t.pr !== null ? `PR ${n0(t.pr)} ms` : "PR no medible", qrs !== null ? `QRS ${n0(qrs)} ms` : null, qtc !== null ? `QTc ${n0(qtc)} ms (Fridericia)` : null].filter(Boolean).join(" · ");
+  const intervals = [t.pr !== null ? `PR ${n0(t.pr)} ms` : "PR no medible", qrs !== null ? `QRS ${n0(qrs)} ms` : null, qtc !== null ? `QTc ${n0(qtc)} ms` : null].filter(Boolean).join(" · ");
   const axis = t.axis === null ? "Eje no determinable" : `Eje QRS ${n0(t.axis)}° (${t.axis >= -30 && t.axis <= 90 ? "normal" : t.axis < -30 && t.axis >= -90 ? "desviado a la izquierda" : t.axis > 90 && t.axis <= 180 ? "desviado a la derecha" : "extremo"})`;
   const m = leadMeasures(s);
-  const wide = (qrs ?? 0) >= 120 || (dominant.length > 0 && s.events.beats[dominant[0]].kind !== "normal");
-  const lines = [
+  const ventricularDominant = dominant.length > 0 && s.events.beats[dominant[0]].kind !== "normal";
+  const wide = (qrs ?? 0) >= 120 || ventricularDominant;
+  // Q waves are not read with LBBB, pre-excitation or ventricular/paced complexes; with
+  // RBBB the initial forces are preserved and they are.
+  const qUnreadable = ventricularDominant || c.conduction === "lbbb" || c.conduction === "wpw";
+  const lines: StructuredDescription["lines"] = [
     { key: "A", text: `12 derivaciones, ${c.view.speed} mm/s, ${c.view.gain} mm/mV.` },
     { key: "B·C", text: `${rhythm}.` },
     { key: "D", text: `${intervals}.` },
@@ -173,14 +201,19 @@ export function structuredDescription(c: ECGCase, s: Signal): StructuredDescript
   ];
   // Polymorphic or chaotic rhythms have no repeatable ST; flutter waves occupy the PR
   // segment the ST is read against.
-  if (!m.some((r) => r.beats > 0) || c.rhythm === "torsades" || c.rhythm === "vf") lines.push({ key: "ST", text: "Sin complejos organizados para leer el ST, la T ni las Q." });
-  else if (c.rhythm === "flutter") lines.push({ key: "ST", text: "No se lee: las ondas F ocupan la línea de base (el segmento PR) contra la que se mide el ST." });
+  if (!m.some((r) => r.beats > 0) || c.rhythm === "torsades" || c.rhythm === "vf") lines.push({ key: "ST", text: "ST, onda T y ondas Q no valorables: no hay complejos organizados." });
+  else if (c.rhythm === "flutter") lines.push({ key: "ST", text: "ST no valorable: las ondas F ocupan la línea de base." });
   else {
-    const st = stLine(m, wide);
-    lines.push({ key: "ST", text: c.rhythm === "af" ? `${st.text} Referencia del PR alterada por las ondas f: lectura aproximada.` : st.text }, { key: "T", text: tLine(m) }, { key: "Q", text: wide ? "No se evalúan con QRS ancho o no conducido." : qLine(m) });
-    if (wide && (st.up || st.down)) lines.push({ key: "ST/QRS", text: "Con QRS ancho el ST es en parte secundario a la despolarización: léelo en proporción al QRS, no como reciprocidad." });
-    else if (st.up && st.down) lines.push({ key: "Rec.", text: "Elevación y descenso simultáneos con QRS estrecho: hay reciprocidad." });
+    // With f waves on the baseline a mild sub-threshold elevation is not readable.
+    const st = stFindings(m);
+    if (c.rhythm === "af") st.mild = [];
+    const stText = stLine(st);
+    lines.push({ key: "ST", text: c.rhythm === "af" ? `${stText.slice(0, -1)} (lectura aproximada por las ondas f).` : stText, info: "st" },
+      { key: "T", text: tLine(tFindings(m), wide), info: "t" },
+      { key: "Q", text: qUnreadable ? "Ondas Q no valorables con este QRS (bloqueo de rama izquierda, preexcitación o QRS ventricular)." : qLine(pathologicalQ(m)), info: "q" });
+    if (wide && (st.elevation.length || st.depression.length)) lines.push({ key: "ST/QRS", text: "Alteraciones del ST secundarias al QRS ancho: valorar su proporción con el QRS." });
+    else if (st.elevation.length && st.depression.length) lines.push({ key: "Rec.", text: "Cambios recíprocos del ST." });
   }
   const summary = `ECG de 12 derivaciones a ${c.view.speed} mm/s. ${rhythm}; ${intervals}; ${axis[0].toLowerCase()}${axis.slice(1)}. ${lines.slice(4).map((l) => l.text).join(" ")}`;
-  return { lines, summary };
+  return { lines, summary, measures: m };
 }

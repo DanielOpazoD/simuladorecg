@@ -33,7 +33,7 @@ try {
    assert.equal(await page.locator(gone).count(),0,gone+' must not exist');
   // Tools appear only where they apply: on the 12-lead paper the freeze control and the
   // acute-lesion lenses (previous ECG, only the change) are hidden; Calibres, Ondas and ST remain.
-  assert.deepEqual(await visibleTools(),['caliper','annotations','lens-st']);
+  assert.deepEqual(await visibleTools(),['caliper','annotations','lens-st','paper']);
   for(const hidden of ['pause','lens-previous','lens-change'])assert.equal(await page.locator(`[data-action=${hidden}]`).isHidden(),true,hidden+' hidden on a case without that tool');
   // Reading guide sits under the trace; «Ajustar el caso» is folded at the end.
   const order=await page.evaluate(()=>{

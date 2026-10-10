@@ -55,11 +55,15 @@ export function metricCards(c: ECGCase, m: Measurement): MetricCard[] {
   });
 }
 
+/** Compact strip: the provenance words («modelo», «media 10 s») stay in the full note
+ * read by assistive technology; only the clinically meaningful part is shown
+ * («Fridericia», «progresivo», «No aplica»). */
+const shortNote = (note: string) => note.split(" · ").filter((p) => p !== "modelo" && p !== "media" && p !== "10 s" && p !== "media 10 s").join(" · ");
 export const metricsHtml = (cards: MetricCard[]) =>
   cards
     .map(
       (x, i) =>
-        `<button class="metric ${i === 0 ? "main-metric" : ""}" data-action="measurements" title="${esc(x.reason)}"><span>${x.label}</span><strong>${x.value}</strong><small><i class="quality-dot ${x.status}"></i>${x.note}</small></button>`,
+        `<button class="metric ${i === 0 ? "main-metric" : ""}" data-action="measurements" title="${esc(x.reason)}" aria-label="${esc(`${x.label}: ${x.value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()}${x.note ? `, ${x.note}` : ""}`)}"><span>${x.label}</span><strong>${x.value}</strong><small><i class="quality-dot ${x.status}"></i>${x.note}</small>${shortNote(x.note) ? `<em class="metric-note">${shortNote(x.note)}</em>` : ""}</button>`,
     )
     .join("");
 

@@ -16,6 +16,8 @@ export function omiSheetHtml(presetId: string, refsOpen = false): string {
 }
 
 export function structuredDescriptionHtml(d: StructuredDescription, open = true): string {
-  return `<details class="structured-description"${open ? " open" : ""}><summary>Descripción estructurada</summary><dl>${d.lines.map((l) => `<div><dt>${esc(l.key)}</dt><dd>${esc(l.text)}</dd></div>`).join("")}</dl>` +
-    `<details class="present-30"><summary>Presentación en 30 s</summary><p>${esc(d.summary)}</p></details><p class="description-note">Leída del trazado: valores del modelo; ST en el punto J y a J+60 respecto del PR, mediana de los latidos dominantes. Criterio de elevación de las guías: 1 mm en dos derivaciones contiguas (1,5 a 2,5 mm en V2–V3 según sexo y edad). Q según la cuarta definición universal.</p></details>`;
+  const info = (l: StructuredDescription["lines"][number]) => l.info
+    ? `<button type="button" class="info-ref" data-action="description-info" data-info="${l.info}" aria-label="Criterios y referencias: ${esc(l.key)}"><sup>?</sup></button>` : "";
+  return `<details class="structured-description"${open ? " open" : ""}><summary>Descripción estructurada</summary><dl>${d.lines.map((l) => `<div><dt>${esc(l.key)}</dt><dd>${esc(l.text)}${info(l)}</dd></div>`).join("")}</dl>` +
+    `<details class="present-30"><summary>Presentación en 30 s</summary><p>${esc(d.summary)}</p></details></details>`;
 }

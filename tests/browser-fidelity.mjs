@@ -1,5 +1,5 @@
 import { chooseCatalogPreset } from './support/catalog-navigation.mjs';
-import { openControlPanel } from './support/adjust-panel.mjs';
+import { openControlPanel ,openPaper} from './support/adjust-panel.mjs';
 /** Real Chromium checks. Run against the built dist (vite preview): ECG_TEST_URL=http://127.0.0.1:5173.
  * Outputs outside source by default; no patient data, diagnostic labels or network AI.
  * npm ci
@@ -37,10 +37,10 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  await page.screenshot({path:path.join(out,'desktop.png')});
  // P7 uses real controls on the compiled product; sample invariance is tested in Node.
  for (const format of ['3x4','3x4+1','3x4+3','6x2','12x1']) {
-  await page.locator('[data-key="view.format"]').selectOption(format);
+  await openPaper(page);await page.locator('[data-key="view.format"]').selectOption(format);
   assert.ok(await page.locator('#ecg').evaluate(c=>c.width>0&&c.height>0));
  }
- await page.locator('[data-key="view.format"]').selectOption('3x4+1');
+ await openPaper(page);await page.locator('[data-key="view.format"]').selectOption('3x4+1');
  await page.screenshot({path:path.join(out,'p7-format.png')});
  // The simplified interface keeps one reading order and one simultaneous-or-not layout;
  // the removed view controls (Cabrera, precordial gain, fit, calibration) are not offered.
@@ -49,7 +49,7 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
   assert.equal(await page.locator(`[data-key="${key}"]`).count(),0,key+' control must not be offered');
  await page.locator('[data-mode="monitor"]').click();
  for (const lead of ['II','V1','aVR']) {
-  await page.locator('[data-key="view.lead"]').selectOption(lead);
+  await openPaper(page);await page.locator('[data-key="view.lead"]').selectOption(lead);
   assert.match(await page.locator('#ecg').getAttribute('aria-label'),new RegExp(lead));
  }
  await page.locator('[data-mode="paper"]').click();
@@ -98,18 +98,18 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  assert.equal(await page.locator('#case-title').innerText(),'Registro con brazos invertidos');
  assert.equal(await page.locator('#finding-title').innerText(),'Transformación de la adquisición');
  assert.doesNotMatch(await page.locator('#findings').innerText(),/III\s*>\s*II|ST↓ recíproco en I/);
- assert.match(await page.locator('#warnings').innerText(),/inversión de electrodos de brazos/i);
+ assert.match(await page.locator('#warnings').textContent(),/inversión de electrodos de brazos/i);
  assert.match(await page.locator('#ecg').getAttribute('aria-label'),/Registro con brazos invertidos/);
  await page.screenshot({path:path.join(out,'inverted-electrodes.png')});
  checks.push('P1: actual JSON import preserves reversed acquisition and retires basal observations');
  for(const id of ['wpw','lbbb','vvi','ddd']) {
   await select(id);
-  const message=await page.locator('#warnings').innerText();
+  const message=await page.locator('#warnings').textContent();
   assert.match(message,id==='wpw'?/ST y T siguen la activación QRS incluida la onda delta/:/relación ST\/QRS no están calibradas clínicamente/);
-  assert.match(await page.locator('#limitation').innerText(),id==='wpw'?/Amplitudes no calibradas/:/no están calibradas clínicamente/);
+  assert.match(await page.locator('#limitation').textContent(),id==='wpw'?/Amplitudes no calibradas/:/no están calibradas clínicamente/);
  }
  await page.screenshot({path:path.join(out,'secondary-repolarization-limit.png')});
- await select('aai');assert.doesNotMatch(await page.locator('#warnings').innerText(),/ST\/QRS/);
+ await select('aai');assert.doesNotMatch(await page.locator('#warnings').textContent(),/ST\/QRS/);
  checks.push('P2: WPW / LBBB / VVI / DDD warnings visible; AAI alone excluded');
  // P6: invalidate synchronously during a real slider input; no stale export window.
  await select('sinus');await page.locator('[data-mode="monitor"]').click();
@@ -157,15 +157,15 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  assert.match(await page.locator('.practice-feedback').innerText(),/Referencia del ejercicio/);
  assert.match(await page.locator('.practice-feedback').innerText(),/no diagnóstico automático/);
  await page.locator('#quiz-panel').screenshot({path:path.join(out,'p8-feedback.png')});
- await page.locator('[data-key="view.gain"]').selectOption('5');
+ await openPaper(page);await page.locator('[data-key="view.gain"]').selectOption('5');
  assert.equal(await page.locator('#quiz-panel').isVisible(),true);
  await openControlPanel(page,'base');
  await page.locator('[data-key="hr"]').evaluate(el=>{el.value=Number(el.value)===80?'90':'80';el.dispatchEvent(new Event('input',{bubbles:true}));});
  assert.equal(await page.locator('#quiz-panel').isVisible(),false);await ready();
  checks.push('P8: real question, separate reference/estimates, view retained and physiology exits practice');
  // P9: keyboard route uses the native button and the focused trace only.
- await select('sinus');await page.locator('[data-key="view.speed"]').selectOption('25');
- await page.locator('[data-key="view.gain"]').selectOption('10');
+ await select('sinus');await openPaper(page);await page.locator('[data-key="view.speed"]').selectOption('25');
+ await openPaper(page);await page.locator('[data-key="view.gain"]').selectOption('10');
  const caliperButton=page.locator('[data-action="caliper"]');await caliperButton.focus();await page.keyboard.press('Enter');
  assert.equal(await page.locator('#ecg').evaluate(c=>c===document.activeElement),true);
  const manual=async()=>page.locator('#measurement-values').evaluate(e=>({ms:Number(e.dataset.ms),mv:Number(e.dataset.mv)}));
@@ -191,9 +191,9 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  await page.locator('.trace-panel').screenshot({path:path.join(out,'p9-keyboard-calipers.png')});
  checks.push('P9: keyboard calipers, native numeric equivalent, live output and no form shortcut collision');
  // Direct pointer path at known physical geometry; source modules are never imported.
- await page.locator('[data-key="view.format"]').selectOption('3x4');
- await page.locator('[data-key="view.speed"]').selectOption('50');
- await page.locator('[data-key="view.gain"]').selectOption('20');
+ await openPaper(page);await page.locator('[data-key="view.format"]').selectOption('3x4');
+ await openPaper(page);await page.locator('[data-key="view.speed"]').selectOption('50');
+ await openPaper(page);await page.locator('[data-key="view.gain"]').selectOption('20');
  await page.locator('#caliper-segment').selectOption('1');
  await page.locator('#caliper-endpoint').selectOption('1');
  await page.locator('#caliper-time').fill('200');await page.keyboard.press('Tab');
@@ -225,7 +225,7 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  assert.ok(Math.abs(pointerManual.ms-referenceManual.ms)<=Math.max(2,msPerPx)+1e-5,JSON.stringify({pointerManual,referenceManual,msPerPx}));
  assert.ok(Math.abs(pointerManual.mv-referenceManual.mv)<=Math.max(.01,mvPerPx)+1e-5,JSON.stringify({pointerManual,referenceManual,mvPerPx}));
  accessibility.push({keyboardNative:native,pointerReference:referenceManual,pointer: pointerManual,canvasPxPerMm:pxPerMm});
- await page.locator('[data-key="view.speed"]').selectOption('25');await page.locator('[data-key="view.gain"]').selectOption('10');
+ await openPaper(page);await page.locator('[data-key="view.speed"]').selectOption('25');await openPaper(page);await page.locator('[data-key="view.gain"]').selectOption('10');
  await caliperButton.click();
  for(const theme of ['light','dark']) {
    if(theme==='dark')await page.locator('[data-action="theme"]').click();
@@ -245,12 +245,12 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  await page.locator('#dialog').evaluate(d=>d.close());
  // Measure actual UI downloads. No source imports, zeroed signals, or layout truth.
  await select('sinus');
- await page.locator('[data-key="view.format"]').selectOption('3x4');
- await page.locator('[data-key="view.grid"]').check();
+ await openPaper(page);await page.locator('[data-key="view.format"]').selectOption('3x4');
+ await openPaper(page);await page.locator('[data-key="view.grid"]').check();
  const pixels=[];
  for(const speed of [12.5,25,50])for(const gain of [2.5,5,10,20]){
-  await page.locator('[data-key="view.speed"]').selectOption(String(speed));
-  await page.locator('[data-key="view.gain"]').selectOption(String(gain));
+  await openPaper(page);await page.locator('[data-key="view.speed"]').selectOption(String(speed));
+  await openPaper(page);await page.locator('[data-key="view.gain"]').selectOption(String(gain));
   await page.locator('[data-action="export"]').click();
   const pending=page.waitForEvent('download');await page.locator('[data-action="png"]').click();
   const file=path.join(out,`calibration-${speed}-${gain}.png`);await (await pending).saveAs(file);

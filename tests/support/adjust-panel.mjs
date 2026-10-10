@@ -14,3 +14,9 @@ export async function openControlPanel(page, name) {
   await page.locator(`#inspector [data-panel="${name}"]`).click();
   await page.locator(`[data-control-panel="${name}"]`).waitFor({ state: 'visible' });
 }
+
+/** Speed, gain, format, grid, lead and duration live in the «Papel» menu of the trace
+ * toolbar; a click elsewhere closes it, so open it before each use. */
+export async function openPaper(page) {
+  await page.evaluate(() => document.querySelector('.paper-menu')?.setAttribute('open', ''));
+}
