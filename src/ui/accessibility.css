@@ -5,20 +5,15 @@
 :where(button,a,input,select,textarea,summary,[tabindex]):focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
 :where([role=region],[role=tabpanel]):focus-visible { outline-offset:-3px; }
 summary { min-height:44px; align-content:center; }
-#case-title, #inspector, #comparison-lab { scroll-margin-block:20px; }
+#case-title, #inspector { scroll-margin-block:20px; }
 .catalog-backdrop { position:fixed; inset:0; background:#152b3a70; z-index:9; }
 .btn, .icon-button { min-height:44px; }
 .icon-button { min-width:44px; width:44px; }
 .view-tabs button, .control-tabs button, .case-button, .text-button { min-height:44px; }
 .trace-tools { flex-wrap:wrap; }
-.detail-navigation .btn { min-height:44px; height:44px; min-width:44px; width:44px; }
-.detail-navigation select { min-height:44px; }
-.detail-navigation { flex-wrap:wrap; }
-.comparison-controls input, .comparison-controls select { min-height:44px; }
-.external-lab .btn, .comparison-lab .btn { white-space:normal; overflow-wrap:anywhere; }
-.external-table:focus-visible, .measurement-table-wrap:focus-visible { outline-offset:-3px; }
-/* Zero geometric insets preserve the manual calibre's absolute sample grid. */
-.external-review canvas { border:0; padding:0; }
+
+.measurement-table-wrap:focus-visible { outline-offset:-3px; }
+
 @media(max-width:800px) {
   .topbar { min-height:62px; height:auto; flex-wrap:wrap; padding-block:12px; }
   .topbar .brand small, .topbar .brand-divider { display:none; }
@@ -32,9 +27,7 @@ summary { min-height:44px; align-content:center; }
   .view-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); width:100%; }
   .view-tabs button { min-width:0; white-space:normal; }
   .case-state .btn { min-width:44px; width:44px; min-height:44px; }
-  .scale-toolbar input, .scale-toolbar select, .external-lab input, .external-lab select,
-  .comparison-lab input, .comparison-lab select, .control-panel select, .search-box input, .category-select select { font-size:16px; min-height:44px; }
-  .detail-navigation select { font-size:16px; }
+  .scale-toolbar input, .scale-toolbar select, .control-panel select, .search-box input, .category-select select { font-size:16px; min-height:44px; }
   .control-note { font-size:13px; line-height:1.6; }
   .range-field input[type=range] { min-height:32px; }
   .toggle, .scale-toggles label { min-height:44px; }
@@ -56,19 +49,12 @@ summary { min-height:44px; align-content:center; }
   .control-tabs button { font-size:13px; white-space:normal; text-align:left; }
   .field-grid, .range-grid { grid-template-columns:minmax(0,1fr); }
   .inline-fields { grid-template-columns:minmax(0,1fr); }
-  .external-heading, .comparison-heading { align-items:flex-start; }
-  .external-heading h2, .comparison-heading h2 { overflow-wrap:anywhere; }
   #dialog-content { padding:18px 16px; }
   .dialog-head { gap:10px; align-items:flex-start; }
   .dialog-head .btn { flex-shrink:0; }
-  .comparison-controls, .review-controls { gap:12px; }
-  .comparison-navigation { grid-template-columns:minmax(0,1fr); }
-  .external-lab input[type=number], .review-controls input[type=number] { max-width:100%; }
-  .external-lab input[type=file] { width:100%; }
 }
 @media(prefers-reduced-motion:reduce) { .sidebar { transition:none; } }
 @media(forced-colors:active) {
-  .external-review canvas { outline:1px solid CanvasText; outline-offset:-1px; }
   :where(button,a,input,select,summary,[tabindex]):focus-visible { outline:3px solid Highlight; }
   .btn { border:1px solid ButtonText; }
 }

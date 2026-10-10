@@ -88,7 +88,7 @@ h1 { font-size:32px; line-height:1.2; letter-spacing:-1px; font-weight:600; text
 .scale-toolbar { background:var(--surface); padding:14px 18px; }
 .scale-toolbar label, .scale-toolbar select { font-size:12px; }
 .trace-caption { padding:12px 18px; font-size:11px; color:var(--muted); }
-.beat-detail { margin-top:22px; }
+
 .lower-grid { margin-top:30px; gap:32px; }
 .inspector { padding:24px; border-radius:10px; box-shadow:none; }
 .inspector h2 { font-size:20px; letter-spacing:-.4px; }
@@ -107,25 +107,14 @@ h1 { font-size:32px; line-height:1.2; letter-spacing:-1px; font-weight:600; text
 .warning { font-size:12px; line-height:1.65; padding:12px 14px; border-radius:7px; }
 .text-button { font-size:13px; min-height:44px; }
 .workspace-footer { font-size:11px; border-top:1px solid var(--line); margin-top:28px; padding-top:18px; }
-.comparison-lab { border-radius:10px; box-shadow:none; }
-.comparison-heading h2, .external-heading h2 { font-size:24px; line-height:1.3; letter-spacing:-.6px; margin:0; }
+
 .section-subtitle { color:var(--muted); font-size:13px; line-height:1.6; margin-top:6px; }
-.comparison-heading .btn, .external-heading .btn { border-color:var(--line); }
-.comparison-controls, .external-controls { padding-block:4px; }
-.comparison-lab .control-note, .external-lab .control-note { font-size:12px; line-height:1.7; }
-.external-summary { font-size:13px; }
-.comparison-actions .btn, .external-actions .btn { border-color:var(--line); }
-.external-actions [data-external=clear], .comparison-actions [data-compare=clear] { color:#a13c30; }
-.dark .external-actions [data-external=clear], .dark .comparison-actions [data-compare=clear] { color:#ffc1ac; }
-dialog.external-lab { border-radius:12px; }
-.external-lab input[type=file] { padding:6px; font-size:13px; }
-.external-lab input[type=file]::file-selector-button { border:0; border-radius:4px; padding:8px 10px; min-height:34px; margin-right:10px; font:inherit; color:var(--accent); background:var(--soft); cursor:pointer; }
+
 .format-help { margin-top:10px; border-top:1px solid var(--line); }
 .format-help summary { color:var(--ink); }
 #compare-pin { background:var(--soft); color:var(--accent); border-color:transparent; }
 #compare-pin:hover:not(:disabled) { border-color:var(--accent); }
-.external-review h3 { font-size:20px; letter-spacing:-.3px; }
-.external-review fieldset { border-radius:8px; }
+
 @media(min-width:1600px) {
   .app-layout { grid-template-columns:290px minmax(0,1fr); }
   .workspace { padding-inline:42px; }
@@ -194,7 +183,6 @@ dialog.external-lab { border-radius:12px; }
   .trace-tools .btn { font-size:11px; }
   .lower-grid { margin-top:24px; gap:24px; }
   .control-tabs { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .comparison-heading h2, .external-heading h2 { font-size:22px; }
   .section-subtitle { font-size:12px; }
 }
 @media(max-width:360px) {

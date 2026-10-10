@@ -188,13 +188,7 @@ jobs:
           node scripts/verify-production.mjs
           node tests/browser-fidelity.mjs
           node tests/browser-worker-recovery.mjs
-          node tests/browser-t-peak-evidence.mjs
-          node tests/browser-t-end-assistance.mjs
           node tests/browser-posterior-amplitude.mjs
-          node tests/browser-comparison.mjs
-          node tests/browser-comparison-external.mjs
-          node tests/browser-external.mjs
-          node tests/browser-external-review.mjs
           node tests/browser-repolarization-coherence.mjs
           node tests/browser-visual-workspace.mjs
       - name: Stage focused secondary ST visual evidence
@@ -297,7 +291,6 @@ jobs:
           case "$ECG_BROWSER_GROUP" in
             source)
               node tests/browser-lpfb-resolution.mjs
-              ECG_ACTIVATION_ENGINES=all node tests/browser-activation.mjs
               ECG_REGIONAL_ENGINES=all node tests/browser-regional-activation.mjs
               node tests/browser-refractory-selection.mjs
               ;;

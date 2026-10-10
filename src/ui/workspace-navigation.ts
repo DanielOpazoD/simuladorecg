@@ -1,5 +1,5 @@
 type WorkspaceActions = Record<
-  "activation" | "compare" | "external" | "about" | "measurements" | "export" | "close-dialog",
+  "about" | "measurements" | "export" | "close-dialog",
   () => void
 >;
 
@@ -17,11 +17,6 @@ export class WorkspaceNavigation {
           this.inspector.scrollIntoView({ block: "start" });
           this.inspector.focus({ preventScroll: true });
         }
-        return true;
-      case "activation":
-      case "compare":
-      case "external":
-        if (!concealed) this.actions[action]();
         return true;
       case "catalog":
         this.catalog.classList.toggle("open");

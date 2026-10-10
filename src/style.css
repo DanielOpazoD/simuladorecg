@@ -1585,60 +1585,7 @@ textarea {
 .quality-dot.unavailable {
   background: #929ca7;
 }
-.beat-detail {
-  margin-top: 18px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 22px 23px 15px;
-  box-shadow: var(--shadow);
-  overflow: hidden;
-}
-.detail-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-}
-.detail-heading .section-label {
-  margin-bottom: 5px;
-  font-size: 10px;
-  letter-spacing: 1.4px;
-  color: var(--accent);
-}
-.detail-heading h2 {
-  font-size: 20px;
-  font-weight: 550;
-  letter-spacing: -0.5px;
-}
-.detail-navigation {
-  display: flex;
-  gap: 5px;
-  align-items: center;
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 13px;
-}
-.detail-navigation > span {
-  margin-right: 8px;
-}
-.detail-navigation small {
-  color: var(--muted);
-}
-.detail-navigation .btn {
-  border: 1px solid var(--line);
-  height: 32px;
-  min-height: 32px;
-  width: 32px;
-  min-width: 32px;
-}
-.detail-navigation select {
-  margin-left: 8px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--ink);
-  padding: 7px 10px;
-  border-radius: 5px;
-}
+
 .previous-beat svg {
   transform: rotate(180deg);
 }
@@ -1650,79 +1597,7 @@ textarea {
   min-height: 150px;
   overflow: visible;
 }
-.detail-grid {
-  stroke: var(--line);
-  stroke-width: 0.7;
-  stroke-dasharray: 2 4;
-}
-.detail-wave {
-  stroke: var(--ink);
-}
-.detail-tick {
-  fill: var(--muted);
-  font:
-    10px "IBM Plex Mono",
-    monospace;
-}
-.detail-interval {
-  font:
-    500 11px "IBM Plex Mono",
-    monospace;
-}
-.detail-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  border-top: 1px solid var(--line);
-  padding-top: 13px;
-  margin-top: 5px;
-}
-.detail-footer > div {
-  display: flex;
-  gap: 9px;
-  align-items: center;
-  font-size: 12px;
-}
-.detail-footer strong {
-  font-weight: 550;
-}
-.detail-footer span:last-child {
-  color: var(--muted);
-}
-.detail-footer .text-button {
-  margin: 0;
-  font-size: 12px;
-  padding: 0;
-}
-.detail-note {
-  margin-top: 8px;
-  font-size: 11px;
-  line-height: 1.7;
-  color: var(--muted);
-}
-.detail-empty {
-  min-height: 110px;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  color: var(--muted);
-}
-.detail-empty > svg {
-  width: 32px;
-  height: 32px;
-  color: var(--accent);
-}
-.detail-empty strong {
-  font-size: 15px;
-  color: var(--ink);
-  font-weight: 550;
-}
-.detail-empty p {
-  font-size: 13px;
-  margin-top: 6px;
-  line-height: 1.6;
-}
+
 .evidence-badge {
   display: inline-block;
   padding: 3px 7px;
@@ -1824,50 +1699,14 @@ textarea {
   .metric strong {
     font-size: 26px;
   }
-  .beat-detail {
-    padding: 18px 14px 14px;
-  }
-  .detail-heading {
-    flex-wrap: wrap;
-  }
-  .detail-heading h2 {
-    font-size: 18px;
-  }
-  .detail-navigation {
-    margin-left: auto;
-  }
-  .detail-footer {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-  .detail-footer > div {
-    flex-wrap: wrap;
-    font-size: 11px;
-  }
-  .detail-note {
-    font-size: 11px;
-  }
   .beat-plot {
     min-width: 600px;
-  }
-  .beat-detail {
-    overflow-x: auto;
-  }
-  .detail-heading,
-  .detail-footer,
-  .detail-note {
-    min-width: 0;
   }
   .range-field > span {
     font-size: 12px;
   }
   .control-note {
     font-size: 12px;
-  }
-}
-@media print {
-  .beat-detail {
-    display: none;
   }
 }
 
@@ -1902,10 +1741,6 @@ textarea {
 @media(max-width:600px){.exploration-context{padding:10px}.exploration-provenance{align-items:flex-start;flex-direction:column;gap:5px}.exploration-actions{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px}.exploration-actions .text-button{min-height:44px}.exploration-actions .text-button:last-child{grid-column:1/-1}}
 
 /* Keep uncertainty in view; only supporting numbers are progressively disclosed. */
-.detail-note > p { margin: 0 0 6px; }
-.detail-evidence summary { cursor: pointer; color: var(--accent); padding: 6px 0; }
-.detail-evidence summary:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
-.detail-evidence p { margin: 6px 0 0; }
 
 .inactive-controls {
   margin-top: 20px;

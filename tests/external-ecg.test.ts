@@ -4,7 +4,6 @@ import { readFileSync } from 'node:fs';
 import { parseWfdb16, parseECGCsv, externalWindow, exportECGCsv } from '../src/io/external-ecg';
 import { LEADS } from '../src/engine/types';
 import { analyzeSamples } from '../src/engine/sample-analysis';
-import { renderExternal } from '../src/render/external';
 
 function fixture(fs = 100, seconds = 10, order = [...LEADS], unit = 'mV', baseline = 13) {
   const n = fs * seconds, data = new ArrayBuffer(n * 12 * 2), v = new DataView(data);
@@ -135,11 +134,3 @@ describe('Already-exposed LUDB development data through the new reader',()=>{
   });
 });
 
-it('drawing at different scales leaves every sample unchanged, including clipped voltages',()=>{
-  const r=parsed(), before=structuredClone(r.leads);
-  const ctx:any=new Proxy({}, {get:(_t,k)=> k==='measureText'?()=>({width:40}):()=>{},set:()=>true});
-  const canvas:any={style:{},getContext:()=>ctx,setAttribute:()=>{}};
-  const a=renderExternal(canvas,r,null,{start:0,offset:0,seconds:2,range:1,marks:false},1200);
-  assert.ok(a.clipped>0);const b=renderExternal(canvas,r,null,{start:0,offset:5,seconds:5,range:16,marks:false},390);
-  assert.equal(b.clipped,0);assert.deepEqual(r.leads,before);assert.equal(b.samplesPerLead,500);
-});

@@ -1,5 +1,5 @@
 /** Presentation-only keyboard/focus support for the existing workspaces.
- * Does not own ECG, reader, comparison, annotation or worker state.
+ * Does not own ECG, annotation or worker state.
  * One child-list observer covers existing synchronous/asynchronous re-renders.
  */
 export function tabDestination(key: string, index: number, length: number): number | null {
@@ -11,7 +11,7 @@ export function tabDestination(key: string, index: number, length: number): numb
   return null;
 }
 
-const identityAttributes = ['data-key','data-action','data-review','data-external','data-compare','data-panel','data-mode','data-id','data-preset'] as const;
+const identityAttributes = ['data-key','data-action','data-panel','data-mode','data-id','data-preset'] as const;
 function selectorFor(el: HTMLElement): string | null {
   if (el.id) return '#' + CSS.escape(el.id);
   const attrs = identityAttributes.filter(a => el.hasAttribute(a));
@@ -39,9 +39,8 @@ export function installAccessibility() {
   title.tabIndex = -1;
   document.querySelector<HTMLElement>('.sidebar-head h2')!.id = 'catalog-title';
   document.querySelector<HTMLElement>('#inspector')!.tabIndex = -1;
-  document.querySelector<HTMLElement>('#comparison-lab')!.tabIndex = -1;
   trigger.setAttribute('aria-controls','catalog');
-  topbar.insertAdjacentHTML('beforebegin', '<nav class="skip-links" aria-label="Accesos directos"><a href="#case-title">Ir al simulador</a><a href="#inspector">Ir a parámetros</a><a href="#comparison-lab">Ir al comparador A/B</a></nav>');
+  topbar.insertAdjacentHTML('beforebegin', '<nav class="skip-links" aria-label="Accesos directos"><a href="#case-title">Ir al simulador</a><a href="#inspector">Ir a parámetros</a></nav>');
   const skips = document.querySelector<HTMLElement>('.skip-links')!;
   skips.addEventListener('click', e => {
     const anchor = (e.target as Element).closest<HTMLAnchorElement>('a');
@@ -57,7 +56,7 @@ export function installAccessibility() {
     const node = e.target as HTMLElement;
     const dialog = node.closest<HTMLDialogElement>('dialog');
     if (dialog && last && last.root !== dialog && !dialog.contains(last.root) && !dialog.contains(last.node)) returns.set(dialog, last);
-    last = {node, selector:selectorFor(node), root:node.closest<HTMLElement>('#diagnosis-navigation,#external-review,#comparison-lab,#inspector,#scale-toolbar,#caliper-editor,#catalog') ?? dialog ?? app};
+    last = {node, selector:selectorFor(node), root:node.closest<HTMLElement>('#diagnosis-navigation,#inspector,#scale-toolbar,#caliper-editor,#catalog') ?? dialog ?? app};
   });
   function restoreFocus() {
     if (!last || last.node.isConnected || document.activeElement !== document.body) return;
@@ -65,7 +64,6 @@ export function installAccessibility() {
     if (open && !open.contains(last.root) && open !== last.root) return;
     const replacement = last.selector ? last.root.querySelector<HTMLElement>(last.selector) : null;
     if (available(replacement)) replacement.focus({preventScroll:true});
-    else if (last.root.id === 'external-review') last.root.querySelector<HTMLElement>('[data-review=new]')?.focus({preventScroll:true});
   }
   // Native modal focus containment is retained; only a replaced opener needs help.
   document.addEventListener('close', e => {
@@ -128,7 +126,7 @@ export function installAccessibility() {
     const heading = document.querySelector<HTMLElement>('#dialog-content h2');
     if (heading) {heading.id = 'model-dialog-title';document.querySelector('#dialog')!.setAttribute('aria-labelledby',heading.id);}
     // Horizontal data tables keep their two-dimensional meaning but are keyboard-scrollable.
-    for (const wrap of document.querySelectorAll<HTMLElement>('.external-table,.measurement-table-wrap')) {
+    for (const wrap of document.querySelectorAll<HTMLElement>('.measurement-table-wrap')) {
       wrap.tabIndex = 0; wrap.setAttribute('role','region');
       const table = wrap.querySelector('table');
       const label = table?.querySelector('caption')?.textContent ?? wrap.closest('section')?.querySelector('h3')?.textContent ?? 'Tabla de medidas ECG';
