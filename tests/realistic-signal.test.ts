@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { synthesize } from "../src/engine/signal";
 import { LEADS, type ECGCase, type Signal } from "../src/engine/types";
-import { fromPreset, presetById, PRESETS, TEXTBOOK_AF_SEED, TEXTBOOK_FLUTTER_SEED, TEXTBOOK_PACED_SEED, TEXTBOOK_PVC_SEED, TEXTBOOK_SEED, TEXTBOOK_SEEDS, TEXTBOOK_VF_SEED, TEXTBOOK_VT_SEED } from "../src/presets/catalog";
+import { fromPreset, patchCase, presetById, PRESETS, TEXTBOOK_AF_SEED, TEXTBOOK_FLUTTER_SEED, TEXTBOOK_PACED_SEED, TEXTBOOK_PVC_SEED, TEXTBOOK_SEED, TEXTBOOK_SEEDS, TEXTBOOK_VF_SEED, TEXTBOOK_VT_SEED } from "../src/presets/catalog";
 import { realisticModelFor, realisticModelsFor } from "../src/engine/realistic/scope";
 import { samplePatient } from "../src/engine/realistic/shape-model";
 
 function load(id: string, patch: Partial<ECGCase> = {}): ECGCase {
-  return { ...fromPreset(presetById(id)!), filter: "off", variability: 0, ...patch };
+  return patchCase(fromPreset(presetById(id)!), { filter: "off", variability: 0, ...patch });
 }
 function maxDiff(a: Signal, b: Signal, start: number, end: number) {
   let max = 0;
@@ -475,7 +475,7 @@ describe("F5.3: extrasístoles ventriculares aprendidas de PTB-XL", () => {
     // Different QRS gains bust the patient cache; the natural axis must not move.
     const a = realisticPvcPatient(load("pvc", { axis: 0 })), b = realisticPvcPatient(load("pvc", { axis: 90, qrsAmp: 1.1 }));
     expect(a.achievedAxes.qrs).toBeCloseTo(b.achievedAxes.qrs, 9);
-    const g = realisticPvcPatient(load("pvc", { qrsAmp: 2 }));
+    const a1 = load("pvc", { axis: 0 }), g = realisticPvcPatient(load("pvc", { qrsAmp: 2 * a1.qrsAmp }));
     expect(g.scales.t / g.scales.qrs).toBeCloseTo(1, 12);
     expect(g.scales.qrs).toBeCloseTo(2 * a.scales.qrs, 12);
   });
@@ -653,5 +653,86 @@ describe("F5.6: fibrilación ventricular aprendida (vfdb + cudb)", () => {
     const c = load("vf");
     expect(Array.from(synthesize(c, 4).leads.II)).not.toEqual(Array.from(synthesize(c, 4, { learnedBase: false }).leads.II));
     expect(c.seed).toBe(TEXTBOOK_VF_SEED);
+  });
+});
+
+describe("F2.3: paciente natural en la base normal", () => {
+  it("cada semilla trae su eje, PR, QRS y QTc, y el trazado es el de esos valores", async () => {
+    const { changeCase } = await import("../src/ui/case-state");
+    const axes = new Set<number>(), qrs = new Set<number>(), base = fromPreset(presetById("sinus")!);
+    for (let seed = 1; seed <= 20; seed++) {
+      const c = changeCase(base, "seed", seed), s = synthesize(c, 10);
+      axes.add(c.axis); qrs.add(c.qrs);
+      expect(Math.abs(s.truth.axis! - c.axis)).toBeLessThan(3);
+      expect(s.truth.qrs).toBeCloseTo(c.qrs, 6);
+    }
+    expect(axes.size).toBeGreaterThan(12);
+    expect(qrs.size).toBeGreaterThan(8);
+  });
+  it("los tamaños naturales son los del paciente (ganancia propia ≈ 1)", async () => {
+    const { realisticPatient } = await import("../src/engine/realistic/engine");
+    const { samplePatient } = await import("../src/engine/realistic/shape-model");
+    const c = fromPreset(presetById("sinus")!), p = realisticPatient(c);
+    const own = samplePatient({ seed: c.seed, axis: null, pAxis: null, tAxis: null, pScale: 1, qrsScale: 1, tScale: 1, horizontalDeg: 0, naturalAmplitude: true, stableCandidate: true });
+    for (const ph of ["p", "qrs", "t"] as const) expect(p.scales[ph] / own.scales[ph]).toBeCloseTo(1, 1);
+  });
+  it("mover un control lo fija; cambiar de semilla no lo pisa y sí renueva los demás", async () => {
+    const { changeCase } = await import("../src/ui/case-state");
+    const c0 = fromPreset(presetById("sinus")!), c1 = changeCase(c0, "axis", 10), c2 = changeCase(c1, "seed", 77);
+    expect(c1.naturalAxis).toBe(false);
+    expect(c2.axis).toBe(10);
+    expect(c2.pr).toBe(changeCase(c0, "seed", 77).pr);
+    expect(c2.pr).not.toBe(c0.pr);
+  });
+  it("fijar el eje rota a la misma persona", async () => {
+    const { changeCase } = await import("../src/ui/case-state");
+    const { realisticPatient } = await import("../src/engine/realistic/engine");
+    for (const seed of [3, 17, 44, 90]) {
+      const c = changeCase(fromPreset(presetById("sinus")!), "seed", seed);
+      expect(Array.from(realisticPatient(changeCase(c, "axis", c.axis + 40)).z)).toEqual(Array.from(realisticPatient(c).z));
+    }
+  });
+  it("lo que el preset fija se conserva y los casos guardados antes conservan lo cambiado", async () => {
+    const { normalizeCase } = await import("../src/engine/types");
+    const av1 = fromPreset(presetById("av1")!);
+    expect(av1.pr).toBe(260); expect(av1.naturalPr).toBe(false); expect(av1.naturalAxis).toBe(true);
+    // Saved before F2.3 (no flags): every value stays as saved, even on a view change.
+    const { changeCase } = await import("../src/ui/case-state");
+    const old = normalizeCase({ version: 1, presetId: "sinus", name: "Ritmo sinusal", seed: 1951 });
+    expect(old.naturalQrs).toBe(false);
+    const viewed = changeCase(old, "view.speed", 50);
+    for (const k of ["axis", "pr", "qrs", "qtc", "pAmp", "qrsAmp", "tAmp"] as const) expect(viewed[k]).toBe(old[k]);
+    expect(normalizeCase({ version: 1, qrs: 120, naturalQrs: true, naturalPr: true }).naturalQrs).toBe(true);
+    expect(normalizeCase({ version: 1, qrs: 120, naturalQrs: true }).naturalPr).toBe(true);
+  });
+  it("un valor implícito en otra elección se fija: BAV de 1.er grado lleva su PR", async () => {
+    const { changeCase } = await import("../src/ui/case-state");
+    const c = changeCase(fromPreset(presetById("sinus")!), "av", "first");
+    expect(c.pr).toBe(260); expect(c.naturalPr).toBe(false);
+    expect(synthesize(c, 10).truth.pr).toBe(260);
+  });
+  it("los casos de preset guardados, antes y después de F2.3, conservan su patrón", async () => {
+    const { normalizeCase } = await import("../src/engine/types");
+    const { caseContext } = await import("../src/presets/case-context");
+    for (const id of ["sinus", "brady", "av1", "longqt", "pac"]) {
+      const now = normalizeCase(JSON.parse(JSON.stringify(fromPreset(presetById(id)!))));
+      expect(caseContext(now).preset?.id).toBe(id);
+      const before = JSON.parse(JSON.stringify(fromPreset(presetById(id)!, undefined, { natural: false })));
+      for (const flag of ["naturalAxis", "naturalPr", "naturalQrs", "naturalQt", "naturalPAmp", "naturalQrsAmp", "naturalTAmp"]) delete before[flag];
+      expect(caseContext(normalizeCase(before)).preset?.id).toBe(id);
+    }
+  });
+  it("rotar el corazón (transición precordial) no cambia de persona", async () => {
+    const { changeCase } = await import("../src/ui/case-state");
+    const c = fromPreset(presetById("sinus")!), r = changeCase(c, "transition", 0.5);
+    for (const k of ["pr", "qrs", "qtc"] as const) expect(r[k]).toBe(c[k]);
+  });
+  it("el paciente de libro es normal con sus valores propios", () => {
+    const c = fromPreset(presetById("sinus")!);
+    expect(c.seed).toBe(TEXTBOOK_SEED);
+    expect(c.axis).toBeGreaterThanOrEqual(30); expect(c.axis).toBeLessThanOrEqual(75);
+    expect(c.pr).toBeGreaterThanOrEqual(130); expect(c.pr).toBeLessThanOrEqual(190);
+    expect(c.qrs).toBeGreaterThanOrEqual(80); expect(c.qrs).toBeLessThanOrEqual(100);
+    expect(c.qtc).toBeGreaterThanOrEqual(380); expect(c.qtc).toBeLessThanOrEqual(430);
   });
 });

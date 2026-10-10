@@ -2,16 +2,21 @@ import { isVviDemand, isVviNoncapture, vviScopeDescription } from "../engine/vvi
 import { rhythmControlState } from './rhythm-controls';
 import { regionalActivationState } from "../engine/regional-activation";
 import { regionalActivationControls } from "./regional-activation";
-import { LEADS, type ECGCase } from "../engine/types";
+import { isNatural, LEADS, type ECGCase, type NaturalControl } from "../engine/types";
 import { lesionControlEffect, tVector } from "../engine/morphology";
 import { range, select, toggle } from "./helpers";
-import { learnedSecondaryRepolarization, realisticModelFor } from "../engine/realistic/scope";
+import { learnedSecondaryRepolarization, noConductedBeats, realisticModelFor } from "../engine/realistic/scope";
 
 /** On the learned base, P and T follow the patient until their slider is moved. */
 function learnedNatural(c: ECGCase, wave: "p" | "t") {
   const model = realisticModelFor(c);
   if (!model) return false;
   return wave === "p" ? c.naturalPAxis !== false : c.naturalTAxis !== false || learnedSecondaryRepolarization(model);
+}
+/** F2.3: on the learned normal base, an untouched control shows the patient's own
+ * value; the first move fixes it. */
+function naturalLabel(c: ECGCase, control: NaturalControl, label: string) {
+  return realisticModelFor(c) === "NORM" && !noConductedBeats(c) && isNatural(c, control) ? `${label} (natural del paciente)` : label;
 }
 /** Chronic phase of a territory with a learned old-infarction population. */
 const oldInfarction = (c: ECGCase) => {
@@ -82,7 +87,7 @@ export function controls(c: ECGCase) {
  <div class="control-tabs" role="tablist" aria-label="Parámetros"><button role="tab" aria-selected="true" data-panel="base">Intervalos</button><button role="tab" aria-selected="false" data-panel="conduction">Conducción</button><button role="tab" aria-selected="false" data-panel="st">ST y ondas</button><button role="tab" aria-selected="false" data-panel="signal">Señal y papel</button></div>
  <div class="control-panel" data-control-panel="base"><div class="range-grid">
  ${range("hr", rhythm.baseRateLabel, 20, 250, 1, c.hr, "lpm", rhythm.baseRateDisabled)}
- ${range("pr", "Intervalo PR", 80, 400, 5, c.pr, "ms", rhythm.prDisabled)}${range("qrs", "Duración QRS", regionalActivationState(c).active ? regionalActivationState(c).minimumQrsMs : 60, 240, 5, c.qrs, "ms", rhythm.noOrganizedBeats)}${range("qtc", "QTc · Fridericia", 260, 650, 5, c.qtc, "ms", rhythm.noOrganizedBeats)}${range("axis", "Eje QRS solicitado", -180, 180, 5, c.axis, "°", rhythm.qrsAxisDisabled)}${range("variability", "Variabilidad sinusal RR", 0, 0.3, 0.01, c.variability, "", rhythm.variabilityDisabled)}
+ ${range("pr", naturalLabel(c, "pr", "Intervalo PR"), 80, 400, 5, c.pr, "ms", rhythm.prDisabled)}${range("qrs", naturalLabel(c, "qrs", "Duración QRS"), regionalActivationState(c).active ? regionalActivationState(c).minimumQrsMs : 60, 240, 5, c.qrs, "ms", rhythm.noOrganizedBeats)}${range("qtc", naturalLabel(c, "qtc", "QTc · Fridericia"), 260, 650, 5, c.qtc, "ms", rhythm.noOrganizedBeats)}${range("axis", naturalLabel(c, "axis", "Eje QRS solicitado"), -180, 180, 5, c.axis, "°", rhythm.qrsAxisDisabled)}${range("variability", "Variabilidad sinusal RR", 0, 0.3, 0.01, c.variability, "", rhythm.variabilityDisabled)}
  </div><div class="inline-fields">${range("respiratoryRate", "Frecuencia respiratoria", 6, 40, 1, c.respiratoryRate, "rpm")}${range("atrialRate", "FC auricular independiente", 40, 350, 5, c.atrialRate, "lpm", rhythm.atrialRateDisabled)}</div><p class="control-note">Los controles atenuados no actúan en el ritmo seleccionado; conservan su valor para otros ritmos. FC auricular independiente: flutter, BAV completo y TV. El QT se adapta a la historia de RR con memoria exponencial de ≈40 s; no responde de golpe a un RR aislado.</p></div>
  <div class="control-panel" data-control-panel="conduction" hidden><div class="field-grid">
  ${contextualSelect(
@@ -242,7 +247,7 @@ export function controls(c: ECGCase) {
    c.overload,
  )}
  ${range("st", "Intensidad de lesión", 0, 8, 0.25, c.st, "escala del patrón", amplitude.stDisabled)}${range("transition", "Rotación precordial", -1, 1, 0.1, c.transition, "", rhythm.noOrganizedBeats)}
- ${range("pAxis", learnedNatural(c, "p") ? "Eje de P (natural del paciente)" : "Eje de P", -180, 180, 5, c.pAxis, "°", rhythm.pAxisDisabled)}<div class="t-axis-control">${range("tAxis", learnedNatural(c, "t") ? "Eje de T (natural del paciente)" : "Eje de T", -180, 180, 5, c.tAxis, "°", tAxis.disabled, "t-axis-note")}<p class="control-note" id="t-axis-note">${tAxis.reason}</p></div>${range("pAmp", "Amplitud de P", 0, 0.5, 0.01, c.pAmp, "mV ref.", rhythm.pAmplitudeDisabled)}${range("qrsAmp", "Amplitud QRS", 0.1, 3, 0.1, c.qrsAmp, "×", rhythm.noOrganizedBeats)}${range("tAmp", "Amplitud de T", 0, 1, 0.01, c.tAmp, "mV ref.", amplitude.tDisabled)}
+ ${range("pAxis", learnedNatural(c, "p") ? "Eje de P (natural del paciente)" : "Eje de P", -180, 180, 5, c.pAxis, "°", rhythm.pAxisDisabled)}<div class="t-axis-control">${range("tAxis", learnedNatural(c, "t") ? "Eje de T (natural del paciente)" : "Eje de T", -180, 180, 5, c.tAxis, "°", tAxis.disabled, "t-axis-note")}<p class="control-note" id="t-axis-note">${tAxis.reason}</p></div>${range("pAmp", naturalLabel(c, "pAmp", "Amplitud de P"), 0, 0.5, 0.01, c.pAmp, "mV ref.", rhythm.pAmplitudeDisabled)}${range("qrsAmp", naturalLabel(c, "qrsAmp", "Amplitud QRS"), 0.1, 3, 0.1, c.qrsAmp, "×", rhythm.noOrganizedBeats)}${range("tAmp", naturalLabel(c, "tAmp", "Amplitud de T"), 0, 1, 0.01, c.tAmp, "mV ref.", amplitude.tDisabled)}
  ${toggle("septalQ", "Componente septal", c.septalQ)}</div><p class="control-note" id="amplitude-note">${amplitude.note}</p><p class="control-note">Amplitud de P ajusta las ondas P programadas, no las ondas de FA/flutter. En ritmo de la unión la dirección retrógrada es fija. Los controles atenuados conservan su valor.</p><p class="control-note">Amplitud de T escala toda la T, incluidas las correcciones locales; 0 la anula. No modifica QRS, el ST primario/secundario ni U. Los voltajes de referencia no son amplitudes de una derivación concreta.</p><p class="control-note" id="secondary-repolarization-note">T secundaria: la dirección sigue la activación QRS, no el control Eje de T; la sobrecarga actúa a través del QRS. ${c.rhythm === "torsades" ? "En torsades el modelo no añade un segmento ST separable." : "El ST secundario sigue esa misma fuente QRS, independientemente de Amplitud de T."} ST/T son aproximados y no validan criterios ST/QRS. El ST de lesión primaria es un componente distinto.</p></div>
  <div class="control-panel" data-control-panel="signal" hidden><div class="field-grid">
  ${select(

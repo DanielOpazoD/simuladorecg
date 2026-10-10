@@ -58,12 +58,14 @@ describe('Replayed monitor phase and preservation, no generator reference in fil
         // Monitor band-limiting trims a few percent off a real QRS's sharp peaks
         // (learned base); an absolute 0.05 mV only suited the smooth kernel QRS.
         expect(Math.abs(m.qrsPeakToPeakMv-r.qrsPeakToPeakMv)).toBeLessThan(.05+.06*r.qrsPeakToPeakMv);
-        expect(Math.abs(m.tAbsoluteAreaMvS-r.tAbsoluteAreaMvS)).toBeLessThan(.004+(ectopic?.1*r.tAbsoluteAreaMvS:0));
+        // In a learned PVC case the high-pass tails of the preceding conducted beats
+        // (natural sizes since F2.3) add up: up to ~0.011 mV·s on a small lateral T.
+        expect(Math.abs(m.tAbsoluteAreaMvS-r.tAbsoluteAreaMvS)).toBeLessThan(ectopic?.006+.15*r.tAbsoluteAreaMvS:.004);
         // A nearly biphasic wave can exchange its largest signed peak. Compare
         // BOTH extrema instead of treating that argmax switch as a 0.4mV error.
         const extrema=(a:Float64Array,base:number)=>{const t=a.slice(Math.ceil(w.t[0]*500),Math.floor(w.t[1]*500)+1);return [Math.min(...t)-base,Math.max(...t)-base];};
         const rb=extrema(clean.leads[l],r.baselineMv),mb=extrema(mon.leads[l],m.baselineMv);
-        expect(Math.max(...mb.map((v,i)=>Math.abs(v-rb[i])))).toBeLessThan(.04+(ectopic?.06*Math.max(...rb.map(Math.abs)):0));
+        expect(Math.max(...mb.map((v,i)=>Math.abs(v-rb[i])))).toBeLessThan(ectopic?.05+.06*Math.max(...rb.map(Math.abs)):.04);
       }
     }
   });

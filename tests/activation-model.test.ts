@@ -46,8 +46,9 @@ describe('Activation lab: sampled vector, explicit domains and real beat kinds',
     assert.throws(() => activationAt(t, NaN), /Instante/);
   });
   it('uses shared absolute time and amplitude scales, not per-source normalization', () => {
-    const pair = activationPair(load('sinus'), beat(), 'rbbb');
-    assert.equal(pair.a.durationMs, 90); assert.equal(pair.b.durationMs, 150); assert.equal(pair.durationMs, 150);
+    const c = load('sinus'), pair = activationPair(c, beat(), 'rbbb');
+    // The learned sinus patient carries its own QRS (F2.3).
+    assert.equal(pair.a.durationMs, c.qrs); assert.equal(pair.b.durationMs, 150); assert.equal(pair.durationMs, 150);
     assert.deepEqual(activationAt(pair.a, 110).xyz, [0, 0, 0]);
     assert.ok(Math.hypot(...activationAt(pair.b, 110).xyz) > .01);
     for (const t of [pair.a, pair.b]) for (const l of LEADS) assert.ok(Math.max(...t.leads[l].map(Math.abs)) < pair.leadRangeMv);
@@ -303,7 +304,7 @@ describe('WPW lab represents the entire existing vector QRS, without retuning it
     const pair = activationPair(c, originalEvents.beats[0], 'wpw'), next = generateEvents(pair.b.case, 10);
     assert.equal(pair.b.case.pr, 100); assert.equal(pair.b.case.qrs, 135); assert.equal(pair.b.case.conduction, 'wpw');
     assert.equal(pair.b.case.rhythm, c.rhythm); assert.deepEqual(pair.a.case, saved); assert.deepEqual(c, saved);
-    close(next.beats[0].time - originalEvents.beats[0].time, -.06);
+    close(next.beats[0].time - originalEvents.beats[0].time, (100 - c.pr) / 1000);
     assert.equal(pair.b.beat.time, originalEvents.beats[0].time); // Explicitly captured, not recalculated.
     assert.equal(Object.hasOwn(pair.b.beat, 'qt'), false);
     assert.equal(caseContext(normalizeImportedCase(pair.b.case)).preset, undefined);

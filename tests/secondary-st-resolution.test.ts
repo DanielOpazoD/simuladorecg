@@ -17,7 +17,7 @@ describe('Represented secondary ST source',()=>{
   const{c,b}=setup(id);expect(secondaryRepolarization(c,b,qrsKernels(c,b)).st).toBeNull();
  });
  it('retains both true PVCs when ST connects a late/early pair of slope candidates',()=>{
-  const c={...fromPreset(presetById('couplet')!),hr:60,coupling:.35,filter:'off' as const,variability:0,seed:29};
+  const c={...fromPreset(presetById('couplet')!,undefined,{natural:false}),hr:60,coupling:.35,filter:'off' as const,variability:0,seed:29};
   Object.assign(c.artifacts,{baseline:0,muscle:0,mains:0,loose:0});const s=synthesize(c,10,{learnedBase:false}),m=analyzeSamples({fs:s.fs,leads:s.leads});
   const pvc=s.events.beats.filter(b=>b.kind==='pvc'&&b.time>1&&b.time<9);
   expect(pvc).toHaveLength(2);

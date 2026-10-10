@@ -21,8 +21,10 @@ describe("Audit identities and the actual contributing population", () => {
     expect(m.qrs).not.toBeNull();
     expect(m.qrs).toBe(raw.qrs);
     expect(m.evidence.qrs.status).toBe("review");
+    // Conducted beats only (the textbook PVC patient's own QRS is 100 ms; its PVCs
+    // are much wider).
     expect(referenceForMeasurement(signal, raw).reference.qrs).toBeLessThan(
-      100,
+      110,
     );
     expect(raw.rejected).toBeUndefined();
   });

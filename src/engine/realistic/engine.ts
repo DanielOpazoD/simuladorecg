@@ -11,7 +11,7 @@ import { dipoleOf, reconstruct, samplePatient, shapeModel, transform, type Patie
 import { addAtrial, addVentricular, beatShapeState, beatTemplate, qrsOnsetLevel, type BeatShapeState } from "./beat";
 import { learnedSecondaryRepolarization, noConductedBeats, realisticModelFor } from "./scope";
 
-const P_REFERENCE_AMPLITUDE = 0.15;
+export const P_REFERENCE_AMPLITUDE = 0.15;
 /** Horizontal heart rotation per unit of the transition control (degrees). */
 export const TRANSITION_DEG = 18;
 export { usesRealisticBase } from "./scope";

@@ -22,7 +22,8 @@ await build({
     contents: `export { synthesize } from "./src/engine/signal.ts";
 export { PRESETS, fromPreset } from "./src/presets/catalog.ts";
 export { LEADS } from "./src/engine/lead-registry.ts";
-export { registerShapeModel } from "./src/engine/realistic/shape-model.ts";`,
+export { registerShapeModel } from "./src/engine/realistic/shape-model.ts";
+export { withNaturalControls } from "./src/engine/realistic/natural.ts";`,
     resolveDir: root,
     loader: "ts",
   },
@@ -32,7 +33,7 @@ export { registerShapeModel } from "./src/engine/realistic/shape-model.ts";`,
   outfile: bundle,
   logLevel: "error",
 });
-const { synthesize, PRESETS, fromPreset, LEADS, registerShapeModel } = await import(pathToFileURL(bundle).href);
+const { synthesize, PRESETS, fromPreset, LEADS, registerShapeModel, withNaturalControls } = await import(pathToFileURL(bundle).href);
 await rm(tmp, { recursive: true, force: true });
 // Modelos por clase: en la app los carga el worker bajo demanda (import.meta.glob);
 // aquí se registran desde el disco.
@@ -40,8 +41,9 @@ const modelsDir = path.join(root, "src/engine/realistic/models");
 for (const f of await readdir(modelsDir))
   if (f.endsWith(".json")) registerShapeModel(f.slice(0, -5), JSON.parse(await readFile(path.join(modelsDir, f), "utf8")));
 
-// Población "normal" para dar al motor su mejor oportunidad: los intervalos, el eje
-// y las amplitudes recorren rangos de adultos sanos. Determinista por índice.
+// Población "normal": desde F2.3 cada semilla trae su eje, amplitudes, PR, QRS y QT
+// (paciente natural); el lote solo varía lo que no es del paciente: frecuencia,
+// respiración y variabilidad RR. Determinista por índice.
 function rng(seed) {
   // mulberry32 sobre una semilla mezclada: semillas consecutivas no correlacionan.
   let a = Math.imul(seed ^ 0x9e3779b9, 0x85ebca6b) >>> 0;
@@ -78,13 +80,11 @@ const n = Number(nArg);
 for (let i = 0; i < n; i++) {
   const r = rng(9001 + offset + i);
   const u = (a, b) => a + (b - a) * r();
-  const c = { ...fromPreset(preset), seed: 1 + offset + i };
+  const c = withNaturalControls({ ...fromPreset(preset), seed: 1 + offset + i });
   if (mode === "ideal") c.acquisition = "ideal";
   if (presetId === "sinus") {
     Object.assign(c, {
-      hr: u(52, 98), pr: u(130, 195), qrs: u(80, 104), qtc: u(390, 440),
-      axis: u(-15, 85), pAxis: u(35, 70), qrsAmp: u(0.8, 1.25), tAmp: u(0.18, 0.38),
-      pAmp: u(0.11, 0.2), transition: u(-0.6, 0.6), respiratoryRate: u(10, 18),
+      hr: u(52, 98), respiratoryRate: u(10, 18),
       // Variabilidad RR individual: lognormal alrededor de la mediana de reposo.
       variability: 0.035 * Math.exp(0.6 * Math.sqrt(-2 * Math.log(r() || 1e-9)) * Math.cos(2 * Math.PI * r())),
     });

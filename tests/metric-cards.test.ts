@@ -80,13 +80,14 @@ describe("modelMetricCards: el simulador muestra lo que generó", () => {
     return modelMetricCards(c, synthesize(c, 10));
   };
   it("sinusal: PR, QRS, QTc y eje programados, sin depender del analizador", () => {
-    const [hr, pr, qrs, qtc, axis] = cards("sinus");
+    const [hr, pr, qrs, qtc, axis] = cards("sinus"), c = fromPreset(presetById("sinus")!);
     expect(Number.parseFloat(hr.value)).toBeGreaterThan(68);
-    expect(pr.value).toBe("160<small>ms</small>");
-    expect(qrs.value).toBe("90<small>ms</small>");
-    expect(Math.abs(Number.parseFloat(qtc.value) - 410)).toBeLessThan(12);
-    // The axis card states the axis the trace shows (measured), close to the 55° asked.
-    expect(Math.abs(Number.parseFloat(axis.value) - 55)).toBeLessThan(6);
+    // The textbook patient's own values (F2.3), carried by the case controls.
+    expect(pr.value).toBe(`${c.pr}<small>ms</small>`);
+    expect(qrs.value).toBe(`${c.qrs}<small>ms</small>`);
+    expect(Math.abs(Number.parseFloat(qtc.value) - c.qtc)).toBeLessThan(12);
+    // The axis card states the axis the trace shows (measured), close to the patient's.
+    expect(Math.abs(Number.parseFloat(axis.value) - c.axis)).toBeLessThan(6);
     expect([hr, pr, qrs, qtc, axis].every((x) => x.status === "usable" && x.note.startsWith("modelo"))).toBe(true);
   });
   it("Wenckebach: el PR es el rango progresivo, no «No estimable»", () => {

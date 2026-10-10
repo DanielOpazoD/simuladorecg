@@ -1,6 +1,6 @@
 // Elige la semilla del "paciente de libro" para los presets con base aprendida:
 // el más cercano a la media poblacional (‖z‖ mínimo) entre los que cumplen los
-// criterios clásicos de un ECG normal. Uso: node scripts/fidelity/choose-textbook-seed.mjs [n=4000]
+// criterios clásicos de un ECG normal, con sus valores naturales (F2.3). Uso: node scripts/fidelity/choose-textbook-seed.mjs [n=4000]
 import { build } from "esbuild";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -21,7 +21,9 @@ const c = M.DEFAULT_CASE, n = Number(process.argv[2] ?? 4000);
 const LEADS = ["I", "II", "V1", "V2", "V3", "V4", "V5", "V6"];
 const results = [];
 for (let seed = 1; seed <= n; seed++) {
-  const p = M.samplePatient({ seed, axis: c.axis, pAxis: null, tAxis: null, pScale: 1, qrsScale: 1, tScale: 1, horizontalDeg: 0 }) // P/T natural, as in the presets;
+  // Natural patient, as the presets show it (F2.3): own axes, sizes and intervals.
+  const p = M.samplePatient({ seed, axis: null, pAxis: null, tAxis: null, pScale: 1, qrsScale: 1, tScale: 1, horizontalDeg: 0,
+    stableCandidate: true, ownSizes: { p: true, qrs: true, t: true } });
   const m = p.model, x = M.transform(m, M.reconstruct(m, p.z), p.ops);
   const wave = (phase, lead) => {
     const ph = m.phases[phase], li = LEADS.indexOf(lead);
@@ -48,6 +50,10 @@ for (let seed = 1; seed <= n; seed++) {
     tAVR: t("aVR") < -0.05,
     stV2: stV2 > 0 && stV2 < 0.15,
     pDuration: p.pMs > 85 && p.pMs < 115,
+    axis: p.achievedAxes.qrs >= 30 && p.achievedAxes.qrs <= 75,
+    pr: p.pMs + p.pqMs >= 130 && p.pMs + p.pqMs <= 190,
+    qrs: p.qrsMs >= 80 && p.qrsMs <= 100,
+    qtc: (p.qrsMs + p.sttMs) / Math.cbrt(p.rrMs / 1000) >= 380 && (p.qrsMs + p.sttMs) / Math.cbrt(p.rrMs / 1000) <= 430,
   };
   const ok = Object.values(checks).every(Boolean);
   const norm = Math.hypot(...p.z);

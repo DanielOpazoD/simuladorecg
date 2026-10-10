@@ -1,5 +1,6 @@
 import { WPW_REPOLARIZATION_LIMIT, SECONDARY_ST_RATIO_LIMIT } from "./teaching-limits";
-import { DEFAULT_CASE, cloneCase, type ECGCase } from "../engine/types";
+import { DEFAULT_CASE, NATURAL_CONTROLS, cloneCase, type ECGCase, type NaturalControl } from "../engine/types";
+import { withNaturalControls } from "../engine/realistic/natural";
 import { learnedVentricularEctopy, pacedVentricular, realisticModelFor, ventricularRhythm } from "../engine/realistic/scope";
 import type { BeatModelCode } from "../engine/realistic/shape-model";
 export interface Preset {
@@ -776,9 +777,10 @@ export const PRESETS: Preset[] = [
   ),
 ];
 /** Patient of the learned base closest to the population mean among those that
- * meet every classic normal criterion (scripts/fidelity/choose-textbook-seed.mjs):
- * presets show the textbook example; the seed control explores real variety. */
-export const TEXTBOOK_SEED = 1951;
+ * meet every classic normal criterion with its natural axis and intervals (F2.3;
+ * scripts/fidelity/choose-textbook-seed.mjs, 6 of 20 000): presets show the
+ * textbook example; the seed control explores real variety. */
+export const TEXTBOOK_SEED = 12066;
 /** Per learned population, among 300 seeds: those a classifier trained only on
  * real PTB-XL ECGs finds most typical of the class (probability within 0.03 of
  * the best), then the one the frozen analyzer measures closest to the programmed
@@ -802,9 +804,14 @@ export const TEXTBOOK_VT_SEED = 157;
 export const TEXTBOOK_PACED_SEED = 13;
 export const TEXTBOOK_SEEDS: Record<BeatModelCode, number> = { NORM: TEXTBOOK_SEED, CLBBB: 15, CRBBB: 276, IRBBB: 201, LAFB: 9, LVH: 154, IMI: 52, ASMI: 105 };
 
-export function fromPreset(preset: Preset, view?: ECGCase["view"]): ECGCase {
+/** `natural: false` keeps the control defaults instead of the learned patient's
+ * values: fixtures for the kernel model (synthesize with learnedBase: false). */
+export function fromPreset(preset: Preset, view?: ECGCase["view"], options: { natural?: boolean } = {}): ECGCase {
   const c = cloneCase(DEFAULT_CASE);
   Object.assign(c, preset.patch);
+  // A value the preset sets is part of its teaching picture: an exact target.
+  for (const [control, flag] of Object.entries(NATURAL_CONTROLS) as [NaturalControl, (typeof NATURAL_CONTROLS)[NaturalControl]][])
+    if (preset.patch[control] !== undefined) c[flag] = false;
   const model = realisticModelFor(c);
   if (preset.patch.seed === undefined && model)
     c.seed = model !== "NORM" ? TEXTBOOK_SEEDS[model] : c.rhythm === "af" ? TEXTBOOK_AF_SEED
@@ -815,6 +822,15 @@ export function fromPreset(preset: Preset, view?: ECGCase["view"]): ECGCase {
   c.presetId = preset.id;
   c.name = preset.name;
   if (view) c.view = { ...view };
-  return c;
+  return options.natural === false ? c : withNaturalControls(c);
 }
 export const presetById = (id: string) => PRESETS.find((p) => p.id === id);
+/** A case with some controls replaced, as the interface does it: a natural control
+ * the patch sets becomes an exact target, and the rest follow the (possibly new)
+ * patient (F2.3). */
+export function patchCase(base: ECGCase, patch: Partial<ECGCase>): ECGCase {
+  const c = { ...base, ...patch };
+  for (const [control, flag] of Object.entries(NATURAL_CONTROLS) as [NaturalControl, (typeof NATURAL_CONTROLS)[NaturalControl]][])
+    if (patch[control] !== undefined && patch[flag] === undefined) c[flag] = false;
+  return withNaturalControls(c);
+}

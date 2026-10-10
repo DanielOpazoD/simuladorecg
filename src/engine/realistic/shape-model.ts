@@ -310,6 +310,9 @@ export interface PatientTargets {
   /** Scales multiply the patient's own wave sizes instead of setting them to
    * the population median (ectopic beats keep their real amplitude spread). */
   naturalAmplitude?: boolean;
+  /** Pick the stable-axis candidate even without an axis target, so fixing the axis
+   * control later rotates the same person (F2.3). */
+  stableCandidate?: boolean;
 }
 export interface Patient {
   model: ShapeModel;
@@ -321,6 +324,8 @@ export interface Patient {
   /** The patient's own QRS and ST-T durations (ms) in the learned population. */
   qrsMs: number;
   sttMs: number;
+  /** The patient's own RR (ms) at which its durations were measured. */
+  rrMs: number;
   /** Net-area frontal axes the template actually has (equal to the targets
    * unless a dominant non-dipolar residual makes a target unreachable). */
   achievedAxes: { p: number; qrs: number; t: number };
@@ -409,16 +414,16 @@ export const MIN_AXIS_MARGIN = 0.07;
 
 export function samplePatient(t: PatientTargets): Patient {
   // A patient with an indeterminate frontal axis (tiny net area at some rotation)
-  // cannot carry an axis control reliably. The choice depends only on the seed
-  // and the horizontal rotation, never on the requested axes: moving an axis
-  // control rotates the same person.
+  // cannot carry an axis control reliably. The choice depends only on the seed,
+  // never on the requested axes or the precordial rotation: moving either control
+  // transforms the same person.
   const m = shapeModel(t.model);
   // Without an axis control (ectopic beats keep their own axis) there is nothing
   // to stabilize: the first draw is the patient, unbiased.
-  if (t.axis === null) return sampleCandidate(m, t, 0);
+  if (t.axis === null && !t.stableCandidate) return sampleCandidate(m, t, 0);
   let chosen = 0, bestMargin = -1;
   for (let attempt = 0; attempt < 16; attempt++) {
-    const margin = axisMargin(m, reconstruct(m, candidateZ(m, t.seed, attempt).z), t.horizontalDeg);
+    const margin = axisMargin(m, reconstruct(m, candidateZ(m, t.seed, attempt).z), 0);
     if (margin > bestMargin) { chosen = attempt; bestMargin = margin; }
     if (margin >= MIN_AXIS_MARGIN) break;
   }
@@ -498,6 +503,6 @@ function sampleCandidate(m: ShapeModel, t: PatientTargets, attempt: number): Pat
   return {
     model: m, z, ops, rotations, scales, achievedAxes: achieved, pMs: Math.exp(s.log_p), pqMs: Math.exp(s.log_pq),
     tApexFraction: Math.min(0.9, Math.max(0.35, 1 / (1 + Math.exp(-s.logit_t_apex)))),
-    qrsMs: Math.exp(s.log_qrs), sttMs: Math.exp(s.log_stt),
+    qrsMs: Math.exp(s.log_qrs), sttMs: Math.exp(s.log_stt), rrMs: Math.exp(s.log_rr),
   };
 }
