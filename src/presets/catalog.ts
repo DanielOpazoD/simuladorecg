@@ -787,6 +787,9 @@ export const TEXTBOOK_SEED = 1951;
 export const TEXTBOOK_AF_SEED = 251;
 /** Ventricular premature beat presets (F5.3): the seed also draws the PVC patient. */
 export const TEXTBOOK_PVC_SEED = 283;
+/** Atrial flutter presets (F5.2): a typical counter-clockwise patient (negative
+ * sawtooth in II, positive F in V1, 0.25 mV in II); the classifier has no flutter label. */
+export const TEXTBOOK_FLUTTER_SEED = 46;
 export const TEXTBOOK_SEEDS: Record<BeatModelCode, number> = { NORM: TEXTBOOK_SEED, CLBBB: 15, CRBBB: 276, IRBBB: 201, LAFB: 9, LVH: 154, IMI: 52, ASMI: 105 };
 
 export function fromPreset(preset: Preset, view?: ECGCase["view"]): ECGCase {
@@ -795,6 +798,7 @@ export function fromPreset(preset: Preset, view?: ECGCase["view"]): ECGCase {
   const model = realisticModelFor(c);
   if (preset.patch.seed === undefined && model)
     c.seed = model !== "NORM" ? TEXTBOOK_SEEDS[model] : c.rhythm === "af" ? TEXTBOOK_AF_SEED
+      : c.rhythm === "flutter" ? TEXTBOOK_FLUTTER_SEED
       : learnedVentricularEctopy(c) ? TEXTBOOK_PVC_SEED : TEXTBOOK_SEED;
   c.presetId = preset.id;
   c.name = preset.name;

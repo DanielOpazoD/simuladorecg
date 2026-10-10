@@ -606,3 +606,41 @@ desplaza más a una EV grande y ancha (J+60 hasta ~0,07 mV, área de T ~7 %) y s
 cola alcanza al latido siguiente: el contrato de fase cero escala sus tolerancias
 con el QRS y la T de cada complejo. Los casos guardados antes de F5.3 con EV
 automáticas cambian de morfología (ahora un paciente real) sin aviso propio.
+
+## F5.2 · Flutter auricular: ondas F aprendidas
+
+**Datos y descartes.**
+- PTB-XL tiene 73 flutter, casi todos 2:1 a ~145 lpm: las ondas F caen enganchadas
+  al QRS y a la T, y una cancelación del QRST las borra con él.
+- La etiqueta de flutter de Chapman-Ningbo (PhysioNet ecg-arrhythmia 1.0.0, 8.060
+  registros, más que la FA) resultó ser en su mayoría fibrilación auricular a la
+  vista: se descartó.
+- Georgia (PhysioNet Challenge 2021, CC BY 4.0): 171 flutter sin FA (bajados y
+  verificados con SHA-256); con PTB-XL (pliegues 1–8), 28 pacientes con FC ≤ 100
+  (conducción 3:1, 4:1 o variable) cuya onda plegada explica ≥ 20 % de la señal
+  libre (`scripts/fidelity/build_flutter_model.py --sample-scale 0.7`).
+
+**Extracción.** QRS-T enmascarado (−80 ms … +min(450 ms, 0,55·RR)) y la señal
+original plegada por el ciclo auricular, sin cancelar latidos. El ciclo se estima
+por autocorrelación y se refina en pasos de 0,2 ms maximizando la varianza
+explicada (en 10 s caben ~50 ciclos: 3 ms de error emborronaban el plegado; con el
+refinado los pacientes útiles pasaron de 8 a 28). Por paciente: un ciclo de onda F
+(64 puntos × 8 derivaciones, nadir de II en la fase 0) y la fase del ciclo en que
+llega el QRS conducido. Población: ACP (9 modos) y gaussiana contraída, muestreo
+acotado a 0,7 (muy pocos pacientes).
+
+**Producto.** Con base aprendida, el flutter dibuja el ciclo del paciente a la
+frecuencia auricular del caso (control), anclado para que cada QRS conducido caiga
+en su fase. Paciente de libro: semilla 46, flutter típico antihorario (sierra
+negativa en II, F positiva en V1, 0,25 mV en II). Núcleos: diente de sierra
+histórico.
+
+### Resultado y límites
+
+A nivel de paciente frente a los 28 de entrenamiento: ondas F en II p10 / p50 /
+p90 0,09 / 0,15 / 0,22 mV (entrenamiento: mediana 0,165); flutter típico (II
+negativa, V1 positiva) 30 % frente a 54 %: la gaussiana sobre tan pocos pacientes
+mezcla subtipos. A nivel de trazado no hay comparación posible: la reserva deja 4
+registros utilizables, y el clasificador diagnóstico no tiene etiqueta de flutter
+(menos de 100 registros en PTB-XL). Es el modelo aprendido con menos respaldo del
+ciclo: más datos de flutter con conducción variable lo mejorarían.

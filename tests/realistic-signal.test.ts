@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { synthesize } from "../src/engine/signal";
 import { LEADS, type ECGCase, type Signal } from "../src/engine/types";
-import { fromPreset, presetById, PRESETS, TEXTBOOK_AF_SEED, TEXTBOOK_PVC_SEED, TEXTBOOK_SEED, TEXTBOOK_SEEDS } from "../src/presets/catalog";
+import { fromPreset, presetById, PRESETS, TEXTBOOK_AF_SEED, TEXTBOOK_FLUTTER_SEED, TEXTBOOK_PVC_SEED, TEXTBOOK_SEED, TEXTBOOK_SEEDS } from "../src/presets/catalog";
 import { realisticModelFor, realisticModelsFor } from "../src/engine/realistic/scope";
 import { samplePatient } from "../src/engine/realistic/shape-model";
 
@@ -489,5 +489,29 @@ describe("F5.3: extrasístoles ventriculares aprendidas de PTB-XL", () => {
     expect(t.timing.label).toBe("Extrasístole aprendida (PTB-XL)");
     expect(t.durationMs).toBeCloseTo(b.qrs! * 1000, 6);
     expect(Math.max(...t.xyz.map((v) => Math.hypot(...v)))).toBeGreaterThan(0.3);
+  });
+});
+
+describe("F5.2: ondas F del flutter aprendidas (Georgia + PTB-XL)", () => {
+  it("periódicas al ciclo auricular del caso y ancladas a la fase del QRS del paciente", async () => {
+    const { addFlutterWaves, flutterPatient } = await import("../src/engine/realistic/atrial-flutter");
+    const fs = 1000, acc = Array.from({ length: 8 }, () => new Float64Array(6 * fs)), p = flutterPatient(46);
+    addFlutterWaves(acc, fs, 46, 300, 0.4);
+    for (let i = 500; i < 5000; i += 37) expect(acc[1][i + 200]).toBeCloseTo(acc[1][i], 9); // 300/min → 200 ms
+    // At the conducted QRS time the wave is at the patient's QRS phase.
+    const B = p.cycle.length / 8, k = Math.round(p.qrsPhase * B) % B;
+    expect(Math.abs(acc[1][400] - p.cycle[k * 8 + 1])).toBeLessThan(0.02);
+    expect(p.qrsPhase).toBeGreaterThanOrEqual(0);
+    expect(p.qrsPhase).toBeLessThan(1);
+  });
+  it("el flutter 3:1 de libro muestra ondas F en II entre complejos (típico: negativas)", () => {
+    const s = synthesize(load("flutter3"), 10), beats = s.events.beats;
+    let lo = Infinity, hi = -Infinity;
+    for (let k = 1; k < beats.length; k++)
+      for (let i = Math.round((beats[k - 1].time + beats[k - 1].qt! + 0.02) * s.fs); i < Math.round((beats[k].time - 0.03) * s.fs); i++) {
+        lo = Math.min(lo, s.leads.II[i]); hi = Math.max(hi, s.leads.II[i]);
+      }
+    expect(hi - lo).toBeGreaterThan(0.15);
+    expect(fromPreset(presetById("flutter")!).seed).toBe(TEXTBOOK_FLUTTER_SEED);
   });
 });
