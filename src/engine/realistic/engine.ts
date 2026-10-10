@@ -5,11 +5,11 @@
  * historical vector kernels until their own migration stage.
  */
 import type { AtrialEvent, Beat, ECGCase } from "../types";
-import { random } from "../random";
+import { normal, random } from "../random";
 import { qrsAmplitudeScale, T_REFERENCE_AMPLITUDE } from "../morphology";
-import { dipoleOf, reconstruct, samplePatient, transform, type Patient } from "./shape-model";
+import { dipoleOf, reconstruct, samplePatient, shapeModel, transform, type Patient } from "./shape-model";
 import { addAtrial, addVentricular, beatShapeState, beatTemplate, qrsOnsetLevel, type BeatShapeState } from "./beat";
-import { learnedSecondaryRepolarization, realisticModelFor } from "./scope";
+import { learnedSecondaryRepolarization, pacedVentricular, realisticModelFor } from "./scope";
 
 const P_REFERENCE_AMPLITUDE = 0.15;
 /** Horizontal heart rotation per unit of the transition control (degrees). */
@@ -35,7 +35,9 @@ export function realisticPatient(c: ECGCase): Patient {
   let p = patients.get(key);
   if (!p) {
     p = samplePatient({
-      model, seed: c.seed, axis: c.axis, pAxis, tAxis,
+      // Without conducted beats (VVI/DDD) the QRS axis control does not apply: the
+      // atrial patient keeps its natural axes.
+      model, seed: c.seed, axis: pacedVentricular(c) ? null : c.axis, pAxis, tAxis,
       pScale: c.pAmp / P_REFERENCE_AMPLITUDE, qrsScale: qrsAmplitudeScale(c),
       // Secondary repolarization (bundle-branch block, LVH strain) follows the
       // depolarization: the QRS gain scales ST-T (ST/QRS ratios hold) and the T
@@ -162,6 +164,23 @@ export class RealisticTrack {
     }
     const qrsMs = b.qrs! * 1000, sttMs = Math.max(80, b.qt! * 1000 - qrsMs);
     addVentricular(this.acc, this.fs, b.time, qrsMs, sttMs, beatTemplate(e.patient, e.state, b.time, this.c.respiratoryRate), e.patient, 0);
+  }
+  private spikeVector: Float64Array | null = null;
+  /** A pacing spike as recorded (F5.4): the learned filtered waveform (±10 ms)
+   * along this patient's spike vector; the same for atrial and ventricular spikes. */
+  addSpike(t: number) {
+    const m = shapeModel("VPACE"), sp = m.spike!;
+    if (!this.spikeVector) {
+      const rng = random(((this.c.seed * 53) ^ 0x5b1c) >>> 0), size = Math.exp(sp.logNormMean + sp.logNormSd * normal(rng));
+      this.spikeVector = Float64Array.from(sp.unit, (u) => u * size);
+    }
+    const shape = sp.shape500Hz, half = 0.01, n = shape.length - 1;
+    const lo = Math.max(0, Math.ceil((t - half) * this.fs)), hi = Math.min(this.acc[0].length - 1, Math.floor((t + half) * this.fs));
+    for (let i = lo; i <= hi; i++) {
+      const x = ((i / this.fs - (t - half)) / (2 * half)) * n, j = Math.min(n - 1, Math.floor(x)), f = x - j;
+      const w = shape[j] + (shape[j + 1] - shape[j]) * f;
+      for (let l = 0; l < 8; l++) this.acc[l][i] += this.spikeVector[l] * w;
+    }
   }
   /** QRS, ST-T and post-T of a normally conducted beat, warped to its QRS and QT. */
   addBeat(b: Beat, qrsSeconds: number) {

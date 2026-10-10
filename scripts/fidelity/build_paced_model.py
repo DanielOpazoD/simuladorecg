@@ -7,11 +7,12 @@ Uso: python scripts/fidelity/build_paced_model.py --data ~/datos/ecg-referencia 
 Por registro con PACE (500 Hz):
   1. Latido dominante del registro (≥ 60 % de los latidos con correlación ≥ 0,85
      con la mediana): en un registro estimulado, el complejo estimulado.
-  2. La espiga ventricular queda dentro del complejo aprendido, tal como la
-     registran los equipos (filtrada, ~8 ms, ~2 mV pico a pico en 140 de 196
-     registros); el motor no dibuja otra encima. Retirarla solo donde destaca
-     mucho dejaba plantillas con y sin espiga y, sumada a la del motor, ensanchaba
-     el QRS medido 16 ms.
+  2. Espiga: el máximo de la derivada espacial antes del QRS, si es estrecho
+     (≤ 10 ms por encima de la mitad de su pico) y al menos el doble de abrupto que
+     el QRS (140 de 196 registros). Se retira de la plantilla por interpolación y
+     se guardan su amplitud por derivación y su forma media normalizada: el
+     complejo aprendido no la lleva (el muestreo por modos la borraba: 0,005 mV en
+     II) y el motor la dibuja una sola vez con ese tamaño y esa forma filtrada.
   3. Fiduciales y fases como la extrasístole (sin P propia). Solo complejos con
      QRS ≥ 120 ms (estimulación ventricular; la auricular conserva un QRS normal).
 La población se ajusta con la misma función que las clases. Sin trazados ni
@@ -27,8 +28,33 @@ from build_shape_model import CLASS_POST_MS, fit_and_write
 from build_pvc_model import windows, qrs_corr, align, fiducials, segment_pvc, PRE
 
 
+SPIKE_HALF = 10  # ±ms de la forma de la espiga
+
+
+def remove_spike(t8):
+    """(plantilla sin espiga, amplitud por derivación, forma normalizada) o (t8, None, None)."""
+    a = ms(PRE)
+    d = np.sqrt((np.diff(t8, axis=0) ** 2).sum(1))
+    lo, hi = a - ms(200), a + ms(40)
+    s = lo + int(np.argmax(d[lo:hi]))
+    width = int((d[max(0, s - ms(10)):s + ms(10)] > 0.5 * d[s]).sum())
+    qrs_slope = np.median(np.sort(d[a - ms(60):a + ms(100)])[-ms(20):])
+    if width > ms(10) or d[s] < 2 * qrs_slope:
+        return t8, None, None
+    i0, i1 = max(0, s - ms(SPIKE_HALF)), min(len(t8) - 1, s + ms(SPIKE_HALF))
+    out = t8.copy()
+    for j in range(t8.shape[1]):
+        out[i0:i1 + 1, j] = np.linspace(t8[i0, j], t8[i1, j], i1 - i0 + 1)
+    spike = t8[i0:i1 + 1] - out[i0:i1 + 1]          # (tiempo, 8)
+    k = int(np.argmax(np.abs(spike).sum(1)))
+    amp = spike[k]                                   # amplitud firmada en el pico
+    lead = int(np.argmax(np.abs(amp)))
+    shape = spike[:, lead] / amp[lead]               # forma normalizada (pico = 1)
+    return out, amp, shape
+
+
 def record_paced(x):
-    b, a = butter(2, [0.5 / (FS / 2), 40 / (FS / 2)], 'band')
+    b, a = butter(2, [0.5 / (FS / 2), 100 / (FS / 2)], 'band')  # 100 Hz: la espiga sigue siendo estrecha
     x = filtfilt(b, a, x, axis=0)
     pk = detect_beats(x)
     if len(pk) < 5:
@@ -42,6 +68,10 @@ def record_paced(x):
     if dom.mean() < 0.6:
         return None
     tpl = align(W[dom])
+    tpl, spike, shape = remove_spike(tpl)
+    # Sin espiga, la plantilla pasa a la banda de las demás (40 Hz).
+    bl, al = butter(4, 40 / (FS / 2))
+    tpl = filtfilt(bl, al, tpl, axis=0)
     fid = fiducials(tpl)
     if fid is None:
         return None
@@ -51,7 +81,7 @@ def record_paced(x):
         return None
     rr = np.diff(pk) / FS
     return {'v': segment_pvc(tpl, fid), 'qrs': qrs_ms, 'stt': stt_ms, 'frac': (apex - off) / max(1, end - off),
-            'rr': float(np.median(rr))}
+            'rr': float(np.median(rr)), 'spike': spike, 'shape': shape}
 
 
 def main():
@@ -64,7 +94,7 @@ def main():
     a = ap.parse_args()
     root = os.path.expanduser(a.data)
     rows = list(csv.DictReader(open(os.path.join(root, 'ptb-xl', 'ptbxl_database.csv'))))
-    vecs, durs, rrs, seen = [], [], [], set()
+    vecs, durs, rrs, spikes, shapes, seen = [], [], [], [], [], set()
     rej = {'archivo': 0, 'sin_estimulacion_ventricular': 0}
     for row in rows:
         scp = ast.literal_eval(row['scp_codes'])
@@ -85,11 +115,23 @@ def main():
         vecs.append(f['v'])
         durs.append([100.0, 50.0, f['qrs'], f['stt'], min(0.9, max(0.1, f['frac']))])
         rrs.append(f['rr'])
+        if f['spike'] is not None:
+            spikes.append(f['spike'])
+            shapes.append(f['shape'])
     V, D, RR = np.array(vecs), np.array(durs), np.array(rrs)
-    print(f'Latidos estimulados: {len(V)}; rechazos: {rej}', file=sys.stderr)
+    print(f'Latidos estimulados: {len(V)}; rechazos: {rej}; espigas: {len(spikes)}', file=sys.stderr)
     model, rep = fit_and_write(V, D, RR, rej, 'VPACE', a.components, a.sample_scale, CLASS_POST_MS,
                                'PTB-XL 1.0.3 (CC BY 4.0), latido estimulado en el ventrículo (mediana por registro), pliegues 1-8, PACE',
                                a.out, None)
+    Sp = np.array(spikes)
+    norms = np.linalg.norm(Sp, axis=1)
+    # Dirección mediana (vector unitario) y tamaño log-normal; forma media a 500 Hz.
+    unit = np.median(Sp / norms[:, None], 0)
+    model['spike'] = {'unit': (unit / np.linalg.norm(unit)).round(4).tolist(),
+                      'logNormMean': round(float(np.log(norms).mean()), 4), 'logNormSd': round(float(np.log(norms).std(ddof=1)), 4),
+                      'shape500Hz': np.mean(shapes, 0).round(4).tolist(), 'n': len(Sp)}
+    json.dump(model, open(a.out, 'w'), separators=(',', ':'))
+    rep['spike'] = {k: v for k, v in model['spike'].items() if k != 'shape500Hz'}
     print(json.dumps({k: v for k, v in rep.items() if k != 'explained_curve'}), file=sys.stderr)
     if a.report:
         json.dump(rep, open(a.report, 'w'), indent=1)

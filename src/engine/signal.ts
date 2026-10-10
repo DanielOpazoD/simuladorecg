@@ -274,11 +274,10 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
       for (let j = 0; j < 3; j++) xyz[j][i] += v[j];
     }
   }
-  // A learned ventricular paced complex already carries its recorded spike (F5.4).
-  const pacedBeats = track && learnedEctopicModel(c, "paced") ? events.beats.filter((b) => b.kind === "paced") : [];
+  // On the learned base the spike is the recorded one (F5.4); kernels keep theirs.
   for (const t of events.spikes)
-    if (!pacedBeats.some((b) => b.time - t >= 0 && b.time - t < 0.01))
-      add(t, 0.004, (u) => scale(frontal(65, 1.9, -0.8), u < 0.5 ? 1 : -0.22));
+    if (track && c.rhythm === "paced") track.addSpike(t);
+    else add(t, 0.004, (u) => scale(frontal(65, 1.9, -0.8), u < 0.5 ? 1 : -0.22));
   const output = makeArrays(Math.floor(duration * OUT));
   const floor = acquisitionFloor(c, n, FS);
   for (let lindex = 0; lindex < INDEPENDENT.length; lindex++) {

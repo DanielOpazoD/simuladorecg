@@ -39,6 +39,9 @@ export interface ShapeModel {
   /** Spread of the population draw (1 = learned covariance). Below 1 only for very
    * small classes, whose Gaussian tails blend subtypes no patient has. */
   sampleScale: number;
+  /** Paced populations: the recorded pacing spike (unit 8-lead direction, log-normal
+   * spatial size in mV and mean normalized waveform at 500 Hz, ±10 ms). */
+  spike?: { unit: number[]; logNormMean: number; logNormSd: number; shape500Hz: number[] };
   population: { durationsMsP50: number[]; axisP50: number; magnitudesP50: number[] };
 }
 
@@ -79,6 +82,7 @@ function decode(code: ModelCode, r: RawShapeModel): ShapeModel {
     jointCov: Float64Array.from(r.joint.cov), population: r.population,
     mixture: { weights: r.mixture.weights, means: decodeFloat32(r.mixture.means), cholesky: decodeFloat32(r.mixture.cholesky) },
     sampleScale: (r as { sampleScale?: number }).sampleScale ?? 1,
+    spike: (r as { spike?: ShapeModel["spike"] }).spike,
   };
 }
 export function registerShapeModel(code: ModelCode, r: RawShapeModel): void {

@@ -656,3 +656,50 @@ paciente puede no ser el real. El modelo se aprendió entre 171 y 330 lpm
 auriculares; el control llega de 40 a 350 y fuera de ese rango estira el ciclo
 sin respaldo. Como en la FA, el bajo voltaje no escala las ondas F. Es el modelo
 aprendido con menos respaldo del ciclo.
+
+## F5.4 · Marcapasos: complejo estimulado y espiga aprendidos
+
+**Datos.** 294 registros de PTB-XL con PACE (bajados y verificados con SHA-256);
+80 pacientes de los pliegues 1–8 con estimulación ventricular dominante (QRS ≥
+120 ms; `scripts/fidelity/build_paced_model.py --components 30`, 16 modos, 0,95).
+La extracción reutiliza la de las EV (latido dominante en vez de prematuro). Eje
+mediano −58° y QRS mediano 180 ms: el marcapasos apical del VD típico.
+
+**La espiga.** En PTB-XL la espiga llega filtrada por el equipo (~8 ms, pendiente
+≥ 2 veces la del QRS en 140 de 196 registros). Tres intentos medidos:
+1. Dejarla dentro del complejo aprendido y dibujar además la del motor: dos
+   espigas; el QRS medido salía 16 ms más ancho (KS 0,33 → 0,08 sin la del motor).
+2. Dejarla solo dentro del complejo: el muestreo por modos la borraba (0,005 mV en
+   II en el paciente de libro): el marcapasos dejaba de verse.
+3. (Elegido) Detectarla a 100 Hz en 59 registros, retirarla de la plantilla y
+   aprender su dirección espacial, su tamaño log-normal (mediana 3,3 mV espaciales)
+   y su forma media; el motor la dibuja una vez con el tamaño del paciente. Las
+   espigas auriculares (AAI, DDD) usan los mismos parámetros por falta de datos
+   propios.
+
+**Producto.** VVI y DDD usan el complejo aprendido (`learnedEctopicModel`, junto a
+las EV) con su eje, ancho, ST-T y amplitud propios; AAI conduce el latido normal
+aprendido; todos dibujan la espiga aprendida. Sin latidos conducidos (VVI/DDD) la
+base es la sinusal normal con eje natural: los controles de eje y conducción no
+mueven la P. Paciente de libro VVI/DDD: semilla 13.
+
+### Resultado
+
+Frente a los 80 pacientes de entrenamiento (la reserva tiene 22–24, y entrenamiento
+y reserva ya difieren entre sí con KS 0,17–0,42):
+
+| Rasgo | Entrenamiento p10 / p50 / p90 | Sintético | KS |
+|---|---|---|---|
+| QRS (ms) | 148 / 180 / 208 | 148 / 178 / 210 | 0,08 |
+| ST-T (ms) | 224 / 262 / 418 | 228 / 298 / 382 | 0,28 |
+| Eje (°) | −80 / −57 / −28 | −96 / −69 / −28 | 0,26 |
+| T discordante | 0,5 / 1 / 1 | 0,5 / 1 / 1 | 0,05 |
+| Magnitud QRS (mV) | 2,2 / 3,4 / 5,9 | 2,1 / 3,5 / 5,4 | 0,14 |
+| Magnitud T (mV) | 0,7 / 1,3 / 2,9 | 0,7 / 1,3 / 2,0 | 0,15 |
+
+Clasificador diagnóstico: 300 de 300 VVI sintéticos reconocidos como estimulados.
+
+**Límites.** El analizador congelado no fue ajustado a la espiga registrada: sus
+contratos de detección en AAI/VVI/DDD corren sobre núcleos, y en la AAI aprendida
+sus dos entradas (`measure` y `analyzeSamples`) divergen. Espigas auriculares con
+los parámetros de las ventriculares. Sin captura fallida ni fusión aprendidas.

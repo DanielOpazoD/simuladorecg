@@ -14,7 +14,9 @@ function evaluate(id: string, changes: Partial<ECGCase>, noise: number) {
     muscle: noise,
     mains: noise,
   };
-  const s = synthesize(c, 10);
+  // Frozen-analyzer fixtures run on the kernels (the learned paced complex, F5.4,
+  // carries its filtered spike, which this detector was not built for).
+  const s = synthesize(c, 10, { learnedBase: false });
   const snapshot = structuredClone(s.leads);
   const m = analyzeSamples({ fs: s.fs, leads: s.leads });
   expect(s.leads).toEqual(snapshot);

@@ -161,7 +161,8 @@ describe("Independent analysis versus simulator audit", () => {
   it.each(["wpw", "aai", "vvi"])(
     "does not present intervals from a rejected QRS in %s",
     (id) => {
-      const s = synthesize(load(id), 10),
+      // Audit logic on frozen-analyzer fixtures (kernels).
+      const s = synthesize(load(id), 10, { learnedBase: false }),
         raw = measure(s);
       raw.beats[0].onset -= 0.06;
       raw.beats[0].offset -= 0.06;
