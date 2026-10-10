@@ -714,7 +714,7 @@ export const PRESETS: Preset[] = [
     "Aproximación morfológica de T picuda y reducción de P.",
     ["T altas y estrechas", "Disminución de P"],
     "vectorial",
-    "Sin relación concentración–ECG, ni evolución a onda sinusoidal.",
+    "Patrón esquemático de libro. En pacientes reales el ECG no sigue al potasio de forma lineal: con K ≥ 5,5 solo 2 de 7 mostraron T más picuda que su propio ECG con K normal (demo de MIMIC-IV); influyen la cronicidad, el calcio y los fármacos. Sin relación concentración–ECG, ni evolución a onda sinusoidal.",
   ),
   p(
     "hypok",
@@ -725,7 +725,7 @@ export const PRESETS: Preset[] = [
     "Reducción de T y aparición de U prominente.",
     ["T aplanada", "U prominente"],
     "vectorial",
-    "El delineador puede confundir T y U; QT automático no fiable.",
+    "Patrón esquemático de libro; en pacientes reales es variable (T aplanada en 3 de 4 con K ≤ 3,3 frente a su propio ECG con K normal, demo de MIMIC-IV). El delineador puede confundir T y U; QT automático no fiable.",
   ),
   p(
     "longqt",
