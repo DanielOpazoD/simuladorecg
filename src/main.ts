@@ -95,7 +95,7 @@ applyTheme(readTheme());
 const root = $("#app");
 root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="ECG Lab, inicio">${icon("pulse")}<span>ECG<span class="brand-light">lab</span></span><span class="brand-divider"></span><small>Explora la electrocardiografía</small></a><nav aria-label="Herramientas"><button class="btn mobile-cases" data-action="catalog">${icon("menu")}<span>Casos</span></button>${btn("quiz", "Practicar", "quiz")}${btn("about", "Guía", "book")}${btn("theme", "Tema", "sun", "icon-button")}${btn("export", "Exportar", "download", "primary")}</nav></header>
  <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><h2>Biblioteca de patrones</h2>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Patrón, sigla o palabra…" aria-label="Buscar caso"/></label><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div></aside>
- <main class="workspace"><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><p id="case-subtitle">Activación auricular sinusal seguida de conducción AV 1:1.</p><div id="exploration-context" class="exploration-context" hidden></div></div><div class="case-state">${btn("parameters", "Ajustar", "settings", "subtle")}${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
+ <main class="workspace"><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><div id="exploration-context" class="exploration-context" hidden></div></div><div class="case-state">${btn("parameters", "Ajustar", "settings", "subtle")}${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
  <section id="diagnosis-navigation" class="diagnosis-navigation" aria-label="Variantes del patrón" hidden></section>
  <div id="diagnosis-content">
  <section id="metrics" class="metrics" aria-label="Medidas del ECG"><div class="loading-metrics">Generando señal…</div></section>
@@ -104,7 +104,7 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  <div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div>
  <div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><div class="scale-toolbar" id="scale-toolbar"></div><p id="trace-keyboard-help" class="sr-only">Con foco en el trazado: M, P y R cambian la vista; V y G, la escala; C activa los calibres y espacio congela el monitor. Con calibres, las flechas mueven el extremo seleccionado; Mayús mueve diez pasos.</p></section>
  </div>
- <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><div class="section-label">Guía de lectura</div><h2 id="finding-title">Hallazgos esperados</h2><ul id="findings"></ul><div id="structured-description"></div></div><div class="guide-side"><div id="omi-sheet"></div><div id="limitation" class="model-note"></div><div id="warnings"></div><div class="guide-links"><button class="text-button" data-action="measurements">Medidas y valores del modelo ${icon("chevron")}</button><button class="text-button" data-action="about">Estado y referencias ${icon("chevron")}</button></div></div></section>
+ <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><div class="section-label">Guía de lectura</div><h2 id="finding-title">Hallazgos esperados</h2><p id="case-subtitle" class="guide-lead">Activación auricular sinusal seguida de conducción AV 1:1.</p><ul id="findings"></ul><div id="structured-description"></div></div><div class="guide-side"><div id="omi-sheet"></div><details class="model-details"><summary>Sobre el modelo <span id="warning-count"></span></summary><div id="limitation" class="model-note"></div><div id="warnings"></div></details><div class="guide-links"><button class="text-button" data-action="measurements">Medidas y valores del modelo ${icon("chevron")}</button><button class="text-button" data-action="about">Estado y referencias ${icon("chevron")}</button></div></div></section>
  <details id="adjust" class="adjust-panel"><summary><span>Ajustar el caso</span><small>Parámetros del modelo</small></summary><div id="inspector" class="inspector"></div></details>
  <footer class="workspace-footer"><span>ECG Lab · Laboratorio de electrocardiografía</span><span>Morfología normal aprendida de <a href="https://physionet.org/content/ptb-xl/1.0.3/" target="_blank" rel="noopener">PTB-XL</a> y <a href="https://physionet.org/content/ptb-xl-plus/1.0.1/" target="_blank" rel="noopener">PTB-XL+</a> (Wagner et al. 2020; Strodthoff et al. 2023), <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>; se distribuyen solo coeficientes derivados.</span><span>Uso educativo. Sin validación clínica. <span data-product-version="${APP_VERSION}">v${APP_VERSION}</span></span></footer></main></div>
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
@@ -147,6 +147,8 @@ function renderCatalog() {
   $("#catalog-count").textContent = view.count;
   $("[data-action=clear-search]").hidden = !view.clearFiltersVisible;
   $("#case-list").innerHTML = view.html;
+  // The result count only matters while searching.
+  $(".catalog-result-bar").hidden = !view.clearFiltersVisible;
 }
 function formatExplorationValue(value:unknown){if(typeof value==="boolean")return value?"Sí":"No";return value==null?"—":String(value)}
 function renderExplorationContext(concealed:boolean) {
@@ -217,6 +219,8 @@ function renderInfo() {
     : "FA representativa: intervalos RR positivos independientes (distribución gamma, CV 0,22). No simula memoria del nodo AV ni toda la variabilidad entre pacientes; la FC programada es una media de largo plazo."] : [])])
     .map((w) => `<p class="warning">${esc(w)}</p>`)
     .join("");
+  const notices = $("#warnings").childElementCount;
+  $("#warning-count").textContent = notices ? `· ${notices} ${notices === 1 ? "aviso" : "avisos"}` : "";
   $<HTMLButtonElement>('[data-action="export"]').disabled = !!concealed;
   $("#adjust").hidden = !!concealed;
   $<HTMLButtonElement>('[data-action="parameters"]').disabled = !!concealed;

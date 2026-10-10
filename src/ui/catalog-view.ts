@@ -50,7 +50,7 @@ export class VariantNavigation {
     const key = multi ? `${diagnosis.id}/${preset!.id}` : "";
     this.navigation.hidden = !multi;
     if (key !== this.renderedKey) {
-      this.navigation.innerHTML = multi ? `<div class="variant-heading"><span id="variant-label">Variantes del patrón</span><small>Cambiar de variante carga su ejemplo original.</small></div><div class="variant-tabs" role="tablist" aria-labelledby="variant-label" data-activation="manual">${diagnosis.variants.map(v => `<button type="button" role="tab" id="variant-tab-${esc(v.id)}" data-variant="${esc(v.id)}" aria-selected="${v.id === preset!.id}" aria-controls="diagnosis-content" tabindex="${v.id === preset!.id ? 0 : -1}">${esc(v.label)}</button>`).join("")}</div>` : "";
+      this.navigation.innerHTML = multi ? `<span id="variant-label" class="sr-only">Variantes del patrón</span><div class="variant-tabs" role="tablist" aria-labelledby="variant-label" data-activation="manual">${diagnosis.variants.map(v => `<button type="button" role="tab" id="variant-tab-${esc(v.id)}" data-variant="${esc(v.id)}" aria-selected="${v.id === preset!.id}" aria-controls="diagnosis-content" tabindex="${v.id === preset!.id ? 0 : -1}">${esc(v.label)}</button>`).join("")}</div>` : "";
       this.renderedKey = key;
     }
     if (multi) {

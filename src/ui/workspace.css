@@ -266,3 +266,37 @@ h1 { font-size:32px; line-height:1.2; letter-spacing:-1px; font-weight:600; text
 .present-30 { margin-top:10px; font-size:13px; }
 .present-30 summary { cursor:pointer; font-weight:600; min-height:32px; }
 .present-30 p { margin:6px 0 0; line-height:1.6; }
+
+/* Compact top (UI · 3): the ECG appears early. One-line heading, small variant pills,
+   a slim strip of values; technical notes fold away. */
+.topbar { height:58px; }
+.case-heading { margin-bottom:10px; gap:16px; align-items:center; }
+.case-heading h1 { font-size:26px; line-height:1.15; }
+.case-category { margin-bottom:2px; }
+.case-heading .case-variant-title { display:none; }
+.diagnosis-navigation { margin:0 0 12px; padding:0; }
+.variant-tabs { gap:6px; }
+.variant-tabs > button { min-height:32px; padding:5px 12px; font-size:13px; border-radius:16px; }
+.metrics { display:flex; flex-wrap:wrap; gap:0; min-height:0; padding:0; margin-bottom:12px; border:1px solid var(--line); border-radius:10px; background:var(--surface); box-shadow:none; overflow:hidden; }
+.metrics .metric { flex:1 1 0; min-width:0; min-height:0; display:flex; flex-direction:row; align-items:baseline; justify-content:center; gap:8px; padding:9px 12px; border:0; border-radius:0; background:none; }
+.metrics .metric + .metric { border-left:1px solid var(--line); }
+.metrics .metric + .metric::before { display:none; }
+.metrics .metric > span { font-size:12px; color:var(--muted); white-space:nowrap; }
+.metrics .metric strong, .metrics .main-metric strong { font-size:19px; line-height:1.1; letter-spacing:-.3px; white-space:nowrap; }
+.metrics .metric strong small { font-size:11px; }
+.metrics .metric > small { display:none; }
+.metrics .loading-metrics { padding:10px 14px; font-size:13px; }
+.trace-toolbar { padding-block:6px; }
+.view-tabs button { min-height:36px; padding-block:6px; }
+.guide-lead { margin:6px 0 0; font-size:14px; line-height:1.6; color:var(--ink); }
+.model-details { margin-top:14px; font-size:12px; }
+.model-details > summary { cursor:pointer; min-height:32px; color:var(--muted); font-weight:600; }
+.model-details .model-note { margin:8px 0; }
+.description-method { margin-top:8px; }
+.description-method > summary { cursor:pointer; font-size:12px; color:var(--muted); min-height:28px; }
+@media (max-width:800px) {
+  .metrics .metric { flex:1 1 30%; flex-direction:column; align-items:flex-start; gap:2px; padding:8px 10px; }
+  .metrics .metric:nth-child(4) { border-left:0; }
+  .metrics .metric:nth-child(n+4) { border-top:1px solid var(--line); }
+  .case-heading h1 { font-size:22px; }
+}

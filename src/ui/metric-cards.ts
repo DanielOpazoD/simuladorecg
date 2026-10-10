@@ -59,7 +59,7 @@ export const metricsHtml = (cards: MetricCard[]) =>
   cards
     .map(
       (x, i) =>
-        `<button class="metric ${i === 0 ? "main-metric" : ""}" data-action="measurements" title="${esc(x.reason)}"><span>${x.label}</span><strong>${x.value}</strong><small><i class="quality-dot ${x.status}"></i>${x.note}</small></button>`,
+        `<button class="metric ${i === 0 ? "main-metric" : ""}" data-action="measurements" title="${esc(x.note ? `${x.note}. ${x.reason}` : x.reason)}"><span>${x.label}</span><strong>${x.value}</strong><small><i class="quality-dot ${x.status}"></i>${x.note}</small></button>`,
     )
     .join("");
 
