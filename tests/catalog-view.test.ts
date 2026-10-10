@@ -6,8 +6,11 @@ describe("catalog presentation", () => {
   it("keeps all collapsed entries and disables only the five pending examples", () => {
     const before = JSON.stringify(PRESETS);
     const view = catalogView(PRESETS);
-    expect(view.count).toBe("41 patrones · 63 ejemplos");
-    expect(view.html.match(/data-diagnosis=/g)).toHaveLength(46);
+    expect(view.count).toBe("42 patrones · 63 ejemplos");
+    // 47 entries plus three imitators also shown under «Imitadores».
+    expect(view.html.match(/data-diagnosis=/g)).toHaveLength(50);
+    expect(view.html.match(/<small class="case-variants-count">También en /g)).toHaveLength(3);
+    expect(view.html).toContain("En las guías: STEMI");
     expect(view.html.match(/ disabled /g)).toHaveLength(5);
     expect(view.clearFiltersVisible).toBe(false);
     expect(JSON.stringify(PRESETS)).toBe(before);

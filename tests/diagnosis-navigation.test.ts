@@ -2,18 +2,21 @@ import { describe, expect, it } from 'vitest';
 import { PRESETS, fromPreset, presetById } from '../src/presets/catalog';
 import { caseContext } from '../src/presets/case-context';
 import { DIAGNOSIS_GROUPS, diagnosisFamilies, diagnosisForPreset } from '../src/ui/diagnosis-navigation';
+import { catalogGroup } from '../src/ui/catalog-presentation';
 
+// Each entry's own place (cross-listed imitators excluded).
 const entries = (query = '', category = '', selected?: string) =>
-  diagnosisFamilies(PRESETS, query, category, selected).flatMap(f => f.sections.flatMap(s => s.entries));
+  diagnosisFamilies(PRESETS, query, category, selected).flatMap(f => f.sections.filter(s => !s.crossListed).flatMap(s => s.entries));
 
 describe('Pattern entries and canonical variant navigation', () => {
   it('preserves all 63 active examples and five pending examples exactly once', () => {
     const before = JSON.stringify(PRESETS), all = entries();
-    expect(all).toHaveLength(46);
-    expect(all.filter(e => e.target.strategy !== 'pending')).toHaveLength(41);
+    // The two inferior occlusions (RCA, LCx) are separate entries since the OMI families.
+    expect(all).toHaveLength(47);
+    expect(all.filter(e => e.target.strategy !== 'pending')).toHaveLength(42);
     expect(all.filter(e => e.target.strategy === 'pending')).toHaveLength(5);
     expect(all.flatMap(e => e.matches.map(p => p.id)).sort()).toEqual(PRESETS.map(p => p.id).sort());
-    expect(new Set(all.map(e => e.diagnosis.id)).size).toBe(46);
+    expect(new Set(all.map(e => e.diagnosis.id)).size).toBe(47);
     expect(JSON.stringify(PRESETS)).toBe(before);
   });
   it('has no duplicate, unavailable or cross-family variants in grouped navigation', () => {
@@ -22,7 +25,7 @@ describe('Pattern entries and canonical variant navigation', () => {
     for (const g of DIAGNOSIS_GROUPS) {
       const members = g.variants.map(v => presetById(v.id)!);
       expect(members.every(p => p && p.strategy !== 'pending')).toBe(true);
-      expect(new Set(members.map(p => p.group)).size).toBe(1);
+      expect(new Set(members.map(p => catalogGroup(p))).size).toBe(1);
       expect(g.variants).toHaveLength(entries().find(e => e.diagnosis.id === g.id)!.matches.length);
     }
   });

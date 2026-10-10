@@ -297,19 +297,19 @@
   },
   {
     "id": "inferior",
-    "nombre": "Lesión inferior · predominio en III",
+    "nombre": "Oclusión de la coronaria derecha · III > II",
     "categoria": "Isquemia y ST",
     "estado": "aproximado",
     "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "limitacion": "Cambio del ST aprendido de oclusiones con balón (STAFF III, 103 pacientes): una oclusión súbita y completa, cuyos tiempos no son los del infarto espontáneo; sin ondas Q ni evolución tras la reperfusión."
   },
   {
     "id": "inferior_lcx",
-    "nombre": "Lesión inferior · predominio en II",
+    "nombre": "Oclusión de la circunfleja · II ≥ III",
     "categoria": "Isquemia y ST",
     "estado": "aproximado",
     "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "limitacion": "Cambio del ST aprendido de oclusiones con balón (STAFF III, 103 pacientes): una oclusión súbita y completa, cuyos tiempos no son los del infarto espontáneo; sin ondas Q ni evolución tras la reperfusión."
   },
   {
     "id": "old_inferior",
@@ -329,11 +329,11 @@
   },
   {
     "id": "anterior",
-    "nombre": "Lesión anterior",
+    "nombre": "Oclusión de la descendente anterior",
     "categoria": "Isquemia y ST",
     "estado": "aproximado",
     "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "limitacion": "Cambio del ST aprendido de oclusiones con balón (STAFF III, 103 pacientes): una oclusión súbita y completa, cuyos tiempos no son los del infarto espontáneo; sin ondas Q ni evolución tras la reperfusión."
   },
   {
     "id": "lateral",

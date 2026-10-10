@@ -457,7 +457,7 @@ export const PRESETS: Preset[] = [
   ),
   p(
     "inferior",
-    "Lesión inferior · predominio en III",
+    "Oclusión de la coronaria derecha · III > II",
     "Inferior (CD)",
     "Isquemia y ST",
     { ischemia: "inferior_rca", st: 2 },
@@ -467,15 +467,19 @@ export const PRESETS: Preset[] = [
       "ST↓ recíproco en I y aVL",
       "La arteria no se determina solo por ECG",
     ],
+    "vectorial",
+    "Cambio del ST aprendido de oclusiones con balón (STAFF III, 103 pacientes): una oclusión súbita y completa, cuyos tiempos no son los del infarto espontáneo; sin ondas Q ni evolución tras la reperfusión.",
   ),
   p(
     "inferior_lcx",
-    "Lesión inferior · predominio en II",
+    "Oclusión de la circunfleja · II ≥ III",
     "Inferior (Cx)",
     "Isquemia y ST",
     { ischemia: "inferior_lcx", st: 2 },
     "Oclusión de la circunfleja aprendida de angioplastias con balón (STAFF III).",
     ["ST↑ II ≥III", "I isoeléctrica o elevada"],
+    "vectorial",
+    "Cambio del ST aprendido de oclusiones con balón (STAFF III, 103 pacientes): una oclusión súbita y completa, cuyos tiempos no son los del infarto espontáneo; sin ondas Q ni evolución tras la reperfusión.",
   ),
   p(
     "old_inferior",
@@ -501,7 +505,7 @@ export const PRESETS: Preset[] = [
   ),
   p(
     "anterior",
-    "Lesión anterior",
+    "Oclusión de la descendente anterior",
     "Anterior",
     "Isquemia y ST",
     { ischemia: "anterior", st: 2 },
@@ -510,6 +514,8 @@ export const PRESETS: Preset[] = [
       "Elevación ST precordial anterior",
       "Repolarización dependiente de la fase",
     ],
+    "vectorial",
+    "Cambio del ST aprendido de oclusiones con balón (STAFF III, 103 pacientes): una oclusión súbita y completa, cuyos tiempos no son los del infarto espontáneo; sin ondas Q ni evolución tras la reperfusión.",
   ),
   p(
     "lateral",

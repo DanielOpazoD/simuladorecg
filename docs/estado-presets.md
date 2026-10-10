@@ -43,11 +43,11 @@ Ningún patrón se presenta como validado clínicamente. La columna «Estrategia
 | BRD + hemibloqueo anterior izquierdo | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
 | Bifascicular + BAV de primer grado | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
 | Preexcitación ventricular | aproximado | vectorial | Delta aproximada; sin vías accesorias anatómicas ni circuito AVRT. Preexcitación aproximada: en los latidos preexcitados, ST y T siguen la activación QRS incluida la onda delta. Amplitudes no calibradas; no localiza vías accesorias ni reproduce AVRT o memoria cardíaca. |
-| Lesión inferior · predominio en III | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
-| Lesión inferior · predominio en II | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
+| Oclusión de la coronaria derecha · III > II | aproximado | vectorial | Cambio del ST aprendido de oclusiones con balón (STAFF III, 103 pacientes): una oclusión súbita y completa, cuyos tiempos no son los del infarto espontáneo; sin ondas Q ni evolución tras la reperfusión. |
+| Oclusión de la circunfleja · II ≥ III | aproximado | vectorial | Cambio del ST aprendido de oclusiones con balón (STAFF III, 103 pacientes): una oclusión súbita y completa, cuyos tiempos no son los del infarto espontáneo; sin ondas Q ni evolución tras la reperfusión. |
 | Infarto inferior antiguo | aproximado | vectorial | Latido aprendido de pacientes con infarto inferior antiguo (PTB-XL); el ECG no data el infarto ni localiza la arteria. |
 | Infarto anteroseptal antiguo | aproximado | vectorial | Latido aprendido de pacientes con infarto anteroseptal antiguo (PTB-XL); el ECG no data el infarto ni localiza la arteria. |
-| Lesión anterior | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
+| Oclusión de la descendente anterior | aproximado | vectorial | Cambio del ST aprendido de oclusiones con balón (STAFF III, 103 pacientes): una oclusión súbita y completa, cuyos tiempos no son los del infarto espontáneo; sin ondas Q ni evolución tras la reperfusión. |
 | Lesión lateral | aproximado | vectorial | Morfología paramétrica representativa; sin validación contra ECG de pacientes. |
 | Patrón de lesión posterior | aproximado | local | Corrección local de R; V7–V9 pendientes. |
 | Lesión ventricular derecha | aproximado | vectorial | V3R–V4R pendientes; no reproduce todos los criterios territoriales. |
