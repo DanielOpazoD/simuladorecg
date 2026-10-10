@@ -93,7 +93,7 @@ export function leadMeasures(s: Pick<Signal, "fs" | "leads" | "events">): LeadMe
 const contiguous = (set: ReadonlySet<Lead>) => ST_ORDER.filter((l) => CONTIGUOUS.some((p) => p.includes(l) && set.has(p[0]) && set.has(p[1])));
 const largest = (rs: LeadMeasure[], value: (r: LeadMeasure) => number) => rs.reduce((a, b) => (Math.abs(value(b)) > Math.abs(value(a)) ? b : a));
 
-function stLine(m: LeadMeasure[]): { text: string; up: boolean; down: boolean } {
+function stLine(m: LeadMeasure[], wide: boolean): { text: string; up: boolean; down: boolean } {
   const leads = m.filter((r) => r.lead !== "aVR");
   const up = leads.filter((r) => r.j0 >= ST_LENS.thresholdMv), down = leads.filter((r) => r.j0 <= -ST_LENS.thresholdMv);
   const avr = m.find((r) => r.lead === "aVR")!;
@@ -108,7 +108,7 @@ function stLine(m: LeadMeasure[]): { text: string; up: boolean; down: boolean } 
     const p = largest(up, (r) => r.j0), where = `${mm(p.j0)} en J y ${mm(p.j60)} a J+60, en ${p.lead}`;
     parts.push(sdst ? `SDST en ${leadList(up.map((r) => r.lead))} (máx. ${where})`
       : `Punto J elevado en ${leadList(up.map((r) => r.lead))} (máx. ${where}), bajo el criterio de las guías (1 mm en dos derivaciones contiguas; 1,5 a 2,5 mm en V2–V3 según sexo y edad)` +
-        (up.every((r) => /^V[1-4]$/.test(r.lead)) ? ", habitual en V1–V3" : ""));
+        (!wide && up.every((r) => /^V[1-4]$/.test(r.lead)) ? ", habitual en V1–V3" : ""));
   }
   if (down.length) {
     const p = largest(down, (r) => r.j0), rising = median(down.map((r) => (r.j60 - r.j0) / Math.abs(r.j0))) >= 0.5;
@@ -155,10 +155,10 @@ export function structuredDescription(c: ECGCase, s: Signal): StructuredDescript
   const qtc = t.qt && rr ? t.qt / Math.cbrt(rr) : null;
   const av = c.rhythm === "sinus" ? AV[c.av] : undefined, ectopy = ECTOPY[c.ectopy];
   const dissociated = !!av && c.av !== "first", ventricular = dissociated || c.rhythm === "af" || c.rhythm === "flutter";
-  const atrial = dissociated || c.rhythm === "flutter" ? atrialRate(s) : null;
+  const atrial = dissociated ? atrialRate(s) : null;
   const rhythm = `${RHYTHM[c.rhythm]}${av ? ` con ${av}` : ""}${ectopy ? ` y ${ectopy}` : ""}` +
     (t.hr > 0 ? `, frecuencia ${ventricular ? "ventricular " : ""}${n0(t.hr)} lpm` : "") +
-    (atrial ? `, ${c.rhythm === "flutter" ? "ondas F" : "ondas P"} a ${n0(atrial)}/min` : "");
+    (atrial ? `, ondas P a ${n0(atrial)}/min` : "");
   const dominant = dominantBeats(s), dominantQrs = dominant.length ? median(dominant.map((i) => s.events.beats[i].qrs!)) * 1000 : null;
   const qrs = dominantQrs ?? t.qrs;
   const intervals = [t.pr !== null ? `PR ${n0(t.pr)} ms` : "PR no medible", qrs !== null ? `QRS ${n0(qrs)} ms` : null, qtc !== null ? `QTc ${n0(qtc)} ms (Fridericia)` : null].filter(Boolean).join(" · ");
@@ -176,7 +176,7 @@ export function structuredDescription(c: ECGCase, s: Signal): StructuredDescript
   if (!m.some((r) => r.beats > 0) || c.rhythm === "torsades" || c.rhythm === "vf") lines.push({ key: "ST", text: "Sin complejos organizados para leer el ST, la T ni las Q." });
   else if (c.rhythm === "flutter") lines.push({ key: "ST", text: "No se lee: las ondas F ocupan la línea de base (el segmento PR) contra la que se mide el ST." });
   else {
-    const st = stLine(m);
+    const st = stLine(m, wide);
     lines.push({ key: "ST", text: c.rhythm === "af" ? `${st.text} Referencia del PR alterada por las ondas f: lectura aproximada.` : st.text }, { key: "T", text: tLine(m) }, { key: "Q", text: wide ? "No se evalúan con QRS ancho o no conducido." : qLine(m) });
     if (wide && (st.up || st.down)) lines.push({ key: "ST/QRS", text: "Con QRS ancho el ST es en parte secundario a la despolarización: léelo en proporción al QRS, no como reciprocidad." });
     else if (st.up && st.down) lines.push({ key: "Rec.", text: "Elevación y descenso simultáneos con QRS estrecho: hay reciprocidad." });
