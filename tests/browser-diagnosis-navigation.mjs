@@ -29,7 +29,7 @@ for(const engine of engines){
    await page.goto(url);await ready();assert.match(await page.title(),/ECG/);assert.equal(await page.locator('vite-error-overlay').count(),0);
    const build=await(await page.request.get(new URL('build-info.json',url).href)).json();
    if(process.env.ECG_EXPECT_COMMIT)assert.equal(build.commit,process.env.ECG_EXPECT_COMMIT);assert.equal(build.dirty,false);
-   assert.equal(await page.locator('#case-list [data-diagnosis]').count(),45);
+   assert.equal(await page.locator('#case-list [data-diagnosis]').count(),46);
    assert.equal(await page.locator('#case-list [data-diagnosis]:disabled').count(),5);
    assert.equal(await page.locator('#diagnosis-navigation [role=tab]').count(),4);
    assert.equal(await page.locator('#diagnosis-navigation [tabindex="0"]').count(),1);
@@ -54,10 +54,10 @@ for(const engine of engines){
     assert.deepEqual(await page.locator('#diagnosis-navigation [data-variant]').evaluateAll(es=>es.map(e=>e.dataset.variant)),ids);
     for(const id of ids){await tab(id);assert.equal(await page.locator('#diagnosis-navigation [aria-selected=true]').count(),1);variants++;}
    }
-   assert.equal(variants,36);
+   assert.equal(variants,38);
    await choose('af');await tab('af_fast');
    assert.equal(await page.locator('#case-title').textContent(),'Fibrilación auricular');
-   assert.match(await page.locator('#warnings').innerText(),/FA representativa/);
+   assert.match(await page.locator('#warnings').innerText(),/FA (representativa|aprendida)/);
    await page.locator('#ecg').screenshot({path:resolve(out,`af-gamma-${engine.name()}-${width}.png`)});
    const fast=await exported('af-fast');assert.equal(fast.B.case.presetId,'af_fast');assert.equal(fast.B.case.hr,145);assert.deepEqual(fast.A,original.A);
    if(width<=800)await page.locator('[data-action=catalog]').click();

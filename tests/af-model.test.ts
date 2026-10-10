@@ -55,6 +55,17 @@ describe("F5.1: generador de ondas f frente a una decodificación independiente 
     expect(Math.sqrt(num / den)).toBeLessThan(0.1);
     for (let a = 0; a < 8; a++) expect(Math.sqrt(M[a][a] / C[a][a])).toBeGreaterThan(0.9);
   });
+  it("los modos espaciales del modelo cambian la covarianza como dice el modelo", () => {
+    const z = mean.slice();
+    z[names.indexOf("v0")] += 1.5; z[names.indexOf("v1")] -= 1;
+    const C = covariance(z), C0 = covariance(mean), M = measuredCovariance(generate(z, 120));
+    let num = 0, den = 0, shift = 0;
+    for (let a = 0; a < 8; a++) for (let b = 0; b < 8; b++) {
+      num += (M[a][b] - C[a][b]) ** 2; den += C[a][b] ** 2; shift += (C[a][b] - C0[a][b]) ** 2;
+    }
+    expect(Math.sqrt(shift / den)).toBeGreaterThan(0.2); // the modes do move the covariance
+    expect(Math.sqrt(num / den)).toBeLessThan(0.1);
+  });
   it("el espectro medido sigue el pico, el ancho, el armónico y los bordes de banda del paciente", () => {
     const z = mean.slice();
     z[names.indexOf("dominant_hz")] = 4.5; z[names.indexOf("harmonic")] = 0.6;
