@@ -269,7 +269,7 @@ h1 { font-size:32px; line-height:1.2; letter-spacing:-1px; font-weight:600; text
 
 /* Compact top (UI · 3): the ECG appears early. One-line heading, small variant pills,
    a slim strip of values; technical notes fold away. */
-.topbar { height:58px; }
+@media (min-width:801px) { .topbar { height:58px; } }
 .case-heading { margin-bottom:10px; gap:16px; align-items:center; }
 .case-heading h1 { font-size:26px; line-height:1.15; }
 .case-category { margin-bottom:2px; }

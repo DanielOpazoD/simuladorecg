@@ -66,7 +66,7 @@ for(const engine of engines){
    assert.equal(variants,36);
    await choose('af');await tab('af_fast');
    assert.equal(await page.locator('#case-title').textContent(),'Fibrilación auricular');
-   assert.match(await page.locator('#warnings').innerText(),/FA (representativa|aprendida)/);
+   assert.match(await page.locator('#warnings').textContent(),/FA (representativa|aprendida)/);
    await page.locator('#ecg').screenshot({path:resolve(out,`af-gamma-${engine.name()}-${width}.png`)});
    const fast=await trace();assert.equal(fast.case.presetId,'af_fast');assert.equal(fast.case.hr,145);
    if(width<=800)await page.locator('[data-action=catalog]').click();
