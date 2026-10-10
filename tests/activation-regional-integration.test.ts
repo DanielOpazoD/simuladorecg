@@ -7,7 +7,7 @@ import { fromPreset, PRESETS, presetById } from '../src/presets/catalog';
 import { project, frontal, type Vec } from '../src/engine/leads';
 import { LEADS, type Beat, type ECGCase } from '../src/engine/types';
 import { realisticQrsVector, usesRealisticBase } from '../src/engine/realistic/engine';
-import { learnedVentricularEctopy } from '../src/engine/realistic/scope';
+import { learnedEctopicModel } from '../src/engine/realistic/scope';
 
 const beat: Beat = { time: 1, rr: 1, kind: 'normal' };
 const load = (id: string) => fromPreset(presetById(id)!);
@@ -70,9 +70,9 @@ describe('Merged regional engine and QRS laboratory share the same temporal supp
           learned++;
           continue;
         }
-        if (event.kind === 'pvc' && usesRealisticBase(c) && learnedVentricularEctopy(c)) {
-          // Learned PVC (F5.3): the lab samples the learned ectopic vector.
-          trace.xyz.forEach((actual, i) => assert.deepEqual(actual, realisticQrsVector(c, trace.timesMs[i] / trace.durationMs, 'pvc')));
+        if ((event.kind === 'pvc' || event.kind === 'paced') && learnedEctopicModel(c, event.kind)) {
+          // Learned ectopic beat (F5.3–F5.4): the lab samples the learned vector.
+          trace.xyz.forEach((actual, i) => assert.deepEqual(actual, realisticQrsVector(c, trace.timesMs[i] / trace.durationMs, event.kind as 'pvc' | 'paced')));
           learned++;
           continue;
         }
@@ -99,7 +99,7 @@ describe('Merged regional engine and QRS laboratory share the same temporal supp
         checked++;
       }
     }
-    assert.ok(checked > 25); // F5.3 moved the four PVC presets to the learned loop
+    assert.ok(checked > 20); // F5.3–F5.4 moved the PVC and paced presets to the learned loop
     assert.ok(learned > 15, 'Learned-base presets must use the learned loop');
     assert.equal(deltaChecked, 1, 'The WPW preset must participate, not be silently skipped');
   });

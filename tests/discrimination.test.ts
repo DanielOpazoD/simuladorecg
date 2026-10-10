@@ -52,7 +52,9 @@ describe("Raw detector regression for existing difficult presets", () => {
     "counts ventricles rather than T, P or stimuli in %s",
     (id) => {
       const c = fromPreset(presetById(id)!);
-      const s = synthesize(c, 10);
+      // Frozen-detector fixture: the recorded pacing spike of the learned base
+      // (F5.4) is not what this detector was tuned on; it runs on the kernels.
+      const s = synthesize(c, 10, { learnedBase: false });
       const raw = measure({ fs: s.fs, leads: s.leads });
       expect(raw.hr).not.toBeNull();
       expect(Math.abs(raw.hr! - s.truth.hr)).toBeLessThan(2);

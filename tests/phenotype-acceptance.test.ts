@@ -284,15 +284,18 @@ describe.each(["off", "diagnostic"] as const)(
               b.time + (id === "aai" ? 0.075 : 0.14),
             ),
           );
-          expect(v1).toBeLessThan(-0.2);
-          expect(v6).toBeGreaterThan(0.1);
-          if (id !== "aai") {
-            expect(
-              mean(samples(s, "V1", b.time + 0.28, b.time + 0.37)),
-            ).toBeGreaterThan(0.08);
-            expect(
-              mean(samples(s, "V6", b.time + 0.28, b.time + 0.37)),
-            ).toBeLessThan(-0.03);
+          if (id === "aai") {
+            expect(v1).toBeLessThan(-0.2);
+            expect(v6).toBeGreaterThan(0.1);
+          } else {
+            // Learned paced complex (F5.4): a real patient's, so no fixed lead
+            // pattern; wide, with discordant T where its QRS is largest.
+            expect(b.qrs!).toBeGreaterThanOrEqual(0.12);
+            const area = (lead: Lead, a: number, z: number) => mean(samples(s, lead, b.time + a, b.time + z));
+            const big = (["I", "II", "V1", "V2", "V3", "V4", "V5", "V6"] as Lead[])
+              .map((l) => ({ l, q: area(l, 0.015, b.qrs! - 0.01) }))
+              .sort((x, y) => Math.abs(y.q) - Math.abs(x.q)).slice(0, 3);
+            for (const { l, q } of big) expect(Math.sign(area(l, b.qrs! + 0.04, b.qt!))).toBe(-Math.sign(q));
           }
         }
       },

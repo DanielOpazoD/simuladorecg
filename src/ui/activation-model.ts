@@ -6,7 +6,7 @@ import { VENTRICULAR_SOURCE_IDS, VENTRICULAR_SOURCES, ventricularSource } from '
 import { WPW_REPOLARIZATION_LIMIT } from '../presets/teaching-limits';
 import { changeCase } from './case-state';
 import { regionalActivationState, regionalActivationTimeline, usesRegionalActivation } from '../engine/regional-activation';
-import { learnedVentricularEctopy, usesRealisticBase } from '../engine/realistic/scope';
+import { learnedEctopicModel, usesRealisticBase } from '../engine/realistic/scope';
 import type * as LearnedEngine from '../engine/realistic/engine';
 
 // The learned models live in the signal worker; the main thread loads them only
@@ -77,12 +77,14 @@ export function activationCandidate(c: ECGCase, b: Beat, choice: string, edits: 
 export function activationTiming(c: ECGCase, b: Beat) {
   const state = regionalActivationState(c), regional = usesRegionalActivation(c, b);
   const deltaDurationMs = c.conduction === 'wpw' && b.kind === 'normal' ? WPW_DELTA_SECONDS * 1000 : null;
-  const learnedPvc = b.kind === 'pvc' && usesRealisticBase(c) && learnedVentricularEctopy(c);
+  const ectopic = learnedEctopicModel(c, b.kind), learnedPvc = ectopic !== null;
   const learned = (b.kind === 'normal' && !regional && usesRealisticBase(c)) || learnedPvc;
   const applied = b.kind !== 'normal' ? 'ventricular-source' : regional ? state.model : 'template';
   const label = regional ? (state.model === 'regional-lbbb-v1' ? 'BRI regional · experimental' : 'BRD regional · experimental') : state.requested ? 'Regional no aplicado'
-    : learnedPvc ? 'Extrasístole aprendida (PTB-XL)' : learned ? 'Latido aprendido (PTB-XL)' : b.kind !== 'normal' ? 'Fuente ventricular' : deltaDurationMs ? 'Plantilla histórica + delta' : 'Plantilla histórica';
-  const note = learnedPvc
+    : ectopic === 'VPACE' ? 'Latido estimulado aprendido (PTB-XL)' : learnedPvc ? 'Extrasístole aprendida (PTB-XL)' : learned ? 'Latido aprendido (PTB-XL)' : b.kind !== 'normal' ? 'Fuente ventricular' : deltaDurationMs ? 'Plantilla histórica + delta' : 'Plantilla histórica';
+  const note = ectopic === 'VPACE'
+    ? 'Complejo estimulado en el ventrículo, aprendido de pacientes con marcapasos (PTB-XL), proyectado con Dower. Su eje y su ancho son los del paciente (cambian con la semilla); elegir una fuente concreta vuelve a la plantilla histórica.'
+    : learnedPvc
     ? 'Extrasístole ventricular aprendida de pacientes reales (PTB-XL), proyectada con Dower. Su eje y su ancho son los del paciente (cambian con la semilla); elegir una fuente concreta vuelve a la plantilla histórica.'
     : learned && !state.requested
     ? 'Vector cardiaco del QRS aprendido de ECG reales (PTB-XL), proyectado con Dower. Los pacientes cambian con la semilla; el eje y las amplitudes siguen los controles del caso.'
@@ -104,10 +106,11 @@ export function activationTiming(c: ECGCase, b: Beat) {
 export function sampleActivation(c: ECGCase, b: Beat): ActivationTrace {
   const limitation = activationLimitation(c, b);
   if (limitation) throw Error(limitation);
-  const learnedPvc = b.kind === 'pvc' && usesRealisticBase(c) && learnedVentricularEctopy(c);
+  const ectopicKind = b.kind === 'pvc' || b.kind === 'paced' ? b.kind : null;
+  const learnedPvc = ectopicKind !== null && learnedEctopicModel(c, ectopicKind) !== null;
   if (learnedPvc && !learned) throw Error('El modelo aprendido aún se está cargando.');
-  // A learned PVC keeps the patient's own QRS width, as in the trace (F5.3).
-  const durationMs = (learnedPvc ? learned!.learnedPvcQrsSeconds(c) : qrsDuration(c, b)) * 1000;
+  // A learned ectopic beat keeps the patient's own QRS width, as in the trace.
+  const durationMs = (learnedPvc ? learned!.learnedEctopicQrsSeconds(c, ectopicKind!) : qrsDuration(c, b)) * 1000;
   if (!Number.isFinite(durationMs) || durationMs <= 0 || durationMs > 1000) throw Error('Duración QRS no válida.');
   const learnedBeat = b.kind === 'normal' && !usesRegionalActivation(c, b) && usesRealisticBase(c);
   if (learnedBeat && !learned) throw Error('El modelo aprendido aún se está cargando.');
@@ -124,7 +127,7 @@ export function sampleActivation(c: ECGCase, b: Beat): ActivationTrace {
   const integral: Vec = [0, 0, 0];
   let peakMagnitude = 0, pathLength = 0;
   for (let i = 0; i < timesMs.length; i++) {
-    const elapsed = timesMs[i], u = elapsed / durationMs, v: Vec = learnedBeat ? learned!.realisticQrsVector(c, u) : learnedPvc ? learned!.realisticQrsVector(c, u, 'pvc') : [0, 0, 0];
+    const elapsed = timesMs[i], u = elapsed / durationMs, v: Vec = learnedBeat ? learned!.realisticQrsVector(c, u) : learnedPvc ? learned!.realisticQrsVector(c, u, ectopicKind!) : [0, 0, 0];
     for (const k of kernels) {
       const g = qrsKernelValue(k, u);
       for (let j = 0; j < 3; j++) v[j] += g * k.v[j];

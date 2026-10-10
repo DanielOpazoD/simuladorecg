@@ -39,6 +39,9 @@ export interface ShapeModel {
   /** Spread of the population draw (1 = learned covariance). Below 1 only for very
    * small classes, whose Gaussian tails blend subtypes no patient has. */
   sampleScale: number;
+  /** Paced populations: the recorded pacing spike (unit 8-lead direction, log-normal
+   * spatial size in mV and mean normalized waveform at 500 Hz, ±10 ms). */
+  spike?: { unit: number[]; logNormMean: number; logNormSd: number; shape500Hz: number[] };
   population: { durationsMsP50: number[]; axisP50: number; magnitudesP50: number[] };
 }
 
@@ -53,9 +56,11 @@ function decodeInt16(b64: string): Int16Array {
 
 /** Learned populations: the normal sinus beat (always bundled) and per-diagnosis
  * classes that the signal worker loads on demand (models.ts). */
-export type ModelCode = "NORM" | "CLBBB" | "CRBBB" | "IRBBB" | "LAFB" | "LVH" | "IMI" | "ASMI" | "PVC";
-/** Populations of the conducted (sinus/supraventricular) beat; PVC is an ectopic population. */
-export type BeatModelCode = Exclude<ModelCode, "PVC">;
+export type ModelCode = "NORM" | "CLBBB" | "CRBBB" | "IRBBB" | "LAFB" | "LVH" | "IMI" | "ASMI" | "PVC" | "VPACE";
+/** Ectopic populations: ventricular premature beats and ventricular paced beats. */
+export type EctopicModelCode = "PVC" | "VPACE";
+/** Populations of the conducted (sinus/supraventricular) beat. */
+export type BeatModelCode = Exclude<ModelCode, EctopicModelCode>;
 export type RawShapeModel = typeof raw;
 const registry = new Map<ModelCode, ShapeModel>();
 
@@ -77,6 +82,7 @@ function decode(code: ModelCode, r: RawShapeModel): ShapeModel {
     jointCov: Float64Array.from(r.joint.cov), population: r.population,
     mixture: { weights: r.mixture.weights, means: decodeFloat32(r.mixture.means), cholesky: decodeFloat32(r.mixture.cholesky) },
     sampleScale: (r as { sampleScale?: number }).sampleScale ?? 1,
+    spike: (r as { spike?: ShapeModel["spike"] }).spike,
   };
 }
 export function registerShapeModel(code: ModelCode, r: RawShapeModel): void {

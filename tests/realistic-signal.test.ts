@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { synthesize } from "../src/engine/signal";
 import { LEADS, type ECGCase, type Signal } from "../src/engine/types";
-import { fromPreset, presetById, PRESETS, TEXTBOOK_AF_SEED, TEXTBOOK_FLUTTER_SEED, TEXTBOOK_PVC_SEED, TEXTBOOK_SEED, TEXTBOOK_SEEDS } from "../src/presets/catalog";
+import { fromPreset, presetById, PRESETS, TEXTBOOK_AF_SEED, TEXTBOOK_FLUTTER_SEED, TEXTBOOK_PACED_SEED, TEXTBOOK_PVC_SEED, TEXTBOOK_SEED, TEXTBOOK_SEEDS } from "../src/presets/catalog";
 import { realisticModelFor, realisticModelsFor } from "../src/engine/realistic/scope";
 import { samplePatient } from "../src/engine/realistic/shape-model";
 
@@ -35,7 +35,11 @@ describe("alcance de la base aprendida (F2–F3)", () => {
       expect(realisticModelsFor(fromPreset(presetById(id)!))).toEqual(["NORM", "PVC"]);
     }
     expect(realisticModelFor({ ...fromPreset(presetById("pvc")!), ventricularSource: "rv_apical_pacing" })).toBeNull();
-    for (const id of ["vt", "vvi", "lpfb", "bifascicular", "wpw", "anterior", "inferior", "lateral", "sgarbossa", "rv_acute", "hyperk", "complete_v"])
+    // Pacing (F5.4): AAI conducts the learned beat; VVI and DDD add the learned paced complex.
+    expect(realisticModelsFor(fromPreset(presetById("aai")!))).toEqual(["NORM", "VPACE"]); // recorded spike
+    for (const id of ["vvi", "ddd"]) expect(realisticModelsFor(fromPreset(presetById(id)!))).toEqual(["NORM", "VPACE"]);
+    expect(realisticModelFor({ ...fromPreset(presetById("vvi")!), ventricularSource: "rv_apical_pacing" })).toBeNull();
+    for (const id of ["vt", "lpfb", "bifascicular", "wpw", "anterior", "inferior", "lateral", "sgarbossa", "rv_acute", "hyperk", "complete_v"])
       expect(model[id]).toBeNull();
     // Only the chronic phase of a territory with a learned old-infarction population.
     expect(realisticModelFor({ ...fromPreset(presetById("lateral")!), phase: "chronic" })).toBeNull();
@@ -543,3 +547,39 @@ describe("F5.2: ondas F del flutter aprendidas (Georgia + PTB-XL)", () => {
   });
 });
 
+describe("F5.4: marcapasos aprendido de PTB-XL", () => {
+  it("el complejo estimulado conserva su ancho propio y el laboratorio lo reconoce", async () => {
+    const { sampleActivation } = await import("../src/ui/activation-model");
+    const widths = new Set<number>();
+    for (let seed = 1; seed <= 8; seed++) {
+      const c = load("vvi", { seed }), b = synthesize(c, 10).events.beats.find((x) => x.kind === "paced")!;
+      expect(b.ownDurations).toBe(true);
+      expect(b.qrs!).toBeGreaterThanOrEqual(0.12);
+      widths.add(Math.round(b.qrs! * 1000));
+      if (seed === 1) expect(sampleActivation(c, b).timing.label).toBe("Latido estimulado aprendido (PTB-XL)");
+    }
+    expect(widths.size).toBeGreaterThan(4);
+  });
+  it("la espiga es la registrada (forma aprendida, una por estímulo) y su tamaño cambia con el paciente", () => {
+    const peaks: number[] = [];
+    for (let seed = 1; seed <= 8; seed++) {
+      const s = synthesize(load("vvi", { seed }), 10), t = s.events.spikes.find((x) => x > 1)!;
+      const w = Array.from(s.leads.II.slice(Math.round((t - 0.012) * s.fs), Math.round((t + 0.012) * s.fs)));
+      peaks.push(Math.max(...w) - Math.min(...w));
+    }
+    expect(Math.min(...peaks)).toBeGreaterThan(0.2);
+    const mean = peaks.reduce((a, b) => a + b, 0) / peaks.length;
+    expect(Math.sqrt(peaks.reduce((a, b) => a + (b - mean) ** 2, 0) / peaks.length) / mean).toBeGreaterThan(0.15);
+  });
+  it("la espiga auricular no se cuenta como latido: la FC medida de AAI es la del caso", async () => {
+    const { analyzeSamples } = await import("../src/engine/sample-analysis");
+    // With the ventricular spike borrowed for atrial pacing, 11 of these 16 failed.
+    for (let seed = 1; seed <= 8; seed++) for (const hr of [60, 90]) {
+      const s = synthesize(load("aai", { seed, hr, filter: "diagnostic" }), 10);
+      expect(analyzeSamples({ fs: s.fs, leads: s.leads }).hr).toBeCloseTo(hr, -1);
+    }
+  });
+  it("los presets VVI y DDD muestran su paciente de libro", () => {
+    for (const id of ["vvi", "ddd"]) expect(fromPreset(presetById(id)!).seed).toBe(TEXTBOOK_PACED_SEED);
+  });
+});
