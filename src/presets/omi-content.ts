@@ -22,7 +22,7 @@ export const REFERENCES = {
   wellens1982: { level: "estudio", cite: "de Zwaan C, Bär FW, Wellens HJ. Characteristic electrocardiographic pattern indicating a critical stenosis high in left anterior descending coronary artery in patients admitted because of impending myocardial infarction. Am Heart J 1982;103:730–736.", url: doi("10.1016/0002-8703(82)90480-x") },
   sgarbossa1996: { level: "estudio", cite: "Sgarbossa EB, Pinski SL, Barbagelata A, et al. Electrocardiographic diagnosis of evolving acute myocardial infarction in the presence of left bundle-branch block. N Engl J Med 1996;334:481–487.", url: doi("10.1056/NEJM199602223340801") },
   smithSgarbossa2015: { level: "estudio", cite: "Meyers HP, Limkakeng AT Jr, Jaffa EJ, et al. Validation of the modified Sgarbossa criteria for acute coronary occlusion in the setting of left bundle branch block. Am Heart J 2015;170:1255–1264.", url: doi("10.1016/j.ahj.2015.09.005") },
-  aslanger2020: { level: "estudio", cite: "Aslanger E, Yıldırımtürk Ö, Şimşek B, et al. A new electrocardiographic pattern indicating inferior myocardial infarction. J Electrocardiol 2020;61:41–46.", url: doi("10.1016/j.jelectrocard.2020.04.008") },
+  udmi2018: { level: "guía", cite: "Thygesen K, Alpert JS, Jaffe AS, et al. Fourth Universal Definition of Myocardial Infarction (2018). Circulation 2018;138:e618–e651.", url: doi("10.1161/CIR.0000000000000617") },
   formula2017: { level: "estudio", cite: "Driver BE, Khalil A, Henry T, et al. A new 4-variable formula to differentiate normal variant ST segment elevation in V2–V4 (early repolarization) from subtle left anterior descending coronary occlusion. J Electrocardiol 2017;50:561–569.", url: doi("10.1016/j.jelectrocard.2017.04.005") },
   staff3: { level: "datos", cite: "STAFF III Database (PhysioNet, ODC-By 1.0): ECG de 12 derivaciones durante angioplastia con balón. Fuente del cambio del ST aprendido en ECG Lab.", url: "https://physionet.org/content/staffiii/1.0.0/" },
 } as const satisfies Record<string, Reference>;
@@ -69,15 +69,15 @@ export const OMI_SHEETS: Readonly<Record<string, OmiSheet>> = {
   },
   inferior_lcx: {
     context: "La circunfleja irriga la pared lateral y, en personas con dominancia izquierda, también la inferior y la posterior. Sus oclusiones son las que más a menudo no cumplen criterios STEMI.",
-    ecg: "ST elevado en II, III y aVF con II ≥ III, I positiva, elevación en V5–V6 y descenso en V1–V3.",
-    interpretation: "OMI inferolateral por oclusión de la Cx. El descenso en V1–V3 es el espejo de la pared posterior.",
-    lesson: "Un descenso del ST máximo en V1–V3 con T positiva no es isquemia subendocárdica anterior: es el espejo de un OMI posterior.",
+    ecg: "En este paciente la pared inferior apenas cambia (II ≥ III en el punto J, ambos bajo 0,5 mm): domina el patrón posterolateral, con ST elevado en V5–V6 y descenso marcado en V1–V4 con T negativas.",
+    interpretation: "OMI posterolateral por oclusión de la Cx. El descenso en V1–V4 es el espejo de la pared posterior; no cumple criterios STEMI en las derivaciones inferiores.",
+    lesson: "Un descenso del ST máximo en V1–V4 no es isquemia subendocárdica anterior: es el espejo de un OMI posterior.",
     notes: [
       { kind: "Perla", text: "Las derivaciones V7–V9 muestran de frente la elevación posterior que V1–V3 ven en espejo." },
       { kind: "Trampa", text: "Etiquetar el caso como SCASEST por el descenso en V1–V3 y retrasar la reperfusión." },
       { kind: "Consejo", text: "Con «Punto J y ST», el azul de V1–V3 y el rojo de V5–V6 son un mismo vector de lesión." },
     ],
-    refs: ["omi2021", "omiFindings2021", "ricci2025", "acc2025", "staff3"],
+    refs: ["omi2021", "omiFindings2021", "difoccult", "ricci2025", "acc2025", "staff3"],
     chapter: { slug: "09-omi-inferior-posterior", title: "OMI inferior, posterior y de VD" },
   },
   rv_infarct: {
@@ -88,15 +88,15 @@ export const OMI_SHEETS: Readonly<Record<string, OmiSheet>> = {
     notes: [
       { kind: "Perla", text: "En el infarto del VD el gasto depende de la precarga: los vasodilatadores pueden provocar hipotensión." },
       { kind: "Trampa", text: "Leer la elevación de V1–V2 como un OMI anterior asociado." },
-      { kind: "Consejo", text: "Registra V4R en todo OMI inferior." },
+      { kind: "Consejo", text: "Ante un OMI inferior, registra V4R, sobre todo si V1 está elevada o hay hipotensión." },
     ],
     refs: ["acc2025", "esc2023", "ricci2025"],
     chapter: { slug: "09-omi-inferior-posterior", title: "OMI inferior, posterior y de VD" },
   },
   lateral: {
-    context: "La pared lateral alta depende de la primera diagonal o de ramas de la circunfleja.",
-    ecg: "ST elevado en I y aVL, a veces en V2 o V5–V6, con descenso recíproco en III.",
-    interpretation: "OMI lateral alto por oclusión de la diagonal o de la circunfleja.",
+    context: "La pared lateral depende de la diagonal o de las ramas marginales de la circunfleja.",
+    ecg: "ST elevado en I y aVL y en V3–V6, máximo en V4–V5, con descenso recíproco en III y V1.",
+    interpretation: "OMI lateral por oclusión de la diagonal o de una marginal: el vector de lesión apunta a la izquierda.",
     lesson: "I y aVL tienen poco voltaje: una elevación pequeña con espejo en III ya es significativa.",
     notes: [
       { kind: "Perla", text: "El descenso del ST en III puede preceder a la elevación lateral." },
@@ -121,7 +121,7 @@ export const OMI_SHEETS: Readonly<Record<string, OmiSheet>> = {
   },
   posterior: {
     context: "La pared posterior (inferobasal) depende de la circunfleja o de una coronaria derecha dominante. Ninguna de las 12 derivaciones la mira de frente.",
-    ecg: "Descenso del ST máximo en V1–V3 (o V4) con T positivas y R alta en V2; elevación en V7–V9.",
+    ecg: "Descenso horizontal del ST máximo en V2–V3, sin elevación en el resto; la T puede invertirse. En V7–V9, que no se registran aquí, se vería la elevación.",
     interpretation: "OMI posterior: el espejo anterior de una elevación posterior.",
     lesson: "Invierte mentalmente V1–V3: el descenso se vuelve elevación.",
     notes: [
@@ -129,7 +129,7 @@ export const OMI_SHEETS: Readonly<Record<string, OmiSheet>> = {
       { kind: "Trampa", text: "Etiquetarlo como SCASEST y retrasar la reperfusión." },
       { kind: "Consejo", text: "Registra V7–V9 cuando el descenso predomina en V1–V3." },
     ],
-    refs: ["omiFindings2021", "ricci2025", "tenSteps2021"],
+    refs: ["omiFindings2021", "difoccult", "ricci2025", "tenSteps2021"],
     chapter: { slug: "09-omi-inferior-posterior", title: "OMI inferior, posterior y de VD" },
   },
   diffuse: {
@@ -147,7 +147,7 @@ export const OMI_SHEETS: Readonly<Record<string, OmiSheet>> = {
   },
   sgarbossa: {
     context: "Con bloqueo de rama izquierda la repolarización es secundaria y discordante: el ST elevado es la regla, no la excepción.",
-    ecg: "ST concordante con el QRS de al menos 1 mm, descenso concordante en V1–V3, o ST discordante desproporcionado (razón ST/S ≤ −0,25 en la versión de Smith).",
+    ecg: "Elevación del ST concordante con el QRS de al menos 1 mm, descenso concordante de al menos 1 mm en V1–V3, o elevación discordante desproporcionada (al menos 1 mm y razón ST/S ≤ −0,25 en la versión de Smith).",
     interpretation: "OMI con BRI: criterios de Sgarbossa modificados positivos.",
     lesson: "Con BRI la pregunta no es si el ST está elevado, sino si es proporcional al QRS.",
     notes: [
@@ -160,8 +160,8 @@ export const OMI_SHEETS: Readonly<Record<string, OmiSheet>> = {
   },
   subendo: {
     context: "Isquemia sin oclusión: desequilibrio entre aporte y demanda o estenosis que no cierra la arteria.",
-    ecg: "Descenso del ST horizontal o descendente, máximo en V4–V6, sin elevación localizada; puede haber T negativas.",
-    interpretation: "NOMI: SCASEST sin oclusión.",
+    ecg: "Descenso del ST horizontal o descendente, máximo en V4–V5 e II, con elevación especular en aVR y T negativas; sin elevación localizada.",
+    interpretation: "Isquemia sin oclusión: si la troponina sube es un NOMI; en las guías, SCASEST.",
     lesson: "Mira dónde es máximo el descenso: en V4–V6 sugiere subendocárdica; en V1–V3, un posible OMI posterior.",
     notes: [
       { kind: "Perla", text: "La isquemia subendocárdica no localiza la arteria: el descenso no tiene territorio." },
@@ -207,20 +207,20 @@ export const OMI_SHEETS: Readonly<Record<string, OmiSheet>> = {
       { kind: "Trampa", text: "Leer las Q como un infarto agudo y activar cateterismo." },
       { kind: "Consejo", text: "Compara con un ECG previo: si las Q ya estaban, el cambio agudo no es ese." },
     ],
-    refs: ["esc2023", "mclaren2024"],
+    refs: ["udmi2018", "esc2023"],
     chapter: { slug: "11-stemi-mimics", title: "STEMI mimics" },
   },
   old_anterior: {
     context: "Infarto anteroseptal establecido: necrosis con ondas Q y repolarización residual.",
-    ecg: "Q o QS en V1–V3, pérdida de R anterior, ST sin elevación aguda.",
-    interpretation: "Infarto anteroseptal antiguo (aprendido de pacientes de PTB-XL). El ECG no fecha el infarto.",
-    lesson: "Q anteriores sin T hiperaguda orientan a infarto antiguo; el ST elevado persistente sugiere aneurisma.",
+    ecg: "Q profundas en V1–V3 con pérdida de R anterior; ST residual elevado (bajo el criterio en el punto J, mayor a J+60) con T pequeñas o bifásicas en V3–V4.",
+    interpretation: "Infarto anteroseptal antiguo con elevación residual del ST (aprendido de pacientes de PTB-XL). El ECG no fecha el infarto.",
+    lesson: "Q anteriores con ST elevado pero T pequeña respecto del QRS orientan a infarto antiguo o aneurisma, no a un OMI en curso.",
     notes: [
       { kind: "Perla", text: "En el aneurisma la elevación persiste, con T relativamente pequeña respecto del QRS." },
       { kind: "Trampa", text: "Confundir un QS antiguo con un OMI anterior en curso." },
       { kind: "Consejo", text: "Mira la T: hiperaguda en el agudo, pequeña o negativa en el antiguo." },
     ],
-    refs: ["esc2023", "mclaren2024"],
+    refs: ["udmi2018", "mclaren2024"],
     chapter: { slug: "11-stemi-mimics", title: "STEMI mimics" },
   },
   pericarditis: {

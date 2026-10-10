@@ -188,6 +188,18 @@ function renderExplorationContext(concealed:boolean) {
 }
 
 function showExplorationChanges(){if(!explorationOrigin)return;const changes=explorationChanges(explorationOrigin,c);openDialog("Cambios respecto al origen",`<p class="dialog-lead">Origen: <strong>${esc(explorationOrigin.presetName)}</strong>. Se muestran diferencias reales del modelo; la vista no cuenta como ajuste.</p><div class="measurement-table-wrap"><table><thead><tr><th>Parámetro</th><th>Origen</th><th>Actual</th></tr></thead><tbody>${changes.map(x=>`<tr><td>${esc(x.label)}</td><td>${esc(formatExplorationValue(x.before))}${x.beforeLabel?`<br><small>${esc(x.beforeLabel)}</small>`:""}</td><td>${esc(formatExplorationValue(x.after))}${x.afterLabel?`<br><small>${esc(x.afterLabel)}</small>`:""}</td></tr>`).join("")}</tbody></table></div><p class="control-note">Una acción puede cambiar varios parámetros coordinados; el recuento describe diferencias del estado resultante, no el número de clics.</p>`)}
+// Open state of the sheet's support and of the description, kept across re-renders.
+let refsOpen = false, descriptionOpen = true;
+document.addEventListener("toggle", (e) => {
+  const el = e.target as HTMLDetailsElement;
+  if (el.classList?.contains("omi-refs")) refsOpen = el.open;
+  else if (el.classList?.contains("structured-description")) descriptionOpen = el.open;
+}, true);
+/** The description is read from the signal shown: empty while a new one is computed. */
+function renderDescription() {
+  const concealed = quiz && !quiz.answer;
+  $("#structured-description").innerHTML = !concealed && session.signal ? structuredDescriptionHtml(structuredDescription(c, session.signal), descriptionOpen) : "";
+}
 function renderInfo() {
   const context = caseContext(c),
     reading = caseReading(c, context),
@@ -224,8 +236,9 @@ function renderInfo() {
     .join("");
   // OMI families (A3): case sheet with expert notes and support; and, for any case,
   // the structured description read from the trace shown.
-  $("#omi-sheet").innerHTML = !concealed && p && !customExploration ? omiSheetHtml(p.id) : "";
-  $("#structured-description").innerHTML = !concealed && session.signal ? structuredDescriptionHtml(structuredDescription(c, session.signal)) : "";
+  // With reversed arm electrodes the trace no longer shows the sheet's picture.
+  $("#omi-sheet").innerHTML = !concealed && p && !customExploration && !c.artifacts.reversed ? omiSheetHtml(p.id, refsOpen) : "";
+  renderDescription();
   $("#limitation").innerHTML = concealed
     ? "El diagnóstico se mostrará al responder."
     : `<strong>${p?.strategy === "local" ? "Ajuste morfológico local" : "Modelo aproximado"}</strong><p>${esc(p?.limitation || "Sin validación clínica de este caso personalizado.")}</p>`;
@@ -487,6 +500,7 @@ function invalidateSignal() {
   activation.invalidate();
   clearToast();
   session.invalidate();
+  renderDescription();
   comparison.invalidate();
   renderQuiz();
   showUnavailableSignal("Calculando señal…");
@@ -597,6 +611,7 @@ function setValue(key: string, value: unknown) {
   if (session.measurement && (key === "view.timing" || key === "view.format"))
     session.selectBeat(representativeBeat(session.measurement, visibleSegmentEnd()));
   if (!key.startsWith("view.")) { renderCatalog(); renderInfo(); }
+  else renderDescription();
 }
 /** Natural P/T axes: show the patient's actual axis on the slider until it is moved. */
 function syncNaturalAxes(s: Signal) {
