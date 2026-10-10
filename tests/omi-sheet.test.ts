@@ -52,10 +52,11 @@ describe("descripción estructurada", () => {
   });
   it("describe en lenguaje clínico la oclusión de la DA: elevación, descenso recíproco y T prominentes", () => {
     const d = read("anterior"), st = line(d, "ST");
-    expect(st).toMatch(/^Elevación del ST en [^;]*V1–V5, máxima en V3/);
+    // Only leads that reach the guideline threshold (V1 0,8 mm and V5 0,7 mm stay out).
+    expect(st).toMatch(/^Elevación del ST en I, aVL y V2–V4, máxima en V3/);
     expect(st).toMatch(/descenso del ST [^;]*III/);
     expect(line(d, "Rec.")).toBe("Cambios recíprocos del ST.");
-    expect(line(d, "T")).toMatch(/Ondas T invertidas en III y aVF; ondas T prominentes, grandes para su QRS, en [^.]*V3/);
+    expect(line(d, "T")).toMatch(/Ondas T invertidas en III y aVF; ondas T prominentes, grandes para su QRS, en V3/);
     expect(d.lines.find((l) => l.key === "ST")!.info).toBe("st");
     expect(d.summary).toContain("12 derivaciones");
   });
@@ -68,7 +69,7 @@ describe("descripción estructurada", () => {
   });
   it("De Winter: descenso ascendente y T prominentes; Wellens: T bifásicas o invertidas", () => {
     const d = read("de_winter");
-    expect(line(d, "ST")).toMatch(/^Descenso del ST ascendente en V1–V6/);
+    expect(line(d, "ST")).toMatch(/^Descenso del ST con pendiente ascendente en V1–V6/);
     expect(line(d, "T")).toMatch(/ondas T prominentes, grandes para su QRS, en [^.]*V2–V6|Ondas T prominentes/i);
     expect(line(read("wellens_a"), "T")).toBe("Ondas T bifásicas en V2 y V3.");
     expect(line(read("wellens_b"), "T")).toBe("Ondas T invertidas en V2 y V3.");
@@ -77,6 +78,8 @@ describe("descripción estructurada", () => {
     expect(line(read("old_inferior"), "Q")).toBe("Ondas Q patológicas en II, III y aVF.");
     const lbbb = read("lbbb");
     expect(line(lbbb, "Q")).toMatch(/no valorables/);
+    // With RBBB the initial forces are preserved: Q waves are read.
+    expect(line(read("rbbb"), "Q")).toBe("Sin ondas Q patológicas.");
     expect(line(lbbb, "Rec.")).toBe("");
     expect(line(lbbb, "ST/QRS")).toMatch(/secundarias/);
   });
@@ -96,7 +99,10 @@ describe("descripción estructurada", () => {
   });
   it("cada ficha coincide con su trazado en los rasgos que nombra", () => {
     expect(line(read("subendo"), "ST")).toMatch(/máximo en V[45]/);
-    expect(line(read("lateral"), "ST")).toMatch(/^Elevación del ST en I, aVL y V3–V6/);
+    expect(line(read("lateral"), "ST")).toMatch(/^Elevación del ST en I, aVL y V3–V6[^.]*descenso del ST [^;]*III/);
+    // Pericarditis: the ST depression in aVR is named.
+    expect(line(read("pericarditis"), "ST")).toMatch(/descenso del ST en aVR/);
+    expect(line(read("old_inferior"), "T")).toMatch(/aplanadas en [^.]*II/);
     expect(line(read("posterior"), "ST")).toMatch(/máximo en V[23]/);
     const lcx = leadMeasures(synthesize(preset("inferior_lcx"), 10)), at = (l: string) => lcx.find((m) => m.lead === l)!.j0;
     expect(at("II")).toBeGreaterThanOrEqual(at("III"));
