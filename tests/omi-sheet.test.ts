@@ -102,7 +102,8 @@ describe("descripción estructurada", () => {
     expect(line(read("lateral"), "ST")).toMatch(/^Elevación del ST en I, aVL y V3–V6[^.]*descenso del ST [^;]*III/);
     // Pericarditis: the ST depression in aVR is named.
     expect(line(read("pericarditis"), "ST")).toMatch(/descenso del ST en aVR/);
-    expect(line(read("old_inferior"), "T")).toMatch(/aplanadas en [^.]*II/);
+    expect(line(read("rbbb"), "T")).not.toMatch(/aplanadas/);
+    expect(line(read("lbbb"), "T")).not.toMatch(/prominentes|aplanadas en aVF/);
     expect(line(read("posterior"), "ST")).toMatch(/máximo en V[23]/);
     const lcx = leadMeasures(synthesize(preset("inferior_lcx"), 10)), at = (l: string) => lcx.find((m) => m.lead === l)!.j0;
     expect(at("II")).toBeGreaterThanOrEqual(at("III"));

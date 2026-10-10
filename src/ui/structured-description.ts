@@ -135,14 +135,19 @@ export function tFindings(m: LeadMeasure[]): TFindings {
   // Normal variants: an inverted T in V1, or in III alone, is common in healthy adults.
   const inferiorToo = negative.some((r) => r.lead === "II" || r.lead === "aVF");
   const inverted = negative.filter((r) => r.lead !== "V1" && (r.lead !== "III" || inferiorToo));
-  // Flat: under 1 mm where the T is normally upright (I, II, aVF, V3–V6).
-  const flat = leads.filter((r) => /^(I|II|aVF|V[3-6])$/.test(r.lead) && !biphasic.includes(r) && !negative.includes(r) && r.tMax < 0.1);
+  // Flat: under 1 mm where the T is normally upright (I, II, V3–V6; aVF may be flat in
+  // healthy adults), in two contiguous leads.
+  const flatCandidates = leads.filter((r) => /^(I|II|V[3-6])$/.test(r.lead) && !biphasic.includes(r) && !negative.includes(r) && r.tMax < 0.1);
+  const flatPairs = contiguous(new Set(flatCandidates.map((r) => r.lead)));
+  const flat = flatCandidates.filter((r) => flatPairs.includes(r.lead));
   // Prominent: ≥ 10 mm, or ≥ 7 mm and at least 80 % of a QRS of ≥ 8 mm (a small QRS
   // alone does not make a normal T «large for its QRS»).
   const prominent = leads.filter((r) => !biphasic.includes(r) && (r.tMax >= 1 || (r.tMax >= 0.7 && r.qrs >= 0.8 && r.tMax / r.qrs >= 0.8)));
   return { inverted, biphasic, flat, prominent };
 }
-function tLine(f: TFindings): string {
+function tLine(f: TFindings, wide: boolean): string {
+  // With a wide QRS the T is secondary: its size says nothing about ischaemia.
+  if (wide) f = { ...f, prominent: [] };
   const parts: string[] = [];
   if (f.inverted.length) parts.push(`Ondas T invertidas en ${leadList(f.inverted.map((r) => r.lead))}`);
   if (f.biphasic.length) parts.push(`ondas T bifásicas en ${leadList(f.biphasic.map((r) => r.lead))}`);
@@ -204,7 +209,7 @@ export function structuredDescription(c: ECGCase, s: Signal): StructuredDescript
     if (c.rhythm === "af") st.mild = [];
     const stText = stLine(st);
     lines.push({ key: "ST", text: c.rhythm === "af" ? `${stText.slice(0, -1)} (lectura aproximada por las ondas f).` : stText, info: "st" },
-      { key: "T", text: tLine(tFindings(m)), info: "t" },
+      { key: "T", text: tLine(tFindings(m), wide), info: "t" },
       { key: "Q", text: qUnreadable ? "Ondas Q no valorables con este QRS (bloqueo de rama izquierda, preexcitación o QRS ventricular)." : qLine(pathologicalQ(m)), info: "q" });
     if (wide && (st.elevation.length || st.depression.length)) lines.push({ key: "ST/QRS", text: "Alteraciones del ST secundarias al QRS ancho: valorar su proporción con el QRS." });
     else if (st.elevation.length && st.depression.length) lines.push({ key: "Rec.", text: "Cambios recíprocos del ST." });

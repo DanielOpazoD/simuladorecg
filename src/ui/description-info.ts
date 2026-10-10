@@ -44,7 +44,7 @@ const CONTENT: Record<DescriptionInfo, InfoContent> = {
       ["Normal", "Positiva en I, II y V3–V6; negativa en aVR. Puede ser negativa o aplanada en III, aVL, aVF y V1 (y en V2 en jóvenes) sin significado patológico."],
       ["Invertida", "Negativa donde debería ser positiva, en dos o más derivaciones contiguas. Profunda y simétrica en V2–V3 tras dolor torácico sugiere reperfusión de la DA (Wellens)."],
       ["Bifásica", "Con un componente positivo y otro negativo; positiva-negativa en V2–V3 es el Wellens tipo A."],
-      ["Aplanada", "Menor de 1 mm donde debería ser positiva (I, II, aVF, V3–V6)."],
+      ["Aplanada", "Menor de 1 mm donde debería ser positiva (I, II, V3–V6), en dos derivaciones contiguas."],
       ["Prominente («hiperaguda»)", "Ancha, voluminosa y grande para su QRS. Aquí se marca cuando mide ≥ 10 mm, o ≥ 7 mm y al menos el 80 % de un QRS de ≥ 8 mm; no hay un umbral universal, y una T de 6–8 mm en V2–V4 puede ser normal en hombres jóvenes."],
     ],
     refs: ["rautaharju2009", "wagner2009", "wellens1982", "deWinter2008"],
