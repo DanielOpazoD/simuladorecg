@@ -106,10 +106,16 @@ export interface ECGCase {
   /** Learned base: P and T keep the patient's own axes and turn with the heart
    * unless the user sets them (then pAxis/tAxis are exact targets). Missing = natural. */
   naturalPAxis?: boolean;
-  /** Experimental (F2.3): the learned sinus patient keeps its own QRS axis, wave
-   * sizes and QRS/ST-T durations; the axis, amplitude and interval controls do not
-   * apply. Not set by the product. */
-  naturalPatient?: boolean;
+  /** Learned base (F2.3): the patient keeps its own QRS axis, wave sizes, PR, QRS
+   * and QT until a preset or the user sets that control (then it is an exact
+   * target). Missing = natural. */
+  naturalAxis?: boolean;
+  naturalPr?: boolean;
+  naturalQrs?: boolean;
+  naturalQt?: boolean;
+  naturalPAmp?: boolean;
+  naturalQrsAmp?: boolean;
+  naturalTAmp?: boolean;
   naturalTAxis?: boolean;
   /** Resting noise floor measured in real recordings; missing means "realistic". */
   acquisition?: "realistic" | "ideal";
@@ -276,6 +282,13 @@ export const DEFAULT_CASE: ECGCase = {
   acquisition: "realistic",
   naturalPAxis: true,
   naturalTAxis: true,
+  naturalAxis: true,
+  naturalPr: true,
+  naturalQrs: true,
+  naturalQt: true,
+  naturalPAmp: true,
+  naturalQrsAmp: true,
+  naturalTAmp: true,
   notch: 0,
   mainsFrequency: 50,
   view: {
@@ -297,6 +310,14 @@ export const DEFAULT_CASE: ECGCase = {
 export function cloneCase(c: ECGCase): ECGCase {
   return JSON.parse(JSON.stringify(c));
 }
+/** Controls that, on the learned base, follow the patient until set (F2.3). */
+export const NATURAL_CONTROLS = {
+  axis: "naturalAxis", pr: "naturalPr", qrs: "naturalQrs", qtc: "naturalQt",
+  pAmp: "naturalPAmp", qrsAmp: "naturalQrsAmp", tAmp: "naturalTAmp",
+} as const satisfies Partial<Record<keyof ECGCase, keyof ECGCase>>;
+export type NaturalControl = keyof typeof NATURAL_CONTROLS;
+/** Whether a control follows the learned patient (missing = natural). */
+export const isNatural = (c: Partial<ECGCase>, control: NaturalControl) => c[NATURAL_CONTROLS[control]] !== false;
 export function normalizeCase(input: unknown): ECGCase {
   if (!input || typeof input !== "object" || Array.isArray(input))
     throw new Error("El archivo no contiene un caso ECG.");
@@ -308,6 +329,13 @@ export function normalizeCase(input: unknown): ECGCase {
   const enums: Record<string, readonly unknown[]> = {
     naturalPAxis: [true, false],
     naturalTAxis: [true, false],
+    naturalAxis: [true, false],
+    naturalPr: [true, false],
+    naturalQrs: [true, false],
+    naturalQt: [true, false],
+    naturalPAmp: [true, false],
+    naturalQrsAmp: [true, false],
+    naturalTAmp: [true, false],
     acquisition: ["realistic", "ideal"],
     rhythm: [
       "sinus",
@@ -420,6 +448,9 @@ export function normalizeCase(input: unknown): ECGCase {
   // Cases saved before natural P/T axes existed keep an axis they had changed.
   if (s.naturalPAxis === undefined) c.naturalPAxis = s.pAxis === undefined || s.pAxis === DEFAULT_CASE.pAxis;
   if (s.naturalTAxis === undefined) c.naturalTAxis = s.tAxis === undefined || s.tAxis === DEFAULT_CASE.tAxis;
+  // Likewise for the controls that became natural in F2.3.
+  for (const [control, flag] of Object.entries(NATURAL_CONTROLS) as [NaturalControl, (typeof NATURAL_CONTROLS)[NaturalControl]][])
+    if (s[flag] === undefined) c[flag] = s[control] === undefined || s[control] === DEFAULT_CASE[control];
   c.flutterRatio = Math.round(c.flutterRatio);
   for (const k of ["presetId", "name"] as const)
     if (typeof s[k] === "string") c[k] = s[k].slice(0, 100);

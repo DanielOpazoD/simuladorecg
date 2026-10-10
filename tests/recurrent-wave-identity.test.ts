@@ -6,7 +6,7 @@ import { detectVentricularCandidates } from "../src/engine/analysis/ventricular-
 import type { ECGCase, Signal } from "../src/engine/types";
 
 function recording(id: string, changes: Partial<ECGCase>) {
-  const config = { ...fromPreset(presetById(id)!), variability: 0, ...changes };
+  const config = { ...fromPreset(presetById(id)!, undefined, { natural: false }), variability: 0, ...changes };
   config.artifacts = { ...config.artifacts, baseline: 0, muscle: 0, mains: 0 };
   // Analyzer stress fixtures on the kernel model; the frozen analyzer's limits on
   // the learned base are recorded in docs/fidelidad.md.

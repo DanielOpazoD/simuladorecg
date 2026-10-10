@@ -44,7 +44,7 @@ describe("generator-level spatial QRS contract", () => {
   it("gain changes scale the loop without rotating its frontal axis", () => {
     const c=load("sinus");
     const base=spatialQrsSummary(qrsKernels(c,beat()));
-    c.qrsAmp=2;
+    c.qrsAmp*=2;
     const high=spatialQrsSummary(qrsKernels(c,beat()));
     expect(angularSeparation(base.frontalAxis,high.frontalAxis)).toBeLessThan(1e-8);
     expect(high.peakSpatialMagnitude/base.peakSpatialMagnitude).toBeCloseTo(2,10);

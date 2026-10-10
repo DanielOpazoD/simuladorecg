@@ -310,6 +310,9 @@ export interface PatientTargets {
   /** Scales multiply the patient's own wave sizes instead of setting them to
    * the population median (ectopic beats keep their real amplitude spread). */
   naturalAmplitude?: boolean;
+  /** Pick the stable-axis candidate even without an axis target, so fixing the axis
+   * control later rotates the same person (F2.3). */
+  stableCandidate?: boolean;
 }
 export interface Patient {
   model: ShapeModel;
@@ -417,7 +420,7 @@ export function samplePatient(t: PatientTargets): Patient {
   const m = shapeModel(t.model);
   // Without an axis control (ectopic beats keep their own axis) there is nothing
   // to stabilize: the first draw is the patient, unbiased.
-  if (t.axis === null) return sampleCandidate(m, t, 0);
+  if (t.axis === null && !t.stableCandidate) return sampleCandidate(m, t, 0);
   let chosen = 0, bestMargin = -1;
   for (let attempt = 0; attempt < 16; attempt++) {
     const margin = axisMargin(m, reconstruct(m, candidateZ(m, t.seed, attempt).z), t.horizontalDeg);

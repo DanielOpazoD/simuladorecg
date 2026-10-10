@@ -2,9 +2,12 @@ import {
   cloneCase,
   normalizeCase,
   DEFAULT_CASE,
+  NATURAL_CONTROLS,
   type ECGCase,
+  type NaturalControl,
 } from "../engine/types";
 import { presetById } from "../presets/catalog";
+import { withNaturalControls } from "../engine/realistic/natural";
 export type CaseControlKey =
   | Exclude<keyof ECGCase, "artifacts" | "view">
   | `artifacts.${keyof ECGCase["artifacts"]}`
@@ -48,6 +51,7 @@ export function changeCase(
   // Moving an axis control fixes that axis; until then it follows the patient.
   if (key === "pAxis") c.naturalPAxis = false;
   if (key === "tAxis") c.naturalTAxis = false;
+  if (key in NATURAL_CONTROLS) c[NATURAL_CONTROLS[key as NaturalControl]] = false;
   if (key === "rhythm") {
     c.av = "normal";
     c.ectopy = "none";
@@ -103,5 +107,6 @@ export function changeCase(
     c.name = "Caso personalizado";
     c.presetId = "custom";
   }
-  return normalizeCase(c);
+  // Controls not yet set follow the (possibly new) patient: seed, rotation, rhythm.
+  return withNaturalControls(normalizeCase(c));
 }

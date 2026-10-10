@@ -40,7 +40,7 @@ import { assertRepresentableEvents, tWaveSupport } from "./constraints";
 import { median } from "./analysis/statistics";
 import { atrialVector, tWave } from "./morphology";
 import { regionalTerritory, regionalTCorrection } from "./regional-repolarization";
-import { learnEctopicDurations, learnNaturalDurations, naturalTAxis, RealisticTrack, realisticEctopicPatient, usesRealisticBase } from "./realistic/engine";
+import { learnEctopicDurations, naturalTAxis, RealisticTrack, realisticEctopicPatient, usesRealisticBase } from "./realistic/engine";
 import { learnedEctopicModel } from "./realistic/scope";
 import { acquisitionFloor } from "./realistic/acquisition";
 import { addFibrillationWaves } from "./realistic/atrial-fibrillation";
@@ -63,7 +63,6 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
     n = Math.ceil((total + guard) * FS),
     events = generateEvents(c, total + guard);
   assignRepolarization(c, events.beats);
-  if (options.learnedBase !== false && usesRealisticBase(c) && c.naturalPatient === true) learnNaturalDurations(c, events.beats);
   if (options.learnedBase !== false && usesRealisticBase(c))
     learnEctopicDurations(c, events.beats, (["pvc", "paced", "ventricular"] as const).filter((k) => learnedEctopicModel(c, k)));
   assertRepresentableEvents(c, events);
@@ -120,7 +119,7 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
   }
   for (const b of events.beats) {
     if (track && b.kind === "normal") {
-      track.addBeat(b, b.ownDurations ? b.qrs! : qrsDuration(c, b));
+      track.addBeat(b, qrsDuration(c, b));
       continue;
     }
     if (track && b.kind !== "normal" && learnedEctopicModel(c, b.kind)) {
