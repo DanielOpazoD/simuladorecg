@@ -104,7 +104,7 @@ for (const [hr, qrs] of [
             muscle: noise,
             mains: noise,
           });
-          const s = synthesize(c, 10),
+          const s = synthesize(c, 10, { learnedBase: false }), // frozen-analyzer fixture (kernel widths)
             m = analyzeSamples({ fs: s.fs, leads: s.leads });
           expect(m.hr).not.toBeNull();
           expect(Math.abs(m.hr! - hr)).toBeLessThanOrEqual(1);
@@ -139,7 +139,7 @@ it.each([80, 140])(
       muscle: 0.025,
       mains: 0.025,
     });
-    const s = synthesize(c, 10),
+    const s = synthesize(c, 10, { learnedBase: false }), // frozen-analyzer fixture (kernel widths)
       m = analyzeSamples({ fs: s.fs, leads: s.leads });
     expect(Math.abs(m.hr! - 220)).toBeLessThanOrEqual(1);
     expect(m.detectedPeaks.length).toBe(35);

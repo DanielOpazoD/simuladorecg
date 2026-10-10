@@ -70,7 +70,7 @@ it("keeps the same QRS fiducial when the competing slope belongs to that complex
     filter: "off" as const,
   };
   Object.assign(c.artifacts, { baseline: 0, muscle: 0, mains: 0 });
-  const s = synthesize(c, 10),
+  const s = synthesize(c, 10, { learnedBase: false }), // frozen-analyzer fixture (kernel widths)
     input = { fs: s.fs, leads: s.leads };
   const original = detectVentricularCandidates(input, { tReject: false });
   const selected = detectVentricularCandidates(input);
@@ -94,7 +94,7 @@ it.each(
       filter: filter as "off" | "diagnostic",
       activationModel: "regional-lbbb-v1" as const,
     };
-    const s = synthesize(c, 10),
+    const s = synthesize(c, 10, { learnedBase: false }), // frozen-analyzer fixture (kernel widths)
       m = analyzeSamples({ fs: s.fs, leads: s.leads });
     expect(m.qrs).not.toBeNull();
     expect(Math.abs(m.qrs! - qrs)).toBeLessThanOrEqual(20);

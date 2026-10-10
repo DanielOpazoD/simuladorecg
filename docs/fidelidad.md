@@ -713,3 +713,32 @@ nueva congelación del analizador.
 
 **Límites.** Los contratos de detección del analizador en AAI/VVI/DDD corren sobre
 núcleos. Sin espiga auricular aprendida. Sin captura fallida ni fusión aprendidas.
+
+## F5.5 · Ritmos ventriculares con el foco aprendido
+
+**Premisa medida.** En INCART (PhysioNet, ODC-By 1.0; 12 derivaciones, anotada latido
+a latido; bajada y verificada con SHA-256), en los registros con rachas de ≥ 3
+latidos ventriculares y EV aisladas, el complejo mediano de la racha correlaciona
+con la EV aislada del mismo paciente 0,87 de mediana (≥ 0,8 en el 69 % de 147
+rachas). La TV monomorfa es, en la mayoría, el mismo foco que la EV.
+
+**Producto.** La TV, el ritmo idioventricular (y acelerado) y el BAV completo con
+escape ventricular usan la EV aprendida del paciente (misma semilla que su EV) con
+su ancho de QRS, y su ST-T escalado con la raíz cúbica del RR adaptado (la EV se
+midió tras ciclos de ~0,8 s); las P disociadas son las sinusales aprendidas, con
+eje natural (sin latidos conducidos, los controles de eje y conducción no mueven
+la P). El eje «verdadero» de un ritmo totalmente ventricular o estimulado es el
+del complejo aprendido (corrige también el VVI de F5.4). Una fuente docente
+elegida vuelve a núcleos. Paciente de libro: semilla 292 (eje −82°, QRS 170 ms).
+
+### Resultado y límites
+
+Frente a las rachas de INCART a frecuencias comparables (mismo método de plantilla
+y fiduciales, INCART remuestreado a 500 Hz): rachas lentas (≤ 115 lpm, 22) frente
+al RIVA sintético — QRS KS 0,23, eje 0,23, magnitud 0,28; rachas rápidas (≥ 130 lpm,
+16) frente a la TV — QRS 0,27, eje 0,37, magnitud 0,31. INCART son 32 pacientes
+coronarios con muchas rachas cada uno: sus TV tienden a eje superior (mediana −56°
+a −86°), mientras la población de EV de PTB-XL incluye muchos focos de tracto de
+salida con eje inferior (mediana +42°). Sin fusión ni captura, ni TV polimorfa
+(torsades y FV siguen en núcleos). Los contratos del analizador congelado con estos
+ritmos corren sobre núcleos.

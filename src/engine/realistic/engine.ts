@@ -9,7 +9,7 @@ import { normal, random } from "../random";
 import { qrsAmplitudeScale, T_REFERENCE_AMPLITUDE } from "../morphology";
 import { dipoleOf, reconstruct, samplePatient, shapeModel, transform, type Patient } from "./shape-model";
 import { addAtrial, addVentricular, beatShapeState, beatTemplate, qrsOnsetLevel, type BeatShapeState } from "./beat";
-import { learnedSecondaryRepolarization, pacedVentricular, realisticModelFor } from "./scope";
+import { learnedSecondaryRepolarization, noConductedBeats, realisticModelFor } from "./scope";
 
 const P_REFERENCE_AMPLITUDE = 0.15;
 /** Horizontal heart rotation per unit of the transition control (degrees). */
@@ -37,7 +37,7 @@ export function realisticPatient(c: ECGCase): Patient {
     p = samplePatient({
       // Without conducted beats (VVI/DDD) the QRS axis control does not apply: the
       // atrial patient keeps its natural axes.
-      model, seed: c.seed, axis: pacedVentricular(c) ? null : c.axis, pAxis, tAxis,
+      model, seed: c.seed, axis: noConductedBeats(c) ? null : c.axis, pAxis, tAxis,
       pScale: c.pAmp / P_REFERENCE_AMPLITUDE, qrsScale: qrsAmplitudeScale(c),
       // Secondary repolarization (bundle-branch block, LVH strain) follows the
       // depolarization: the QRS gain scales ST-T (ST/QRS ratios hold) and the T
@@ -55,6 +55,8 @@ export function realisticPatient(c: ECGCase): Patient {
 const ECTOPIC = {
   pvc: { model: "PVC", seed: (s: number) => (s * 7919 + 13) >>> 0, state: (s: number) => ((s * 41) ^ 0x9cf) >>> 0, qrs: [0.1, 0.2] },
   paced: { model: "VPACE", seed: (s: number) => (s * 104729 + 29) >>> 0, state: (s: number) => ((s * 43) ^ 0x7ac) >>> 0, qrs: [0.12, 0.24] },
+  // A ventricular rhythm is the same focus as the patient's PVC (same seed).
+  ventricular: { model: "PVC", seed: (s: number) => (s * 7919 + 13) >>> 0, state: (s: number) => ((s * 47) ^ 0x3e1) >>> 0, qrs: [0.1, 0.2] },
 } as const;
 export type EctopicKind = keyof typeof ECTOPIC;
 const ectopicPatients = new Map<string, Patient>();
@@ -87,8 +89,13 @@ export function learnedEctopicQrsSeconds(c: ECGCase, kind: EctopicKind): number 
 export const learnedPvcQrsSeconds = (c: ECGCase) => learnedEctopicQrsSeconds(c, "pvc");
 export function learnEctopicDurations(c: ECGCase, beats: Beat[], kinds: readonly EctopicKind[]): void {
   for (const kind of kinds) {
-    const qrs = learnedEctopicQrsSeconds(c, kind), stt = Math.min(0.5, Math.max(0.16, realisticEctopicPatient(c, kind).sttMs / 1000));
-    for (const b of beats) if (b.kind === kind) { b.qrs = qrs; b.qt = qrs + stt; b.ownDurations = true; }
+    const qrs = learnedEctopicQrsSeconds(c, kind), own = realisticEctopicPatient(c, kind).sttMs / 1000;
+    for (const b of beats) if (b.kind === kind) {
+      // A ventricular rhythm repolarizes at its own rate: the patient's ST-T (seen
+      // after a ~0.8 s cycle) scales with the cube root of the adapted RR.
+      const stt = kind === "ventricular" ? own * Math.cbrt(Math.max(0.25, b.adaptedRR ?? 0.8) / 0.8) : own;
+      b.qrs = qrs; b.qt = qrs + Math.min(0.5, Math.max(0.12, stt)); b.ownDurations = true;
+    }
   }
 }
 
@@ -156,6 +163,7 @@ export class RealisticTrack {
   /** A learned ectopic beat (PVC or ventricular paced), warped to the event's QRS
    * and QT (the patient's own durations, set on the events by `learnEctopicDurations`). */
   addEctopic(b: Beat & { kind: EctopicKind }) {
+    if (!b.qrs || !b.qt) throw new Error("Latido ectópico sin duraciones propias.");
     let e = this.ectopic.get(b.kind);
     if (!e) {
       const patient = realisticEctopicPatient(this.c, b.kind);

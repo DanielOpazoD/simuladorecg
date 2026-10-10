@@ -136,7 +136,7 @@ describe("actual QRS ownership precedes uncertainty padding", () => {
       filter: "diagnostic" as const,
     };
     c.artifacts = { ...c.artifacts, baseline: 0.03, muscle: 0.03, mains: 0.03 };
-    const signal = synthesize(c, 10),
+    const signal = synthesize(c, 10, { learnedBase: false }), // frozen-analyzer fixture (kernel widths)
       raw = measure(signal),
       frozen = structuredClone(raw);
     const audited = auditMeasurement(signal, raw);
@@ -162,7 +162,7 @@ describe("recording-origin QRS provenance", () => {
       filter: "diagnostic" as const,
     };
     c.artifacts = { ...c.artifacts, baseline: 0, muscle: 0, mains: 0 };
-    const signal = synthesize(c, 10),
+    const signal = synthesize(c, 10, { learnedBase: false }), // frozen-analyzer fixture (kernel widths)
       raw = measure(signal),
       frozen = structuredClone(raw);
     expect(signal.events.beats[0].time).toBeCloseTo(0.2, 12);

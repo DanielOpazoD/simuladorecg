@@ -150,7 +150,9 @@ describe("Independent analysis versus simulator audit", () => {
   it.each(["hyperk", "complete_v"])(
     "retains the recovered ventricular count in %s",
     (id) => {
-      const s = synthesize(load(id), 10),
+      // Frozen-analyzer audit fixture (kernels): the learned ventricular escape
+      // (F5.5) is outside what this detector was tuned on.
+      const s = synthesize(load(id), 10, { learnedBase: false }),
         raw = measure(s),
         m = auditMeasurement(s, raw);
       expect(m.hr).toBe(raw.hr);

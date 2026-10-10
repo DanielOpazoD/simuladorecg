@@ -81,7 +81,7 @@ export function activationTiming(c: ECGCase, b: Beat) {
   const learned = (b.kind === 'normal' && !regional && usesRealisticBase(c)) || learnedPvc;
   const applied = b.kind !== 'normal' ? 'ventricular-source' : regional ? state.model : 'template';
   const label = regional ? (state.model === 'regional-lbbb-v1' ? 'BRI regional · experimental' : 'BRD regional · experimental') : state.requested ? 'Regional no aplicado'
-    : ectopic === 'VPACE' ? 'Latido estimulado aprendido (PTB-XL)' : learnedPvc ? 'Extrasístole aprendida (PTB-XL)' : learned ? 'Latido aprendido (PTB-XL)' : b.kind !== 'normal' ? 'Fuente ventricular' : deltaDurationMs ? 'Plantilla histórica + delta' : 'Plantilla histórica';
+    : ectopic === 'VPACE' ? 'Latido estimulado aprendido (PTB-XL)' : learnedPvc && b.kind === 'ventricular' ? 'Complejo ventricular aprendido (PTB-XL)' : learnedPvc ? 'Extrasístole aprendida (PTB-XL)' : learned ? 'Latido aprendido (PTB-XL)' : b.kind !== 'normal' ? 'Fuente ventricular' : deltaDurationMs ? 'Plantilla histórica + delta' : 'Plantilla histórica';
   const note = ectopic === 'VPACE'
     ? 'Complejo estimulado en el ventrículo, aprendido de pacientes con marcapasos (PTB-XL), proyectado con Dower. Su eje y su ancho son los del paciente (cambian con la semilla); elegir una fuente concreta vuelve a la plantilla histórica.'
     : learnedPvc
@@ -106,7 +106,7 @@ export function activationTiming(c: ECGCase, b: Beat) {
 export function sampleActivation(c: ECGCase, b: Beat): ActivationTrace {
   const limitation = activationLimitation(c, b);
   if (limitation) throw Error(limitation);
-  const ectopicKind = b.kind === 'pvc' || b.kind === 'paced' ? b.kind : null;
+  const ectopicKind = b.kind === 'normal' ? null : b.kind;
   const learnedPvc = ectopicKind !== null && learnedEctopicModel(c, ectopicKind) !== null;
   if (learnedPvc && !learned) throw Error('El modelo aprendido aún se está cargando.');
   // A learned ectopic beat keeps the patient's own QRS width, as in the trace.

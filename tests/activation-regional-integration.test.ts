@@ -70,9 +70,9 @@ describe('Merged regional engine and QRS laboratory share the same temporal supp
           learned++;
           continue;
         }
-        if ((event.kind === 'pvc' || event.kind === 'paced') && learnedEctopicModel(c, event.kind)) {
+        if (event.kind !== 'normal' && learnedEctopicModel(c, event.kind)) {
           // Learned ectopic beat (F5.3–F5.4): the lab samples the learned vector.
-          trace.xyz.forEach((actual, i) => assert.deepEqual(actual, realisticQrsVector(c, trace.timesMs[i] / trace.durationMs, event.kind as 'pvc' | 'paced')));
+          trace.xyz.forEach((actual, i) => assert.deepEqual(actual, realisticQrsVector(c, trace.timesMs[i] / trace.durationMs, event.kind as 'pvc' | 'paced' | 'ventricular')));
           learned++;
           continue;
         }
@@ -99,7 +99,7 @@ describe('Merged regional engine and QRS laboratory share the same temporal supp
         checked++;
       }
     }
-    assert.ok(checked > 20); // F5.3–F5.4 moved the PVC and paced presets to the learned loop
+    assert.ok(checked > 12); // F5.3–F5.5 moved PVC, paced and ventricular presets to the learned loop
     assert.ok(learned > 15, 'Learned-base presets must use the learned loop');
     assert.equal(deltaChecked, 1, 'The WPW preset must participate, not be silently skipped');
   });

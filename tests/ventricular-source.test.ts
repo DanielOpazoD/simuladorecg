@@ -39,7 +39,7 @@ describe("Ventricular source is independent of rhythm classification", () => {
       // durations. Every time, kind and interval is identical either way.
       const timing=(e:typeof a.events)=>({...e,beats:e.beats.map(({qrs,qt,ownDurations,...rest})=>rest)});
       expect(timing(b.events)).toEqual(timing(a.events));
-      if(!["pvc","vvi","ddd"].includes(preset))expect(b.events).toEqual(a.events);
+      if(!["pvc","vvi","ddd","vt","complete_v"].includes(preset))expect(b.events).toEqual(a.events);
       expect(lesionVector({...c,ventricularSource:id})).toEqual(lesionVector(c));
     }
   });

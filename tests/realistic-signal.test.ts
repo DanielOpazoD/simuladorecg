@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { synthesize } from "../src/engine/signal";
 import { LEADS, type ECGCase, type Signal } from "../src/engine/types";
-import { fromPreset, presetById, PRESETS, TEXTBOOK_AF_SEED, TEXTBOOK_FLUTTER_SEED, TEXTBOOK_PACED_SEED, TEXTBOOK_PVC_SEED, TEXTBOOK_SEED, TEXTBOOK_SEEDS } from "../src/presets/catalog";
+import { fromPreset, presetById, PRESETS, TEXTBOOK_AF_SEED, TEXTBOOK_FLUTTER_SEED, TEXTBOOK_PACED_SEED, TEXTBOOK_PVC_SEED, TEXTBOOK_SEED, TEXTBOOK_SEEDS, TEXTBOOK_VT_SEED } from "../src/presets/catalog";
 import { realisticModelFor, realisticModelsFor } from "../src/engine/realistic/scope";
 import { samplePatient } from "../src/engine/realistic/shape-model";
 
@@ -39,7 +39,9 @@ describe("alcance de la base aprendida (F2–F3)", () => {
     expect(realisticModelsFor(fromPreset(presetById("aai")!))).toEqual(["NORM", "VPACE"]); // recorded spike
     for (const id of ["vvi", "ddd"]) expect(realisticModelsFor(fromPreset(presetById(id)!))).toEqual(["NORM", "VPACE"]);
     expect(realisticModelFor({ ...fromPreset(presetById("vvi")!), ventricularSource: "rv_apical_pacing" })).toBeNull();
-    for (const id of ["vt", "lpfb", "bifascicular", "wpw", "anterior", "inferior", "lateral", "sgarbossa", "rv_acute", "hyperk", "complete_v"])
+    // Ventricular rhythms (F5.5): the patient's own PVC focus on a normal atrial base.
+    for (const id of ["vt", "idioventricular", "aivr", "complete_v"]) expect(realisticModelsFor(fromPreset(presetById(id)!))).toEqual(["NORM", "PVC"]);
+    for (const id of ["torsades", "vf", "lpfb", "bifascicular", "wpw", "anterior", "inferior", "lateral", "sgarbossa", "rv_acute", "hyperk"])
       expect(model[id]).toBeNull();
     // Only the chronic phase of a territory with a learned old-infarction population.
     expect(realisticModelFor({ ...fromPreset(presetById("lateral")!), phase: "chronic" })).toBeNull();
@@ -581,5 +583,29 @@ describe("F5.4: marcapasos aprendido de PTB-XL", () => {
   });
   it("los presets VVI y DDD muestran su paciente de libro", () => {
     for (const id of ["vvi", "ddd"]) expect(fromPreset(presetById(id)!).seed).toBe(TEXTBOOK_PACED_SEED);
+  });
+});
+
+describe("F5.5: ritmos ventriculares con el foco aprendido del paciente", () => {
+  it("la TV es el mismo foco que la EV del paciente y su ST-T se acorta con la frecuencia", async () => {
+    const { realisticEctopicPatient } = await import("../src/engine/realistic/engine");
+    const c = load("vt"), v = realisticEctopicPatient(c, "ventricular"), p = realisticEctopicPatient(c, "pvc");
+    expect(Array.from(v.z)).toEqual(Array.from(p.z));
+    const fast = synthesize(c, 10).events.beats.find((b) => b.kind === "ventricular")!;
+    const slow = synthesize(load("aivr", { seed: c.seed }), 10).events.beats.find((b) => b.kind === "ventricular")!;
+    expect(fast.ownDurations).toBe(true);
+    expect(fast.qrs).toBeCloseTo(slow.qrs!, 12);
+    expect(fast.qt! - fast.qrs!).toBeLessThan(slow.qt! - slow.qrs!);
+  });
+  it("el eje «verdadero» de un ritmo ventricular es el del complejo aprendido, no el de la fuente docente", async () => {
+    const { realisticEctopicPatient } = await import("../src/engine/realistic/engine");
+    const c = load("vt"), s = synthesize(c, 10);
+    expect(s.truth.axis).toBeCloseTo(realisticEctopicPatient(c, "ventricular").achievedAxes.qrs, 9);
+    expect(fromPreset(presetById("vt")!).seed).toBe(TEXTBOOK_VT_SEED);
+  });
+  it("el BAV completo con escape ventricular conserva las P disociadas aprendidas", () => {
+    const s = synthesize(load("complete_v"), 10);
+    expect(s.events.atria.length).toBeGreaterThan(s.events.beats.length);
+    expect(s.events.beats.every((b) => b.kind === "ventricular" && b.ownDurations)).toBe(true);
   });
 });
