@@ -1,9 +1,10 @@
 import type { Lead, Signal } from "../engine/types";
 
 /** Reading of the J point and the ST segment for the OMI lens. The J point is the
- * end of the QRS the model generated (exact); the ST is read from J to J+80 ms
- * against the local PR segment (40–20 ms before the QRS). */
-export const ST_LENS = Object.freeze({ windowS: 0.08, prFromS: -0.04, prToS: -0.02, j60S: 0.06, thresholdMv: 0.05 });
+ * end of the QRS the model generated (exact); the ST is read against the local PR
+ * segment (40–20 ms before the QRS) and classified at J, where the guidelines
+ * measure it (the structured description uses the same reading). */
+export const ST_LENS = Object.freeze({ jS: 0.01, windowS: 0.08, prFromS: -0.04, prToS: -0.02, j60S: 0.06, thresholdMv: 0.05 });
 
 export interface StMark {
   /** Index of the beat in the signal's events. */
@@ -12,11 +13,12 @@ export interface StMark {
   endTime: number;
   /** PR reference level (mV). */
   prLevel: number;
-  /** Mean ST deviation from J to J+80 ms and the value at J+60 ms (mV). */
+  /** ST deviation at J (mean of its first 10 ms), its mean from J to J+80 ms and the value at J+60 ms (mV). */
+  j0: number;
   mean: number;
   j60: number;
   /** ST elevation (SDST, supradesnivel) or depression (IDST, infradesnivel) of at
-   * least 0.5 mm, or none. */
+   * least 0.5 mm at J, or none. */
   kind: "SDST" | "IDST" | null;
 }
 
@@ -33,8 +35,13 @@ export function stMarks(s: Pick<Signal, "fs" | "leads" | "events">, lead: Lead, 
     pr /= p1 - p0 + 1;
     let sum = 0;
     for (let i = i0; i <= i1; i++) sum += a[i] - pr;
+    // J is read over its first 10 ms: a single sample moves with noise and timing.
+    let j0 = 0;
+    const jEnd = at(jTime + ST_LENS.jS);
+    for (let i = i0; i <= jEnd; i++) j0 += a[i] - pr;
+    j0 /= jEnd - i0 + 1;
     const mean = sum / (i1 - i0 + 1), j60 = a[at(jTime + ST_LENS.j60S)] - pr;
-    out.push({ beat, jTime, endTime, prLevel: pr, mean, j60, kind: mean >= ST_LENS.thresholdMv ? "SDST" : mean <= -ST_LENS.thresholdMv ? "IDST" : null });
+    out.push({ beat, jTime, endTime, prLevel: pr, j0, mean, j60, kind: j0 >= ST_LENS.thresholdMv ? "SDST" : j0 <= -ST_LENS.thresholdMv ? "IDST" : null });
   });
   return out;
 }

@@ -145,7 +145,7 @@ export function lesionVector(c: ECGCase): Vec {
     posterior: [-0.04, 0.01, 0.25],
     rv: [-0.13, 0.11, -0.22],
     diffuse: [-0.2, -0.19, 0.08],
-    subendo: [-0.1, -0.12, 0.1],
+    subendo: [-0.16, -0.12, 0.04],
     pericarditis: [0.18, 0.18, -0.14],
     sgarbossa: [0.22, 0.05, -0.07],
   };

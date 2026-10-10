@@ -8,6 +8,8 @@ import { ActivationLab, type ActivationApplyResult } from "./ui/activation-lab";
 import { catalogGroup, catalogGroups, familyGuide, familyLabel } from "./ui/catalog-presentation";
 import { lesionBaseline } from "./engine/lesion-baseline";
 import { differenceSignal } from "./render/st-lens";
+import { omiSheetHtml, structuredDescriptionHtml } from "./ui/omi-sheet";
+import { structuredDescription } from "./ui/structured-description";
 import { metricsHtml, modelMetricCards } from "./ui/metric-cards";
 import { openDialog, closeDialog } from "./ui/dialog";
 import { exportDialogHtml } from "./ui/export-dialog";
@@ -110,7 +112,7 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  <section id="beat-detail" class="beat-detail" aria-label="Ampliación del latido"><div class="detail-empty">Preparando análisis…</div></section>
  </div>
  <section id="comparison-lab" class="comparison-lab" aria-label="Laboratorio comparativo A/B"></section>
- <section class="lower-grid"><div id="inspector" class="inspector"></div><aside class="interpretation"><div class="section-label">Guía de lectura</div><h2 id="finding-title">Hallazgos esperados</h2><ul id="findings"></ul><div id="limitation" class="model-note"></div><div id="warnings"></div><button class="text-button" data-action="measurements">Ver medidas y valores del modelo ${icon("chevron")}</button><button class="text-button" data-action="about">Estado y referencias ${icon("chevron")}</button></aside></section>
+ <section class="lower-grid"><div id="inspector" class="inspector"></div><aside class="interpretation"><div class="section-label">Guía de lectura</div><h2 id="finding-title">Hallazgos esperados</h2><ul id="findings"></ul><div id="omi-sheet"></div><div id="structured-description"></div><div id="limitation" class="model-note"></div><div id="warnings"></div><button class="text-button" data-action="measurements">Ver medidas y valores del modelo ${icon("chevron")}</button><button class="text-button" data-action="about">Estado y referencias ${icon("chevron")}</button></aside></section>
  <footer class="workspace-footer"><span>ECG Lab · Laboratorio de electrocardiografía</span><span>Morfología normal aprendida de <a href="https://physionet.org/content/ptb-xl/1.0.3/" target="_blank" rel="noopener">PTB-XL</a> y <a href="https://physionet.org/content/ptb-xl-plus/1.0.1/" target="_blank" rel="noopener">PTB-XL+</a> (Wagner et al. 2020; Strodthoff et al. 2023), <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>; se distribuyen solo coeficientes derivados.</span><span>Uso educativo. Sin validación clínica.</span></footer></main></div>
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
 
@@ -186,6 +188,18 @@ function renderExplorationContext(concealed:boolean) {
 }
 
 function showExplorationChanges(){if(!explorationOrigin)return;const changes=explorationChanges(explorationOrigin,c);openDialog("Cambios respecto al origen",`<p class="dialog-lead">Origen: <strong>${esc(explorationOrigin.presetName)}</strong>. Se muestran diferencias reales del modelo; la vista no cuenta como ajuste.</p><div class="measurement-table-wrap"><table><thead><tr><th>Parámetro</th><th>Origen</th><th>Actual</th></tr></thead><tbody>${changes.map(x=>`<tr><td>${esc(x.label)}</td><td>${esc(formatExplorationValue(x.before))}${x.beforeLabel?`<br><small>${esc(x.beforeLabel)}</small>`:""}</td><td>${esc(formatExplorationValue(x.after))}${x.afterLabel?`<br><small>${esc(x.afterLabel)}</small>`:""}</td></tr>`).join("")}</tbody></table></div><p class="control-note">Una acción puede cambiar varios parámetros coordinados; el recuento describe diferencias del estado resultante, no el número de clics.</p>`)}
+// Open state of the sheet's support and of the description, kept across re-renders.
+let refsOpen = false, descriptionOpen = true;
+document.addEventListener("toggle", (e) => {
+  const el = e.target as HTMLDetailsElement;
+  if (el.classList?.contains("omi-refs")) refsOpen = el.open;
+  else if (el.classList?.contains("structured-description")) descriptionOpen = el.open;
+}, true);
+/** The description is read from the signal shown: empty while a new one is computed. */
+function renderDescription() {
+  const concealed = quiz && !quiz.answer;
+  $("#structured-description").innerHTML = !concealed && session.signal ? structuredDescriptionHtml(structuredDescription(c, session.signal), descriptionOpen) : "";
+}
 function renderInfo() {
   const context = caseContext(c),
     reading = caseReading(c, context),
@@ -220,6 +234,11 @@ function renderInfo() {
   )
     .map((f) => `<li>${esc(f)}</li>`)
     .join("");
+  // OMI families (A3): case sheet with expert notes and support; and, for any case,
+  // the structured description read from the trace shown.
+  // With reversed arm electrodes the trace no longer shows the sheet's picture.
+  $("#omi-sheet").innerHTML = !concealed && p && !customExploration && !c.artifacts.reversed ? omiSheetHtml(p.id, refsOpen) : "";
+  renderDescription();
   $("#limitation").innerHTML = concealed
     ? "El diagnóstico se mostrará al responder."
     : `<strong>${p?.strategy === "local" ? "Ajuste morfológico local" : "Modelo aproximado"}</strong><p>${esc(p?.limitation || "Sin validación clínica de este caso personalizado.")}</p>`;
@@ -481,6 +500,7 @@ function invalidateSignal() {
   activation.invalidate();
   clearToast();
   session.invalidate();
+  renderDescription();
   comparison.invalidate();
   renderQuiz();
   showUnavailableSignal("Calculando señal…");
@@ -591,6 +611,7 @@ function setValue(key: string, value: unknown) {
   if (session.measurement && (key === "view.timing" || key === "view.format"))
     session.selectBeat(representativeBeat(session.measurement, visibleSegmentEnd()));
   if (!key.startsWith("view.")) { renderCatalog(); renderInfo(); }
+  else renderDescription();
 }
 /** Natural P/T axes: show the patient's actual axis on the slider until it is moved. */
 function syncNaturalAxes(s: Signal) {

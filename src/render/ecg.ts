@@ -357,7 +357,7 @@ function drawStLens(ctx: CanvasRenderingContext2D, s: Signal, seg: Segment, c: E
       if (k === 0) {
         ctx.fillStyle = ctx.strokeStyle;
         ctx.font = "600 2.3px ui-monospace,monospace";
-        const mm = m.j60 * 10; // standard calibration (1 mm = 0.1 mV), whatever the display gain
+        const mm = m.j0 * 10; // at J; standard calibration (1 mm = 0.1 mV), whatever the display gain
         ctx.fillText(`${m.kind} ${mm > 0 ? "+" : ""}${mm.toFixed(1).replace(".", ",")} mm`, X(m.endTime) + 0.8, Y(a[i1]) + (m.kind === "SDST" ? -1 : 2.6));
       }
     }
