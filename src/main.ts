@@ -31,7 +31,7 @@ import { initialCaliper, placeCaliper, moveCaliper } from "./render/caliper-geom
 import { practiceFeedback, type PracticeId } from "./ui/practice-feedback";
 import { createPractice, answerPractice, type PracticeState } from "./ui/practice-session";
 import { practicePanelHtml } from "./ui/practice-panel";
-import { changeCase, isCaseControlKey, controlValue } from "./ui/case-state";
+import { changeCase, isCaseControlKey, controlValue, withInterfaceView } from "./ui/case-state";
 import { representativeBeat, nearestBeat } from "./ui/beat-selection";
 import { measurementDialog } from "./ui/measurement-dialog";
 import { auditMeasurement } from "./engine/analysis/model-audit";
@@ -86,7 +86,8 @@ let timer = 0,
 let explorationOrigin: ExplorationOrigin | null = null;
 let initialError = "";
 try {
-  c = decodeCase(location.hash) || c;
+  const decoded = decodeCase(location.hash);
+  if (decoded) c = withInterfaceView(decoded);
 } catch (e) {
   initialError = (e as Error).message;
 }
@@ -345,6 +346,7 @@ function syncTraceTools() {
   $("#monitor-state").textContent = !ready ? "SIN SEÑAL" : session.paused ? "CONGELADO" : "REPRODUCCIÓN";
   const waves = $<HTMLButtonElement>('[data-action="annotations"]');
   waves.disabled = !paper || !ready;
+  waves.hidden = !paper;
   waves.classList.toggle("active", ready && paper && annotations);
   waves.setAttribute("aria-pressed", String(ready && paper && annotations));
   const lesion = !!lesionBaseline(c) && !(quiz && !quiz.answer);
@@ -358,6 +360,7 @@ function syncTraceTools() {
   $('[data-action="theme"]').setAttribute("aria-pressed", String(currentTheme() === "dark"));
   const caliperButton = $<HTMLButtonElement>('[data-action="caliper"]');
   caliperButton.disabled = monitorMode || !ready;
+  caliperButton.hidden = monitorMode;
   caliperButton.classList.toggle("active", measuring);
   caliperButton.setAttribute("aria-pressed", String(measuring));
   $("#ecg").classList.toggle("measuring", measuring);
@@ -704,7 +707,7 @@ document.addEventListener("click", async (e) => {
   if (saved) {
     const selected = savedCaseAt(savedCaseSnapshot, Number(saved.dataset.saved));
     if (!selected) { toast("El caso seleccionado no está disponible; vuelve a abrir la lista."); return; }
-    c = selected;
+    c = withInterfaceView(selected);
     explorationOrigin=null;
     closeDialog();
     quiz = null;
@@ -791,7 +794,7 @@ $<HTMLInputElement>("#file-input").addEventListener("change", async (e) => {
   try {
     if (f.size > 50000)
       throw new Error("El caso excede el tamaño máximo de 50 kB.");
-    c = normalizeImportedCase(JSON.parse(await f.text()));
+    c = withInterfaceView(normalizeImportedCase(JSON.parse(await f.text())));
     explorationOrigin=null;
     quiz = null;
     closeDialog();
@@ -901,7 +904,7 @@ window.addEventListener("hashchange", () => {
   try {
     const next = decodeCase(location.hash);
     if (next) {
-      c = next;
+      c = withInterfaceView(next);
       explorationOrigin=null;
       quiz = null;
       renderQuiz();

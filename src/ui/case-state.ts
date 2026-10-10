@@ -115,3 +115,10 @@ export function changeCase(
   // Controls not yet set follow the (possibly new) patient: seed, rotation, rhythm.
   return withNaturalControls(normalizeCase(c));
 }
+
+/** View settings the simplified interface no longer exposes (fit to width, Cabrera
+ * order, simultaneous timing, separate precordial gain): a shared, saved or imported
+ * case returns to the defaults so nothing is stuck in a state the reader cannot undo. */
+export function withInterfaceView(c: ECGCase): ECGCase {
+  return { ...c, view: { ...c.view, fit: true, cabrera: false, timing: "sequential", chestGain: c.view.gain } };
+}
