@@ -792,9 +792,10 @@ export const TEXTBOOK_PVC_SEED = 283;
 /** Atrial flutter presets (F5.2): a typical counter-clockwise patient (negative
  * sawtooth in II, positive F in V1, ~0.25 mV in both); the classifier has no flutter label. */
 export const TEXTBOOK_FLUTTER_SEED = 39;
-/** Ventricular rhythm presets (F5.5): a superior-axis, wide focus (−82°, 170 ms),
- * the classic VT picture; the same patient also gives the dissociated P waves. */
-export const TEXTBOOK_VT_SEED = 292;
+/** Ventricular rhythm presets (F5.5): a superior-axis, wide focus (−61°, 172 ms),
+ * the classic VT picture, whose rate the frozen analyzer measures in VT, idioventricular,
+ * AIVR and complete block with ventricular escape; the same patient gives the dissociated P. */
+export const TEXTBOOK_VT_SEED = 157;
 /** Ventricular pacing presets (F5.4): the seed also draws the paced complex and spike. */
 export const TEXTBOOK_PACED_SEED = 13;
 export const TEXTBOOK_SEEDS: Record<BeatModelCode, number> = { NORM: TEXTBOOK_SEED, CLBBB: 15, CRBBB: 276, IRBBB: 201, LAFB: 9, LVH: 154, IMI: 52, ASMI: 105 };

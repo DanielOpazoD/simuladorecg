@@ -729,7 +729,7 @@ midió tras ciclos de ~0,8 s); las P disociadas son las sinusales aprendidas, co
 eje natural (sin latidos conducidos, los controles de eje y conducción no mueven
 la P). El eje «verdadero» de un ritmo totalmente ventricular o estimulado es el
 del complejo aprendido (corrige también el VVI de F5.4). Una fuente docente
-elegida vuelve a núcleos. Paciente de libro: semilla 292 (eje −82°, QRS 170 ms).
+elegida vuelve a núcleos. Paciente de libro: semilla 157 (eje −61°, QRS 172 ms).
 
 ### Resultado y límites
 
@@ -742,3 +742,11 @@ a −86°), mientras la población de EV de PTB-XL incluye muchos focos de tract
 salida con eje inferior (mediana +42°). Sin fusión ni captura, ni TV polimorfa
 (torsades y FV siguen en núcleos). Los contratos del analizador congelado con estos
 ritmos corren sobre núcleos.
+
+**Frecuencia medida.** Como en el marcapasos, con el complejo ventricular aprendido
+el analizador congelado cuenta a veces la T como otro latido (semillas 1–20, FC
+doble): TV 0/20, idioventricular 3/20, RIVA 5/20, BAV completo con escape 2/20; con
+núcleos, ninguno; las EV aisladas, igual que en `main`. El primer paciente de libro
+(semilla 292) daba 130 lpm en el RIVA de 78. Entre 400 semillas, solo 3 cumplen eje
+superior (−100° a −30°), QRS ≥ 150 ms y FC medida a ±3 lpm en los cuatro presets con
+adquisición ideal y realista; la 157 es la de eje más típico.

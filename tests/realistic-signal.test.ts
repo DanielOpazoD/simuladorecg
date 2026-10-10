@@ -603,6 +603,14 @@ describe("F5.5: ritmos ventriculares con el foco aprendido del paciente", () => 
     expect(s.truth.axis).toBeCloseTo(realisticEctopicPatient(c, "ventricular").achievedAxes.qrs, 9);
     expect(fromPreset(presetById("vt")!).seed).toBe(TEXTBOOK_VT_SEED);
   });
+  it("el paciente de libro mide su FC en los cuatro ritmos ventriculares (la T no se cuenta como latido)", async () => {
+    const { analyzeSamples } = await import("../src/engine/sample-analysis");
+    for (const id of ["vt", "idioventricular", "aivr", "complete_v"]) for (const acquisition of ["ideal", "realistic"] as const) {
+      const s = synthesize({ ...fromPreset(presetById(id)!), acquisition }, 10);
+      expect(fromPreset(presetById(id)!).seed).toBe(TEXTBOOK_VT_SEED);
+      expect(Math.abs(analyzeSamples({ fs: s.fs, leads: s.leads }).hr! - s.truth.hr)).toBeLessThanOrEqual(3);
+    }
+  });
   it("el BAV completo con escape ventricular conserva las P disociadas aprendidas", () => {
     const s = synthesize(load("complete_v"), 10);
     expect(s.events.atria.length).toBeGreaterThan(s.events.beats.length);
