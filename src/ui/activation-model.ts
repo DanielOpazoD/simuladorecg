@@ -37,7 +37,7 @@ export interface ActivationPair { a: ActivationTrace; b: ActivationTrace; vector
 export const ACTIVATION_SCOPE = 'QRS vectorial aislado del generador, antes de filtros y adquisición. Sin P, ST, T ni espigas. Coordenadas XYZ sintéticas; no es un VCG clínico ni una propagación anatómica.';
 export const CONDUCTION_EXAMPLES = [
   ['normal', 'Conducción normal'], ['rbbb', 'BRD completo'], ['irbbb', 'BRD incompleto'],
-  ['lbbb', 'BRI completo'], ['lafb', 'Hemibloqueo anterior'], ['lpfb', 'Hemibloqueo posterior'],
+  ['lbbb', 'BRI completo'], ['lafb', 'Bloqueo fascicular anterior'], ['lpfb', 'Bloqueo fascicular posterior'],
   ['wpw', 'WPW · preexcitación'],
 ] as const;
 
