@@ -138,7 +138,7 @@ for(const engine of engines) {
 
         // The cards show the model; what the sample analyzer can say lives in the measurements dialog and
         // must follow the known acquisition filtering (and the monitor keeps the model rate, labelled as such).
-        await key('[data-panel=signal]');
+        await openPaper(page);
         await page.locator('[data-key="filter"]').selectOption('aggressive');await ready();
         let measured=await readMeasurements(page);
         assert.ok(Object.values(measured).every(m=>m.status==='unavailable'),'A 2 Hz high-pass leaves no certified measurement: '+JSON.stringify(measured));
@@ -147,11 +147,11 @@ for(const engine of engines) {
         assert.equal(await page.locator('#monitor-rate-note').innerText(),'lpm · modelo');
         await page.locator('#monitor-rate').scrollIntoViewIfNeeded();
         await page.screenshot({path:resolve(out,stem+'-filter-scope.png')});
-        await page.locator('[data-key="filter"]').selectOption('monitor');await ready();
+        await openPaper(page);await page.locator('[data-key="filter"]').selectOption('monitor');await ready();
         measured=await readMeasurements(page);
         assert.ok(Object.values(measured).every(m=>m.status!=='usable'),'The 0.5-40 Hz monitor filter may distort limits: nothing is certified: '+JSON.stringify(measured));
         assert.equal(measured.hr.status,'review');
-        await page.locator('[data-key="filter"]').selectOption('diagnostic');await ready();
+        await openPaper(page);await page.locator('[data-key="filter"]').selectOption('diagnostic');await ready();
         measured=await readMeasurements(page);
         assert.equal(measured.hr.status,'usable');assert.ok(measured.hr.value>0);
         await key('[data-mode=paper]');await key('[data-panel=conduction]');
