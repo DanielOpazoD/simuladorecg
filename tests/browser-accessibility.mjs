@@ -66,6 +66,9 @@ for(const engine of engines) {
         // Pick the normal rhythm through the library by keyboard (searching opens every family, so the entry is reachable).
         const chooseSinus=async()=>{
           if(width===390)await key('[data-action=catalog]');
+          await page.locator('#case-search').focus();await page.keyboard.press('?');
+          assert.equal(await page.locator('#dialog').evaluate(d=>d.open),false);
+          assert.ok((await page.locator('#case-search').inputValue()).endsWith('?'));
           await page.locator('#case-search').fill('sinusal');
           await key('[data-preset=sinus]');await ready();
         };
@@ -173,7 +176,19 @@ for(const engine of engines) {
         await page.locator('[data-key="pacingBehavior"]').selectOption('fixed');await ready();
         assert.equal(await page.locator('[data-key="intrinsicRate"]').isDisabled(),true);
         await chooseSinus();
+        await page.locator('#ecg').focus();await page.keyboard.press('?');
+        const keyboardHelp=page.getByRole('dialog',{name:'Atajos de teclado'});
+        await keyboardHelp.waitFor();
+        assert.equal(await keyboardHelp.locator('kbd').count(),10);
+        await page.keyboard.press('m');
+        assert.equal(await page.locator('[data-mode=paper]').getAttribute('aria-selected'),'true');
+        await page.keyboard.press('Escape');await keyboardHelp.waitFor({state:'hidden'});await active('#ecg');
+        await page.keyboard.press('Control+Shift+/');
+        assert.equal(await page.locator('#dialog').evaluate(d=>d.open),false);
         await key('.topbar [data-action=about]');await page.getByRole('dialog',{name:'Modelo, alcance y referencias'}).waitFor();
+        await key('.keyboard-help > summary');
+        assert.equal(await page.locator('.keyboard-help').evaluate(e=>e.open),true);
+        assert.equal(await page.locator('.keyboard-help-content').isVisible(),true);
         await page.keyboard.press('Escape');await page.locator('#dialog').waitFor({state:'hidden'});await active('.topbar [data-action=about]');
         // From here on every request must be a local read: no data upload, no third-party request.
         page.on('request',r=>requests.push({method:r.method(),url:r.url()}));

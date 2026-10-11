@@ -1,5 +1,5 @@
 import { applyTheme, currentTheme, readTheme } from "./ui/theme";
-import { aboutDialogHtml } from "./ui/about-dialog";
+import { aboutDialogHtml, keyboardHelpHtml } from "./ui/about-dialog";
 import { regionalActivationControls } from "./ui/regional-activation";
 import "./style.css";
 import { presetTitle } from "./presets/nomenclature";
@@ -106,7 +106,7 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><div class="trace-tools">${btn("caliper", "Calibres", "ruler")}${btn("annotations", "Ondas", "eye")}<span class="lens-tools" role="group" aria-label="Lentes OMI">${btn("lens-previous", "ECG previo", "strip")}${btn("lens-change", "Solo el cambio", "pulse")}${btn("lens-st", "Punto J y ST", "ruler")}</span>${btn("pause", "Congelar", "pause")}<details class="paper-menu"><summary class="btn" data-action="paper" aria-label="Papel: velocidad, ganancia, formato y filtro">${icon("grid")}<span>Papel</span></summary><div class="scale-toolbar" id="scale-toolbar"></div></details></div></div>
  <div id="quiz-panel" hidden></div><div id="caliper-editor" class="caliper-editor" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small id="monitor-rate-note">No estimable</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
  <div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div>
- <div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><p id="trace-keyboard-help" class="sr-only">Con foco en el trazado: M, P y R cambian la vista; V y G, la escala; C activa los calibres y espacio congela el monitor. Con calibres, las flechas mueven el extremo seleccionado; Mayús mueve diez pasos.</p></section>
+ <div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><p id="trace-keyboard-help" class="sr-only">Con foco en el trazado: M, P y R cambian la vista; V y G, la escala; C activa los calibres y espacio congela el monitor. Con calibres, las flechas mueven el extremo seleccionado; Mayús mueve diez pasos. Pulsa ? para abrir la ayuda de atajos.</p></section>
  </div>
  <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><div class="section-label">Guía de lectura</div><h2 id="finding-title">Hallazgos esperados</h2><p id="case-subtitle" class="guide-lead">Activación auricular sinusal seguida de conducción AV 1:1.</p><ul id="findings"></ul><div id="structured-description"></div></div><div class="guide-side"><div id="omi-sheet"></div><details class="model-details"><summary>Sobre el modelo <span id="warning-count"></span></summary><div id="limitation" class="model-note"></div><div id="warnings"></div><button class="text-button" data-action="measurements">Medidas del analizador y valores del modelo ${icon("chevron")}</button></details><div class="guide-links"><button class="text-button" data-action="about">Estado y referencias ${icon("chevron")}</button></div></div></section>
  <details id="adjust" class="adjust-panel"><summary><span>Ajustar el caso</span><small>Parámetros del modelo</small></summary><div id="inspector" class="inspector"></div></details>
@@ -920,6 +920,11 @@ document.addEventListener("keydown", (e) => {
   // keep their keyboard behavior; do not intercept screen-reader modifiers.
   if (e.target !== canvas || e.ctrlKey || e.altKey || e.metaKey || e.isComposing || $<HTMLDialogElement>("#dialog").open) return;
   const key=e.key.toLowerCase();
+  if (key === "?") {
+    e.preventDefault();
+    openDialog("Atajos de teclado", keyboardHelpHtml());
+    return;
+  }
   if (session.caliperOn && session.signal && layout && e.key.startsWith("Arrow")) {
     e.preventDefault();
     caliper=moveCaliper(caliper??initialCaliper(layout,c.view,session.signal.fs),caliperEditor.endpoint,e.key,layout,c.view,session.signal.fs,e.shiftKey);
