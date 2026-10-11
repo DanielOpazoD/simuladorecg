@@ -208,6 +208,10 @@ function pulse(
   ctx.lineTo(x + w + 0.8, base);
   ctx.stroke();
 }
+/** Shrinks the paper scale so the whole sheet, rhythm strip included, fits the
+ * visible height, never below `minWidthPx` of paper width (readability floor). */
+export const heightFittedPxPerMm = (layout: Layout, maxHeightPx: number, minWidthPx = 760) =>
+  Math.min(layout.pxPerMm, Math.max(minWidthPx / layout.widthMm, maxHeightPx / layout.heightMm));
 export function renderPaper(
   canvas: HTMLCanvasElement,
   s: Signal,
@@ -228,6 +232,8 @@ export function renderPaper(
     stLens?: boolean;
     /** Caption of a derived trace (e.g. the lesion alone). */
     traceNote?: string;
+    /** Visible height (px) the whole sheet should fit in; see `heightFittedPxPerMm`. */
+    maxHeight?: number;
   } = {},
 ): Layout {
   let amplitude = 0;
@@ -237,7 +243,11 @@ export function renderPaper(
       amplitude = Math.max(amplitude, Math.abs(s.leads[lead][i]) * gain);
   }
   const ratio = options.ratio ?? Math.min(2, window.devicePixelRatio || 1);
-  const layout = paperLayout(c, availableWidth, options.pxPerMm, amplitude),
+  const natural = paperLayout(c, availableWidth, options.pxPerMm, amplitude),
+    layout =
+      options.maxHeight && options.pxPerMm === undefined && c.view.fit
+        ? paperLayout(c, availableWidth, heightFittedPxPerMm(natural, options.maxHeight), amplitude)
+        : natural,
     ctx = setup(
       canvas,
       layout,
