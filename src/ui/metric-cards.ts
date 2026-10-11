@@ -65,7 +65,7 @@ export const metricsHtml = (cards: MetricCard[]) =>
       (x, i) =>
         `<button class="metric ${i === 0 ? "main-metric" : ""}" data-action="measurements" title="${esc(x.reason)}" aria-label="${esc(`${x.label}: ${x.value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()}${x.note ? `, ${x.note}` : ""}`)}"><span>${x.label}</span><strong>${x.value}</strong><small><i class="quality-dot ${x.status}"></i>${x.note}</small>${shortNote(x.note) ? `<em class="metric-note">${shortNote(x.note)}</em>` : ""}</button>`,
     )
-    .join("");
+    .join("") + `<span class="metrics-source" title="Valores con los que el modelo generó el trazado; la medición automática está en «Medidas».">Valores del modelo</span>`;
 
 /** Practice hides every value (and its availability, which would also hint the
  * answer) until the learner responds; the calipers remain available to measure. */

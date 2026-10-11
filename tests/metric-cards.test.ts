@@ -111,4 +111,9 @@ describe("concealMetricCards", () => {
     const html = metricsHtml(hidden);
     expect(html).not.toMatch(/\d{2,}|No estimable|Revisar/);
   });
+  it("labels the strip as model values, visible without a tooltip", () => {
+    const html = metricsHtml(metricCards(DEFAULT_CASE, measurement()));
+    expect(html).toMatch(/<span class="metrics-source"[^>]*>Valores del modelo<\/span>$/);
+    expect(html.match(/class="metric /g)).toHaveLength(5);
+  });
 });
