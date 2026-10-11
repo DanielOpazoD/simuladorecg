@@ -1,3 +1,4 @@
+import { presetTitle } from "../presets/nomenclature";
 import type { Preset } from "../presets/catalog";
 import { diagnosisFamilies, diagnosisForPreset } from "./diagnosis-navigation";
 import { esc, icon } from "./helpers";
@@ -29,7 +30,7 @@ export function catalogView(
         const detail = pending ? "Pendiente" : section.crossListed ? `También en ${familyLabel(catalogGroup(target))}` : search && matches.length === 1 && multiple
           ? `Coincide: ${diagnosis.variants.find(v => v.id === target.id)!.label}`
           : multiple ? `${diagnosis.variants.length} variantes` : "";
-        return `<button type="button" class="case-button ${selected ? "selected" : ""}" data-diagnosis="${esc(diagnosis.id)}" data-preset="${esc(target.id)}" title="${esc(target.name)}" aria-label="${esc(diagnosis.title)}${detail ? ` · ${esc(detail)}` : ""}" ${pending ? "disabled" : ""} ${selected ? 'aria-current="true"' : ""}><span>${esc(diagnosis.title)}${detail ? `<small class="case-variants-count">${esc(detail)}</small>` : ""}</span>${selected ? icon("check") : multiple ? icon("chevron") : ""}</button>`;
+        return `<button type="button" class="case-button ${selected ? "selected" : ""}" data-diagnosis="${esc(diagnosis.id)}" data-preset="${esc(target.id)}" title="${esc(presetTitle(target))}" aria-label="${esc(diagnosis.title)}${detail ? ` · ${esc(detail)}` : ""}" ${pending ? "disabled" : ""} ${selected ? 'aria-current="true"' : ""}><span>${esc(diagnosis.title)}${detail ? `<small class="case-variants-count">${esc(detail)}</small>` : ""}</span>${selected ? icon("check") : multiple ? icon("chevron") : ""}</button>`;
       }).join("")}`
     ).join("")}</details>`
   ).join("") || '<div class="catalog-empty"><strong>No encontramos ese patrón</strong><p>Prueba con el nombre completo o una sigla como FA, BRI o WPW.</p></div>';
