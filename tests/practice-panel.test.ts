@@ -35,7 +35,7 @@ describe("practice panel presentation", () => {
     expect(html).toContain("Etiqueta configurada, no diagnóstico automático.");
     expect(html).toContain("no mide precisión clínica.");
     expect(html).toContain('data-action="quiz"');
-    if (answer === "af") expect(html).toContain("Elegiste Fibrilación auricular.");
+    if (answer === "af") expect(html).toContain("Elegiste Fibrilación auricular con respuesta controlada.");
   });
 
   it("escapes every feedback field and preset label without mutating inputs", () => {
