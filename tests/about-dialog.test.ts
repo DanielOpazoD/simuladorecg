@@ -2,9 +2,24 @@ import { esc } from "../src/ui/helpers";
 import { presetTitle } from "../src/presets/nomenclature";
 import { describe, expect, it } from "vitest";
 import { PRESETS } from "../src/presets/catalog";
-import { aboutDialogHtml } from "../src/ui/about-dialog";
+import { aboutDialogHtml, keyboardHelpHtml } from "../src/ui/about-dialog";
 
 describe("about dialog content", () => {
+  it("offers the same keyboard help folded in the guide and alone", () => {
+    const html = aboutDialogHtml([]);
+    expect(html).toContain(`<details class="keyboard-help"><summary>Atajos de teclado</summary>${keyboardHelpHtml()}</details>`);
+    expect(html).not.toContain('class="keyboard-help" open');
+  });
+
+  it("documents only trace-scoped keys and the actual scale cycles", () => {
+    const html = keyboardHelpHtml();
+    for (const key of ["M", "P", "R", "V", "G", "C", "Espacio", "Flechas", "Mayús + flechas", "?"])
+      expect(html).toContain(`<kbd>${key}</kbd>`);
+    expect(html).toContain("12,5 / 25 / 50 mm/s");
+    expect(html).toContain("2,5 / 5 / 10 / 20 mm/mV");
+    expect(html).toContain("No se activan al escribir en campos ni dentro de un diálogo.");
+    expect(html).not.toContain("Siguiente caso");
+  });
   it("retains the educational and measurement limitations", () => {
     const html = aboutDialogHtml([]);
     for (const text of [

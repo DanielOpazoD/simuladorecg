@@ -132,6 +132,15 @@ for(const engine of engines){
    await choose('sinus');await page.locator('[data-action=quiz]').click();await ready();
    assert.equal(await page.locator('#diagnosis-navigation').isVisible(),false);assert.equal(await page.locator('#diagnosis-navigation [data-variant]').count(),0);
    assert.equal(await page.locator('#case-variant-title').textContent(),'');assert.equal(await page.locator('#case-title').textContent(),'Interpreta este ECG');
+   const quizGenerations=await page.evaluate(()=>window.__variantGenerations);
+   const quizText=await page.locator('#quiz-panel').innerText(),quizMetrics=await page.locator('#metrics').innerText();
+   await page.locator('#ecg').focus();await page.keyboard.press('?');
+   await page.getByRole('dialog',{name:'Atajos de teclado'}).waitFor();
+   await page.keyboard.press('Escape');await page.locator('#dialog').waitFor({state:'hidden'});await focus('#ecg');
+   assert.equal(await page.locator('#quiz-panel').innerText(),quizText,'Help must preserve the unanswered exercise');
+   assert.equal(await page.locator('#metrics').innerText(),quizMetrics,'Help must not reveal the model values');
+   assert.equal(await page.evaluate(()=>window.__variantGenerations),quizGenerations,'Help must not regenerate the ECG');
+   assert.equal(await page.locator('#case-title').textContent(),'Interpreta este ECG');
    assert.deepEqual(errors,[]);assert.deepEqual(warnings,[]);
    results.push({engine:engine.name(),version:browser.version(),width,variants,sidebarEntries:45,activeExamples:63,manualActivation:true,search:true,customAndQuizIsolation:true,geometry,build,errors,warnings});
   }catch(error){failures.push({engine:engine.name(),width,error:String(error.stack),errors,warnings});await page.screenshot({path:resolve(out,`${stem}-failure.png`)}).catch(()=>{});}
