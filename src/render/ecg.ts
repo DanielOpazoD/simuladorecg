@@ -27,6 +27,8 @@ export interface Layout {
   pxPerMm: number;
   segments: Segment[];
   mode: "paper" | "monitor" | "rhythm";
+  /** Paper only: the largest deflection (mm) the row height was sized for. */
+  amplitudeMm?: number;
 }
 export interface Caliper {
   x1: number;
@@ -125,7 +127,7 @@ export function paperLayout(
       polarity: 1,
     });
   }
-  return { widthMm, heightMm, pxPerMm, segments, mode: "paper" };
+  return { widthMm, heightMm, pxPerMm, segments, mode: "paper", amplitudeMm };
 }
 function grid(
   ctx: CanvasRenderingContext2D,
@@ -219,10 +221,12 @@ export function renderPaperSkeleton(
   c: ECGCase,
   availableWidth: number,
   maxHeight?: number,
+  /** The previous trace's amplitude; a 2 mV deflection before the first one. */
+  amplitudeMm = 2 * Math.max(c.view.gain, c.view.chestGain),
 ): Layout {
-  const natural = paperLayout(c, availableWidth),
+  const natural = paperLayout(c, availableWidth, undefined, amplitudeMm),
     layout = maxHeight && c.view.fit
-      ? paperLayout(c, availableWidth, heightFittedPxPerMm(natural, maxHeight))
+      ? paperLayout(c, availableWidth, heightFittedPxPerMm(natural, maxHeight), amplitudeMm)
       : natural,
     ctx = setup(canvas, layout, Math.min(2, window.devicePixelRatio || 1));
   grid(ctx, layout.widthMm, layout.heightMm, palettes[c.view.palette], c.view.grid);

@@ -69,6 +69,7 @@ const session = new TraceSession();
 // bare defaults it is built from.
 let c = fromPreset(presetById("sinus")!),
   layout: Layout | null = null,
+  paperAmplitudeMm: number | undefined,
   monitor: Monitor | null = null;
 /** OMI lenses on the 12-lead paper: the same patient's previous ECG (grey), the
  * lesion alone (this trace minus that one) and the J point with SDST/IDST. */
@@ -441,7 +442,7 @@ function showUnavailableSignal(message: string, unavailable = false) {
   const canvas = $<HTMLCanvasElement>("#ecg");
   if (!unavailable && c.view.mode === "paper") {
     c.view.palette = currentTheme() === "dark" ? "dark" : "paper";
-    renderPaperSkeleton(canvas, c, $("#canvas-wrap").clientWidth, paperMaxHeight());
+    renderPaperSkeleton(canvas, c, $("#canvas-wrap").clientWidth, paperMaxHeight(), paperAmplitudeMm);
   } else canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
   canvas.setAttribute("aria-label", "Señal no disponible");
   const loading = $("#signal-loading");
@@ -509,6 +510,7 @@ function draw() {
       traceNote: change ? "solo el cambio: este trazado menos el ECG previo del mismo paciente" : prior && lens.previous ? "gris: ECG previo del mismo paciente" : undefined,
       maxHeight: paperMaxHeight(),
     });
+    paperAmplitudeMm = layout.amplitudeMm;
   } else if (c.view.mode === "rhythm") {
     monitor = null;
     layout = renderRhythm(canvas, session.signal, c, width);
