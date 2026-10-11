@@ -159,10 +159,13 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  await page.locator('#quiz-panel').screenshot({path:path.join(out,'p8-feedback.png')});
  await openPaper(page);await page.locator('[data-key="view.gain"]').selectOption('5');
  assert.equal(await page.locator('#quiz-panel').isVisible(),true);
+ await page.locator('[data-key="filter"]').selectOption('monitor');await ready();
+ assert.equal(await page.locator('#quiz-panel').isVisible(),true);
+ assert.equal(await page.locator('#case-title').innerText(),'Interpreta este ECG');
  await openControlPanel(page,'base');
  await page.locator('[data-key="hr"]').evaluate(el=>{el.value=Number(el.value)===80?'90':'80';el.dispatchEvent(new Event('input',{bubbles:true}));});
  assert.equal(await page.locator('#quiz-panel').isVisible(),false);await ready();
- checks.push('P8: real question, separate reference/estimates, view retained and physiology exits practice');
+ checks.push('P8: real question, separate reference/estimates, view and filter retained and physiology exits practice');
  // P9: keyboard route uses the native button and the focused trace only.
  await select('sinus');await openPaper(page);await page.locator('[data-key="view.speed"]').selectOption('25');
  await openPaper(page);await page.locator('[data-key="view.gain"]').selectOption('10');

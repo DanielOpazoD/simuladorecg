@@ -122,3 +122,7 @@ export function changeCase(
 export function withInterfaceView(c: ECGCase): ECGCase {
   return { ...c, view: { ...c.view, fit: true, cabrera: false, timing: "sequential", chestGain: c.view.gain } };
 }
+
+/** View settings and the acquisition filter (paper menu) do not change the
+ * exercise: an unanswered practice survives them. */
+export const keepsPractice = (key: string) => key.startsWith("view.") || key === "filter";
