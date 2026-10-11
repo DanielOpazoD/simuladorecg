@@ -474,6 +474,11 @@ const paperMaxHeight = () =>
   window.innerWidth < 1024
     ? undefined
     : Math.max(420, window.innerHeight - ($("#canvas-wrap").getBoundingClientRect().top + window.scrollY) - 16);
+/** Mobile: tells the eye that more leads lie to the right of the visible sheet. */
+const syncTraceOverflow = () => {
+  const wrap = $("#canvas-wrap");
+  wrap.toggleAttribute("data-more-right", wrap.scrollLeft + wrap.clientWidth < wrap.scrollWidth - 2);
+};
 function draw() {
   c.view.palette = currentTheme() === "dark" ? "dark" : "paper";
   syncTraceTools();
@@ -512,6 +517,7 @@ function draw() {
     c.view.mode === "monitor",
   );
   if (caliper && layout && session.caliperOn) drawCaliper(canvas, layout, caliper, c);
+  syncTraceOverflow();
   caliperEditor.update({active:session.caliperOn, layout, caliper, view:c.view, fs:session.signal.fs});
 }
 function animate(t: number) {
@@ -931,6 +937,7 @@ new ResizeObserver(() => {
   window.clearTimeout(resizeTimer);
   resizeTimer = window.setTimeout(draw, 90);
 }).observe($("#canvas-wrap"));
+$("#canvas-wrap").addEventListener("scroll", syncTraceOverflow, { passive: true });
 window.addEventListener("resize", () => {
   window.clearTimeout(resizeTimer);
   resizeTimer = window.setTimeout(draw, 90);
