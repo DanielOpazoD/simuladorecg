@@ -180,12 +180,15 @@ for(const engine of engines) {
         const keyboardHelp=page.getByRole('dialog',{name:'Atajos de teclado'});
         await keyboardHelp.waitFor();
         assert.equal(await keyboardHelp.locator('kbd').count(),10);
+        assert.equal(await keyboardHelp.evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,'Keyboard help must fit without horizontal scrolling');
+        await page.screenshot({path:resolve(out,stem+'-keyboard-help.png')});
         await page.keyboard.press('m');
         assert.equal(await page.locator('[data-mode=paper]').getAttribute('aria-selected'),'true');
         await page.keyboard.press('Escape');await keyboardHelp.waitFor({state:'hidden'});await active('#ecg');
         await page.keyboard.press('Control+Shift+/');
         assert.equal(await page.locator('#dialog').evaluate(d=>d.open),false);
         await key('.topbar [data-action=about]');await page.getByRole('dialog',{name:'Modelo, alcance y referencias'}).waitFor();
+        assert.equal(await page.locator('.keyboard-help').evaluate(e=>e.open),false);
         await key('.keyboard-help > summary');
         assert.equal(await page.locator('.keyboard-help').evaluate(e=>e.open),true);
         assert.equal(await page.locator('.keyboard-help-content').isVisible(),true);
