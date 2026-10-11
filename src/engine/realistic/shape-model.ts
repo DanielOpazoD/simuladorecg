@@ -159,45 +159,6 @@ function solveSpd(a: Float64Array, n: number, b: Float64Array, cols: number): Fl
   return x;
 }
 
-/** Sample every variable not in `known` from the joint Gaussian conditioned on `known`. */
-export function sampleConditional(
-  m: ShapeModel,
-  known: Record<string, number>,
-  rng: () => number,
-): Record<string, number> {
-  const all = m.names, M = all.length;
-  const ki = all.map((n, i) => (n in known ? i : -1)).filter((i) => i >= 0);
-  const ui = all.map((n, i) => (n in known ? -1 : i)).filter((i) => i >= 0);
-  const q = ki.length, u = ui.length, C = m.jointCov, mu = m.jointMean;
-  const Cdd = new Float64Array(q * q), Cdu = new Float64Array(q * u), r = new Float64Array(q);
-  for (let a = 0; a < q; a++) {
-    r[a] = known[all[ki[a]]] - mu[ki[a]];
-    for (let b = 0; b < q; b++) Cdd[a * q + b] = C[ki[a] * M + ki[b]];
-    for (let b = 0; b < u; b++) Cdu[a * u + b] = C[ki[a] * M + ui[b]];
-  }
-  const w = q ? solveSpd(Cdd, q, Cdu, u) : new Float64Array(0); // Cdd⁻¹ Cdu
-  const alpha = q ? solveSpd(Cdd, q, r, 1) : new Float64Array(0);
-  const cov = new Float64Array(u * u), mean = new Float64Array(u);
-  for (let a = 0; a < u; a++) {
-    let s = mu[ui[a]];
-    for (let p = 0; p < q; p++) s += Cdu[p * u + a] * alpha[p];
-    mean[a] = s;
-    for (let b = 0; b < u; b++) {
-      let c = C[ui[a] * M + ui[b]];
-      for (let p = 0; p < q; p++) c -= Cdu[p * u + a] * w[p * u + b];
-      cov[a * u + b] = c;
-    }
-  }
-  const l = cholesky(cov, u), e = Array.from({ length: u }, () => normal(rng));
-  const out: Record<string, number> = { ...known };
-  for (let a = 0; a < u; a++) {
-    let s = mean[a];
-    for (let b = 0; b <= a; b++) s += l[a * u + b] * e[b];
-    out[all[ui[a]]] = s;
-  }
-  return out;
-}
-
 // ── Dipolar (Dower) decomposition: rotations act on the heart vector only ─────
 const D = MODEL_LEADS.map((lead) => (LEAD_REGISTRY[lead] as { projection: readonly number[] }).projection);
 /** Pseudo-inverse (DᵀD)⁻¹Dᵀ, 3 × 8. */

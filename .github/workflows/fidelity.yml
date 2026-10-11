@@ -20,7 +20,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
-          node-version: '22.16.0'
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - name: Types and production build
@@ -42,7 +42,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
-          node-version: '22.16.0'
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - name: Unit contracts and production build on macOS
@@ -63,7 +63,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
-          node-version: '22.16.0'
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - name: Paired QRS amplitude regression (${{ matrix.scope }})
@@ -96,7 +96,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
-          node-version: '22.16.0'
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - name: Complete native QRS-T, transfer and ectopy matrix
@@ -135,7 +135,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
-          node-version: '22.16.0'
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - name: Unit and signal contracts
@@ -267,7 +267,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
-          node-version: '22.16.0'
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - uses: actions/download-artifact@v7

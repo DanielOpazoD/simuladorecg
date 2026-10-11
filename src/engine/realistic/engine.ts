@@ -87,7 +87,6 @@ export function learnedEctopicQrsSeconds(c: ECGCase, kind: EctopicKind): number 
   const [lo, hi] = ECTOPIC[kind].qrs;
   return Math.min(hi, Math.max(lo, realisticEctopicPatient(c, kind).qrsMs / 1000));
 }
-export const learnedPvcQrsSeconds = (c: ECGCase) => learnedEctopicQrsSeconds(c, "pvc");
 export function learnEctopicDurations(c: ECGCase, beats: Beat[], kinds: readonly EctopicKind[]): void {
   for (const kind of kinds) {
     const qrs = learnedEctopicQrsSeconds(c, kind), own = realisticEctopicPatient(c, kind).sttMs / 1000;
