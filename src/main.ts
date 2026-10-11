@@ -340,7 +340,7 @@ function renderScales() {
           c.view.duration,
         )
       : ""
-  }${filterSelect(c)}<div class="scale-toggles"><label class="toggle"><input type="checkbox" data-key="view.grid" ${c.view.grid ? "checked" : ""}/>Grilla</label></div>`;
+  }<div class="scale-toggles"><label class="toggle"><input type="checkbox" data-key="view.grid" ${c.view.grid ? "checked" : ""}/>Grilla</label></div>${filterSelect(c)}`;
   document
     .querySelectorAll("[data-mode]")
     .forEach((el) =>
