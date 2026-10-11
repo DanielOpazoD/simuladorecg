@@ -270,7 +270,8 @@ export function renderPaper(
     11,
   );
   ctx.strokeStyle = palette.trace;
-  ctx.lineWidth = 0.29;
+  // 0.29 mm, but never thinner than ~1.1 CSS px when the sheet is fitted smaller.
+  ctx.lineWidth = Math.max(0.29, 1.1 / layout.pxPerMm);
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
   const doneRows = new Set<number>();
