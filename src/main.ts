@@ -469,6 +469,11 @@ function generate() {
   previousSignal = null;
   session.expectRequest(controller.request(c, 65, { previous: (lens.previous || lens.change) && !!lesionBaseline(c) }));
 }
+/** Desktop: the whole sheet fits under the trace toolbar without scrolling the page. */
+const paperMaxHeight = () =>
+  window.innerWidth < 1024
+    ? undefined
+    : Math.max(420, window.innerHeight - ($("#canvas-wrap").getBoundingClientRect().top + window.scrollY) - 16);
 function draw() {
   c.view.palette = currentTheme() === "dark" ? "dark" : "paper";
   syncTraceTools();
@@ -492,6 +497,7 @@ function draw() {
       previous: prior && lens.previous && !change ? prior : undefined,
       stLens: lens.st && !practice,
       traceNote: change ? "solo el cambio: este trazado menos el ECG previo del mismo paciente" : prior && lens.previous ? "gris: ECG previo del mismo paciente" : undefined,
+      maxHeight: paperMaxHeight(),
     });
   } else if (c.view.mode === "rhythm") {
     monitor = null;
@@ -925,6 +931,10 @@ new ResizeObserver(() => {
   window.clearTimeout(resizeTimer);
   resizeTimer = window.setTimeout(draw, 90);
 }).observe($("#canvas-wrap"));
+window.addEventListener("resize", () => {
+  window.clearTimeout(resizeTimer);
+  resizeTimer = window.setTimeout(draw, 90);
+});
 let resizeTimer = 0;
 window.addEventListener("hashchange", () => {
   try {
