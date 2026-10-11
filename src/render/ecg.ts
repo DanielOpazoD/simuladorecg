@@ -270,8 +270,8 @@ export function renderPaper(
     11,
   );
   ctx.strokeStyle = palette.trace;
-  // 0.29 mm, but never thinner than ~1.1 CSS px when the sheet is fitted smaller.
-  ctx.lineWidth = Math.max(0.29, 1.1 / layout.pxPerMm);
+  // Fitting the sheet to the height shrinks the scale, not the pen: keep the unfitted stroke in px.
+  ctx.lineWidth = (0.29 * natural.pxPerMm) / layout.pxPerMm;
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
   const doneRows = new Set<number>();
