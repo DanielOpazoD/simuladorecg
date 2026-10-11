@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_CASE, cloneCase, type ECGCase, type Measurement, type MetricKey, type Reliability } from "../src/engine/types";
-import { metricCards, metricsHtml, monitorRate } from "../src/ui/metric-cards";
+import { concealMetricCards, metricCards, metricsHtml, monitorRate } from "../src/ui/metric-cards";
 
 const measurement = (status: Partial<Record<MetricKey, Reliability>> = {}): Measurement => {
   const evidence = Object.fromEntries(
@@ -98,5 +98,17 @@ describe("modelMetricCards: el simulador muestra lo que generó", () => {
   it("FV y BAV completo: sin PR; FV sin ningún número", () => {
     expect(cards("vf").every((x) => x.value === "—")).toBe(true);
     expect(cards("complete")[1].value).toBe("—");
+  });
+});
+
+describe("concealMetricCards", () => {
+  it("hides every value and its availability during practice", () => {
+    const shown = metricCards(withCase({ av: "complete" } as Partial<ECGCase>), measurement({ qt: "review" }));
+    const hidden = concealMetricCards(shown);
+    expect(hidden.map(x => x.value)).toEqual(["?", "?", "?", "?", "?"]);
+    expect(new Set(hidden.map(x => x.status))).toEqual(new Set(["usable"]));
+    expect(hidden.every(x => x.note === "Oculto en práctica")).toBe(true);
+    const html = metricsHtml(hidden);
+    expect(html).not.toMatch(/\d{2,}|No estimable|Revisar/);
   });
 });

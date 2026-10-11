@@ -9,7 +9,7 @@ import { differenceSignal } from "./render/st-lens";
 import { omiSheetHtml, structuredDescriptionHtml } from "./ui/omi-sheet";
 import { structuredDescription, type DescriptionInfo, type StructuredDescription } from "./ui/structured-description";
 import { descriptionInfoHtml, descriptionInfoTitle } from "./ui/description-info";
-import { metricsHtml, modelMetricCards } from "./ui/metric-cards";
+import { concealMetricCards, metricsHtml, modelMetricCards } from "./ui/metric-cards";
 import { openDialog, closeDialog } from "./ui/dialog";
 import { exportDialogHtml } from "./ui/export-dialog";
 import { handleExportAction } from "./ui/export-actions";
@@ -242,10 +242,12 @@ function renderMetrics() {
   if (!session.signal || !session.measurement) return;
   // The simulator knows what it generated: show the model's values. The frozen
   // sample analyzer remains an independent estimate inside «Medidas».
-  const cards = modelMetricCards(c, session.signal), rate = cards[0];
+  const concealed = !!quiz && !quiz.answer, model = modelMetricCards(c, session.signal);
+  const cards = concealed ? concealMetricCards(model) : model, rate = cards[0];
   $("#metrics").innerHTML = metricsHtml(cards);
+  $("#metrics").toggleAttribute("data-concealed", concealed);
   $("#monitor-rate").textContent = rate.value === "—" ? "—" : rate.value.replace(/<small>.*<\/small>/, "");
-  $("#monitor-rate-note").textContent = rate.value === "—" ? "No estimable" : "lpm · modelo";
+  $("#monitor-rate-note").textContent = concealed ? "oculto en práctica" : rate.value === "—" ? "No estimable" : "lpm · modelo";
 }
 function renderControls() {
   const previous = activePanel;
@@ -663,6 +665,7 @@ function exportDialog() {
   );
 }
 function renderQuiz() {
+  renderMetrics();
   const panel = $("#quiz-panel");
   panel.hidden = !quiz;
   if (!quiz) return;
