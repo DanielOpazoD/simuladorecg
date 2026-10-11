@@ -44,6 +44,7 @@ import {
 } from "./presets/catalog";
 import {
   renderPaper,
+  renderPaperSkeleton,
   renderRhythm,
   drawCaliper,
   Monitor,
@@ -438,7 +439,10 @@ function resetTracePresentation() {
 function showUnavailableSignal(message: string, unavailable = false) {
   resetTracePresentation();
   const canvas = $<HTMLCanvasElement>("#ecg");
-  canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
+  if (!unavailable && c.view.mode === "paper") {
+    c.view.palette = currentTheme() === "dark" ? "dark" : "paper";
+    renderPaperSkeleton(canvas, c, $("#canvas-wrap").clientWidth, paperMaxHeight());
+  } else canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
   canvas.setAttribute("aria-label", "Señal no disponible");
   const loading = $("#signal-loading");
   loading.classList.toggle("signal-unavailable", unavailable);

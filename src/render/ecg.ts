@@ -212,6 +212,22 @@ function pulse(
  * visible height, never below `minWidthPx` of paper width (readability floor). */
 export const heightFittedPxPerMm = (layout: Layout, maxHeightPx: number, minWidthPx = 760) =>
   Math.min(layout.pxPerMm, Math.max(minWidthPx / layout.widthMm, maxHeightPx / layout.heightMm));
+/** While the signal is computed: the empty sheet at its final size, so the trace
+ * appears in place instead of the page jumping from a placeholder. */
+export function renderPaperSkeleton(
+  canvas: HTMLCanvasElement,
+  c: ECGCase,
+  availableWidth: number,
+  maxHeight?: number,
+): Layout {
+  const natural = paperLayout(c, availableWidth),
+    layout = maxHeight && c.view.fit
+      ? paperLayout(c, availableWidth, heightFittedPxPerMm(natural, maxHeight))
+      : natural,
+    ctx = setup(canvas, layout, Math.min(2, window.devicePixelRatio || 1));
+  grid(ctx, layout.widthMm, layout.heightMm, palettes[c.view.palette], c.view.grid);
+  return layout;
+}
 export function renderPaper(
   canvas: HTMLCanvasElement,
   s: Signal,
