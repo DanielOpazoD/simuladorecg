@@ -208,6 +208,10 @@ h1 { font-size:32px; line-height:1.2; letter-spacing:-1px; font-weight:600; text
   .variant-tabs > button { min-width:0; padding:10px 8px; font-size:var(--text-sm); overflow-wrap:anywhere; }
   .variant-heading > small { flex-basis:100%; }
 }
+@media(min-width:375px) and (max-width:600px) {
+  .variant-tabs { grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:4px; }
+  .variant-tabs > button { padding:3px 2px; font-size:var(--text-xs); line-height:1.25; overflow-wrap:normal; text-wrap:balance; }
+}
 @media print { .diagnosis-navigation { display:none!important; } }
 
 /* OMI case sheet and structured description (A3) */
