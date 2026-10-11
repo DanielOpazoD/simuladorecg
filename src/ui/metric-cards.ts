@@ -67,6 +67,11 @@ export const metricsHtml = (cards: MetricCard[]) =>
     )
     .join("");
 
+/** Practice hides every value (and its availability, which would also hint the
+ * answer) until the learner responds; the calipers remain available to measure. */
+export const concealMetricCards = (cards: MetricCard[]): MetricCard[] =>
+  cards.map((x) => ({ ...x, value: "?", note: "Oculto en práctica", status: "usable", reason: "Se revela al responder. Puedes medir con los calibres." }));
+
 export const monitorRate = (c: ECGCase, m: Measurement) =>
   unorganized(c) || m.evidence.hr.status === "unavailable" || m.hr === null || !Number.isFinite(m.hr)
     ? "—"

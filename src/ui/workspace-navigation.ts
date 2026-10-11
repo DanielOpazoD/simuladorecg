@@ -24,8 +24,10 @@ export class WorkspaceNavigation {
       case "close-catalog":
         this.catalog.classList.remove("open");
         return true;
-      case "about":
       case "measurements":
+        if (!concealed) this.actions.measurements();
+        return true;
+      case "about":
       case "export":
       case "close-dialog":
         this.actions[action]();

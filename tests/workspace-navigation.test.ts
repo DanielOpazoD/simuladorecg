@@ -35,7 +35,15 @@ describe("workspace navigation", () => {
     expect(inspector.focus).toHaveBeenCalledOnce();
   });
 
-  it.each(["about", "measurements", "export", "close-dialog"] as const)("keeps %s available during practice", action => {
+  it("withholds the measurements dialog until the practice answer", () => {
+    const { actions, navigation } = fixture();
+    expect(navigation.handle("measurements", true)).toBe(true);
+    expect(actions.measurements).not.toHaveBeenCalled();
+    expect(navigation.handle("measurements", false)).toBe(true);
+    expect(actions.measurements).toHaveBeenCalledOnce();
+  });
+
+  it.each(["about", "export", "close-dialog"] as const)("keeps %s available during practice", action => {
     const { actions, navigation } = fixture();
     expect(navigation.handle(action, true)).toBe(true);
     for (const [name, callback] of Object.entries(actions))
