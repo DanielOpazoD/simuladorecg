@@ -67,7 +67,8 @@ const displayNames: Readonly<Record<string, string>> = {
   mobitz2: 'Bloqueo AV 2.º grado Mobitz II', av21: 'Bloqueo AV 2.º grado 2:1', highav: 'Bloqueo AV de alto grado',
   complete: 'Bloqueo AV completo · unión', complete_v: 'Bloqueo AV completo · ventricular',
   rbbb: 'Bloqueo de rama derecha', irbbb: 'BRD incompleto', lbbb: 'Bloqueo de rama izquierda',
-  lafb: 'Hemibloqueo anterior', lpfb: 'Hemibloqueo posterior', wpw: 'Preexcitación · WPW',
+  lafb: 'Bloqueo fascicular anterior', lpfb: 'Bloqueo fascicular posterior',
+  lateral: 'Oclusión de la Cx · lateral', posterior: 'Oclusión posterior · V1–V3', wpw: 'Preexcitación · WPW',
   anterior: 'Oclusión de la DA', inferior: 'Oclusión de la CD · III > II', inferior_lcx: 'Oclusión de la Cx · II ≥ III',
   sgarbossa: 'BRI con lesión concordante',
 };
@@ -76,7 +77,7 @@ export const catalogLabel = (preset: Preset): string => displayNames[preset.id] 
 const aliases: Readonly<Record<string, string>> = {
   af: 'FA AF fibrilacion auricular', af_fast: 'FA rapida AF RVR', af_slow: 'FA lenta AF',
   rbbb: 'RBBB BRD', irbbb: 'IRBBB BRD', lbbb: 'LBBB BRI',
-  lafb: 'HBAI LAFB', lpfb: 'HBPI LPFB',
+  lafb: 'BFAI HBAI LAFB hemibloqueo hemibloqueos', lpfb: 'BFPI HBPI LPFB hemibloqueo hemibloqueos',
   pac: 'ESA PAC extrasistole supraventricular', pvc: 'ESV PVC extrasistole ventricular',
   aivr: 'RIVA AIVR', vt: 'TV VT', vf: 'FV VF',
   torsades: 'torsades de pointes TdP TV polimorfica',

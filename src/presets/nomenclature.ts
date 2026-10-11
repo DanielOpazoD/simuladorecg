@@ -15,10 +15,14 @@ const TITLES: Readonly<Record<string, string>> = {
   av21: "Bloqueo AV de segundo grado 2:1",
   complete: "Bloqueo AV completo con escape de la unión",
   complete_v: "Bloqueo AV completo con escape ventricular",
-  bifascicular: "Bloqueo bifascicular · BRD + HBAI",
+  lafb: "Bloqueo fascicular anterior izquierdo",
+  lpfb: "Bloqueo fascicular posterior izquierdo",
+  bifascicular: "Bloqueo bifascicular · BRD + BFAI",
   bifascicular_pr: "Bloqueo bifascicular con BAV de primer grado",
   diffuse: "Descenso difuso del ST con elevación en aVR",
   hyperk: "Hiperpotasemia · ondas T picudas",
   pericarditis: "Pericarditis aguda",
+  lateral: "Oclusión de la Cx con lesión lateral",
+  posterior: "Oclusión posterior",
 };
 export const presetTitle = (preset: Pick<Preset, "id" | "name">): string => TITLES[preset.id] ?? preset.name;
