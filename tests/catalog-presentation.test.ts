@@ -61,7 +61,7 @@ describe('Catalog presentation never changes clinical presets', () => {
   });
   it('retains canonical descriptive names behind concise labels', () => {
     const preset = PRESETS.find(p => p.id === 'lbbb')!;
-    assert.equal(catalogLabel(preset), 'Rama izquierda · BRI');
+    assert.equal(catalogLabel(preset), 'Bloqueo de rama izquierda');
     assert.notEqual(preset.name, catalogLabel(preset));
     assert.ok(ids(preset.name).includes(preset.id));
   });

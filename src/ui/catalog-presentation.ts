@@ -1,4 +1,5 @@
 import type { Preset } from '../presets/catalog';
+import { presetTitle } from '../presets/nomenclature';
 
 /** Presentation only: no preset patch, diagnosis or signal is rewritten. */
 const labels: Readonly<Record<string, string>> = {
@@ -61,8 +62,11 @@ const displayNames: Readonly<Record<string, string>> = {
   af: 'Fibrilación auricular', af_fast: 'FA · respuesta rápida', af_slow: 'FA · respuesta lenta',
   svt: 'TSV regular', junctional: 'Ritmo de la unión', pac: 'Extrasístole auricular',
   pvc: 'Extrasístole ventricular', couplet: 'Dupla ventricular', aivr: 'Idioventricular acelerado',
-  complete: 'BAV completo · unión', complete_v: 'BAV completo · ventricular',
-  rbbb: 'Rama derecha · BRD', irbbb: 'BRD incompleto', lbbb: 'Rama izquierda · BRI',
+  rsa: 'Arritmia sinusal',
+  av1: 'Bloqueo AV de primer grado', wenckebach: 'Bloqueo AV 2.º grado Mobitz I',
+  mobitz2: 'Bloqueo AV 2.º grado Mobitz II', av21: 'Bloqueo AV 2.º grado 2:1', highav: 'Bloqueo AV de alto grado',
+  complete: 'Bloqueo AV completo · unión', complete_v: 'Bloqueo AV completo · ventricular',
+  rbbb: 'Bloqueo de rama derecha', irbbb: 'BRD incompleto', lbbb: 'Bloqueo de rama izquierda',
   lafb: 'Hemibloqueo anterior', lpfb: 'Hemibloqueo posterior', wpw: 'Preexcitación · WPW',
   anterior: 'Oclusión de la DA', inferior: 'Oclusión de la CD · III > II', inferior_lcx: 'Oclusión de la Cx · II ≥ III',
   sgarbossa: 'BRI con lesión concordante',
@@ -91,8 +95,8 @@ const subdivisions: Readonly<Record<string, readonly Subdivision[]>> = {
     {title:'Unión y TSV', ids:['svt','junctional']},
   ],
   'Conducción AV': [
-    {title:'Grado I y II', ids:['av1','wenckebach','mobitz2','av21']},
-    {title:'Avanzado y completo', ids:['highav','complete','complete_v']},
+    {title:'Primer y segundo grado', ids:['av1','wenckebach','mobitz2','av21']},
+    {title:'Alto grado y completo', ids:['highav','complete','complete_v']},
   ],
   'Conducción intraventricular': [
     {title:'Ramas', ids:['rbbb','irbbb','lbbb']},
@@ -113,7 +117,7 @@ export interface CatalogFamily {
 const acronyms = new Set(['fa','af','tv','vt','fv','vf','brd','bri','tsv','svt','esa','esv','pac','pvc','wpw','qt','bav','riva']);
 export function matchesCatalog(preset: Preset, tokens: readonly string[], extra = ''): boolean {
   const family = catalogGroup(preset);
-  const text = searchText(`${preset.id} ${preset.name} ${preset.short} ${catalogLabel(preset)} ${family} ${familyLabel(family)} ${familyGuide(family)} ${aliases[preset.id] ?? ''} ${extra}`);
+  const text = searchText(`${preset.id} ${preset.name} ${presetTitle(preset)} ${preset.short} ${catalogLabel(preset)} ${family} ${familyLabel(family)} ${familyGuide(family)} ${aliases[preset.id] ?? ''} ${extra}`);
   const words = text.split(/[^a-z0-9]+/);
   // A short abbreviation must not match an unrelated fragment (FA ≠ fascículos).
   return tokens.every(token => acronyms.has(token) ? words.includes(token) : text.includes(token));

@@ -1,6 +1,7 @@
 import { NATURAL_CONTROLS, normalizeCase, type ECGCase } from "../engine/types";
 import { repolarizationLimitations } from "./teaching-limits";
 import { fromPreset, presetById, type Preset } from "./catalog";
+import { presetTitle } from "./nomenclature";
 import { realisticModelFor } from "../engine/realistic/scope";
 import { learnedIschemiaArtery } from "../engine/realistic/ischemia";
 
@@ -82,7 +83,9 @@ export function caseContext(input: ECGCase): CaseContext {
     displayName:
       !preset && declared && c.name === declared.name
         ? "Caso personalizado"
-        : c.name,
+        : preset && c.name === preset.name
+          ? presetTitle(preset)
+          : c.name,
     warnings,
   };
 }

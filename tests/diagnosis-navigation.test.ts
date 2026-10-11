@@ -70,7 +70,7 @@ describe('Pattern entries and canonical variant navigation', () => {
     expect(entries('sinus','','tachy')[0].target.id).toBe('sinus');
   });
   it('searches the visible parent and variant names', () => {
-    expect(entries('Respuesta basal')[0].target.id).toBe('af');
+    expect(entries('Respuesta controlada')[0].target.id).toBe('af');
     expect(entries('hemibloqueos')[0].diagnosis.variants).toHaveLength(2);
     expect(entries('extrasístoles ventriculares')[0].diagnosis.variants).toHaveLength(4);
     expect(entries('marcapasos')[0].diagnosis.variants).toHaveLength(3);

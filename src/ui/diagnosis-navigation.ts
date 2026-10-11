@@ -13,8 +13,8 @@ export interface DiagnosisGroup {
 const group = (id: string, title: string, variants: readonly (readonly [string, string])[]): DiagnosisGroup =>
   ({ id, title, variants: variants.map(([id, label]) => ({ id, label })) });
 export const DIAGNOSIS_GROUPS: readonly DiagnosisGroup[] = [
-  group('sinus', 'Ritmo sinusal', [['sinus', 'Normal'], ['brady', 'Bradicardia'], ['tachy', 'Taquicardia'], ['rsa', 'Arritmia respiratoria']]),
-  group('af', 'Fibrilación auricular', [['af', 'Respuesta basal'], ['af_fast', 'Respuesta rápida'], ['af_slow', 'Respuesta lenta']]),
+  group('sinus', 'Ritmo sinusal', [['sinus', 'Normal'], ['brady', 'Bradicardia'], ['tachy', 'Taquicardia'], ['rsa', 'Arritmia sinusal']]),
+  group('af', 'Fibrilación auricular', [['af', 'Respuesta controlada'], ['af_fast', 'Respuesta rápida'], ['af_slow', 'Respuesta lenta']]),
   group('flutter', 'Flutter auricular', [['flutter', 'Conducción 2:1'], ['flutter3', 'Conducción 3:1']]),
   group('pvc', 'Extrasístoles ventriculares', [['pvc', 'Aisladas'], ['bigeminy', 'Bigeminismo'], ['trigeminy', 'Trigeminismo'], ['couplet', 'Dupla']]),
   group('idioventricular', 'Ritmo idioventricular', [['idioventricular', 'Lento'], ['aivr', 'Acelerado']]),
@@ -25,7 +25,7 @@ export const DIAGNOSIS_GROUPS: readonly DiagnosisGroup[] = [
   group('bifascicular', 'Bloqueo bifascicular', [['bifascicular', 'BRD + HBAI'], ['bifascicular_pr', 'Con PR prolongado']]),
   group('old_inferior', 'Infarto antiguo', [['old_inferior', 'Inferior'], ['old_anterior', 'Anteroseptal']]),
   group('wellens_a', 'Patrón de Wellens', [['wellens_a', 'Tipo A'], ['wellens_b', 'Tipo B']]),
-  group('rv_acute', 'Sobrecarga del ventrículo derecho', [['rv_acute', 'Aguda'], ['rv_chronic', 'Hipertrofia']]),
+  group('rv_acute', 'Ventrículo derecho', [['rv_acute', 'Sobrecarga aguda'], ['rv_chronic', 'Hipertrofia']]),
   group('aai', 'Estimulación con marcapasos', [['aai', 'AAI'], ['vvi', 'VVI'], ['ddd', 'DDD']]),
   group('longqt', 'Alteraciones del QT', [['longqt', 'QT prolongado'], ['shortqt', 'QT corto']]),
 ];

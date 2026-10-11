@@ -2,6 +2,7 @@ import { applyTheme, currentTheme, readTheme } from "./ui/theme";
 import { aboutDialogHtml } from "./ui/about-dialog";
 import { regionalActivationControls } from "./ui/regional-activation";
 import "./style.css";
+import { presetTitle } from "./presets/nomenclature";
 import { APP_VERSION } from "./ui/version";
 import { catalogGroup, familyGuide, familyLabel } from "./ui/catalog-presentation";
 import { lesionBaseline } from "./engine/lesion-baseline";
@@ -193,8 +194,8 @@ function renderInfo() {
   const grouped = diagnosis && diagnosis.variants.length > 1;
   const customExploration=!!explorationOrigin&&explorationChanges(explorationOrigin,c).length>0&&!concealed;
   $("#case-title").textContent = concealed ? "Interpreta este ECG" : customExploration ? "Exploración personalizada" : grouped ? diagnosis.title : reading.title;
-  $("#case-variant-title").hidden = !!concealed || !grouped || p?.name === diagnosis?.title;
-  $("#case-variant-title").textContent = !concealed && grouped ? p!.name : "";
+  $("#case-variant-title").hidden = !!concealed || !grouped || (p ? presetTitle(p) : "") === diagnosis?.title;
+  $("#case-variant-title").textContent = !concealed && grouped ? presetTitle(p!) : "";
   variantNavigation.update(p, !!concealed, c.artifacts.reversed);
   $("#case-category").textContent = concealed
     ? "PRÁCTICA"
