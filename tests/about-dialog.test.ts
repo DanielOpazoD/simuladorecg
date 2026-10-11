@@ -1,3 +1,5 @@
+import { esc } from "../src/ui/helpers";
+import { presetTitle } from "../src/presets/nomenclature";
 import { describe, expect, it } from "vitest";
 import { PRESETS } from "../src/presets/catalog";
 import { aboutDialogHtml } from "../src/ui/about-dialog";
@@ -24,7 +26,7 @@ describe("about dialog content", () => {
     const rows = [...html.matchAll(/<tr><td>(.*?)<\/td><td>(.*?)<\/td><td>(.*?)<\/td><\/tr>/g)];
     expect(rows).toHaveLength(PRESETS.length);
     expect(rows.map((row) => row.slice(1))).toEqual(PRESETS.map((preset) => [
-      preset.name,
+      esc(presetTitle(preset)),
       { pending: "Pendiente", local: "Aproximado · ajuste local", vectorial: "Aproximado · vectorial" }[preset.strategy],
       preset.limitation,
     ]));
