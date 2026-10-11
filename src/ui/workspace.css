@@ -323,3 +323,20 @@ h1 { font-size:32px; line-height:1.2; letter-spacing:-1px; font-weight:600; text
 .metrics .metric-note { font-style:normal; font-size:11px; color:var(--muted); white-space:nowrap; }
 @media (max-width:360px) { .metrics .metric strong, .metrics .main-metric strong { font-size:16px; white-space:normal; } }
 .paper-menu .scale-toolbar > :has([data-key="filter"]) { grid-column:1 / -1; }
+
+/* Mobile first viewport (UI · M6): one-row top bar, slimmer value strip, so the trace
+   shows earlier. Labels hidden visually stay in the accessible name. */
+@media (max-width:600px) {
+  .topbar { flex-wrap:wrap; gap:4px; min-height:56px; padding:6px 12px; }
+  .topbar .brand { flex:0 0 auto; min-width:44px; min-height:44px; justify-content:center; }
+  .topbar .brand > span:first-of-type,
+  .topbar nav > .btn[data-action=export] span { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  .topbar nav { flex:1 1 auto; gap:2px; }
+  .topbar nav > .btn { padding-inline:8px; }
+  .topbar nav > .btn[data-action=export] { width:44px; padding-inline:0; justify-content:center; }
+  .topbar nav > .btn[data-action=export] svg { display:inline-block; }
+  .metrics .metric { padding:6px 10px; }
+  .metrics .metric strong, .metrics .main-metric strong { font-size:19px; }
+}
+/* Horizontal overflow of the 12-lead sheet: the right edge fades while more leads lie beyond. */
+.canvas-scroll[data-more-right] { -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent); mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent); }
