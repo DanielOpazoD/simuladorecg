@@ -331,7 +331,7 @@ h1 { font-size:32px; line-height:1.2; letter-spacing:-1px; font-weight:600; text
   .topbar .brand { flex:0 0 auto; min-width:44px; min-height:44px; justify-content:center; }
   .topbar .brand > span:first-of-type,
   .topbar nav > .btn[data-action=export] span { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
-  .topbar nav { flex:1 1 auto; gap:2px; }
+  .topbar nav { flex:1 1 0; width:auto; min-width:max-content; gap:2px; }
   .topbar nav > .btn { padding-inline:8px; }
   .topbar nav > .btn[data-action=export] { width:44px; padding-inline:0; justify-content:center; }
   .topbar nav > .btn[data-action=export] svg { display:inline-block; }
