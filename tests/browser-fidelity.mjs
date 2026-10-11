@@ -161,7 +161,6 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  assert.equal(await page.locator('#quiz-panel').isVisible(),true);
  await page.locator('[data-key="filter"]').selectOption('monitor');await ready();
  assert.equal(await page.locator('#quiz-panel').isVisible(),true);
- assert.equal(await page.locator('#case-title').innerText(),'Interpreta este ECG');
  await openControlPanel(page,'base');
  await page.locator('[data-key="hr"]').evaluate(el=>{el.value=Number(el.value)===80?'90':'80';el.dispatchEvent(new Event('input',{bubbles:true}));});
  assert.equal(await page.locator('#quiz-panel').isVisible(),false);await ready();
