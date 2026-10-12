@@ -12,14 +12,12 @@ credenciales ni archivos de tipografías a este proyecto.
 ## Entorno y verificación
 
 ```bash
-# Node 22.16.0 (misma versión que CI)
+# Node de .nvmrc (misma versión que CI)
 npm ci
 npm run check
-node scripts/validate-repolarization.mjs --output .sites-runtime/comparison.json
 ```
 
-La comparación requiere el commit v1.3 indicado en su script. En un ZIP sin
-historial, usa `--baseline-dir /ruta/v1.3` y no inventes un SHA Git. Los recorridos
+Los recorridos
 de producción y comandos de navegador están en README y `docs/p3-ci-contract.md`.
 Una instalación local y un `build` correctos no prueban la interfaz; CI prueba
 `dist`, el worker, exportaciones reales e identidad. Comprueba también el CI del
