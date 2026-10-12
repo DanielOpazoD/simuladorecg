@@ -165,6 +165,15 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  await page.locator('[data-key="hr"]').evaluate(el=>{el.value=Number(el.value)===80?'90':'80';el.dispatchEvent(new Event('input',{bubbles:true}));});
  assert.equal(await page.locator('#quiz-panel').isVisible(),false);await ready();
  checks.push('P8: real question, separate reference/estimates, view and filter retained and physiology exits practice');
+ // P8b: a view change keeps the patient's natural P/T axes on the sliders.
+ await select('sinus');await openControlPanel(page,'signal');
+ const naturalAxes=()=>page.locator('input[data-key="pAxis"], input[data-key="tAxis"]').evaluateAll(els=>els.map(el=>el.value));
+ const axes=await naturalAxes();
+ await openPaper(page);await page.locator('[data-key="view.speed"]').selectOption('50');
+ await openControlPanel(page,'signal');
+ assert.deepEqual(await naturalAxes(),axes);
+ await openPaper(page);await page.locator('[data-key="view.speed"]').selectOption('25');
+ checks.push('P8b: view change keeps the natural P/T axes on the sliders');
  // P9: keyboard route uses the native button and the focused trace only.
  await select('sinus');await openPaper(page);await page.locator('[data-key="view.speed"]').selectOption('25');
  await openPaper(page);await page.locator('[data-key="view.gain"]').selectOption('10');

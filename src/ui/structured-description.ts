@@ -176,19 +176,24 @@ export type DescriptionInfo = "st" | "t" | "q";
 export interface StructuredDescription { lines: { key: string; text: string; info?: DescriptionInfo }[]; summary: string; measures: LeadMeasure[] }
 export function structuredDescription(c: ECGCase, s: Signal): StructuredDescription {
   const t = s.truth, rr = t.hr > 0 ? 60 / t.hr : null;
-  const qtc = t.qt && rr ? t.qt / Math.cbrt(rr) : null;
+  // Intervals of the dominant beats, as the metric cards: in bigeminy the median
+  // of every beat would mix in the ectopics.
+  const dominant = dominantBeats(s).map((i) => s.events.beats[i]);
+  const dominantQrs = dominant.length ? median(dominant.map((b) => b.qrs!)) * 1000 : null;
+  const dominantQts = dominant.filter((b) => b.qt !== undefined).map((b) => b.qt!);
+  const qt = dominantQts.length ? median(dominantQts) * 1000 : t.qt;
+  const qtc = qt && rr ? qt / Math.cbrt(rr) : null;
   const av = c.rhythm === "sinus" ? AV[c.av] : undefined, ectopy = ECTOPY[c.ectopy];
   const dissociated = !!av && c.av !== "first", ventricular = dissociated || c.rhythm === "af" || c.rhythm === "flutter";
   const atrial = dissociated ? atrialRate(s) : null;
   const rhythm = `${RHYTHM[c.rhythm]}${av ? ` con ${av}` : ""}${ectopy ? ` y ${ectopy}` : ""}` +
     (t.hr > 0 ? `, frecuencia ${ventricular ? "ventricular " : ""}${n0(t.hr)} lpm` : "") +
     (atrial ? `, ondas P a ${n0(atrial)}/min` : "");
-  const dominant = dominantBeats(s), dominantQrs = dominant.length ? median(dominant.map((i) => s.events.beats[i].qrs!)) * 1000 : null;
   const qrs = dominantQrs ?? t.qrs;
   const intervals = [t.pr !== null ? `PR ${n0(t.pr)} ms` : "PR no medible", qrs !== null ? `QRS ${n0(qrs)} ms` : null, qtc !== null ? `QTc ${n0(qtc)} ms` : null].filter(Boolean).join(" · ");
   const axis = t.axis === null ? "Eje no determinable" : `Eje QRS ${n0(t.axis)}° (${t.axis >= -30 && t.axis <= 90 ? "normal" : t.axis < -30 && t.axis >= -90 ? "desviado a la izquierda" : t.axis > 90 && t.axis <= 180 ? "desviado a la derecha" : "extremo"})`;
   const m = leadMeasures(s);
-  const ventricularDominant = dominant.length > 0 && s.events.beats[dominant[0]].kind !== "normal";
+  const ventricularDominant = dominant.length > 0 && dominant[0].kind !== "normal";
   const wide = (qrs ?? 0) >= 120 || ventricularDominant;
   // Q waves are not read with LBBB, pre-excitation or ventricular/paced complexes; with
   // RBBB the initial forces are preserved and they are.
