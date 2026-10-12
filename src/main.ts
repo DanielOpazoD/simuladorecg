@@ -651,6 +651,8 @@ document.addEventListener("change", (e) => {
   renderControls();
   renderInfo();
   if (key.startsWith("view.")) {
+    // Same trace: the sliders keep showing the patient's natural P/T axes.
+    if (session.signal) syncNaturalAxes(session.signal);
     caliper = null;
     draw();
   } else generate();
@@ -732,6 +734,9 @@ function restoreOrigin(origin: ExplorationOrigin) {
 }
 function toggleLens(key: keyof typeof lens) {
   lens[key] = !lens[key];
+  // "Only the change" redraws a smaller signal with other row heights: a caliper
+  // placed on the previous geometry would land on another lead.
+  if (key === "change") caliper = null;
   // The previous ECG comes with the trace from the worker; ask for it once.
   if ((lens.previous || lens.change) && lesionBaseline(c) && !previousSignal) generate();
   else draw();

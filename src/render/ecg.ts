@@ -118,7 +118,8 @@ export function paperLayout(
     segments.push({
       x: 16,
       y,
-      width: widthMm - 22,
+      // The strip spans its 10 s of trace, not the blank margin after it.
+      width: c.view.speed * 10,
       height: rowHeight,
       baseline: y + rowHeight * 0.5,
       start: 0,
