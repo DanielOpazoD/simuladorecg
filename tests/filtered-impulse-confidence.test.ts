@@ -45,7 +45,7 @@ it('does not label a weak noisy impulse train as a usable ventricular rate',()=>
 });
 
 it('the browser impulse fixture passes the unchanged external integrity gate before analysis',async()=>{
- const {assessExternalWindow}=await import('../src/io/external-assessment');
+ const {assessExternalWindow}=await import('./support/external/external-assessment');
  const fs=500,weights={I:1,II:1.3,III:.3,aVR:-1.15,aVL:.35,aVF:.8,V1:-.8,V2:-.4,V3:.2,V4:.6,V5:1.1,V6:.9};
  const x=Float64Array.from({length:5000},(_,i)=>{const t=i/fs;return Math.exp(-.5*(((t+.5)%1-.5)/.006)**2)+1e-6*Math.sin(2*Math.PI*.7*t);});
  const s={fs,leads:Object.fromEntries(Object.entries(weights).map(([l,w])=>[l,Float64Array.from(x,v=>v*w)])) as Signal['leads']};
