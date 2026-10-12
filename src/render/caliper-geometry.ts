@@ -37,3 +37,12 @@ export function moveCaliper(cal:Caliper,end:Endpoint,key:string,l:Layout,v:View,
   else if(key==='ArrowDown')point.y+=gain*.01*step;
   return placeCaliper(cal,end,point,l,v,fs);
 }
+
+/** Sheet position (mm) of a client point on the canvas element that shows `l`. */
+export function sheetPoint(rect: { left: number; top: number; width: number; height: number }, clientX: number, clientY: number, l: Layout) {
+  return { x: ((clientX - rect.left) / rect.width) * l.widthMm, y: ((clientY - rect.top) / rect.height) * l.heightMm };
+}
+/** Index of the lead segment under a sheet point (edges included), or -1. */
+export function segmentIndexAt(l: Layout, p: { x: number; y: number }): number {
+  return l.segments.findIndex((s) => p.x >= s.x && p.x <= s.x + s.width && p.y >= s.y && p.y <= s.y + s.height);
+}

@@ -29,7 +29,7 @@ import {
 import { SignalController } from "./ui/signal-controller";
 import { TraceSession } from "./ui/trace-session";
 import { CaliperEditor } from "./ui/caliper-editor";
-import { initialCaliper, placeCaliper, moveCaliper } from "./render/caliper-geometry";
+import { initialCaliper, placeCaliper, moveCaliper, segmentIndexAt, sheetPoint } from "./render/caliper-geometry";
 import { practiceFeedback, type PracticeId } from "./ui/practice-feedback";
 import { createPractice, answerPractice, type PracticeState } from "./ui/practice-session";
 import { practicePanelHtml } from "./ui/practice-panel";
@@ -51,7 +51,8 @@ import {
   type Layout,
   type Caliper,
 } from "./render/ecg";
-import { icon, btn, esc, select } from "./ui/helpers";
+import { icon, btn, esc, keepInView, select } from "./ui/helpers";
+import { GAINS, SPEEDS, gainOptions, nextInCycle, speedOptions } from "./ui/view-scales";
 import { syncPauseControl } from "./ui/pause-control";
 import { controls, filterSelect, leadOptions, amplitudeControlState, tAxisControlState } from "./ui/controls";
 import { caseContext, caseReading, normalizeImportedCase } from "./presets/case-context";
@@ -300,21 +301,12 @@ function renderScales() {
   toolbar.innerHTML = `${select(
     "view.speed",
     "Velocidad",
-    [
-      [12.5, "12,5 mm/s"],
-      [25, "25 mm/s"],
-      [50, "50 mm/s"],
-    ],
+    speedOptions,
     c.view.speed,
   )}${select(
     "view.gain",
     "Ganancia",
-    [
-      [2.5, "2,5 mm/mV"],
-      [5, "5 mm/mV"],
-      [10, "10 mm/mV"],
-      [20, "20 mm/mV"],
-    ],
+    gainOptions,
     c.view.gain,
   )}${
     paper
@@ -868,25 +860,12 @@ $<HTMLInputElement>("#file-input").addEventListener("change", async (e) => {
 });
 const canvas = $<HTMLCanvasElement>("#ecg");
 function pointer(e: PointerEvent) {
-  if (!layout) return null;
-  const rect = canvas.getBoundingClientRect();
-  return {
-    x: ((e.clientX - rect.left) / rect.width) * layout.widthMm,
-    y: ((e.clientY - rect.top) / rect.height) * layout.heightMm,
-  };
+  return layout ? sheetPoint(canvas.getBoundingClientRect(), e.clientX, e.clientY, layout) : null;
 }
 canvas.addEventListener("pointerdown", (e) => {
   if (!session.caliperOn && layout && session.measurement && c.view.mode === "paper") {
     const pos = pointer(e);
-    const seg = pos
-      ? layout.segments.find(
-          (s) =>
-            pos.x >= s.x &&
-            pos.x <= s.x + s.width &&
-            pos.y >= s.y &&
-            pos.y <= s.y + s.height,
-        )
-      : null;
+    const seg = pos ? layout.segments[segmentIndexAt(layout, pos)] : undefined;
     if (seg && pos) {
       session.selectBeat(nearestBeat(
         session.measurement,
@@ -901,13 +880,7 @@ canvas.addEventListener("pointerdown", (e) => {
   if (!session.caliperOn || !layout || (c.view.mode === "monitor" && !session.paused)) return;
   const pos = pointer(e);
   if (!pos) return;
-  const i = layout.segments.findIndex(
-    (s) =>
-      pos.x >= s.x &&
-      pos.x <= s.x + s.width &&
-      pos.y >= s.y &&
-      pos.y <= s.y + s.height,
-  );
+  const i = segmentIndexAt(layout, pos);
   if (i < 0) return;
   if (!session.signal) return;
   caliper = placeCaliper(initialCaliper(layout,c.view,session.signal.fs,i),1,pos,layout,c.view,session.signal.fs);
@@ -941,11 +914,10 @@ document.addEventListener("keydown", (e) => {
     e.preventDefault();
     caliper=moveCaliper(caliper??initialCaliper(layout,c.view,session.signal.fs),caliperEditor.endpoint,e.key,layout,c.view,session.signal.fs,e.shiftKey);
     draw();
-    const wrap=$("#canvas-wrap"),r=canvas.getBoundingClientRect(),w=wrap.getBoundingClientRect();
-    const x=r.left+(caliperEditor.endpoint===1?caliper.x1:caliper.x2)/layout.widthMm*r.width;
-    const y=r.top+(caliperEditor.endpoint===1?caliper.y1:caliper.y2)/layout.heightMm*r.height;
-    if(x<w.left+20)wrap.scrollLeft+=x-w.left-20;else if(x>w.right-20)wrap.scrollLeft+=x-w.right+20;
-    if(y<w.top+20)wrap.scrollTop+=y-w.top-20;else if(y>w.bottom-20)wrap.scrollTop+=y-w.bottom+20;
+    const r=canvas.getBoundingClientRect(), end=caliperEditor.endpoint===1;
+    keepInView($("#canvas-wrap"),
+      r.left+(end?caliper.x1:caliper.x2)/layout.widthMm*r.width,
+      r.top+(end?caliper.y1:caliper.y2)/layout.heightMm*r.height);
     return;
   }
   if (!['m','p','r','v','g','c',' '].includes(key)) return;
@@ -954,8 +926,14 @@ document.addEventListener("keydown", (e) => {
   if (key==='c') $<HTMLButtonElement>('[data-action="caliper"]').click();
   const mode=({m:'monitor',p:'paper',r:'rhythm'} as Record<string,string>)[key];
   if(mode)$<HTMLButtonElement>(`[data-mode="${mode}"]`).click();
-  if(key==='v') {const a=[12.5,25,50];c.view.speed=a[(a.indexOf(c.view.speed)+1)%3];caliper=null;renderScales();renderDescription();draw();}
-  if(key==='g') {const a=[2.5,5,10,20];c.view.gain=a[(a.indexOf(c.view.gain)+1)%4];c.view.chestGain=c.view.gain;caliper=null;renderScales();renderDescription();draw();}
+  if (key === 'v' || key === 'g') {
+    if (key === 'v') c.view.speed = nextInCycle(SPEEDS, c.view.speed);
+    else c.view.gain = c.view.chestGain = nextInCycle(GAINS, c.view.gain);
+    caliper = null;
+    renderScales();
+    renderDescription();
+    draw();
+  }
 });
 new ResizeObserver(() => {
   window.clearTimeout(resizeTimer);
