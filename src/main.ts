@@ -704,6 +704,90 @@ function startQuiz() {
   renderInfo();
   $("#quiz-panel").scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
+function leavePractice() {
+  quiz = null;
+  renderQuiz();
+}
+/** A whole case from outside the catalog (saved, imported file or shared link). */
+function openCase(next: ECGCase) {
+  c = withInterfaceView(next);
+  explorationOrigin = null;
+  leavePractice();
+  renderCatalog();
+  renderControls();
+  renderInfo();
+  generate();
+}
+/** Back to the preset the exploration started from, keeping the current view. */
+function restoreOrigin(origin: ExplorationOrigin) {
+  c = restoreExplorationOrigin(origin, c);
+  caliper = null;
+  session.resetTools();
+  annotations = false;
+  renderCatalog();
+  renderControls();
+  renderInfo();
+  generate();
+  toast("Origen restaurado; se conserva la vista actual.");
+}
+function toggleLens(key: keyof typeof lens) {
+  lens[key] = !lens[key];
+  // The previous ECG comes with the trace from the worker; ask for it once.
+  if ((lens.previous || lens.change) && lesionBaseline(c) && !previousSignal) generate();
+  else draw();
+}
+/** Buttons ([data-action]) owned here; workspace navigation and export have their own. */
+const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
+  "clear-search": () => {
+    search = ""; group = "";
+    $<HTMLInputElement>("#case-search").value = "";
+    renderCatalog(); $("#case-search").focus();
+  },
+  "exploration-changes": () => showExplorationChanges(),
+  "description-info": (target) => {
+    if (!description) return;
+    const kind = target.closest<HTMLElement>("[data-info]")!.dataset.info as DescriptionInfo;
+    openDialog(descriptionInfoTitle(kind), descriptionInfoHtml(kind, description.measures));
+  },
+  "restore-origin": () => { if (explorationOrigin) restoreOrigin(explorationOrigin); },
+  pause: () => {
+    if (!session.signal || c.view.mode !== "monitor") return;
+    session.togglePause(c.view.mode);
+    syncTraceTools();
+  },
+  caliper: () => {
+    if (!session.signal || c.view.mode === "monitor") return;
+    session.toggleCaliper(c.view.mode);
+    if (!session.caliperOn) caliper = null;
+    else if (layout) caliper = initialCaliper(layout, c.view, session.signal.fs);
+    draw();
+    if (session.caliperOn) $<HTMLCanvasElement>("#ecg").focus();
+  },
+  "clear-caliper": () => { caliper = null; draw(); },
+  annotations: () => { annotations = !annotations; draw(); },
+  "lens-previous": () => toggleLens("previous"),
+  "lens-change": () => toggleLens("change"),
+  "lens-st": () => toggleLens("st"),
+  sound: async () => {
+    audioOn = !audioOn;
+    if (audioOn) {
+      audioContext ??= new AudioContext();
+      await audioContext.resume();
+    }
+    $('[data-action="sound"]').classList.toggle("active", audioOn);
+    toast(audioOn ? "Sonido activado" : "Sonido desactivado");
+  },
+  theme: () => {
+    applyTheme(currentTheme() === "dark" ? "light" : "dark", true);
+    draw();
+  },
+  reset: () => {
+    if (explorationOrigin && explorationChanges(explorationOrigin, c).length) restoreOrigin(explorationOrigin);
+    else { selectPreset(c.presetId === "custom" ? "sinus" : c.presetId); toast("Parámetros restablecidos"); }
+  },
+  quiz: () => startQuiz(),
+  "end-quiz": () => { leavePractice(); renderInfo(); draw(); },
+};
 document.addEventListener("click", async (e) => {
   const target = e.target as HTMLElement,
     variant = target.closest<HTMLElement>("[data-variant]"),
@@ -717,14 +801,13 @@ document.addEventListener("click", async (e) => {
     const id = variant.dataset.variant!;
     const active = currentPreset();
     if (!active || !diagnosisForPreset(active).variants.some(v => v.id === id) || active.id === id) return;
-    quiz = null; renderQuiz(); selectPreset(id);
+    leavePractice(); selectPreset(id);
     document.getElementById(`variant-tab-${id}`)?.focus({preventScroll:true});
     return;
   }
   if (preset) {
     if (quiz && !quiz.answer) return;
-    quiz = null;
-    renderQuiz();
+    leavePractice();
     selectPreset(preset.dataset.preset!);
     return;
   }
@@ -749,81 +832,15 @@ document.addEventListener("click", async (e) => {
   if (saved) {
     const selected = savedCaseAt(savedCaseSnapshot, Number(saved.dataset.saved));
     if (!selected) { toast("El caso seleccionado no está disponible; vuelve a abrir la lista."); return; }
-    c = withInterfaceView(selected);
-    explorationOrigin=null;
     closeDialog();
-    quiz = null;
-    renderQuiz();
-    renderCatalog();
-    renderControls();
-    renderInfo();
-    generate();
+    openCase(selected);
     return;
   }
   const action = target.closest<HTMLElement>("[data-action]")?.dataset.action;
   if (!action) return;
-  if (action === "clear-search") {
-    search = ""; group = "";
-    $<HTMLInputElement>("#case-search").value = "";
-    renderCatalog(); $("#case-search").focus();
-  }
-  if(action==="exploration-changes") showExplorationChanges();
-  if (action === "description-info" && description) {
-    const kind = target.closest<HTMLElement>("[data-info]")!.dataset.info as DescriptionInfo;
-    openDialog(descriptionInfoTitle(kind), descriptionInfoHtml(kind, description.measures));
-  }
-  if(action==="restore-origin"&&explorationOrigin){c=restoreExplorationOrigin(explorationOrigin,c);caliper=null;session.resetTools();annotations=false;renderCatalog();renderControls();renderInfo();generate();toast("Origen restaurado; se conserva la vista actual.")}
   if (action === "parameters" && !(quiz && !quiz.answer)) $<HTMLDetailsElement>("#adjust").open = true;
   if (workspaceNavigation.handle(action, !!quiz && !quiz.answer)) return;
-  if (action === "pause") {
-    if (!session.signal || c.view.mode !== "monitor") return;
-    session.togglePause(c.view.mode);
-    syncTraceTools();
-  }
-  if (action === "caliper") {
-    if (!session.signal || c.view.mode === "monitor") return;
-    session.toggleCaliper(c.view.mode);
-    if (!session.caliperOn) caliper = null;
-    else if (layout) caliper = initialCaliper(layout, c.view, session.signal.fs);
-    draw();
-    if (session.caliperOn) $<HTMLCanvasElement>("#ecg").focus();
-  }
-  if (action === "clear-caliper") {
-    caliper = null;
-    draw();
-  }
-  if (action === "annotations") {
-    annotations = !annotations;
-    draw();
-  }
-  if (action === "lens-previous" || action === "lens-change" || action === "lens-st") {
-    const key = action === "lens-previous" ? "previous" : action === "lens-change" ? "change" : "st";
-    lens[key] = !lens[key];
-    // The previous ECG comes with the trace from the worker; ask for it once.
-    if ((lens.previous || lens.change) && lesionBaseline(c) && !previousSignal) generate();
-    else draw();
-  }
-  if (action === "sound") {
-    audioOn = !audioOn;
-    if (audioOn) {
-      audioContext ??= new AudioContext();
-      await audioContext.resume();
-    }
-    $('[data-action="sound"]').classList.toggle("active", audioOn);
-    toast(audioOn ? "Sonido activado" : "Sonido desactivado");
-  }
-  if (action === "theme") {
-    applyTheme(currentTheme() === "dark" ? "light" : "dark", true);
-    draw();
-  }
-  if(action==="reset"){if(explorationOrigin&&explorationChanges(explorationOrigin,c).length){c=restoreExplorationOrigin(explorationOrigin,c);caliper=null;session.resetTools();annotations=false;renderCatalog();renderControls();renderInfo();generate();toast("Origen restaurado; se conserva la vista actual.")}else{selectPreset(c.presetId==="custom"?"sinus":c.presetId);toast("Parámetros restablecidos")}}
-  if (action === "quiz") startQuiz();
-  if (action === "end-quiz") {
-    quiz = null;
-    renderQuiz();
-    renderInfo();
-    draw();
-  }
+  if (Object.hasOwn(ACTIONS, action)) await ACTIONS[action](target);
   await handleExportAction(action, {
     c,
     signal: session.signal,
@@ -840,15 +857,9 @@ $<HTMLInputElement>("#file-input").addEventListener("change", async (e) => {
   try {
     if (f.size > 50000)
       throw new Error("El caso excede el tamaño máximo de 50 kB.");
-    c = withInterfaceView(normalizeImportedCase(JSON.parse(await f.text())));
-    explorationOrigin=null;
-    quiz = null;
+    const next = normalizeImportedCase(JSON.parse(await f.text()));
     closeDialog();
-    renderQuiz();
-    renderControls();
-    renderCatalog();
-    renderInfo();
-    generate();
+    openCase(next);
     toast("Caso importado");
   } catch (err) {
     toast("No se pudo importar: " + (err as Error).message);
@@ -959,24 +970,14 @@ let resizeTimer = 0;
 window.addEventListener("hashchange", () => {
   try {
     const next = decodeCase(location.hash);
-    if (next) {
-      c = withInterfaceView(next);
-      explorationOrigin=null;
-      quiz = null;
-      renderQuiz();
-      renderCatalog();
-      renderControls();
-      renderInfo();
-      generate();
-    }
+    if (next) openCase(next);
   } catch (err) {
     toast((err as Error).message);
   }
 });
 document.querySelector(".brand")!.addEventListener("click", (e) => {
   e.preventDefault();
-  quiz = null;
-  renderQuiz();
+  leavePractice();
   selectPreset("sinus");
 });
 renderCatalog();
