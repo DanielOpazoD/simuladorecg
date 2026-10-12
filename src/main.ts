@@ -33,7 +33,7 @@ import { initialCaliper, placeCaliper, moveCaliper } from "./render/caliper-geom
 import { practiceFeedback, type PracticeId } from "./ui/practice-feedback";
 import { createPractice, answerPractice, type PracticeState } from "./ui/practice-session";
 import { practicePanelHtml } from "./ui/practice-panel";
-import { changeCase, isCaseControlKey, controlValue, withInterfaceView } from "./ui/case-state";
+import { changeCase, isCaseControlKey, controlValue, keepsPractice, withInterfaceView } from "./ui/case-state";
 import { representativeBeat, nearestBeat } from "./ui/beat-selection";
 import { measurementDialog } from "./ui/measurement-dialog";
 import { auditMeasurement } from "./engine/analysis/model-audit";
@@ -373,8 +373,9 @@ function syncTraceTools() {
   waves.hidden = !paper;
   waves.classList.toggle("active", ready && paper && annotations);
   waves.setAttribute("aria-pressed", String(ready && paper && annotations));
-  const lesion = !!lesionBaseline(c) && !(quiz && !quiz.answer);
-  for (const [action, on, enabled] of [["lens-previous", lens.previous, lesion], ["lens-change", lens.change, lesion], ["lens-st", lens.st, true]] as const) {
+  const practice = !!quiz && !quiz.answer, lesion = !!lesionBaseline(c) && !practice;
+  // Lenses that would reveal the answer are hidden during an unanswered exercise.
+  for (const [action, on, enabled] of [["lens-previous", lens.previous, lesion], ["lens-change", lens.change, lesion], ["lens-st", lens.st, !practice]] as const) {
     const b = $<HTMLButtonElement>(`[data-action="${action}"]`), active = ready && paper && enabled && on;
     b.disabled = !paper || !ready || !enabled;
     b.classList.toggle("active", active);
@@ -574,7 +575,7 @@ function selectPreset(id: string) {
 }
 function setValue(key: string, value: unknown) {
   if (!isCaseControlKey(key)) return;
-  if (quiz && !key.startsWith("view.")) { quiz = null; renderQuiz(); renderInfo(); }
+  if (quiz && !keepsPractice(key)) { quiz = null; renderQuiz(); renderInfo(); }
   if (key.startsWith("view.")) caliper = null;
   c = changeCase(c, key, value);
   if (session.measurement && (key === "view.timing" || key === "view.format"))
@@ -942,8 +943,8 @@ document.addEventListener("keydown", (e) => {
   if (key==='c') $<HTMLButtonElement>('[data-action="caliper"]').click();
   const mode=({m:'monitor',p:'paper',r:'rhythm'} as Record<string,string>)[key];
   if(mode)$<HTMLButtonElement>(`[data-mode="${mode}"]`).click();
-  if(key==='v') {const a=[12.5,25,50];c.view.speed=a[(a.indexOf(c.view.speed)+1)%3];caliper=null;renderScales();draw();}
-  if(key==='g') {const a=[2.5,5,10,20];c.view.gain=a[(a.indexOf(c.view.gain)+1)%4];c.view.chestGain=c.view.gain;caliper=null;renderScales();draw();}
+  if(key==='v') {const a=[12.5,25,50];c.view.speed=a[(a.indexOf(c.view.speed)+1)%3];caliper=null;renderScales();renderDescription();draw();}
+  if(key==='g') {const a=[2.5,5,10,20];c.view.gain=a[(a.indexOf(c.view.gain)+1)%4];c.view.chestGain=c.view.gain;caliper=null;renderScales();renderDescription();draw();}
 });
 new ResizeObserver(() => {
   window.clearTimeout(resizeTimer);

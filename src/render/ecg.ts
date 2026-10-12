@@ -369,6 +369,8 @@ function drawStLens(ctx: CanvasRenderingContext2D, s: Signal, seg: Segment, c: E
   const a = s.leads[seg.lead], gain = leadGain(seg.lead, c.view) * seg.polarity, scale = c.view.speed;
   const X = (t: number) => seg.x + (t - seg.start) * scale, Y = (v: number) => seg.baseline - v * gain;
   const marks = stMarks(s, seg.lead, seg.start, seg.start + seg.duration);
+  // The caller's pen (height-fitted stroke width) must survive the overlay.
+  ctx.save();
   marks.forEach((m, k) => {
     const i0 = Math.round(m.jTime * s.fs), i1 = Math.round(m.endTime * s.fs);
     if (m.kind) {
@@ -403,8 +405,7 @@ function drawStLens(ctx: CanvasRenderingContext2D, s: Signal, seg: Segment, c: E
       ctx.fillText("J", X(m.jTime) - 0.7, Y(a[i0]) - 2.1);
     }
   });
-  ctx.strokeStyle = palette.trace;
-  ctx.lineWidth = 0.29;
+  ctx.restore();
 }
 
 /** The overlay receives only measured sample-domain boundaries, never source events. */
