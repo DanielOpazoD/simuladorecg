@@ -1,4 +1,4 @@
-import { LEADS, type Lead } from '../engine/types';
+import { LEADS, type Lead } from '../../../src/engine/types';
 import type { ExternalECG } from './external-ecg';
 import { assertExternalSamples } from './external-assessment';
 

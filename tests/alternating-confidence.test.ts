@@ -36,6 +36,6 @@ it('preserves already unavailable evidence and numeric data',()=>{
  expect(reviewAlternatingCandidates(s,m)).toBe(m);
 });
 it('external fixture admission is independent of its confidence result',async()=>{
- const {assessExternalWindow}=await import('../src/io/external-assessment');
+ const {assessExternalWindow}=await import('./support/external/external-assessment');
  expect(assessExternalWindow(alternatingFixture()).analysisAllowed).toBe(true);
 });

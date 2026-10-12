@@ -1,4 +1,4 @@
-import { LEADS, type Lead, type Measurement, type Signal } from '../engine/types';
+import { LEADS, type Lead, type Measurement, type Signal } from '../../../src/engine/types';
 
 type Samples = Pick<Signal, 'fs' | 'leads'>;
 export const EXTERNAL_ANALYSIS_POLICY = 'external-500hz-10s-v1';

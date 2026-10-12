@@ -1,6 +1,6 @@
 import {it,expect} from 'vitest';
 import {wideDeflectionFixture,wideDeflectionCsv} from './support/wide-qrs-browser-fixture.mjs';
-import {assessExternalWindow} from '../src/io/external-assessment';
+import {assessExternalWindow} from './support/external/external-assessment';
 import {analyzeSamples} from '../src/engine/sample-analysis';
 it('admits the analytical browser fixture without weakening reader safeguards',()=>{
  const s=wideDeflectionFixture(),assessment=assessExternalWindow(s);

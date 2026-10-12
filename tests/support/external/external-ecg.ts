@@ -1,4 +1,4 @@
-import { LEADS, type Lead, type Signal } from '../engine/types';
+import { LEADS, type Lead, type Signal } from '../../../src/engine/types';
 
 /** A recording is samples, not a synthetic case. Never attach truth, events or diagnosis. */
 export interface ExternalECG extends Pick<Signal, 'fs' | 'leads'> {

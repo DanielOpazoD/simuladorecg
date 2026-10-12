@@ -1,7 +1,7 @@
 import { describe, it } from 'vitest';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { parseWfdb16, parseECGCsv, externalWindow, exportECGCsv } from '../src/io/external-ecg';
+import { parseWfdb16, parseECGCsv, externalWindow, exportECGCsv } from './support/external/external-ecg';
 import { LEADS } from '../src/engine/types';
 import { analyzeSamples } from '../src/engine/sample-analysis';
 

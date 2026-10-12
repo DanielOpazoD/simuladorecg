@@ -4,10 +4,10 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { LEADS, type Lead } from '../src/engine/types';
 import { analyzeSamples } from '../src/engine/sample-analysis';
-import { externalWindow, exportECGCsv, parseECGCsv, type ExternalECG } from '../src/io/external-ecg';
-import { assessExternalWindow, evaluateExternalWindow, assertExternalSamples } from '../src/io/external-assessment';
+import { externalWindow, exportECGCsv, parseECGCsv, type ExternalECG } from './support/external/external-ecg';
+import { assessExternalWindow, evaluateExternalWindow, assertExternalSamples } from './support/external/external-assessment';
 import { fingerprintECG, importReview, intervalMs, ManualHistory, MAX_REVIEW_BYTES, reviewSidecar,
-  validateBounds, type BuildProvenance, type ManualAnnotation, type SignalIdentity } from '../src/io/external-review';
+  validateBounds, type BuildProvenance, type ManualAnnotation, type SignalIdentity } from './support/external/external-review';
 
 const build: BuildProvenance = {appVersion:'1.5.0', commit:'a'.repeat(40), sourceSha256:'b'.repeat(64), analysisSourceSha256:'c'.repeat(64), dirty:false};
 function fixture(fs = 500): ExternalECG {
