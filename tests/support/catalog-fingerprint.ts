@@ -7,8 +7,7 @@ import { expect } from "vitest";
  * A SHA-256 of the raw sample buffer differs between Linux x64 and macOS arm64
  * because libm-level transcendental results may differ by one ULP. These values
  * tolerate that last-bit rounding noise while still failing on any
- * morphological change. Exact sample identity remains enforced on Linux CI by
- * scripts/validate-posterior-amplitude.mjs.
+ * morphological change. They are the catalog's sample regression contract.
  */
 export interface CatalogFingerprint {
   n: number;

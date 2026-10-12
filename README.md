@@ -45,29 +45,24 @@ npm run dev
 `check` ejecuta pruebas, TypeScript y compilación; no incluye navegador. Abrir mediante HTTP, no como archivo local. P4 actualiza metadatos y documentación; P6 extrae el estado de sesión del trazado. Ninguno modifica el motor ni el analizador.
 
 ```bash
-# Comparación de señal con la referencia v1.3, sin modificarla:
-node scripts/validate-repolarization.mjs --output .sites-runtime/repolarization.json
-# Requiere historial con 38c0cd3; alternativa: --baseline-dir /ruta/v1.3
-
 # LUDB: subconjunto conocido de regresión, NO una reserva clínica nueva:
 node scripts/validate-analysis.mjs --split=all --output .sites-runtime/analysis-current.json
 
 # Después de npm run build, desde un commit limpio:
 npm ci
-npx playwright install chromium
+npx playwright install chromium   # firefox y webkit para las pruebas multinavegador
 npx vite preview --host 127.0.0.1 --port 5173 --strictPort
 # En otra terminal:
 node scripts/verify-production.mjs
 node tests/browser-fidelity.mjs
 ```
 
-Playwright es una dependencia temporal de pruebas, no del producto. Con Vitest 4,
-`--legacy-peer-deps` evita un fallo interno de npm al resolver su peer opcional;
-`--no-save --package-lock=false` conserva los manifiestos y el lockfile.
+Playwright está fijado en `devDependencies` (1.63.0) solo para las pruebas de
+navegador; no forma parte del producto. La versión de Node está en `.nvmrc`.
 
 Las salidas nuevas se guardan en `.sites-runtime/` o la ruta indicada, sin sobrescribir evidencia histórica de `docs/`. El informe de análisis incluye versión real, commit/árbol cuando existen, estado de los archivos evaluados y SHA-256 de sus fuentes. Un archivo fuente sin historial informa procedencia Git desconocida; no inventa un SHA ni un estado limpio.
 
-CI (`.github/workflows/fidelity.yml`) comprueba PR, push a `main` y ejecución manual; sirve **dist**, comprueba identidad y ejecuta Chromium. Los artefactos se vinculan al SHA (retención 14 días). El workflow no activa por sí solo la protección administrativa de rama: ver [contrato P3](docs/p3-ci-contract.md).
+La CI obligatoria de cada PR y push a `main` es `.github/workflows/ci.yml`: pruebas, tipos, build y humo en Chromium de todos los presets. `fidelity.yml` (referencia del analizador congelado) solo se ejecuta a mano; sirve **dist**, comprueba identidad y ejecuta Chromium, Firefox y WebKit, con artefactos vinculados al SHA (retención 14 días). Los oráculos de comparación exacta contra versiones anteriores del generador se retiraron al cambiar a la base aprendida; siguen en el historial de git y sus informes en `docs/`. Ver [contrato P3](docs/p3-ci-contract.md).
 
 ## Alcance actual, contratos y limitaciones
 

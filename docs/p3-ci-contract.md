@@ -1,5 +1,12 @@
 # P3 · CI del código integrado y del artefacto servido
 
+> **Estado (octubre de 2026).** Desde la decisión F0 de `docs/fidelidad.md`, la CI
+> obligatoria de PR y `main` es `ci.yml`; `ECG fidelity` solo se ejecuta a mano.
+> Los oráculos de comparación exacta descritos en «Invariantes» (incluido
+> `validate-repolarization.mjs`) se retiraron cuando el generador pasó a la base
+> aprendida y quedan como registro histórico en git. La verificación del artefacto
+> servido (`verify-production.mjs`) y las pruebas de navegador siguen vigentes.
+
 ## Contrato ejecutable
 
 `ECG fidelity` se ejecuta en cada pull request, push a `main`, ramas históricas
@@ -13,7 +20,7 @@ y compara sus bytes con el build local, incluido el worker. El navegador verific
 que usa assets compilados y no importa `/src/` ni `@vite/client`.
 Esto prueba el artefacto servido en CI, no el despliegue de la URL privada.
 
-## Invariantes que ahora hacen fallar CI
+## Invariantes de P3 (histórico, retirado)
 
 `validate-repolarization.mjs` usa los mismos validadores de
 `tests/fidelity-gates.test.mjs`. Siete mutaciones negativas cubren cambio de voltaje,
@@ -48,7 +55,7 @@ administrativa queda pendiente hasta confirmarla mediante la API de GitHub.
 ```bash
 npm ci
 npm run check
-node scripts/validate-repolarization.mjs
+npm run build
 npx vite preview --host 127.0.0.1 --port 5173 --strictPort
 # En otra terminal, con el mismo commit limpio y Playwright instalado:
 node scripts/verify-production.mjs

@@ -47,14 +47,12 @@ Comando después de instalar las dependencias de desarrollo y Playwright:
 npm ci
 npm test
 npm run build
-npm install --no-save --package-lock=false --legacy-peer-deps playwright@1.63.0
 npx playwright install --with-deps chromium webkit firefox
 # Servir dist en http://127.0.0.1:5173/ (vite preview)
 ECG_TEST_URL=http://127.0.0.1:5173/ node tests/browser-accessibility.mjs
 ```
 
-El flag `--legacy-peer-deps` evita el fallo de resolución de npm con el peer
-opcional de Vitest 4, sin cambiar `package.json` ni `package-lock.json`.
+Playwright 1.63.0 ya está en `devDependencies`, así que `npm ci` lo instala.
 En macOS basta `npx playwright install chromium webkit firefox`; `--with-deps`
 instala además los paquetes de sistema necesarios en Linux.
 
