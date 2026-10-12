@@ -32,13 +32,15 @@ export function realisticPatient(c: ECGCase): Patient {
   if (!model) throw new Error("El caso no usa el modelo aprendido.");
   const pAxis = c.naturalPAxis === false ? c.pAxis : null;
   const tAxis = naturalTAxis(c) ? null : c.tAxis;
-  const key = [model, c.seed, c.axis, pAxis, tAxis, c.pAmp, qrsAmplitudeScale(c), c.tAmp, c.transition].join("|");
+  // Without conducted beats (VVI/DDD) the QRS axis control does not apply: the
+  // atrial patient keeps its natural axes. The key holds the axis actually used, so
+  // a sinus case and its paced variant never share a patient.
+  const axis = noConductedBeats(c) ? null : c.axis;
+  const key = [model, c.seed, axis, pAxis, tAxis, c.pAmp, qrsAmplitudeScale(c), c.tAmp, c.transition].join("|");
   let p = patients.get(key);
   if (!p) {
     p = samplePatient({
-      // Without conducted beats (VVI/DDD) the QRS axis control does not apply: the
-      // atrial patient keeps its natural axes.
-      model, seed: c.seed, axis: noConductedBeats(c) ? null : c.axis, pAxis, tAxis,
+      model, seed: c.seed, axis, pAxis, tAxis,
       pScale: c.pAmp / P_REFERENCE_AMPLITUDE, qrsScale: qrsAmplitudeScale(c),
       // Secondary repolarization (bundle-branch block, LVH strain) follows the
       // depolarization: the QRS gain scales ST-T (ST/QRS ratios hold) and the T
@@ -149,6 +151,8 @@ export class RealisticTrack {
     let i1 = 0, avf = 0;
     for (const b of beats) {
       if (b.kind !== "normal" || b.qrs === undefined) continue;
+      // A QRS cut by the end of the buffer has no complete area: skip it.
+      if (Math.floor((b.time + b.qrs) * this.fs) > this.acc[0].length) continue;
       // Areas from the end-of-PR level, as electrocardiographs measure the axis.
       const k0 = Math.ceil(b.time * this.fs), pr = (lead: number) => {
         let sum = 0;
