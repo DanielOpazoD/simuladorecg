@@ -284,6 +284,13 @@ function hideInactiveControls() {
     const input = field.querySelector<HTMLInputElement | HTMLSelectElement>("[data-key]");
     if (input) field.hidden = input.disabled;
   }
+  // A panel left without any control says so instead of looking empty.
+  for (const panel of $("#inspector").querySelectorAll<HTMLElement>("[data-control-panel]")) {
+    const any = [...panel.querySelectorAll<HTMLElement>(".range-field, .field, .toggle")].some((f) => !f.hidden && !f.closest(".inactive-controls, #regional-activation-controls[hidden]"));
+    let note = panel.querySelector<HTMLElement>(".controls-empty");
+    if (!any && !note) { note = document.createElement("p"); note.className = "control-note controls-empty"; note.textContent = "Ningún control de esta pestaña actúa en este ritmo."; panel.prepend(note); }
+    if (note) note.hidden = any;
+  }
   const tAxis = document.querySelector<HTMLInputElement>('[data-key="tAxis"]');
   const tNote = document.querySelector<HTMLElement>("#t-axis-note");
   if (tAxis && tNote) tNote.hidden = tAxis.disabled;

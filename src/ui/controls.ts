@@ -96,7 +96,7 @@ export function controls(c: ECGCase) {
  ${range("hr", rhythm.baseRateLabel, 20, 250, 1, c.hr, "lpm", rhythm.baseRateDisabled)}
  ${range("pr", naturalLabel(c, "pr", "Intervalo PR"), 80, 400, 5, c.pr, "ms", rhythm.prDisabled)}${range("qrs", naturalLabel(c, "qrs", "Duración QRS"), regionalActivationState(c).active ? regionalActivationState(c).minimumQrsMs : 60, 240, 5, c.qrs, "ms", rhythm.noOrganizedBeats)}${range("qtc", naturalLabel(c, "qtc", "QTc · Fridericia"), 260, 650, 5, c.qtc, "ms", rhythm.noOrganizedBeats)}${range("axis", naturalLabel(c, "axis", "Eje QRS solicitado"), -180, 180, 5, c.axis, "°", rhythm.qrsAxisDisabled)}${range("variability", "Variabilidad sinusal RR", 0, 0.3, 0.01, c.variability, "", rhythm.variabilityDisabled)}
  ${range("atrialRate", "FC auricular independiente", 40, 350, 5, c.atrialRate, "lpm", rhythm.atrialRateDisabled)}
- </div><details class="control-limits"><summary>Límites del modelo</summary><p class="control-note">Los controles atenuados no actúan en el ritmo seleccionado; conservan su valor para otros ritmos. FC auricular independiente: flutter, BAV completo y TV. El QT se adapta a la historia de RR con memoria exponencial de ≈40 s; no responde de golpe a un RR aislado.</p></details></div>
+ </div><details class="control-limits"><summary>Límites del modelo</summary><p class="control-note">Los controles que no actúan en el ritmo seleccionado se ocultan; conservan su valor para otros ritmos. FC auricular independiente: flutter, BAV completo y TV. El QT se adapta a la historia de RR con memoria exponencial de ≈40 s; no responde de golpe a un RR aislado.</p></details></div>
  <div class="control-panel" data-control-panel="conduction"><div class="field-grid">
  ${contextualSelect(
    "rhythm",

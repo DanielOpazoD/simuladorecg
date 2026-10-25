@@ -13,7 +13,7 @@ import { esc } from "./helpers";
  */
 const SPEED = 50, GAIN = 10, BEFORE = 0.16, AFTER = 0.62, RANGE_MV = 1.3;
 const mmText = (mv: number) => `${mv >= 0 ? "+" : "−"}${Math.abs(mv * 10).toFixed(1).replace(".", ",")} mm`;
-const msText = (s: number) => `${s >= 0 ? "+" : "−"}${Math.round(Math.abs(s) * 1000)} ms`;
+const msText = (s: number) => { const v = Math.round(s * 1000); return `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v)} ms`; };
 
 /** The beat whose J-point ST is the median of the lead's dominant beats. */
 function representative(s: Signal, lead: Lead): StMark | null {
@@ -75,9 +75,10 @@ export function mountStZoom(root: HTMLElement, s: Signal, lead: Lead, palette: P
     ctx.strokeStyle = palette.trace; ctx.lineWidth = 1.6; ctx.beginPath();
     for (let i = Math.floor(t0 * fs); i <= Math.ceil(t1 * fs); i++) { const x = X(i / fs), y = Y(a[i]); i === Math.floor(t0 * fs) ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
     ctx.stroke();
-    // Automatic J and J+60 levels.
-    for (const [dt, v] of [[0, mark.j0], [ST_LENS.j60S, mark.j60]] as const) {
-      const x = X(mark.jTime + dt), y = Y(mark.prLevel + v);
+    // J and J+60 on the trace (instantaneous samples; the description's J is the mean
+    // of its first 10 ms, given in the readout).
+    for (const dt of [0, ST_LENS.j60S]) {
+      const x = X(mark.jTime + dt), v = at(mark.jTime + dt) - mark.prLevel, y = Y(mark.prLevel + v);
       ctx.fillStyle = v >= 0 ? palette.sdst : palette.idst; ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
       ctx.fillText(mmText(v), x + 6, y - 6);
     }
@@ -92,7 +93,7 @@ export function mountStZoom(root: HTMLElement, s: Signal, lead: Lead, palette: P
     const parts = points.map((t, i) => `Punto ${i + 1}: ${describe(t)}`);
     if (points.length === 2) parts.push(`Diferencia: ${Math.round(Math.abs(points[1] - points[0]) * 1000)} ms, ${mmText(at(points[1]) - at(points[0]))}`);
     if (!points.length && hover !== undefined) parts.push(`Cursor: ${describe(hover)}`);
-    out.textContent = parts.join(" · ") || `Automático: J ${mmText(mark.j0)}, J+60 ${mmText(mark.j60)}. Haz clic para marcar puntos.`;
+    out.textContent = parts.join(" · ") || `Lectura de la descripción: J ${mmText(mark.j0)} (media de sus primeros 10 ms) y J+60 ${mmText(mark.j60)}. Haz clic para marcar puntos.`;
   };
   const timeOf = (e: PointerEvent) => T(e.clientX - canvas.getBoundingClientRect().left);
   canvas.addEventListener("pointermove", (e) => { const t = timeOf(e); draw(t); report(t); });

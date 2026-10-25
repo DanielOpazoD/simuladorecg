@@ -81,7 +81,7 @@ CONTENT.axis = {
   items: [
     ["Normal (adulto)", "De −30° a +90°."],
     ["Desviación a la izquierda", "De −30° a −90°. Un eje de −45° a −90° con qR en aVL y rS en las inferiores sugiere hemibloqueo anterior izquierdo."],
-    ["Desviación a la derecha", "De +90° a +180°. Con rS en I y qR en las inferiores, y sin otra causa (sobrecarga derecha, etc.), sugiere hemibloqueo posterior izquierdo."],
+    ["Desviación a la derecha", "De +90° a +180°. Con rS en I y aVL y qR en las inferiores, y sin otra causa (sobrecarga derecha, etc.), sugiere hemibloqueo posterior izquierdo."],
     ["Extremo («tierra de nadie»)", "De −90° a ±180°: QRS negativo en I y en aVF. Hace pensar en ritmo ventricular, inversión de electrodos o cardiopatía congénita."],
     ["Cómo estimarlo", "Mira el signo neto del QRS en I y en aVF para ubicar el cuadrante; luego busca la derivación más isodifásica: el eje es perpendicular a ella."],
   ],
@@ -97,8 +97,8 @@ export function hexaxialSvg(axis: number | null): string {
   const arc = (a0: number, a1: number, color: string) => { const [x0, y0] = at(a0), [x1, y1] = at(a1), large = Math.abs(a1 - a0) > 180 ? 1 : 0; return `<path d="M${c},${c} L${x0.toFixed(1)},${y0.toFixed(1)} A${r},${r} 0 ${large} 1 ${x1.toFixed(1)},${y1.toFixed(1)} Z" fill="${color}"/>`; };
   const leads: [string, number][] = [["I", 0], ["II", 60], ["III", 120], ["aVF", 90], ["aVL", -30], ["aVR", -150]];
   const label = (text: string, deg: number, k: number, cls = "") => { const [x, y] = at(deg, k); return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle"${cls ? ` class="${cls}"` : ""}>${text}</text>`; };
-  const arrow = axis === null ? "" : (() => { const [x, y] = at(axis, r - 6); return `<line x1="${c}" y1="${c}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" class="hex-axis" marker-end="url(#hex-head)"/>${label(`${Math.round(axis)}°`, axis, r + 30, "hex-axis-label")}`; })();
-  return `<svg class="hexaxial" viewBox="-30 -20 360 340" role="img" aria-label="Sistema hexaxial: eje normal de −30° a +90°${axis === null ? "" : `; eje de este caso ${Math.round(axis)}°`}"><defs><marker id="hex-head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="hex-head"/></marker></defs>` +
+  const arrow = axis === null ? "" : (() => { const [x, y] = at(axis, r - 6); return `<line x1="${c}" y1="${c}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" class="hex-axis" marker-end="url(#hex-head)"/>${label(`${Math.round(axis)}°`, axis, r + 44, "hex-axis-label")}`; })();
+  return `<svg class="hexaxial" viewBox="-48 -40 396 380" role="img" aria-label="Sistema hexaxial: eje normal de −30° a +90°${axis === null ? "" : `; eje de este caso ${Math.round(axis)}°`}"><defs><marker id="hex-head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="hex-head"/></marker></defs>` +
     arc(-30, 90, "var(--hex-normal)") + arc(-90, -30, "var(--hex-left)") + arc(90, 180, "var(--hex-right)") + arc(180, 270, "var(--hex-extreme)") +
     `<circle cx="${c}" cy="${c}" r="${r}" class="hex-ring"/>` +
     leads.map(([name, deg]) => { const [x0, y0] = at(deg + 180), [x1, y1] = at(deg); return `<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}" class="hex-lead"/>${label(name, deg, r + 14, "hex-lead-label")}`; }).join("") +
