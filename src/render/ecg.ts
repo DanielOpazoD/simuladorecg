@@ -37,7 +37,7 @@ export interface Caliper {
   y2: number;
   segment: number;
 }
-const palettes = {
+export const palettes = {
   paper: {
     bg: "#fffdfd",
     fine: "#f4e3e6",

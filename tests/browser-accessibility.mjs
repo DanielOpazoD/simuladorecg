@@ -100,17 +100,13 @@ for(const engine of engines) {
         await active('[data-key="flutterPattern"]');
         assert.equal(await page.locator('[data-key="flutterRatio"]').isDisabled(),true);
         assert.equal(await flutterPattern.inputValue(),'2-3');
-        // Inactive controls remain inspectable through a native disclosure.
+        // Controls with no effect in this rhythm are not shown (their values are kept).
         const inactive=page.locator('[data-control-details="conduction"]');
-        assert.equal(await inactive.evaluate(e=>e.open),false);
-        await key('[data-control-details="conduction"] > summary');
-        assert.equal(await inactive.evaluate(e=>e.open),true);
-        assert.equal(await page.locator('[data-key="flutterRatio"]').isVisible(),true);
+        assert.equal(await inactive.isHidden(),true);
+        assert.equal(await page.locator('[data-key="flutterRatio"]').isVisible(),false);
         await flutterPattern.focus();await flutterPattern.selectOption('3-4');await ready();
         await active('[data-key="flutterPattern"]');
-        assert.equal(await inactive.evaluate(e=>e.open),true,'retain disclosure after field rerender');
-        await key('[data-control-details="conduction"] > summary');
-        assert.equal(await inactive.evaluate(e=>e.open),false);
+        assert.equal(await page.locator('[data-key="flutterRatio"]').isVisible(),false,'stays hidden after field rerender');
         await flutterPattern.selectOption('2-3');await ready();
         const conductionFit=await fits('#control-panel-conduction');
         // The model's limits are a native disclosure of their own, keyboard operable and closed by default.

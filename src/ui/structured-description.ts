@@ -172,9 +172,9 @@ function atrialRate(s: Signal): number | null {
   return t.length < 3 ? null : 60 / median(t.slice(1).map((v, i) => v - t[i]));
 }
 
-export type DescriptionInfo = "st" | "t" | "q";
-export interface StructuredDescription { lines: { key: string; text: string; info?: DescriptionInfo }[]; summary: string; measures: LeadMeasure[] }
-export function structuredDescription(c: ECGCase, s: Signal): StructuredDescription {
+export type DescriptionInfo = "st" | "t" | "q" | "axis";
+export interface StructuredDescription { lines: { key: string; text: string; info?: DescriptionInfo }[]; summary: string; measures: LeadMeasure[]; axis: number | null }
+export function structuredDescription(c: ECGCase, s: Signal, impression?: string): StructuredDescription {
   const t = s.truth, rr = t.hr > 0 ? 60 / t.hr : null;
   // Intervals of the dominant beats, as the metric cards: in bigeminy the median
   // of every beat would mix in the ectopics.
@@ -202,7 +202,7 @@ export function structuredDescription(c: ECGCase, s: Signal): StructuredDescript
     { key: "A", text: `12 derivaciones, ${c.view.speed} mm/s, ${c.view.gain} mm/mV.` },
     { key: "B·C", text: `${rhythm}.` },
     { key: "D", text: `${intervals}.` },
-    { key: "E", text: `${axis}.` },
+    { key: "E", text: `${axis}.`, info: "axis" },
   ];
   // Polymorphic or chaotic rhythms have no repeatable ST; flutter waves occupy the PR
   // segment the ST is read against.
@@ -219,6 +219,13 @@ export function structuredDescription(c: ECGCase, s: Signal): StructuredDescript
     if (wide && (st.elevation.length || st.depression.length)) lines.push({ key: "ST/QRS", text: "Alteraciones del ST secundarias al QRS ancho: valorar su proporción con el QRS." });
     else if (st.elevation.length && st.depression.length) lines.push({ key: "Rec.", text: "Cambios recíprocos del ST." });
   }
-  const summary = `ECG de 12 derivaciones a ${c.view.speed} mm/s. ${rhythm}; ${intervals}; ${axis[0].toLowerCase()}${axis.slice(1)}. ${lines.slice(4).map((l) => l.text).join(" ")}`;
-  return { lines, summary, measures: m };
+  // A spoken presentation: technique, rhythm and rate, intervals, axis, ST-T and Q,
+  // and the conclusion when the case has a name.
+  const lower = (x: string) => x[0].toLowerCase() + x.slice(1);
+  const spokenIntervals = [t.pr !== null ? `PR de ${n0(t.pr)} ms` : "", qrs !== null ? `QRS de ${n0(qrs)} ms` : "", qtc !== null ? `QTc de ${n0(qtc)} ms` : ""].filter(Boolean);
+  const spokenAxis = t.axis === null ? "eje no determinable" : `eje QRS ${lower(axis.slice(axis.indexOf("(") + 1, -1))} (${n0(t.axis)}°)`;
+  const summary = `Electrocardiograma de 12 derivaciones (${c.view.speed} mm/s, ${c.view.gain} mm/mV) en ${lower(rhythm)}` +
+    (spokenIntervals.length ? `, con ${spokenIntervals.length > 1 ? `${spokenIntervals.slice(0, -1).join(", ")} y ${spokenIntervals.at(-1)}` : spokenIntervals[0]}` : "") +
+    `, y ${spokenAxis}. ${lines.slice(4).map((l) => l.text).join(" ")}${impression ? ` En suma: ${lower(impression)}.` : ""}`;
+  return { lines, summary, measures: m, axis: t.axis };
 }
