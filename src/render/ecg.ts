@@ -275,19 +275,33 @@ export function renderPaper(
     ),
     palette = palettes[c.view.palette];
   grid(ctx, layout.widthMm, layout.heightMm, palette, c.view.grid);
+  // Editorial bands stay inside the existing non-signal margins. The same
+  // millimetre typography is used on screen and in the 300 dpi export.
+  ctx.fillStyle = palette.bg;
+  ctx.fillRect(0, 0, layout.widthMm, 16);
+  ctx.fillRect(0, layout.heightMm - 8, layout.widthMm, 8);
   ctx.fillStyle = palette.text;
-  ctx.font = "600 3.2px ui-monospace, monospace";
+  ctx.font = "600 3.8px ui-monospace, monospace";
   ctx.fillText(
     "ECG LAB  /  " +
       (options.hideName ? "CASO DE PRÁCTICA" : (options.displayName ?? c.name).toUpperCase()),
     5,
     6,
+    layout.widthMm - 10,
   );
-  ctx.font = "2.55px ui-monospace, monospace";
+  ctx.font = "500 3px ui-monospace, monospace";
   ctx.fillText(
-    `${c.view.speed} mm/s  ·  ${c.view.gain} mm/mV${c.view.chestGain !== c.view.gain ? " / precordiales " + c.view.chestGain : ""}  ·  ${filterLabel(c)}  ·  señal sintética`,
+    `${c.view.speed} mm/s  ·  ${c.view.gain} mm/mV${c.view.chestGain !== c.view.gain ? " / precordiales " + c.view.chestGain + " mm/mV" : ""}`,
     5,
-    11,
+    10.5,
+    layout.widthMm - 10,
+  );
+  ctx.font = "2.7px ui-monospace, monospace";
+  ctx.fillText(
+    `${filterLabel(c)}  ·  señal sintética`,
+    5,
+    14.5,
+    layout.widthMm - 10,
   );
   ctx.strokeStyle = palette.trace;
   // Fitting the sheet to the height shrinks the scale, not the pen: keep the unfitted stroke in px.
@@ -315,7 +329,7 @@ export function renderPaper(
     );
     ctx.restore();
     ctx.fillStyle = palette.text;
-    ctx.font = "600 3px ui-monospace,monospace";
+    ctx.font = "600 3.5px ui-monospace,monospace";
     ctx.fillText(
       (seg.polarity < 0 ? "−" : "") + seg.lead,
       seg.x - 5,
@@ -342,7 +356,7 @@ export function renderPaper(
       ctx.strokeStyle = palette.trace;
     }
   }
-  ctx.font = "2.5px ui-monospace,monospace";
+  ctx.font = "2.7px ui-monospace,monospace";
   ctx.fillStyle = palette.text;
   ctx.fillText(
     "Registro de 10 s · " +
@@ -350,9 +364,16 @@ export function renderPaper(
         ? "segmentos simultáneos"
         : "columnas secuenciales") +
       " · " +
-      (c.view.cabrera ? "orden de Cabrera" : "orden estándar") + " · sin validación clínica" + (options.traceNote ? ` · ${options.traceNote}` : ""),
+      (c.view.cabrera ? "orden de Cabrera" : "orden estándar"),
     5,
-    layout.heightMm - 3,
+    layout.heightMm - 4.8,
+    layout.widthMm - 10,
+  );
+  ctx.fillText(
+    "Uso educativo · sin validación clínica" + (options.traceNote ? ` · ${options.traceNote}` : ""),
+    5,
+    layout.heightMm - 1.3,
+    layout.widthMm - 10,
   );
   if (options.annotations && options.measurement)
     drawAnnotations(

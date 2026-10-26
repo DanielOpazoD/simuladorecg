@@ -23,7 +23,10 @@ it.each(['3x4','3x4+1','3x4+3','6x2','12x1'] as ECGCase['view']['format'][])('pa
  const canvas={style:{},getContext:()=>ctx} as unknown as HTMLCanvasElement;
  const layout=renderPaper(canvas,s,c,1000,{ratio:1,hideName:true});
  const footer=texts.find(t=>t.text.startsWith('Registro de 10 s'))!;
- expect(footer.text).toContain('sin validación clínica');expect(footer.y).toBe(layout.heightMm-3);
+ const limitation=texts.find(t=>t.text.includes('sin validación clínica'))!;
+ expect(limitation).toBeDefined();
+ expect(limitation.y).toBeGreaterThan(footer.y);
+ expect(limitation.y).toBeLessThan(layout.heightMm);
  expect(texts.some(t=>t.text.includes('SECRET DIAGNOSIS'))).toBe(false);
  expect(layout.segments.every(segment=>segment.y+segment.height< footer.y)).toBe(true);
 });
