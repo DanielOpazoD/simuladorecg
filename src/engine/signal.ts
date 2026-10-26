@@ -53,7 +53,9 @@ const FS = 1000,
 export interface SynthesisOptions {
   /** Temporary seam while modifiers migrate stage by stage (docs/fidelidad.md):
    * false keeps the historical kernels so a test can isolate a not-yet-migrated
-   * modifier against a basal case of the same model. The product never sets it. */
+   * modifier against a basal case of the same model. This also fixes the AF
+   * calendar to the kernel family's RR distribution. The previous-ECG comparison
+   * uses it when removing a lesion would otherwise select a learned base. */
   learnedBase?: boolean;
 }
 export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions = {}): Signal {
@@ -61,7 +63,7 @@ export function synthesize(c: ECGCase, duration = 65, options: SynthesisOptions 
   const total = duration + WARM,
     guard = c.filter === "monitor" ? 4 : GUARD,
     n = Math.ceil((total + guard) * FS),
-    events = generateEvents(c, total + guard);
+    events = generateEvents(c, total + guard, options.learnedBase === false ? false : undefined);
   assignRepolarization(c, events.beats);
   if (options.learnedBase !== false && usesRealisticBase(c))
     learnEctopicDurations(c, events.beats, (["pvc", "paced", "ventricular"] as const).filter((k) => learnedEctopicModel(c, k)));
