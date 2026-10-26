@@ -55,11 +55,16 @@ node scripts/verify-learned-handoff.mjs
 npm run check
 ```
 
-La prueba nueva tiene ocho casos: nivel constante a 500/1000 Hz, uniones dentro
+La prueba nueva tiene diez casos: nivel constante a 500/1000 Hz, uniones dentro
 y fuera de la rejilla, ganancias P 0/0,5/1/2, P bloqueada, 32 pacientes de ocho
-poblaciones y 16 combinaciones de instante/PR del calendario. Antes de corregir
+poblaciones, 16 combinaciones de instante/PR del calendario y dos regresiones
+de una muestra PR recuperada con ganancias P 0 y 2. Antes de corregir
 se reprodujeron seis fallos de los siete casos iniciales; el caso de ganancia
-se añadió después. La tolerancia de nivel (5e-13 mV) comprueba aritmética de
+se añadió después. La revisión independiente encontró que una muestra PR
+recuperada podía entrar en la rama de cola de P bloqueada por unas ULP de
+redondeo. Esa rama se excluye del modo conducido; las dos regresiones adicionales
+comprueban que la muestra conserva su nivel de destino. La tolerancia de nivel
+(5e-13 mV) comprueba aritmética de
 doble precisión, no exactitud clínica.
 
 El script usa las versiones originales de `beat.ts` y `engine.ts` del commit
@@ -96,7 +101,8 @@ motor anterior reproduce las huellas históricas que compara. La opción explíc
 las demás referencias originales. Los otros ocho presets con cambios no
 requieren nueva huella por las exclusiones previas de ese test o su tolerancia.
 
-Verificación local: 2275 pruebas en 172 archivos, tipos y build correctos;
+Verificación local previa a los dos casos de revisión: 2275 pruebas en 172
+archivos, tipos y build correctos; los diez casos específicos pasan tras revisión.
 67 recorridos de biblioteca/variantes en Chromium. Comprobación adicional en
 1440×960 y 390×844: sin errores de consola o de página, sin desbordamiento
 horizontal y cambio Normal → Taquicardia que actualiza la FC de 72 a 125 lpm.

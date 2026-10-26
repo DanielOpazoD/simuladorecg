@@ -45,6 +45,20 @@ describe("unión PR–QRS de las plantillas aprendidas", () => {
     }
   });
 
+  it.each([0, 2])("una muestra PR recuperada por redondeo conserva el destino (ganancia %s)", (gain) => {
+    // The calendar's QRS is just beyond sample 211. Rebuilding elapsed time
+    // from the pre-P lead-in yields 283.00000000000006 ms for 283 ms of phases:
+    // that last conducted sample must not become an unscaled blocked-P tail.
+    const start = 0.008, pr = 0.20300000000000001, onset = start + pr;
+    expect(onset).toBe(0.21100000000000002);
+    const acc = buffers(1000), target = level.map(v => v * gain);
+    addAtrial(acc, 1000, start, 100, pr * 1000 - 100, flat, p, target, onset);
+    for (let l = 0; l < 8; l++) {
+      expect(acc[l][211], `última muestra conducida, ${l}`).toBeCloseTo(target[l], 12);
+      expect(acc[l].subarray(212).every(v => v === 0), `inicio ventricular, ${l}`).toBe(true);
+    }
+  });
+
   it("una P bloqueada conserva su Ta y su decaimiento, sin recortarla como una P conducida", () => {
     const acc = buffers(1000);
     addAtrial(acc, 1000, 0.25, 100, 150, flat, p);

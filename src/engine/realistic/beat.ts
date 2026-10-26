@@ -82,7 +82,7 @@ function place(acc: Float64Array[], fs: number, start: number, x: Float64Array, 
     for (let i = lo; i <= hi; i++) {
       const elapsed = (i / fs - start) * 1000;
       let v: number;
-      if (elapsed > phasesMs) {
+      if (elapsed > phasesMs && mode !== "atrial-conducted") {
         v = vEnd * Math.exp(-(elapsed - phasesMs) / TA_DECAY_MS); // Ta tail of a blocked P
       } else {
         let tms = elapsed, k = 0;
