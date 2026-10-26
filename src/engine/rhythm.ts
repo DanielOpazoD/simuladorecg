@@ -6,16 +6,16 @@ import { flutterRatios, flutterMeanRatio } from "./flutter-conduction";
 import type { ECGCase, EventSeries, Beat } from "./types";
 import { assertEventCalendar } from "./event-calendar";
 import { random, normal } from "./random";
-export function generateEvents(c: ECGCase, duration: number): EventSeries {
+export function generateEvents(c: ECGCase, duration: number, learnedBase = usesRealisticBase(c)): EventSeries {
   if (!Number.isFinite(duration) || duration <= 0) throw new Error("Duración de calendario inválida.");
-  const events = buildEvents(c, duration);
+  const events = buildEvents(c, duration, learnedBase);
   // Two chamber schedules may interleave when AV delay exceeds the pacing cycle.
   // Sort stimulus metadata only; no timestamp is shifted or removed.
   events.spikes.sort((a, b) => a - b);
   assertEventCalendar(events, duration);
   return events;
 }
-function buildEvents(c: ECGCase, duration: number): EventSeries {
+function buildEvents(c: ECGCase, duration: number, learnedBase: boolean): EventSeries {
   if (isVviDemand(c)) return vviDemandEvents(vviSettings(c), duration);
   const r = random(c.seed),
     events: EventSeries = { atria: [], beats: [], spikes: [] };
@@ -42,7 +42,7 @@ function buildEvents(c: ECGCase, duration: number): EventSeries {
   if (c.rhythm === "af") {
     // On the learned base each patient keeps its own RR irregularity (PTB-XL AFIB,
     // CV 0,12–0,30); the historical kernels keep the fixed representative CV.
-    const cv = usesRealisticBase(c) ? afPatient(c.seed).rrCv : undefined;
+    const cv = learnedBase ? afPatient(c.seed).rrCv : undefined;
     let t = 0.35;
     while (t < duration) {
       beat(t);

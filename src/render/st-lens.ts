@@ -47,11 +47,13 @@ export function stMarks(s: Pick<Signal, "fs" | "leads" | "events">, lead: Lead, 
 }
 
 /** The lesion alone: this trace minus the same patient's previous ECG. */
-export function differenceSignal<S extends Pick<Signal, "fs" | "leads">>(s: S, previous: Pick<Signal, "leads">): S {
+export function differenceSignal<S extends Pick<Signal, "fs" | "leads">>(s: S, previous: Pick<Signal, "fs" | "leads">): S {
+  if (s.fs !== previous.fs) throw new Error("La comparación requiere la misma frecuencia de muestreo.");
   const leads = {} as Signal["leads"];
   for (const lead of Object.keys(s.leads) as Lead[]) {
     const a = s.leads[lead], b = previous.leads[lead];
-    leads[lead] = Float64Array.from(a, (v, i) => v - (b?.[i] ?? 0)) as Signal["leads"][Lead];
+    if (!b || b.length !== a.length) throw new Error("La comparación requiere las mismas derivaciones y duración.");
+    leads[lead] = Float64Array.from(a, (v, i) => v - b[i]) as Signal["leads"][Lead];
   }
   return { ...s, leads };
 }
