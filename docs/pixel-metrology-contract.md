@@ -67,7 +67,13 @@ contra esa caja, con un máximo de un píxel CSS de redondeo multiplicado por DP
 El límite de error de las medidas sigue siendo dos píxeles de la imagen.
 
 El instrumento separa la tinta de la cuadrícula rosa por contraste óptico
-`(255−R) − 0,46·(253−G)`. La escala se obtiene de la intensidad integrada de las
+`(255−R) − 0,46·(253−G)`. Dentro de cada banda se conserva únicamente la tinta
+conectada, con vecindad de ocho píxeles, a la línea basal recuperada. Los pies de
+calibración y el trazado continuo son conexiones independientes a esa basal;
+los glifos de texto aislados no pertenecen a ellas. No se eliminan componentes
+por su tamaño, posición de etiqueta conocida ni número de deflexiones esperado.
+Una anotación que toque realmente el trazado no se puede separar con este método
+y conserva su efecto en el resultado. La escala se obtiene de la intensidad integrada de las
 líneas gruesas. La anchura de un pulso se mide entre los centros de sus bordes
 verticales, no entre los extremos exteriores de la pluma. Para el extremo de
 una muestra, el radio de la pluma se estima de la calibración rasterizada y se
@@ -79,7 +85,10 @@ bundle/script/protocolo/imágenes, densidad PNG y resultados de tres corrupcione
 de imagen. El decisor rechaza valores no finitos, filas ausentes y métricas
 incompletas; cuatro controles adicionales verifican ese rechazo. Código de
 salida cero exige la matriz completa, sin errores y con los controles negativos
-rechazados. Si falta Chromium, se cierra el servidor y se conserva el fallo.
+rechazados. Dos controles de aislamiento adicionales añaden un glifo gris
+desconectado (las medidas deben permanecer exactamente iguales) y una deflexión
+extra conectada a la basal (el juez debe rechazarla, no descartarla como texto).
+Si falta Chromium, se cierra el servidor y se conserva el fallo.
 
 ## Resultados adversos conservados durante la construcción
 
@@ -102,3 +111,20 @@ absoluto observado de 1,337 píxeles en pantalla y 1,000 en PNG (redondeados hac
 arriba). Es una comprobación técnica de esta matriz expuesta durante el desarrollo
 del instrumento; no constituye una reserva clínica, un ensayo ciego ni una
 certificación general de toda imagen que produzca el simulador.
+
+### Fallo Linux conservado y reproducción sobre sus píxeles
+
+La primera ejecución Linux del PR 213 falló en la fila de aVR: un píxel de un
+glifo, rasterizado por las fuentes de ese sistema, entró en la banda de medida
+y produjo una quinta componente en X=44. El contraste óptico separaba tinta de
+cuadrícula, pero no texto de señal. El [run 40386375139](https://github.com/DanielOpazoD/simuladorecg/actions/runs/40386375139)
+y su artefacto `12681786389` conservan el fallo. La captura original tiene SHA-256
+`54704749f402b47610a073bb6b695a57c851383f8095ce07ab14ff8503d8dcc6`.
+
+Reevaluar esos mismos bytes con el juez anterior reproduce exactamente el fallo;
+con la separación por conectividad se recuperan las doce filas y el error máximo
+es 1,316 píxeles, redondeado hacia arriba. La captura no fue regenerada en Windows
+para esa comprobación. La corrección afecta únicamente al instrumento, conserva
+el criterio de dos píxeles y no cambia fuentes, muestras, renderer ni exportador.
+La reproducción de un artefacto aislado no sustituye una nueva ejecución de toda
+la matriz en Linux; el estado de esa ejecución se comunica por separado en CI.

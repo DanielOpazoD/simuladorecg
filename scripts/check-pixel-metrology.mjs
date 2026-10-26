@@ -62,7 +62,7 @@ report.scriptSha256=createHash('sha256').update(await readFile(fileURLToPath(imp
 report.protocolSha256=createHash('sha256').update(await readFile(path.join(root,'docs/pixel-metrology-contract.md'))).digest('hex');
 
 /** Runs in browser against either native canvas or decoded downloaded PNG pixels. */
-async function inspectRaster({base64=null, settings, mutation=null}) {
+async function inspectRaster({base64=null, settings, mutation=null, nuisance=null}) {
   let canvas=document.querySelector('canvas');
   if(base64){
     const image=new Image(); image.src='data:image/png;base64,'+base64; await image.decode();
@@ -110,15 +110,48 @@ async function inspectRaster({base64=null, settings, mutation=null}) {
   const spacing=x=>median(x.slice(1).map((v,i)=>v-x[i]));
   const gridSpacingX=spacing(gx),gridSpacingY=spacing(gy);
   const sx=gridSpacingX/5,sy=gridSpacingY/5;
+  // Labels and signal use different ink, but both can be optically dark. Keep
+  // only 8-connected ink that reaches the observed baseline. This is a raster
+  // topology test, not a feature-size exception or a known label coordinate.
+  const connectedInk=(base,half)=>{
+    const y0=Math.max(0,Math.floor(base-half)),y1=Math.min(h,Math.ceil(base+half));
+    const mask=new Uint8Array(w*(y1-y0)),queue=new Uint32Array(mask.length);
+    let head=0,tail=0;
+    const visit=(x,y)=>{
+      if(x<0||x>=w||y<y0||y>=y1)return;
+      const index=(y-y0)*w+x;
+      if(mask[index])return;
+      mask[index]=2;
+      if(isTrace((y*w+x)*4)){mask[index]=1;queue[tail++]=index;}
+    };
+    for(let x=0;x<w;x++)for(let y=Math.floor(base)-2;y<=Math.ceil(base)+2;y++)visit(x,y);
+    while(head<tail){
+      const index=queue[head++],x=index%w,y=y0+Math.floor(index/w);
+      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(dx||dy)visit(x+dx,y+dy);
+    }
+    return (x,y)=>x>=0&&x<w&&y>=y0&&y<y1&&mask[(y-y0)*w+x]===1;
+  };
+  if(nuisance==='isolated-label'){
+    // Raster R glyph in grey annotation ink; no dependence on installed fonts.
+    const glyph=['11110','10001','10001','11110','10100','10010','10001'];
+    const unit=Math.max(1,Math.round(sx*.6)),x0=Math.round(12*sx),y0=Math.round(bases[3]-8*sy);
+    for(let row=0;row<glyph.length;row++)for(let col=0;col<glyph[row].length;col++)if(glyph[row][col]==='1')
+      for(let dy=0;dy<unit;dy++)for(let dx=0;dx<unit;dx++)a.set([81,73,80,255],((y0+row*unit+dy)*w+x0+col*unit+dx)*4);
+  }
+  if(nuisance==='connected-artifact'){
+    const x=Math.round(w*.25),base=bases[0];
+    for(let y=Math.floor(base-4*sy);y<=Math.ceil(base);y++)for(let dx=0;dx<2;dx++)a.set([34,53,60,255],(y*w+x+dx)*4);
+  }
   // Each deliberate corruption changes trace pixels only; grid remains untouched.
   if(mutation){
     const original=a.slice();
     for(let r=0;r<bases.length;r++){
       const base=bases[r],lo=Math.max(0,Math.floor(base-14*sy)),hi=Math.min(h,Math.ceil(base+8*sy));
+      const connected=connectedInk(base,Math.max(14,settings.gain+.5)*sy);
       const points=[];
       for(let y=lo;y<hi;y++)for(let x=0;x<w;x++){
         const i=(y*w+x)*4;
-        if(isTrace(i)){points.push([x,y,original.slice(i,i+4)]);a.set([255,253,253,255],i);}
+        if(connected(x,y)){points.push([x,y,original.slice(i,i+4)]);a.set([255,253,253,255],i);}
       }
       for(const [x,y,color]of points){
         const xx=mutation==='time'?Math.round(x*.8):x;
@@ -131,11 +164,12 @@ async function inspectRaster({base64=null, settings, mutation=null}) {
   const metrics=[];
   for(let row=0;row<12;row++){
     const base=bases[row],half=(settings.gain+.5)*sy;
+    const connected=connectedInk(base,half);
     const activity=[];
     for(let x=0;x<w;x++){
       let present=false;
       for(let y=Math.max(0,Math.floor(base-half));y<Math.min(h,Math.ceil(base+half));y++)
-        if(Math.abs(y-base)>3&&isTrace((y*w+x)*4)){present=true;break;}
+        if(Math.abs(y-base)>3&&connected(x,y)){present=true;break;}
       if(present)activity.push(x);
     }
     // A grid crossing can interrupt the blue chroma of an antialiased trace.
@@ -149,7 +183,7 @@ async function inspectRaster({base64=null, settings, mutation=null}) {
       // Middle of plateau avoids vertical edges. The one-sample impulse uses all pixels.
       const use=k===3?xs:xs.slice(Math.floor(xs.length*.3),Math.ceil(xs.length*.7));
       for(const x of use)for(let y=Math.max(0,Math.floor(base-half));y<Math.min(h,Math.ceil(base+half));y++)
-        if(Math.abs(y-base)>3&&isTrace((y*w+x)*4))ys.push(y);
+        if(Math.abs(y-base)>3&&connected(x,y))ys.push(y);
       if(!ys.length)throw new Error('Feature contains no trace pixels');
       const y=k===3?Math.min(...ys):median(ys);
       let x0=xs[0],x1=xs.at(-1);
@@ -158,7 +192,7 @@ async function inspectRaster({base64=null, settings, mutation=null}) {
         const midY=Math.round((base+y)/2),left=[],right=[],midX=(x0+x1)/2;
         for(const x of xs)for(let yy=midY-1;yy<=midY+1;yy++){
           const index=(yy*w+x)*4;
-          if(isTrace(index))(x<midX?left:right).push([x,255-a[index]]);
+          if(connected(x,yy))(x<midX?left:right).push([x,255-a[index]]);
         }
         const centre=points=>points.reduce((s,[x,weight])=>s+x*weight,0)/points.reduce((s,[,weight])=>s+weight,0);
         if(!left.length||!right.length)throw new Error('Cannot recover both vertical pulse edges');
@@ -170,7 +204,7 @@ async function inspectRaster({base64=null, settings, mutation=null}) {
     // A negative narrow impulse needs its lowest endpoint rather than its highest.
     if(polarity<0){
       let extreme=-Infinity;for(const x of features[3])for(let y=Math.floor(base-half);y<Math.ceil(base+half);y++)
-        if(y>=0&&y<h&&isTrace((y*w+x)*4))extreme=Math.max(extreme,y);
+        if(y>=0&&y<h&&connected(x,y))extreme=Math.max(extreme,y);
       data[3].height=base-extreme;
     }
     const [cal,pos,neg,spike]=data;
@@ -240,6 +274,18 @@ try{
     assert(Math.abs(screen.height-dimensions.cssHeight*settings.dpr)<=settings.dpr,'Screenshot height differs from enclosing CSS box × DPR');
     const screenFailures=failures(screen);
     if(i===0){
+      const labelled=await page.evaluate(inspectRaster,{base64:screenshot.toString('base64'),settings,nuisance:'isolated-label'});
+      assert.deepEqual(labelled,screen,'An isolated annotation must not alter signal metrology');
+      let rejectedConnectedArtifact=false;
+      try{
+        const contaminated=await page.evaluate(inspectRaster,{base64:screenshot.toString('base64'),settings,nuisance:'connected-artifact'});
+        rejectedConnectedArtifact=failures(contaminated).length>0;
+      }catch(error){
+        if(!String(error).includes('Expected calibration and three deflections'))throw error;
+        rejectedConnectedArtifact=true;
+      }
+      assert(rejectedConnectedArtifact,'Connected extra ink must not be discarded as a label');
+      report.annotationIsolation={isolatedGlyphInvariant:true,connectedArtifactRejected:true};
       const poisoned=structuredClone(screen);poisoned.rows[0].errors.positiveHeight=NaN;
       assert(failures(poisoned).length>0,'Decision must reject NaN');
       const missing=structuredClone(screen);delete missing.rows[0].errors.positiveHeight;
