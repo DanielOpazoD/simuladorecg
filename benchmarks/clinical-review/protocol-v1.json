@@ -1,0 +1,22 @@
+{
+  "kind": "ecg-blind-phenotype-protocol",
+  "schemaVersion": 1,
+  "scope": "development-phenotype-review-not-clinical-validation",
+  "synthetic": [
+    { "preset": "sinus", "variants": ["preset", 17, 91] },
+    { "preset": "wenckebach", "variants": ["preset", 17, 91] },
+    { "preset": "lbbb", "variants": ["preset", 17, 91] },
+    { "preset": "vvi", "variants": ["preset", 17, 91] },
+    { "preset": "anterior", "variants": ["preset", 17, 91] }
+  ],
+  "external": {
+    "dataset": "LUDB-1.0.1",
+    "role": "exposed-regression-controls-not-holdout",
+    "records": ["1", "2", "3", "4", "101", "102", "103", "104"]
+  },
+  "review": {
+    "independentReaders": 2,
+    "adjudication": "all-records-after-blind-readings",
+    "maxUnresolvedMajorErrors": 0
+  }
+}
