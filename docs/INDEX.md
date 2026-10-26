@@ -1,18 +1,20 @@
 # Índice de la documentación
 
-Punto de entrada a `docs/`. La navegación vigente empieza en el [README](../README.md) y en la [matriz de alcance](alcance-actual.md). Ningún documento acredita validación clínica. Los registros históricos se conservan tal cual y sus cifras no describen el HEAD actual.
+Punto de entrada a `docs/`. La navegación vigente empieza en el [README](../README.md) y en la [matriz de alcance](alcance-actual.md). Ningún documento acredita validación clínica. Los resultados y decisiones históricos se conservan; las notas de alcance identifican sus sucesores y sus cifras no describen necesariamente el HEAD actual.
 
 ## Alcance y modelo vigentes
 - [Matriz vigente de alcance por fase](alcance-actual.md): implementado, probado y pendiente.
 - [Estado de los patrones](estado-presets.md) · [JSON](estado-presets.json).
 - [Modelo y decisiones](modelo.md) · [Enfoque clínico y contratos de fidelidad](enfoque-clinico.md) · [Aceptación de fenotipos](aceptacion-fenotipos.md).
 - [Patrones y variantes en la hoja](diagnosis-navigation.md).
+- [Coherencia de afirmaciones: criterios y hallazgos](clinical-claims-consistency.md).
 
 ## Contratos del producto (P1–P9)
 - [P1 · Fisiología basal y adquisición invertida](p1-acquisition-contract.md)
-- [P2 · Límites visibles de repolarización secundaria](p2-secondary-repolarization-limits.md)
+- P2, antecedente histórico: [límites de repolarización entonces visibles](p2-secondary-repolarization-limits.md). Implementación posterior: [ST secundario](secondary-st-resolution.md) y [WPW](wpw-repolarization-resolution.md).
 - [P3 · CI del código integrado y del artefacto servido](p3-ci-contract.md)
 - [P4 · Versión, alcance y procedencia de informes](p4-version-provenance.md)
+- [Identidad de fuentes en la compilación](build-source-identity.md): cobertura de archivos y rutas portables; una huella identifica bytes, no validez clínica.
 - [P5 · Derechos y contribución](p5-licensing-contribution.md) · [estado de licencias](licensing-status.json)
 - [P6 · Sesión del trazado](p6-trace-session.md)
 - [P7 · Registro de las doce derivaciones](p7-lead-registry.md)
@@ -27,9 +29,11 @@ Punto de entrada a `docs/`. La navegación vigente empieza en el [README](../REA
 - Amplitud QRS: [R posterior](posterior-qrs-amplitude.md) · [sobrecarga del VD](rv-qrs-amplitude.md) · [onda delta WPW](wpw-qrs-amplitude.md)
 
 ## Generador: repolarización
-- [Repolarización secundaria: alcance vigente](secondary-repolarization-v1.md) · [contrato QRS-repolarización](qrs-coupled-repolarization-contract.json)
-- [Coherencia de repolarización A01 → A02/A03](repolarization-coherence.md)
-- [Repolarización regional v1.4](regional-repolarization-v1.4.md) · [protocolo v1.4](repolarization-protocol-v1.4.md)
+- [ST secundario: implementación y evaluación de la fuente](secondary-st-resolution.md) · [WPW: intervención posterior](wpw-repolarization-resolution.md). Las constantes son ilustrativas; la proporcionalidad clínica sigue sin calibrar.
+- [Contratos de intervención electrofisiológica](electrophysiology-intervention-contract.md) · [comparación causal con el basal del mismo caso](causal-comparison.md).
+- [Continuidad local de los controles](control-continuity-contract.md): barridos sobre muestras y transiciones explícitas entre familias de síntesis.
+- [Contrato de migración QRS-repolarización](qrs-coupled-repolarization-contract.json): referencias congeladas y límites de aquella evaluación, no alcance global del producto.
+- [Repolarización regional de núcleos v1.4](regional-repolarization-v1.4.md) · [protocolo v1.4](repolarization-protocol-v1.4.md). La selección de núcleos o base aprendida se consulta en la [matriz vigente](alcance-actual.md).
 
 ## Analizador y medición
 - [Integridad de entrada antes de medir](sample-input-contract.md)
@@ -44,21 +48,23 @@ Punto de entrada a `docs/`. La navegación vigente empieza en el [README](../REA
 - LUDB: [línea base congelada](ludb-frozen-baseline.md) · [expansión preseleccionada](ludb-expansion-protocol.md) · [delineación v2](ludb-delineation-v2.md)
 - PTB-XL+: [referencia morfológica](ptbxl-morphology-reference.md) · [brecha del generador](generator-ptbxl-gap.md)
 - STAFF III: [exploración](staff-exploration-v1.4.md) · [selección del banco](staff-selection-v1.4.md)
+- [Revisión ciega de fenotipos](clinical-review-packet.md): preparación e integridad del expediente; lecturas humanas y adjudicación son pasos separados.
+- [Referencia ST–T secundaria expuesta](secondary-stt-reference.md): grupos pequeños y experimento negativo anterior, sin calibración clínica.
+- [Referencia tabular QRS con unidades trazables](ptbxl-tabular-amplitude-reference.md).
+- [Evaluación prospectiva del final T reservado](t-end-reserved-evaluation.md): protocolo y resultados de la versión evaluada; no se transfieren automáticamente a otro código.
+- [Referencias originales y auditoría de escala](annotated-morphology-reference.md): morfología anotada, límites de amplitud LUDB y control de originales PTB-XL.
 - [Referencias aportadas](referencias/README.md)
 
 ## Interfaz y accesibilidad
 - [Espacio visual del ECG](visual-workspace.md) · [Teclado y móvil](mobile-accessibility.md) · [Recuperación del motor web](worker-recovery.md)
+- [Metrología visual: latido, referencia y límites](visual-metrology.md) · [Densidad física del PNG y límites de impresión](png-physical-density.md).
+- [Verificación independiente de píxeles y PNG](pixel-metrology-contract.md): señal analítica, criterios previos y límites del instrumento.
 
 ## Registros históricos (no describen el HEAD)
+- Repolarización A01 → A02/A03: [alcance entonces vigente](secondary-repolarization-v1.md) · [evaluación y candidato rechazado](repolarization-coherence.md).
 - v1.4: [verificación](verificacion-v1.4.md) · [reejecución de v1.3](baseline-recheck-v1.4.md) · [metrología](metrologia-v1.4.md)
 - v1.3: [README](README-v1.3.md) · [verificación](verificacion.md) · [entrega HTML](ECG_Lab_Entrega_v1.3.html) · [regresión de detección](detection-regression-v1.3.json)
 - v1.2: [verificación](verificacion-v1.2.md) · [auditoría HTML](auditoria-v1.2.html) · v1.1: [verificación](verificacion-v1.1.md)
 - Análisis congelado: [freeze](analysis-freeze.json) · [comparación pareada](analysis-paired-comparison.json) · [revisión post-freeze](analysis-post-freeze-review.json) · validación [completa](analysis-validation-all.json) y [desarrollo](analysis-validation-development.json)
 - Fidelidad: [informe](fidelity-report.json) · [antes/después](fidelity-before-after.json) · [regresión de detección](detection-regression.json)
 - Material gráfico y casos: `browser-captures/`, `trazados/`, `casos/`
-
-- [Referencia tabular QRS con unidades trazables](ptbxl-tabular-amplitude-reference.md)
-
-- [Evaluación prospectiva del final T reservado](t-end-reserved-evaluation.md): protocolo, límites y resultados de la reserva, sin habilitar QT automático
-
-- [Referencias originales y auditoría de escala](annotated-morphology-reference.md): morfología anotada, límites de amplitud LUDB y control de originales PTB-XL

@@ -1,5 +1,13 @@
 # Secondary ST–T: evidence before promotion
 
+> Historical evidence before the secondary-ST and WPW source changes. The
+> negative local experiment below was not promoted; its results remain unchanged.
+> Subsequent implementation and retained adverse outcomes are documented in
+> [secondary-ST resolution](secondary-st-resolution.md) and
+> [WPW repolarization](wpw-repolarization-resolution.md). The exposed cohort here
+> remains descriptive evidence, not a new holdout or clinical calibration of
+> either implementation. Scope note added 2026-10-26.
+
 This report extends the already exposed, patient-separated PTB-XL+ development
 selection. It does not reacquire a new holdout or tune model coefficients. The
 frozen reader still selects patients before downloading features. The report
