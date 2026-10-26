@@ -1,5 +1,6 @@
 import type { ECGCase, Lead, Signal } from "../engine/types";
 import { stMarks, ST_LENS } from "../render/st-lens";
+import { modelIntervals } from "./model-intervals";
 
 /**
  * Structured description of the trace shown (A3): the ABCDE reading of ECGsmith's
@@ -175,22 +176,19 @@ function atrialRate(s: Signal): number | null {
 export type DescriptionInfo = "st" | "t" | "q" | "axis";
 export interface StructuredDescription { lines: { key: string; text: string; info?: DescriptionInfo }[]; summary: string; measures: LeadMeasure[]; axis: number | null }
 export function structuredDescription(c: ECGCase, s: Signal, impression?: string): StructuredDescription {
-  const t = s.truth, rr = t.hr > 0 ? 60 / t.hr : null;
-  // Intervals of the dominant beats, as the metric cards: in bigeminy the median
-  // of every beat would mix in the ectopics.
+  const t = s.truth, model = modelIntervals(c, s);
+  // The same applicability and generated intervals as the model cards; ST/T/Q
+  // below still read the sampled dominant complexes.
   const dominant = dominantBeats(s).map((i) => s.events.beats[i]);
-  const dominantQrs = dominant.length ? median(dominant.map((b) => b.qrs!)) * 1000 : null;
-  const dominantQts = dominant.filter((b) => b.qt !== undefined).map((b) => b.qt!);
-  const qt = dominantQts.length ? median(dominantQts) * 1000 : t.qt;
-  const qtc = qt && rr ? qt / Math.cbrt(rr) : null;
   const av = c.rhythm === "sinus" ? AV[c.av] : undefined, ectopy = ECTOPY[c.ectopy];
   const dissociated = !!av && c.av !== "first", ventricular = dissociated || c.rhythm === "af" || c.rhythm === "flutter";
   const atrial = dissociated ? atrialRate(s) : null;
   const rhythm = `${RHYTHM[c.rhythm]}${av ? ` con ${av}` : ""}${ectopy ? ` y ${ectopy}` : ""}` +
     (t.hr > 0 ? `, frecuencia ${ventricular ? "ventricular " : ""}${n0(t.hr)} lpm` : "") +
     (atrial ? `, ondas P a ${n0(atrial)}/min` : "");
-  const qrs = dominantQrs ?? t.qrs;
-  const intervals = [t.pr !== null ? `PR ${n0(t.pr)} ms` : "PR no medible", qrs !== null ? `QRS ${n0(qrs)} ms` : null, qtc !== null ? `QTc ${n0(qtc)} ms` : null].filter(Boolean).join(" · ");
+  const { qrs, qtc, pr, prRange, progressivePr } = model;
+  const prText = prRange ? `PR ${prRange[0]}–${prRange[1]} ms (${progressivePr ? "progresivo" : "variable"})` : pr !== null ? `PR ${n0(pr)} ms` : "PR no medible";
+  const intervals = [prText, qrs !== null ? `QRS ${n0(qrs)} ms` : null, qtc !== null ? `QTc ${n0(qtc)} ms` : "QTc no aplicable"].filter(Boolean).join(" · ");
   const axis = t.axis === null ? "Eje no determinable" : `Eje QRS ${n0(t.axis)}° (${t.axis >= -30 && t.axis <= 90 ? "normal" : t.axis < -30 && t.axis >= -90 ? "desviado a la izquierda" : t.axis > 90 && t.axis <= 180 ? "desviado a la derecha" : "extremo"})`;
   const m = leadMeasures(s);
   const ventricularDominant = dominant.length > 0 && dominant[0].kind !== "normal";
@@ -216,13 +214,14 @@ export function structuredDescription(c: ECGCase, s: Signal, impression?: string
     lines.push({ key: "ST", text: c.rhythm === "af" ? `${stText.slice(0, -1)} (lectura aproximada por las ondas f).` : stText, info: "st" },
       { key: "T", text: tLine(tFindings(m), wide), info: "t" },
       { key: "Q", text: qUnreadable ? "Ondas Q no valorables con este QRS (bloqueo de rama izquierda, preexcitación o QRS ventricular)." : qLine(pathologicalQ(m)), info: "q" });
-    if (wide && (st.elevation.length || st.depression.length)) lines.push({ key: "ST/QRS", text: "Alteraciones del ST secundarias al QRS ancho: valorar su proporción con el QRS." });
+    if (wide && (st.elevation.length || st.depression.length)) lines.push({ key: "ST/QRS", text: "QRS ancho: valora la relación ST/QRS. La anchura por sí sola no permite atribuir estas alteraciones a causas primarias o secundarias." });
     else if (st.elevation.length && st.depression.length) lines.push({ key: "Rec.", text: "Cambios recíprocos del ST." });
   }
   // A spoken presentation: technique, rhythm and rate, intervals, axis, ST-T and Q,
   // and the conclusion when the case has a name.
   const lower = (x: string) => x[0].toLowerCase() + x.slice(1);
-  const spokenIntervals = [t.pr !== null ? `PR de ${n0(t.pr)} ms` : "", qrs !== null ? `QRS de ${n0(qrs)} ms` : "", qtc !== null ? `QTc de ${n0(qtc)} ms` : ""].filter(Boolean);
+  const spokenPr = prRange ? `PR ${progressivePr ? "progresivo" : "variable"} de ${prRange[0]} a ${prRange[1]} ms` : pr !== null ? `PR de ${n0(pr)} ms` : "";
+  const spokenIntervals = [spokenPr, qrs !== null ? `QRS de ${n0(qrs)} ms` : "", qtc !== null ? `QTc de ${n0(qtc)} ms` : ""].filter(Boolean);
   const spokenAxis = t.axis === null ? "eje no determinable" : `eje QRS ${lower(axis.slice(axis.indexOf("(") + 1, -1))} (${n0(t.axis)}°)`;
   const summary = `Electrocardiograma de 12 derivaciones (${c.view.speed} mm/s, ${c.view.gain} mm/mV) en ${lower(rhythm)}` +
     (spokenIntervals.length ? `, con ${spokenIntervals.length > 1 ? `${spokenIntervals.slice(0, -1).join(", ")} y ${spokenIntervals.at(-1)}` : spokenIntervals[0]}` : "") +
