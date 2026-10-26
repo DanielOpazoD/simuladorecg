@@ -464,7 +464,7 @@ function showUnavailableSignal(message: string, unavailable = false) {
   const canvas = $<HTMLCanvasElement>("#ecg");
   if (!unavailable && c.view.mode === "paper") {
     c.view.palette = currentTheme() === "dark" ? "dark" : "paper";
-    renderPaperSkeleton(canvas, c, $("#canvas-wrap").clientWidth, paperMaxHeight(), paperAmplitudeMm);
+    renderPaperSkeleton(canvas, c, $("#canvas-wrap").clientWidth, undefined, paperAmplitudeMm);
   } else canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
   canvas.setAttribute("aria-label", "Señal no disponible");
   const loading = $("#signal-loading");
@@ -497,12 +497,7 @@ function generate() {
   previousSignal = null;
   session.expectRequest(controller.request(c, 65, { previous: (lens.previous || lens.change) && !!lesionBaseline(c) }));
 }
-/** Desktop: the whole sheet fits under the trace toolbar without scrolling the page. */
-const paperMaxHeight = () =>
-  window.innerWidth < 1024
-    ? undefined
-    : Math.max(420, window.innerHeight - ($("#canvas-wrap").getBoundingClientRect().top + window.scrollY) - 16);
-/** Mobile: tells the eye that more leads lie to the right of the visible sheet. */
+/** Preserve native paper scale; describe horizontal overflow without fading the trace. */
 const syncTraceOverflow = () => {
   const wrap = $("#canvas-wrap");
   const more = wrap.scrollWidth > wrap.clientWidth + 2;
@@ -512,7 +507,7 @@ const syncTraceOverflow = () => {
   if (layout && c.view.mode !== "monitor") {
     const leads = visiblePaperLeads(layout, wrap.scrollLeft, wrap.clientWidth).join(", ");
     const timing = c.view.mode === "paper" ? (c.view.timing === "simultaneous" ? "columnas simultáneas" : "columnas secuenciales") : "tira de ritmo";
-    context.textContent = `${leads} · ${c.view.speed} mm/s · ${c.view.gain} mm/mV${c.view.chestGain !== c.view.gain ? ` (precordiales ${c.view.chestGain})` : ""} · ${timing}${more ? " · Desplaza el papel horizontalmente; Tira de ritmo permite seguir la conducción." : ""}`;
+    context.textContent = `${leads} · ${c.view.speed} mm/s · ${c.view.gain} mm/mV${c.view.chestGain !== c.view.gain ? ` (precordiales ${c.view.chestGain})` : ""} · ${timing}${more ? c.view.mode === "paper" ? " · Desplaza para ver más derivaciones." : " · Desplaza para recorrer el trazado." : ""}`;
   }
 };
 function draw() {
@@ -538,7 +533,8 @@ function draw() {
       previous: prior && lens.previous && !change ? prior : undefined,
       stLens: lens.st && !practice,
       traceNote: change ? "solo el cambio: este trazado menos el ECG previo del mismo paciente" : prior && lens.previous ? "gris: ECG previo del mismo paciente" : undefined,
-      maxHeight: paperMaxHeight(),
+      // Fit the available width uniformly. Long sheets continue down the page,
+      // rather than shrinking labels and the calibrated trace to viewport height.
     });
     paperAmplitudeMm = layout.amplitudeMm;
   } else if (c.view.mode === "rhythm") {
