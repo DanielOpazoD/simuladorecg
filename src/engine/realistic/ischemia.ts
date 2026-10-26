@@ -12,32 +12,40 @@
  */
 import type { ECGCase } from "../types";
 import { normal, random } from "../random";
+import { ModelIntegrity, VENTRICULAR_PHASE_LAYOUT } from "./model-integrity";
 
 export type Artery = "LAD" | "RCA" | "LCX";
 interface RawArtery { n: number; k: number; mean: string; basis: string; basisScale: string; cholesky: number[] }
-export interface RawIschemiaModel { phases: { name: string; points: number }[]; leads: string[]; states: string[]; sampleScale?: number; arteries: Partial<Record<Artery, RawArtery>> }
+export interface RawIschemiaModel { schema: string; phases: { name: string; points: number }[]; leads: string[]; states: string[]; sampleScale?: number; arteries: Partial<Record<Artery, RawArtery>> }
 interface ArteryModel { k: number; dim: number; mean: Float64Array; basis: Float64Array; cholesky: Float64Array }
 
 let model: { points: number; scale: number; arteries: Partial<Record<Artery, ArteryModel>> } | null = null;
 
-function decodeF32(b64: string) {
-  const bytes = Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0));
-  return Float64Array.from(new Float32Array(bytes.buffer));
-}
-function decodeI16(b64: string) {
-  const bytes = Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0));
-  return new Int16Array(bytes.buffer);
-}
 export function registerIschemiaModel(r: RawIschemiaModel): void {
+  const v = new ModelIntegrity("isquemia");
+  v.object(r, "raíz");
+  v.check(r.schema === "ecg-lab-ischemia-model/1", "schema");
+  v.phases(r.phases, VENTRICULAR_PHASE_LAYOUT);
+  v.ordered(r.leads, ["I", "II", "V1", "V2", "V3", "V4", "V5", "V6"], "leads");
+  v.ordered(r.states, ["acute", "hyperacute"], "states");
+  v.object(r.arteries, "arteries");
+  const names = Object.keys(r.arteries);
+  v.check(names.length === 3 && ["LAD", "RCA", "LCX"].every(name => names.includes(name)), "arteries");
+  const sampleScale = v.number(r.sampleScale === undefined ? 1 : r.sampleScale, "sampleScale", 0);
   const points = r.phases.reduce((s, p) => s + p.points, 0), arteries: Partial<Record<Artery, ArteryModel>> = {};
   for (const [name, a] of Object.entries(r.arteries) as [Artery, RawArtery][]) {
-    const mean = decodeF32(a.mean), dim = mean.length, b16 = decodeI16(a.basis), scale = decodeF32(a.basisScale);
-    if (dim !== 2 * points * 8) throw new Error(`Modelo de isquemia ${name} inconsistente.`);
-    const basis = new Float64Array(a.k * dim);
-    for (let i = 0; i < a.k; i++) for (let j = 0; j < dim; j++) basis[i * dim + j] = b16[i * dim + j] * scale[i];
-    arteries[name] = { k: a.k, dim, mean, basis, cholesky: Float64Array.from(a.cholesky) };
+    v.object(a, `arteries.${name}`);
+    v.integer(a.n, `${name}.n`);
+    const k = v.integer(a.k, `${name}.k`), dim = 2 * points * 8;
+    const mean = v.float32(a.mean, dim, `${name}.mean`), b16 = v.int16(a.basis, k * dim, `${name}.basis`);
+    const scale = v.float32(a.basisScale, k, `${name}.basisScale`, 0);
+    const cholesky = Float64Array.from(v.numbers(a.cholesky, k * (k + 1) / 2, `${name}.cholesky`));
+    v.cholesky(cholesky, k, 1, `${name}.cholesky.diagonal`);
+    const basis = new Float64Array(k * dim);
+    for (let i = 0; i < k; i++) for (let j = 0; j < dim; j++) basis[i * dim + j] = b16[i * dim + j] * scale[i];
+    arteries[name] = { k, dim, mean, basis, cholesky };
   }
-  model = { points, scale: r.sampleScale ?? 1, arteries };
+  model = { points, scale: sampleScale, arteries };
   deltas.clear();
 }
 export const hasIschemiaModel = () => model !== null;

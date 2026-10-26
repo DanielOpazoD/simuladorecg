@@ -14,6 +14,7 @@
 import raw from "./normal-shape-model.json";
 import { LEAD_REGISTRY } from "../lead-registry";
 import { normal, random } from "../random";
+import { ModelIntegrity, SHAPE_PHASE_LAYOUT } from "./model-integrity";
 
 export const MODEL_LEADS = ["I", "II", "V1", "V2", "V3", "V4", "V5", "V6"] as const;
 export type PhaseName = "pre" | "p" | "pq" | "qrs" | "st" | "t" | "post";
@@ -45,15 +46,6 @@ export interface ShapeModel {
   population: { durationsMsP50: number[]; axisP50: number; magnitudesP50: number[] };
 }
 
-function decodeFloat32(b64: string): Float64Array {
-  const bytes = Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0));
-  return Float64Array.from(new Float32Array(bytes.buffer));
-}
-function decodeInt16(b64: string): Int16Array {
-  const bytes = Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0));
-  return new Int16Array(bytes.buffer);
-}
-
 /** Learned populations: the normal sinus beat (always bundled) and per-diagnosis
  * classes that the signal worker loads on demand (models.ts). */
 export type ModelCode = "NORM" | "CLBBB" | "CRBBB" | "IRBBB" | "LAFB" | "LVH" | "IMI" | "ASMI" | "PVC" | "VPACE";
@@ -65,8 +57,52 @@ export type RawShapeModel = typeof raw;
 const registry = new Map<ModelCode, ShapeModel>();
 
 function decode(code: ModelCode, r: RawShapeModel): ShapeModel {
-  const k = r.components, mean = decodeFloat32(r.mean), dim = mean.length;
-  const b16 = decodeInt16(r.basis), basis = new Float64Array(k * dim), basisScale = decodeFloat32(r.basisScale);
+  const v = new ModelIntegrity(code);
+  v.check(["NORM", "CLBBB", "CRBBB", "IRBBB", "LAFB", "LVH", "IMI", "ASMI", "PVC", "VPACE"].includes(code), "code");
+  v.object(r, "raíz");
+  v.check(r.schema === "ecg-lab-shape-model/2" && r.diagnosis === code, "schema/diagnosis");
+  v.ordered(r.leads, MODEL_LEADS, "leads");
+  v.phases(r.phases, SHAPE_PHASE_LAYOUT);
+  const k = v.integer(r.components, "components"), dim = SHAPE_PHASE_LAYOUT.reduce((n, p) => n + p[1], 0) * NL;
+  const mean = v.float32(r.mean, dim, "mean"), b16 = v.int16(r.basis, k * dim, "basis");
+  const basis = new Float64Array(k * dim), basisScale = v.float32(r.basisScale, k, "basisScale", 0);
+  v.check(v.number(r.preMs, "preMs") > 0 && v.number(r.postMs, "postMs") > 0, "duraciones de entrada/salida");
+  v.object(r.joint, "joint");
+  const names = v.names(r.joint.names, "joint.names"), m = names.length;
+  const required = [...Array.from({ length: k }, (_, i) => `z${i}`),
+    "log_p", "log_pq", "log_qrs", "log_stt", "logit_t_apex", "log_rr", "axis_cos", "axis_sin", "log_p_mag", "log_qrs_mag", "log_t_mag"];
+  v.check(required.every(name => names.includes(name)), "joint.names");
+  const jointMean = Float64Array.from(v.numbers(r.joint.mean, m, "joint.mean"));
+  const jointCov = Float64Array.from(v.numbers(r.joint.cov, m * m, "joint.cov"));
+  for (let i = 0; i < m; i++) {
+    v.check(jointCov[i * m + i] >= 0, "joint.cov.diagonal");
+    for (let j = 0; j < i; j++) v.check(jointCov[i * m + j] === jointCov[j * m + i], "joint.cov.simetría");
+  }
+  v.object(r.mixture, "mixture");
+  const weights = v.numbers(r.mixture.weights, Array.isArray(r.mixture.weights) ? r.mixture.weights.length : 0, "mixture.weights", 0);
+  // Coefficients are serialized to six decimals; allow only their rounding error.
+  v.check(weights.length > 0 && Math.abs(weights.reduce((sum, w) => sum + w, 0) - 1) <= 1e-5, "mixture.weights");
+  const mixtureMeans = v.float32(r.mixture.means, weights.length * m, "mixture.means");
+  const mixtureCholesky = v.float32(r.mixture.cholesky, weights.length * m * (m + 1) / 2, "mixture.cholesky");
+  v.cholesky(mixtureCholesky, m, weights.length, "mixture.cholesky.diagonal");
+  v.object(r.population, "population");
+  const durationsMsP50 = v.numbers(r.population.durationsMsP50, 5, "population.durationsMsP50", 0);
+  v.check(durationsMsP50.slice(0, 4).every(n => n > 0) && durationsMsP50[4] > 0 && durationsMsP50[4] < 1, "population.durationsMsP50");
+  const magnitudesP50 = v.numbers(r.population.magnitudesP50, 3, "population.magnitudesP50", 0);
+  v.check(magnitudesP50[1] > 0 && magnitudesP50[2] > 0, "population.magnitudesP50");
+  const population = { durationsMsP50, magnitudesP50, axisP50: v.number(r.population.axisP50, "population.axisP50") };
+  const rawScale = (r as { sampleScale?: number }).sampleScale;
+  const sampleScale = v.number(rawScale === undefined ? 1 : rawScale, "sampleScale", 0);
+  const sourceSpike = (r as { spike?: ShapeModel["spike"] }).spike;
+  let spike: ShapeModel["spike"];
+  if (sourceSpike !== undefined || code === "VPACE") {
+    v.object(sourceSpike, "spike");
+    const unit = v.numbers(sourceSpike!.unit, NL, "spike.unit");
+    v.check(unit.some(n => n !== 0), "spike.unit");
+    const shape500Hz = v.numbers(sourceSpike!.shape500Hz, 11, "spike.shape500Hz");
+    v.check(shape500Hz.some(n => n !== 0), "spike.shape500Hz");
+    spike = { unit, shape500Hz, logNormMean: v.number(sourceSpike!.logNormMean, "spike.logNormMean"), logNormSd: v.number(sourceSpike!.logNormSd, "spike.logNormSd", 0) };
+  }
   for (let i = 0; i < k; i++)
     for (let j = 0; j < dim; j++) basis[i * dim + j] = b16[i * dim + j] * basisScale[i];
   const phases = {} as Record<PhaseName, PhaseLayout>;
@@ -75,14 +111,10 @@ function decode(code: ModelCode, r: RawShapeModel): ShapeModel {
     phases[p.name as PhaseName] = { name: p.name as PhaseName, points: p.points, offset };
     offset += p.points;
   }
-  if (offset * NL !== dim || !Array.from({ length: k }, (_, i) => `z${i}`).every((z) => r.joint.names.includes(z))) throw new Error(`Modelo de forma ${code} inconsistente.`);
   return {
     code, k, dim, points: offset, phases, postMs: r.postMs, preMs: r.preMs, mean, basis,
-    names: r.joint.names, jointMean: Float64Array.from(r.joint.mean),
-    jointCov: Float64Array.from(r.joint.cov), population: r.population,
-    mixture: { weights: r.mixture.weights, means: decodeFloat32(r.mixture.means), cholesky: decodeFloat32(r.mixture.cholesky) },
-    sampleScale: (r as { sampleScale?: number }).sampleScale ?? 1,
-    spike: (r as { spike?: ShapeModel["spike"] }).spike,
+    names, jointMean, jointCov, population,
+    mixture: { weights, means: mixtureMeans, cholesky: mixtureCholesky }, sampleScale, spike,
   };
 }
 export function registerShapeModel(code: ModelCode, r: RawShapeModel): void {
