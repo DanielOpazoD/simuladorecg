@@ -1,6 +1,6 @@
 # Modelo electrocardiográfico y decisiones
 
-> Documento acumulativo: para versión integrada y alcance por fase consultar [README](../README.md) y [matriz vigente](alcance-actual.md). Los apartados históricos no son una nueva validación.
+> Documento acumulativo: los apartados v1.3 describen decisiones históricas, no la selección efectiva actual. Para la procedencia de cada preset consultar la [matriz generada](estado-presets.md); para fase y combinaciones, [alcance vigente](alcance-actual.md). La interfaz obtiene la procedencia desde la misma selección del motor. Los apartados históricos no son una nueva validación.
 
 ## Plan aplicado
 
@@ -19,7 +19,7 @@ La secuencia de P y QRS se genera antes del trazado. Cada evento auricular infor
 - BAV completo: relojes independientes. Cambiar la frecuencia auricular no cambia los QRS del escape.
 - ESV: acoplamiento definido como fracción del RR basal. Se conserva la P sinusal intermedia no conducida y se evita programar activaciones fuera de orden tras duplas.
 - TV y ritmos ventriculares: QRS ancho con eje efectivo superior y actividad auricular independiente en TV. No hay competencia de focos capaz de producir captura/fusión.
-- Estimulación: espigas y captura periódica AAI/VVI/DDD. No se simula el comportamiento a demanda.
+- Estimulación: espigas y captura periódica AAI/VVI/DDD. En la versión actual VVI dispone además de demanda idealizada y ausencia total de captura sin escape; AAI/DDD conservan la secuencia fija. No se simulan fusión, fallos intermitentes ni umbrales de dispositivo.
 
 Mulberry32 provee números pseudoaleatorios reproducibles. El generador de ruido usa semillas derivadas distintas del de eventos. No se usa `Math.random()` en el motor.
 

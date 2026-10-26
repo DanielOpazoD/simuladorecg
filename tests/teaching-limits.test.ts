@@ -62,7 +62,10 @@ describe("Specific teaching limits reflect the implemented source", () => {
     const json=JSON.parse(readFileSync('docs/estado-presets.json','utf8'));
     const md=readFileSync('docs/estado-presets.md','utf8');
     for(const p of PRESETS){
-      expect(json.find((r:{id:string})=>r.id===p.id).limitacion).toBe(p.limitation);
+      // Keep specific caveats. The historical catch-all falsely called learned
+      // populations parametric; their effective provenance now supplies the limit.
+      if(p.limitation==='Morfología paramétrica representativa; sin validación contra ECG de pacientes.')continue;
+      expect(json.find((r:{id:string})=>r.id===p.id).limitacion).toContain(p.limitation);
       expect(md).toContain(p.limitation);
     }
   });
