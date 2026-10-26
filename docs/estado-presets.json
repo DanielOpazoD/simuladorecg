@@ -4,543 +4,838 @@
     "nombre": "Ritmo sinusal",
     "categoria": "Ritmos",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "brady",
     "nombre": "Bradicardia sinusal",
     "categoria": "Ritmos",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "tachy",
     "nombre": "Taquicardia sinusal",
     "categoria": "Ritmos",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "rsa",
     "nombre": "Arritmia sinusal respiratoria",
     "categoria": "Ritmos",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "af",
     "nombre": "Fibrilación auricular",
     "categoria": "Ritmos",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan. Actividad f y variabilidad RR aprendidas de PTB-XL.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "af_fast",
     "nombre": "FA con respuesta rápida",
     "categoria": "Ritmos",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan. Actividad f y variabilidad RR aprendidas de PTB-XL.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "af_slow",
     "nombre": "FA con respuesta lenta",
     "categoria": "Ritmos",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan. Actividad f y variabilidad RR aprendidas de PTB-XL.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "flutter",
     "nombre": "Flutter auricular 2:1",
     "categoria": "Ritmos",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Ondas F aprendidas de 29 pacientes (Georgia y PTB-XL); circuito de reentrada no modelado y poca validación a nivel de trazado (pocos pacientes de reserva)."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan. Ciclo F aprendido de Georgia/PTB-XL.",
+    "fuentes": [
+      "PTB-XL",
+      "Georgia"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Conducción AV según el calendario configurado; no se simula el circuito de reentrada del flutter. Ondas F aprendidas de 29 pacientes (Georgia y PTB-XL); circuito de reentrada no modelado y poca validación a nivel de trazado (pocos pacientes de reserva). Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "flutter3",
     "nombre": "Flutter auricular 3:1",
     "categoria": "Ritmos",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Ondas F aprendidas de 29 pacientes (Georgia y PTB-XL); circuito de reentrada no modelado y poca validación a nivel de trazado (pocos pacientes de reserva)."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan. Ciclo F aprendido de Georgia/PTB-XL.",
+    "fuentes": [
+      "PTB-XL",
+      "Georgia"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Conducción AV según el calendario configurado; no se simula el circuito de reentrada del flutter. Ondas F aprendidas de 29 pacientes (Georgia y PTB-XL); circuito de reentrada no modelado y poca validación a nivel de trazado (pocos pacientes de reserva). Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "svt",
     "nombre": "Taquicardia supraventricular regular",
     "categoria": "Ritmos",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "No distingue AVNRT de AVRT; pseudo-r′ y pseudo-S no ajustadas de forma específica."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "No distingue AVNRT de AVRT; pseudo-r′ y pseudo-S no ajustadas de forma específica. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "junctional",
     "nombre": "Ritmo de la unión",
     "categoria": "Ritmos",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "pac",
     "nombre": "Extrasístole auricular",
     "categoria": "Ectopia",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "pvc",
     "nombre": "Extrasístole ventricular",
     "categoria": "Ectopia",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "No modela penetración retrógrada ni disociación auricular durante la ectopia."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Ruta de ectopia ventricular: PVC aprendido. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "No modela penetración retrógrada ni disociación auricular durante la ectopia. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "bigeminy",
     "nombre": "Bigeminismo ventricular",
     "categoria": "Ectopia",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Ruta de ectopia ventricular: PVC aprendido. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "trigeminy",
     "nombre": "Trigeminismo ventricular",
     "categoria": "Ectopia",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Ruta de ectopia ventricular: PVC aprendido. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "couplet",
     "nombre": "Dupla ventricular",
     "categoria": "Ectopia",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Ruta de ectopia ventricular: PVC aprendido. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "idioventricular",
     "nombre": "Ritmo idioventricular",
     "categoria": "Ritmos ventriculares",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Ruta de complejos ventriculares: PVC aprendido. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "aivr",
     "nombre": "Ritmo idioventricular acelerado",
     "categoria": "Ritmos ventriculares",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Ruta de complejos ventriculares: PVC aprendido. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "vt",
     "nombre": "Taquicardia ventricular monomórfica",
     "categoria": "Ritmos ventriculares",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Sin latidos de captura o fusión; una sola morfología representativa."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Ruta de complejos ventriculares: PVC aprendido. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Sin latidos de captura o fusión; una sola morfología representativa. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "torsades",
     "nombre": "Taquicardia ventricular polimórfica",
     "categoria": "Ritmos ventriculares",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Aproximación visual. No reproduce QT previo ni inicio corto–largo–corto; no equivale a diagnóstico validado de torsades."
+    "mecanismo": "Núcleos paramétricos y proyección vectorial, con correcciones locales según la configuración.",
+    "fuentes": [],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Morfología representativa; esta combinación no utiliza una población de latidos aprendida. Aproximación visual. No reproduce QT previo ni inicio corto–largo–corto; no equivale a diagnóstico validado de torsades. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "vf",
     "nombre": "Fibrilación ventricular",
     "categoria": "Ritmos ventriculares",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Suma oscilatoria sintética; transición gruesa a fina no modelada."
+    "mecanismo": "FV espectral: amplitud y espectro aprendidos; distribución espacial ilustrativa.",
+    "fuentes": [
+      "vfdb/cudb"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Las fuentes originales tienen una o dos derivaciones; la distribución en doce derivaciones no fue aprendida. No representa una evolución de FV gruesa a fina. Suma oscilatoria sintética; transición gruesa a fina no modelada. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "asystole",
     "nombre": "Asistolia",
     "categoria": "Ritmos ventriculares",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Sin actividad cardíaca organizada; adquisición y artefactos configurados.",
+    "fuentes": [],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "av1",
     "nombre": "BAV de primer grado",
     "categoria": "Conducción AV",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "wenckebach",
     "nombre": "BAV Mobitz I · Wenckebach",
     "categoria": "Conducción AV",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "mobitz2",
     "nombre": "BAV de segundo grado Mobitz II",
     "categoria": "Conducción AV",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (CRBBB), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "ST-T conserva la relación secundaria prevista por la población; su proporcionalidad no está calibrada clínicamente. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "av21",
     "nombre": "Bloqueo AV 2:1",
     "categoria": "Conducción AV",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "highav",
     "nombre": "Bloqueo AV de alto grado",
     "categoria": "Conducción AV",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "complete",
     "nombre": "BAV completo · escape de la unión",
     "categoria": "Conducción AV",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "complete_v",
     "nombre": "BAV completo · escape ventricular",
     "categoria": "Conducción AV",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Ruta de complejos ventriculares: PVC aprendido. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "rbbb",
     "nombre": "Bloqueo completo de rama derecha",
     "categoria": "Conducción intraventricular",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (CRBBB), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "ST-T conserva la relación secundaria prevista por la población; su proporcionalidad no está calibrada clínicamente. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "irbbb",
     "nombre": "Bloqueo incompleto de rama derecha",
     "categoria": "Conducción intraventricular",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (IRBBB), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "ST-T conserva la relación secundaria prevista por la población; su proporcionalidad no está calibrada clínicamente. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "lbbb",
     "nombre": "Bloqueo completo de rama izquierda",
     "categoria": "Conducción intraventricular",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (CLBBB), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "ST-T conserva la relación secundaria prevista por la población; su proporcionalidad no está calibrada clínicamente. ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "lafb",
     "nombre": "Hemibloqueo anterior izquierdo",
     "categoria": "Conducción intraventricular",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Reproduce eje; detalle qR/rS de todos los fascículos es aproximado."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (LAFB), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Reproduce eje; detalle qR/rS de todos los fascículos es aproximado. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "lpfb",
     "nombre": "Hemibloqueo posterior izquierdo",
     "categoria": "Conducción intraventricular",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Reproduce eje; no demuestra criterios clínicos excluyentes de HBPI."
+    "mecanismo": "Núcleos paramétricos y proyección vectorial, con correcciones locales según la configuración.",
+    "fuentes": [],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Morfología representativa; esta combinación no utiliza una población de latidos aprendida. Reproduce eje; no demuestra criterios clínicos excluyentes de HBPI. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "bifascicular",
     "nombre": "BRD + hemibloqueo anterior izquierdo",
     "categoria": "Conducción intraventricular",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Núcleos paramétricos y proyección vectorial, con correcciones locales según la configuración.",
+    "fuentes": [],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Morfología representativa; esta combinación no utiliza una población de latidos aprendida. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "bifascicular_pr",
     "nombre": "Bifascicular + BAV de primer grado",
     "categoria": "Conducción intraventricular",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Núcleos paramétricos y proyección vectorial, con correcciones locales según la configuración.",
+    "fuentes": [],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Morfología representativa; esta combinación no utiliza una población de latidos aprendida. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "wpw",
     "nombre": "Preexcitación ventricular",
     "categoria": "Conducción intraventricular",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Delta aproximada; sin vías accesorias anatómicas ni circuito AVRT. Preexcitación aproximada: en los latidos preexcitados, ST y T siguen la activación QRS incluida la onda delta. Amplitudes no calibradas; no localiza vías accesorias ni reproduce AVRT o memoria cardíaca."
+    "mecanismo": "Núcleos paramétricos y proyección vectorial, con correcciones locales según la configuración.",
+    "fuentes": [],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Morfología representativa; esta combinación no utiliza una población de latidos aprendida. Preexcitación aproximada: en los latidos preexcitados, ST y T siguen la activación QRS incluida la onda delta. Amplitudes no calibradas; no localiza vías accesorias ni reproduce AVRT o memoria cardíaca. Delta aproximada; sin vías accesorias anatómicas ni circuito AVRT. Preexcitación aproximada: en los latidos preexcitados, ST y T siguen la activación QRS incluida la onda delta. Amplitudes no calibradas; no localiza vías accesorias ni reproduce AVRT o memoria cardíaca. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "inferior",
     "nombre": "Oclusión de la coronaria derecha · III > II",
     "categoria": "Isquemia y ST",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Cambio del ST aprendido de oclusiones con balón (STAFF III, 103 pacientes): una oclusión súbita y completa, cuyos tiempos no son los del infarto espontáneo; sin ondas Q ni evolución tras la reperfusión."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan. Cambio emparejado de oclusión RCA aprendido de STAFF III.",
+    "fuentes": [
+      "PTB-XL",
+      "STAFF III"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Oclusión provocada con balón: las fases no son un reloj del infarto espontáneo ni una simulación de reperfusión. Cambio del ST aprendido de oclusiones con balón (STAFF III, 103 pacientes): una oclusión súbita y completa, cuyos tiempos no son los del infarto espontáneo; sin ondas Q ni evolución tras la reperfusión. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "inferior_lcx",
     "nombre": "Oclusión de la circunfleja · II ≥ III",
     "categoria": "Isquemia y ST",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Cambio del ST aprendido de oclusiones con balón (STAFF III, 103 pacientes): una oclusión súbita y completa, cuyos tiempos no son los del infarto espontáneo; sin ondas Q ni evolución tras la reperfusión."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan. Cambio emparejado de oclusión LCX aprendido de STAFF III.",
+    "fuentes": [
+      "PTB-XL",
+      "STAFF III"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Oclusión provocada con balón: las fases no son un reloj del infarto espontáneo ni una simulación de reperfusión. Población de entrenamiento LCx pequeña; las amplitudes no constituyen rangos clínicos de referencia. Cambio del ST aprendido de oclusiones con balón (STAFF III, 103 pacientes): una oclusión súbita y completa, cuyos tiempos no son los del infarto espontáneo; sin ondas Q ni evolución tras la reperfusión. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "old_inferior",
     "nombre": "Infarto inferior antiguo",
     "categoria": "Isquemia y ST",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Latido aprendido de pacientes con infarto inferior antiguo (PTB-XL); el ECG no data el infarto ni localiza la arteria."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (IMI), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Población con infarto antiguo; no permite datar el infarto ni demostrar recuperación tisular. Latido aprendido de pacientes con infarto inferior antiguo (PTB-XL); el ECG no data el infarto ni localiza la arteria. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "old_anterior",
     "nombre": "Infarto anteroseptal antiguo",
     "categoria": "Isquemia y ST",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Latido aprendido de pacientes con infarto anteroseptal antiguo (PTB-XL); el ECG no data el infarto ni localiza la arteria."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (ASMI), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Población con infarto antiguo; no permite datar el infarto ni demostrar recuperación tisular. Latido aprendido de pacientes con infarto anteroseptal antiguo (PTB-XL); el ECG no data el infarto ni localiza la arteria. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "anterior",
     "nombre": "Oclusión de la descendente anterior",
     "categoria": "Isquemia y ST",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Cambio del ST aprendido de oclusiones con balón (STAFF III, 103 pacientes): una oclusión súbita y completa, cuyos tiempos no son los del infarto espontáneo; sin ondas Q ni evolución tras la reperfusión."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan. Cambio emparejado de oclusión LAD aprendido de STAFF III.",
+    "fuentes": [
+      "PTB-XL",
+      "STAFF III"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Oclusión provocada con balón: las fases no son un reloj del infarto espontáneo ni una simulación de reperfusión. Cambio del ST aprendido de oclusiones con balón (STAFF III, 103 pacientes): una oclusión súbita y completa, cuyos tiempos no son los del infarto espontáneo; sin ondas Q ni evolución tras la reperfusión. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "lateral",
     "nombre": "Lesión lateral",
     "categoria": "Isquemia y ST",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Núcleos paramétricos y proyección vectorial, con correcciones locales según la configuración.",
+    "fuentes": [],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Morfología representativa; esta combinación no utiliza una población de latidos aprendida. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "posterior",
     "nombre": "Patrón de lesión posterior",
     "categoria": "Isquemia y ST",
     "estado": "aproximado",
-    "estrategia": "local",
-    "limitacion": "Corrección local de R; V7–V9 pendientes."
+    "mecanismo": "Núcleos paramétricos y proyección vectorial, con correcciones locales según la configuración.",
+    "fuentes": [],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Morfología representativa; esta combinación no utiliza una población de latidos aprendida. Corrección local de R; V7–V9 pendientes. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "rv_infarct",
     "nombre": "Lesión ventricular derecha",
     "categoria": "Isquemia y ST",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "V3R–V4R pendientes; no reproduce todos los criterios territoriales."
+    "mecanismo": "Núcleos paramétricos y proyección vectorial, con correcciones locales según la configuración.",
+    "fuentes": [],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Morfología representativa; esta combinación no utiliza una población de latidos aprendida. V3R–V4R pendientes; no reproduce todos los criterios territoriales. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "diffuse",
     "nombre": "ST descendido difuso + aVR elevado",
     "categoria": "Isquemia y ST",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Núcleos paramétricos y proyección vectorial, con correcciones locales según la configuración.",
+    "fuentes": [],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Morfología representativa; esta combinación no utiliza una población de latidos aprendida. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "subendo",
     "nombre": "Patrón de isquemia subendocárdica",
     "categoria": "Isquemia y ST",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Núcleos paramétricos y proyección vectorial, con correcciones locales según la configuración.",
+    "fuentes": [],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Morfología representativa; esta combinación no utiliza una población de latidos aprendida. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "wellens_a",
     "nombre": "Patrón de Wellens · tipo A",
     "categoria": "Isquemia y ST",
     "estado": "aproximado",
-    "estrategia": "local",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Núcleos paramétricos y proyección vectorial, con correcciones locales según la configuración.",
+    "fuentes": [],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Morfología representativa; esta combinación no utiliza una población de latidos aprendida. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "wellens_b",
     "nombre": "Patrón de Wellens · tipo B",
     "categoria": "Isquemia y ST",
     "estado": "aproximado",
-    "estrategia": "local",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Núcleos paramétricos y proyección vectorial, con correcciones locales según la configuración.",
+    "fuentes": [],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Morfología representativa; esta combinación no utiliza una población de latidos aprendida. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "de_winter",
     "nombre": "Patrón de de Winter",
     "categoria": "Isquemia y ST",
     "estado": "aproximado",
-    "estrategia": "local",
-    "limitacion": "No garantiza ST↑ en aVR; patrón parcial señalado como aproximado."
+    "mecanismo": "Núcleos paramétricos y proyección vectorial, con correcciones locales según la configuración.",
+    "fuentes": [],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Morfología representativa; esta combinación no utiliza una población de latidos aprendida. No garantiza ST↑ en aVR; patrón parcial señalado como aproximado. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "sgarbossa",
     "nombre": "BRI con lesión concordante",
     "categoria": "Isquemia y ST",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Caso ilustrativo; sin cálculo automático de score. ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa."
+    "mecanismo": "Núcleos paramétricos y proyección vectorial, con correcciones locales según la configuración.",
+    "fuentes": [],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Morfología representativa; esta combinación no utiliza una población de latidos aprendida. ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa. Caso ilustrativo; sin cálculo automático de score. ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "pericarditis",
     "nombre": "Patrón de pericarditis",
     "categoria": "Isquemia y ST",
     "estado": "aproximado",
-    "estrategia": "local",
-    "limitacion": "Dipolo único no garantiza elevación en todas las derivaciones; no diagnostica pericarditis."
+    "mecanismo": "Núcleos paramétricos y proyección vectorial, con correcciones locales según la configuración.",
+    "fuentes": [],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Morfología representativa; esta combinación no utiliza una población de latidos aprendida. Dipolo único no garantiza elevación en todas las derivaciones; no diagnostica pericarditis. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "rv_acute",
     "nombre": "Sobrecarga aguda del ventrículo derecho",
     "categoria": "Sobrecarga",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "No reproduce S1Q3T3 de forma consistente; ECG no confirma ni excluye TEP."
+    "mecanismo": "Núcleos paramétricos y proyección vectorial, con correcciones locales según la configuración.",
+    "fuentes": [],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Morfología representativa; esta combinación no utiliza una población de latidos aprendida. No reproduce S1Q3T3 de forma consistente; ECG no confirma ni excluye TEP. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "rv_chronic",
     "nombre": "Hipertrofia del ventrículo derecho",
     "categoria": "Sobrecarga",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Criterios de voltaje individuales no validados; no modela anatomía real."
+    "mecanismo": "Núcleos paramétricos y proyección vectorial, con correcciones locales según la configuración.",
+    "fuentes": [],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Morfología representativa; esta combinación no utiliza una población de latidos aprendida. Criterios de voltaje individuales no validados; no modela anatomía real. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "lvh",
     "nombre": "Hipertrofia del ventrículo izquierdo",
     "categoria": "Sobrecarga",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Los criterios Sokolow-Lyon/Cornell no se calculan automáticamente."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (LVH), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "ST-T conserva la relación secundaria prevista por la población; su proporcionalidad no está calibrada clínicamente. Los criterios Sokolow-Lyon/Cornell no se calculan automáticamente. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "aai",
     "nombre": "Estimulación auricular AAI",
     "categoria": "Marcapasos",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Estimulación capturada a frecuencia fija; sensado, demanda y fallos pendientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Estimulación capturada a frecuencia fija; sensado, demanda y fallos pendientes. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "vvi",
     "nombre": "Estimulación ventricular VVI",
     "categoria": "Marcapasos",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Por defecto, estimulación fija capturada. VVI ofrece demanda idealizada y una variante sin captura total sin escape; no simula fusión ni fallos intermitentes. ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Ruta de complejos estimulados: VPACE aprendido. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa. Por defecto, estimulación fija capturada. VVI ofrece demanda idealizada y una variante sin captura total sin escape; no simula fusión ni fallos intermitentes. ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "ddd",
     "nombre": "Estimulación secuencial DDD",
     "categoria": "Marcapasos",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Secuencia fija; no simula demanda, PVARP, seguimiento ni límite superior. ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Ruta de complejos estimulados: VPACE aprendido. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa. Secuencia fija; no simula demanda, PVARP, seguimiento ni límite superior. ST y T secundarios aproximados, acoplados a la activación QRS. La amplitud y la relación ST/QRS no están calibradas clínicamente; no permiten validar criterios proporcionales de Sgarbossa. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "hyperk",
     "nombre": "Hiperpotasemia · T prominente",
     "categoria": "Otros patrones",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Patrón esquemático de libro. En pacientes reales el ECG no sigue al potasio de forma lineal: con K ≥ 5,5 solo 2 de 7 mostraron T más picuda que su propio ECG con K normal (demo de MIMIC-IV); influyen la cronicidad, el calcio y los fármacos. Sin relación concentración–ECG, ni evolución a onda sinusoidal."
+    "mecanismo": "Núcleos paramétricos y proyección vectorial, con correcciones locales según la configuración.",
+    "fuentes": [],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Morfología representativa; esta combinación no utiliza una población de latidos aprendida. Patrón esquemático; no establece una relación concentración–ECG. Patrón esquemático de libro. En pacientes reales el ECG no sigue al potasio de forma lineal: con K ≥ 5,5 solo 2 de 7 mostraron T más picuda que su propio ECG con K normal (demo de MIMIC-IV); influyen la cronicidad, el calcio y los fármacos. Sin relación concentración–ECG, ni evolución a onda sinusoidal. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "hypok",
     "nombre": "Hipopotasemia · onda U",
     "categoria": "Otros patrones",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Patrón esquemático de libro; en pacientes reales es variable (T aplanada en 3 de 4 con K ≤ 3,3 frente a su propio ECG con K normal, demo de MIMIC-IV). El delineador puede confundir T y U; QT automático no fiable."
+    "mecanismo": "Núcleos paramétricos y proyección vectorial, con correcciones locales según la configuración.",
+    "fuentes": [],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Morfología representativa; esta combinación no utiliza una población de latidos aprendida. Patrón esquemático; no establece una relación concentración–ECG. Patrón esquemático de libro; en pacientes reales es variable (T aplanada en 3 de 4 con K ≤ 3,3 frente a su propio ECG con K normal, demo de MIMIC-IV). El delineador puede confundir T y U; QT automático no fiable. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "longqt",
     "nombre": "QT prolongado",
     "categoria": "Otros patrones",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "shortqt",
     "nombre": "QT corto",
     "categoria": "Otros patrones",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "Morfología paramétrica representativa; sin validación contra ECG de pacientes."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "lowvoltage",
     "nombre": "Bajo voltaje",
     "categoria": "Otros patrones",
     "estado": "aproximado",
-    "estrategia": "vectorial",
-    "limitacion": "La etiología y la alternancia eléctrica no están modeladas."
+    "mecanismo": "Ruta de base aprendida de PTB-XL (NORM), con calendario de eventos y transformaciones paramétricas. Las ondas emitidas dependen del calendario; seleccionar una población no implica que todos sus componentes aparezcan.",
+    "fuentes": [
+      "PTB-XL"
+    ],
+    "evidencia": "Procedencia del generador y contratos de software; no acredita plausibilidad clínica, exactitud diagnóstica ni propagación celular.",
+    "limitacion": "La etiología y la alternancia eléctrica no están modeladas. Revisión clínica humana independiente pendiente.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "pending_0",
     "nombre": "Brugada tipo 1",
     "categoria": "Pendientes",
     "estado": "pendiente",
-    "estrategia": "pending",
-    "limitacion": "Requiere modelo morfológico específico y criterios de aceptación adicionales."
+    "mecanismo": "Sin modelo disponible.",
+    "fuentes": [],
+    "evidencia": "No implementado.",
+    "limitacion": "Requiere modelo morfológico específico y criterios de aceptación adicionales.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "pending_1",
     "nombre": "Hipotermia · onda de Osborn",
     "categoria": "Pendientes",
     "estado": "pendiente",
-    "estrategia": "pending",
-    "limitacion": "Requiere modelo morfológico específico y criterios de aceptación adicionales."
+    "mecanismo": "Sin modelo disponible.",
+    "fuentes": [],
+    "evidencia": "No implementado.",
+    "limitacion": "Requiere modelo morfológico específico y criterios de aceptación adicionales.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "pending_2",
     "nombre": "Efecto digitálico",
     "categoria": "Pendientes",
     "estado": "pendiente",
-    "estrategia": "pending",
-    "limitacion": "Requiere modelo morfológico específico y criterios de aceptación adicionales."
+    "mecanismo": "Sin modelo disponible.",
+    "fuentes": [],
+    "evidencia": "No implementado.",
+    "limitacion": "Requiere modelo morfológico específico y criterios de aceptación adicionales.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "pending_3",
     "nombre": "Alternancia eléctrica",
     "categoria": "Pendientes",
     "estado": "pendiente",
-    "estrategia": "pending",
-    "limitacion": "Requiere modelo morfológico específico y criterios de aceptación adicionales."
+    "mecanismo": "Sin modelo disponible.",
+    "fuentes": [],
+    "evidencia": "No implementado.",
+    "limitacion": "Requiere modelo morfológico específico y criterios de aceptación adicionales.",
+    "validacionClinica": "pendiente"
   },
   {
     "id": "pending_4",
     "nombre": "Dextrocardia",
     "categoria": "Pendientes",
     "estado": "pendiente",
-    "estrategia": "pending",
-    "limitacion": "Requiere modelo morfológico específico y criterios de aceptación adicionales."
+    "mecanismo": "Sin modelo disponible.",
+    "fuentes": [],
+    "evidencia": "No implementado.",
+    "limitacion": "Requiere modelo morfológico específico y criterios de aceptación adicionales.",
+    "validacionClinica": "pendiente"
   }
 ]

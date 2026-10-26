@@ -98,9 +98,10 @@ const absMm = (mv: number) => `${Math.abs(mv * 10).toFixed(1).replace(".", ",")}
 /** The clinical reading of each component (what a clinician would write) and the
  * leads behind it; the measured values and criteria live in the info dialogs. */
 export interface StFindings { elevation: LeadMeasure[]; mild: LeadMeasure[]; depression: LeadMeasure[]; rising: boolean; avr: LeadMeasure; meetsCriterion: boolean }
-/** Guideline threshold at J. The case has no sex or age: V2–V3 take the most quoted
- * value, 2 mm (men ≥ 40); the lowest (1.5 mm, women) flags normal early repolarization. */
+/** Descriptive reference at J, not a patient-specific clinical decision threshold.
+ * This case has no age/sex: V2–V3 use 2 mm (men ≥ 40), disclosed in the reading. */
 export const elevationThreshold = (lead: Lead) => (lead === "V2" || lead === "V3" ? 0.2 : 0.1);
+export const ST_REFERENCE = "V2–V3: referencia de 2 mm para varón ≥40 años; edad y sexo no configurados. No confirma ni excluye isquemia.";
 export function stFindings(m: LeadMeasure[]): StFindings {
   const leads = m.filter((r) => r.lead !== "aVR");
   const up = leads.filter((r) => r.j0 >= ST_LENS.thresholdMv);
@@ -120,11 +121,11 @@ export function stFindings(m: LeadMeasure[]): StFindings {
 function stLine(f: StFindings): string {
   const parts: string[] = [];
   if (f.elevation.length) { const p = largest(f.elevation, (r) => r.j0); parts.push(`Elevación del ST en ${leadList(f.elevation.map((r) => r.lead))}, máxima en ${p.lead} (${absMm(p.j0)})`); }
-  if (f.mild.length) parts.push(`elevación leve del ST en ${leadList(f.mild.map((r) => r.lead))}, bajo el criterio de las guías`);
+  if (f.mild.length) parts.push(`elevación leve del ST en ${leadList(f.mild.map((r) => r.lead))}, bajo el criterio de referencia de esta descripción`);
   if (f.depression.length) { const p = largest(f.depression, (r) => r.j0); parts.push(`descenso del ST ${f.rising ? "con pendiente ascendente" : "horizontal o descendente"} en ${leadList(f.depression.map((r) => r.lead))}, máximo en ${p.lead} (${absMm(p.j0)})`); }
   if (f.avr.j0 >= ST_LENS.thresholdMv) parts.push(`elevación del ST en aVR (${absMm(f.avr.j0)})`);
   else if (f.avr.j0 <= -ST_LENS.thresholdMv) parts.push(`descenso del ST en aVR (${absMm(f.avr.j0)})`);
-  if (!parts.length) return "Sin alteraciones del ST.";
+  if (!parts.length) return "No se destacan cambios del ST con las reglas de esta descripción.";
   const text = parts.join("; ");
   return `${text[0].toUpperCase()}${text.slice(1)}.`;
 }
@@ -147,15 +148,15 @@ export function tFindings(m: LeadMeasure[]): TFindings {
   const prominent = leads.filter((r) => !biphasic.includes(r) && (r.tMax >= 1 || (r.tMax >= 0.7 && r.qrs >= 0.8 && r.tMax / r.qrs >= 0.8)));
   return { inverted, biphasic, flat, prominent };
 }
-function tLine(f: TFindings, wide: boolean): string {
-  // With a wide QRS the T is secondary: its size says nothing about ischaemia.
-  if (wide) f = { ...f, prominent: [] };
+function tLine(f: TFindings): string {
+  // QRS width does not adjudicate the cause of a T finding. Preserve observation;
+  // the separate ST/QRS context explains the limits of causal interpretation.
   const parts: string[] = [];
   if (f.inverted.length) parts.push(`Ondas T invertidas en ${leadList(f.inverted.map((r) => r.lead))}`);
   if (f.biphasic.length) parts.push(`ondas T bifásicas en ${leadList(f.biphasic.map((r) => r.lead))}`);
   if (f.flat.length) parts.push(`ondas T aplanadas en ${leadList(f.flat.map((r) => r.lead))}`);
-  if (f.prominent.length) parts.push(`ondas T prominentes, grandes para su QRS, en ${leadList(f.prominent.map((r) => r.lead))}`);
-  if (!parts.length) return "Onda T normal.";
+  if (f.prominent.length) parts.push(`ondas T prominentes en ${leadList(f.prominent.map((r) => r.lead))}`);
+  if (!parts.length) return "No se destacan alteraciones de la onda T con estas reglas descriptivas.";
   const text = parts.join("; ");
   return `${text[0].toUpperCase()}${text.slice(1)}.`;
 }
@@ -214,11 +215,12 @@ export function structuredDescription(c: ECGCase, s: Signal, impression?: string
     // With f waves on the baseline a mild sub-threshold elevation is not readable.
     const st = stFindings(m);
     if (c.rhythm === "af") st.mild = [];
-    const stText = stLine(st);
+    const stText = stLine(st), tf = tFindings(m);
     lines.push({ key: "ST", text: c.rhythm === "af" ? `${stText.slice(0, -1)} (lectura aproximada por las ondas f).` : stText, info: "st" },
-      { key: "T", text: tLine(tFindings(m), wide), info: "t" },
-      { key: "Q", text: qUnreadable ? "Ondas Q no valorables con este QRS (bloqueo de rama izquierda, preexcitación o QRS ventricular)." : qLine(pathologicalQ(m)), info: "q" });
-    if (wide && (st.elevation.length || st.depression.length)) lines.push({ key: "ST/QRS", text: "QRS ancho: valora la relación ST/QRS. La anchura por sí sola no permite atribuir estas alteraciones a causas primarias o secundarias." });
+      { key: "T", text: tLine(tf), info: "t" },
+      { key: "Q", text: qUnreadable ? "Ondas Q no valorables con este QRS (bloqueo de rama izquierda, preexcitación o QRS ventricular)." : qLine(pathologicalQ(m)), info: "q" },
+      { key: "Ref. ST", text: ST_REFERENCE });
+    if (wide && (st.elevation.length || st.mild.length || st.depression.length || tf.inverted.length || tf.biphasic.length || tf.flat.length || tf.prominent.length)) lines.push({ key: "ST/QRS", text: "QRS ancho: valora la relación ST–T/QRS. La anchura por sí sola no permite atribuir estas alteraciones a causas primarias o secundarias." });
     else if (st.elevation.length && st.depression.length) lines.push({ key: "Rec.", text: "Cambios recíprocos del ST." });
   }
   // A spoken presentation: technique, rhythm and rate, intervals, axis, ST-T and Q,

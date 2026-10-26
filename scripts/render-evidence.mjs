@@ -101,29 +101,10 @@ await writeFile(
   path.join(out, "mediciones.json"),
   JSON.stringify(records, null, 2),
 );
-const all = E.PRESETS.map((p) => ({
-  id: p.id,
-  nombre: p.name,
-  categoria: p.group,
-  estado: p.strategy === "pending" ? "pendiente" : "aproximado",
-  estrategia: p.strategy,
-  limitacion: p.limitation,
-}));
-await writeFile(
-  path.join(root, "docs", "estado-presets.json"),
-  JSON.stringify(all, null, 2),
-);
-await writeFile(
-  path.join(root, "docs", "estado-presets.md"),
-  "# Estado de los patrones\n\nNingún patrón se presenta como validado clínicamente.\n\n| Patrón | Estado | Estrategia | Límite |\n|---|---|---|---|\n" +
-    all
-      .map(
-        (p) =>
-          `| ${p.nombre} | ${p.estado} | ${p.estrategia} | ${p.limitacion} |`,
-      )
-      .join("\n") +
-    "\n",
-);
+// One writer for the effective model/evidence matrix; the historical strategy
+// field must not overwrite learned populations with a generic vector label.
+await import("./model-provenance.mjs");
+const all = JSON.parse(await readFile(path.join(root, "docs", "estado-presets.json"), "utf8"));
 for (const id of ["sinus", "af", "complete", "inferior"])
   await writeFile(
     path.join(root, "docs", "casos", id + ".json"),

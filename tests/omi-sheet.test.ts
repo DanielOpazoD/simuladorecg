@@ -56,23 +56,23 @@ describe("descripción estructurada", () => {
     expect(st).toMatch(/^Elevación del ST en I, aVL y V2–V4, máxima en V3/);
     expect(st).toMatch(/descenso del ST [^;]*III/);
     expect(line(d, "Rec.")).toBe("Cambios recíprocos del ST.");
-    expect(line(d, "T")).toMatch(/Ondas T invertidas en III y aVF; ondas T prominentes, grandes para su QRS, en V3/);
+    expect(line(d, "T")).toMatch(/Ondas T invertidas en III y aVF; ondas T prominentes en V3/);
     expect(d.lines.find((l) => l.key === "ST")!.info).toBe("st");
     expect(d.summary).toContain("12 derivaciones");
   });
-  it("el ECG normal dice «sin alteraciones del ST», «onda T normal» y «sin ondas Q patológicas»", () => {
+  it("el ejemplo sinusal no convierte la ausencia de hallazgos seleccionados en normalidad clínica", () => {
     const d = read("sinus");
-    expect(line(d, "ST")).toBe("Sin alteraciones del ST.");
-    expect(line(d, "T")).toBe("Onda T normal.");
+    expect(line(d, "ST")).toBe("No se destacan cambios del ST con las reglas de esta descripción.");
+    expect(line(d, "T")).toBe("No se destacan alteraciones de la onda T con estas reglas descriptivas.");
     expect(line(d, "Q")).toBe("Sin ondas Q patológicas.");
     expect(d.summary).not.toMatch(/J\+60|T\/QRS/);
     expect(structuredDescription(preset("sinus"), synthesize(preset("sinus"), 10), "Ritmo sinusal").summary)
-      .toMatch(/^Electrocardiograma de 12 derivaciones \(25 mm\/s, 10 mm\/mV\) en ritmo sinusal, frecuencia 72 lpm, con PR de \d+ ms, QRS de \d+ ms y QTc de \d+ ms, y eje QRS normal \(\d+°\)\. Sin alteraciones del ST\. .* En suma: ritmo sinusal\.$/);
+      .toMatch(/^Electrocardiograma de 12 derivaciones \(25 mm\/s, 10 mm\/mV\) en ritmo sinusal, frecuencia 72 lpm, con PR de \d+ ms, QRS de \d+ ms y QTc de \d+ ms, y eje QRS normal \(\d+°\)\. No se destacan cambios del ST con las reglas de esta descripción\. .* En suma: ritmo sinusal\.$/);
   });
   it("De Winter: descenso ascendente y T prominentes; Wellens: T bifásicas o invertidas", () => {
     const d = read("de_winter");
     expect(line(d, "ST")).toMatch(/^Descenso del ST con pendiente ascendente en V1–V6/);
-    expect(line(d, "T")).toMatch(/ondas T prominentes, grandes para su QRS, en [^.]*V2–V6|Ondas T prominentes/i);
+    expect(line(d, "T")).toMatch(/ondas T prominentes en [^.]*V2–V6|Ondas T prominentes/i);
     expect(line(read("wellens_a"), "T")).toBe("Ondas T bifásicas en V2 y V3.");
     expect(line(read("wellens_b"), "T")).toBe("Ondas T invertidas en V2 y V3.");
   });
@@ -105,7 +105,10 @@ describe("descripción estructurada", () => {
     // Pericarditis: the ST depression in aVR is named.
     expect(line(read("pericarditis"), "ST")).toMatch(/descenso del ST en aVR/);
     expect(line(read("rbbb"), "T")).not.toMatch(/aplanadas/);
-    expect(line(read("lbbb"), "T")).not.toMatch(/prominentes|aplanadas en aVF/);
+    // The measured T prominence remains visible with LBBB; QRS width does not
+    // establish that all repolarization findings are secondary.
+    expect(line(read("lbbb"), "T")).toMatch(/prominentes/);
+    expect(line(read("lbbb"), "ST/QRS")).toContain("no permite atribuir");
     expect(line(read("posterior"), "ST")).toMatch(/máximo en V[23]/);
     const lcx = leadMeasures(synthesize(preset("inferior_lcx"), 10)), at = (l: string) => lcx.find((m) => m.lead === l)!.j0;
     expect(at("II")).toBeGreaterThanOrEqual(at("III"));

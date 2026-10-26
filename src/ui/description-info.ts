@@ -30,10 +30,10 @@ interface InfoContent { title: string; intro: string; items: [string, string][];
 const CONTENT = {
   st: {
     title: "Segmento ST: criterios",
-    intro: "El ST se mide en el punto J (fin del QRS) respecto de la línea de base del segmento PR. La descripción solo llama «elevación» a la que cumple el criterio de las guías.",
+    intro: "El ST se mide respecto del segmento PR, con marcas temporales del generador. Para esta descripción, J es la media de los primeros 10 ms tras el final del QRS del modelo; J+60 es una muestra. Se comparan voltajes con una referencia adulta fija; no se adjudica un diagnóstico ni se sustituye edad, sexo, QRS basal o contexto clínico. No destacar un cambio con estas reglas no equivale a normalidad ni excluye isquemia.",
     items: [
       ["Elevación significativa", "Nueva elevación en el punto J en al menos dos derivaciones contiguas: ≥ 1 mm en todas salvo V2–V3; en V2–V3, ≥ 2 mm en hombres ≥ 40 años, ≥ 2,5 mm en hombres < 40 años y ≥ 1,5 mm en mujeres."],
-      ["En esta descripción", "El caso no tiene sexo ni edad: se aplica 2 mm en V2–V3 (el umbral más citado, hombres ≥ 40 años) y 1 mm en el resto, en dos derivaciones contiguas. Una elevación menor solo se nombra («elevación leve») fuera del patrón habitual de V1–V3. Junto a una elevación, un descenso recíproco aislado también se describe."],
+      ["En esta descripción", "El caso no tiene sexo ni edad: se usa 2 mm en V2–V3 como referencia de varón ≥40 años y 1 mm en el resto, en dos derivaciones contiguas. No es un umbral individualizado. Una elevación menor solo se nombra («elevación leve») fuera de V1–V3; algunos cambios quedan fuera de estas reglas. Junto a una elevación, un descenso recíproco aislado también se describe."],
       ["Descenso significativo", "Descenso horizontal o descendente ≥ 0,5 mm en dos derivaciones contiguas. El descenso con pendiente ascendente y T altas en precordiales es el patrón de De Winter."],
       ["Lo habitual en sanos", "Una elevación pequeña y cóncava del punto J en V1–V3 es frecuente, sobre todo en hombres jóvenes; por eso el umbral de V2–V3 es más alto."],
       ["Más allá de los milímetros", "El paradigma OMI valora además la forma, la proporción con el QRS y la reciprocidad: una oclusión puede no cumplir el criterio y una elevación puede no ser una oclusión."],
@@ -50,7 +50,7 @@ const CONTENT = {
   },
   t: {
     title: "Onda T: qué es normal",
-    intro: "La T normal es asimétrica (asciende lento y desciende rápido) y sigue la dirección del QRS en la mayoría de las derivaciones.",
+    intro: "Se describen polaridad, fases, aplanamiento y prominencia de la T. La ausencia de un hallazgo seleccionado no demuestra normalidad. Un QRS ancho no permite atribuir automáticamente la T a cambios secundarios ni excluir una alteración primaria.",
     items: [
       ["Normal", "Positiva en I, II y V3–V6; negativa en aVR. Puede ser negativa o aplanada en III, aVL, aVF y V1 (y en V2 en jóvenes) sin significado patológico."],
       ["Invertida", "Negativa donde debería ser positiva, en dos o más derivaciones contiguas. Profunda y simétrica en V2–V3 tras dolor torácico sugiere reperfusión de la DA (Wellens)."],
