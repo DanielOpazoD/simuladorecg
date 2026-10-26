@@ -12,6 +12,7 @@ import { structuredDescription, type DescriptionInfo, type StructuredDescription
 import { descriptionInfoHtml, descriptionInfoTitle } from "./ui/description-info";
 import { concealMetricCards, metricsHtml, modelMetricCards } from "./ui/metric-cards";
 import { defaultZoomLead, mountStZoom, stZoomHtml } from "./ui/st-zoom";
+import { visiblePaperLeads } from "./render/paper-viewport";
 import type { Lead } from "./engine/types";
 import { openDialog, closeDialog } from "./ui/dialog";
 import { exportDialogHtml } from "./ui/export-dialog";
@@ -109,7 +110,7 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  <section id="metrics" class="metrics" aria-label="Valores del modelo que generó el ECG"><div class="loading-metrics">Generando señal…</div></section>
  <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><div class="trace-tools">${btn("caliper", "Calibres", "ruler")}${btn("annotations", "Ondas", "eye")}<span class="lens-tools" role="group" aria-label="Lentes OMI">${btn("lens-previous", "ECG previo", "strip")}${btn("lens-change", "Solo el cambio", "pulse")}${btn("lens-st", "Punto J y ST", "ruler")}</span>${btn("pause", "Congelar", "pause")}<details class="paper-menu"><summary class="btn" data-action="paper" aria-label="Papel: velocidad, ganancia, formato y filtro">${icon("grid")}<span>Papel</span></summary><div class="scale-toolbar" id="scale-toolbar"></div></details></div></div>
  <div id="quiz-panel" hidden></div><div id="caliper-editor" class="caliper-editor" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small id="monitor-rate-note">No estimable</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
- <div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div>
+ <p class="trace-context" id="trace-context" hidden></p><div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-context trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div>
  <div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><p id="trace-keyboard-help" class="sr-only">Con foco en el trazado: M, P y R cambian la vista; V y G, la escala; C activa los calibres y espacio congela el monitor. Con calibres, las flechas mueven el extremo seleccionado; Mayús mueve diez pasos. Pulsa ? para abrir la ayuda de atajos.</p></section>
  </div>
  <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><div class="section-label">Guía de lectura</div><h2 id="finding-title">Hallazgos esperados</h2><p id="case-subtitle" class="guide-lead">Activación auricular sinusal seguida de conducción AV 1:1.</p><ul id="findings"></ul><div id="structured-description"></div></div><div class="guide-side"><div id="omi-sheet"></div><details class="model-details"><summary>Sobre el modelo <span id="warning-count"></span></summary><div id="limitation" class="model-note"></div><div id="warnings"></div><button class="text-button" data-action="measurements">Medidas del analizador y valores del modelo ${icon("chevron")}</button></details><div class="guide-links"><button class="text-button" data-action="about">Estado y referencias ${icon("chevron")}</button></div></div></section>
@@ -500,7 +501,15 @@ const paperMaxHeight = () =>
 /** Mobile: tells the eye that more leads lie to the right of the visible sheet. */
 const syncTraceOverflow = () => {
   const wrap = $("#canvas-wrap");
+  const more = wrap.scrollWidth > wrap.clientWidth + 2;
   wrap.toggleAttribute("data-more-right", wrap.scrollLeft + wrap.clientWidth < wrap.scrollWidth - 2);
+  const context = $("#trace-context");
+  context.hidden = !layout || c.view.mode === "monitor";
+  if (layout && c.view.mode !== "monitor") {
+    const leads = visiblePaperLeads(layout, wrap.scrollLeft, wrap.clientWidth).join(", ");
+    const timing = c.view.mode === "paper" ? (c.view.timing === "simultaneous" ? "columnas simultáneas" : "columnas secuenciales") : "tira de ritmo";
+    context.textContent = `${leads} · ${c.view.speed} mm/s · ${c.view.gain} mm/mV${c.view.chestGain !== c.view.gain ? ` (precordiales ${c.view.chestGain})` : ""} · ${timing}${more ? " · Desplaza el papel horizontalmente; Tira de ritmo permite seguir la conducción." : ""}`;
+  }
 };
 function draw() {
   c.view.palette = currentTheme() === "dark" ? "dark" : "paper";
@@ -869,8 +878,6 @@ document.addEventListener("click", async (e) => {
     openCase(selected);
     return;
   }
-  const zoomLead = target.closest<HTMLElement>("[data-zoom-lead]")?.dataset.zoomLead as Lead | undefined;
-  if (zoomLead) { openStZoom(zoomLead); return; }
   const action = target.closest<HTMLElement>("[data-action]")?.dataset.action;
   if (!action) return;
   // The 30-second button sits inside the description's <summary>: do not toggle it.
