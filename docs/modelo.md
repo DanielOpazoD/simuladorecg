@@ -2,6 +2,14 @@
 
 > Documento acumulativo: los apartados v1.3 describen decisiones históricas, no la selección efectiva actual. Para la procedencia de cada preset consultar la [matriz generada](estado-presets.md); para fase y combinaciones, [alcance vigente](alcance-actual.md). La interfaz obtiene la procedencia desde la misma selección del motor. Los apartados históricos no son una nueva validación.
 
+La descripción vectorial de las secciones 2–4 corresponde a la rama de núcleos.
+El producto actual selecciona también poblaciones aprendidas: sus formas,
+duraciones propias y controles no se deducen de las fórmulas de esa rama. La
+[procedencia efectiva](estado-presets.md), los [contratos de intervención](electrophysiology-intervention-contract.md)
+y la [comparación con el basal](causal-comparison.md) distinguen ambos caminos.
+Aprender coeficientes de ECG externos no acredita por sí solo plausibilidad
+clínica ni convierte un cambio de población en la evolución del mismo paciente.
+
 ## Plan aplicado
 
 Se priorizó un motor independiente y verificable, con vista de papel como superficie inicial, un monitor y herramientas docentes. Los ritmos y bloqueos AV se describen mediante eventos; los bloqueos de rama y vectores de ST modifican el dipolo; algunos patrones regionales tienen correcciones locales identificadas. Los casos que no admitían una representación suficiente quedaron señalados como aproximados o pendientes.
@@ -35,7 +43,7 @@ Esta frontera es una política conservadora del motor que suma ondas; **no estim
 
 Se construyen tres señales XYZ. Convención de Frank: X hacia izquierda, Y hacia inferior y Z hacia posterior. Los kernels QRS incluyen activación septal, fuerzas del VI, componente basal y fuerzas derechas. En BRD se retrasa el componente derecho, conservando su proyección terminal mientras se ajustan las fuerzas dominantes para el eje solicitado. En BRI se sustituye la secuencia por fuerzas anchas y bimodales con alteración secundaria del ST–T.
 
-Las amplitudes y los vectores de este proyecto son **calibraciones propias**, inspiradas en modelos publicados. No son parámetros individuales extraídos de pacientes. Los kernels tienen soporte temporal finito mediante una ventana de borde; sigma no se presenta como duración clínica.
+Las amplitudes y los vectores de la rama de núcleos son **parámetros ilustrativos propios**, inspirados en modelos publicados; no son una calibración clínica ni parámetros individuales extraídos de pacientes. Las poblaciones aprendidas siguen el ciclo de [fidelidad](fidelidad.md) y se distinguen en la procedencia efectiva. Los kernels tienen soporte temporal finito mediante una ventana de borde; sigma no se presenta como duración clínica.
 
 P usa dos componentes solapados en un soporte de 95 ms. Comparten dirección frontal y tienen distinta evolución anteroposterior. La amplitud tardía se limita para que el ejemplo sinusal de V1 tenga componentes pequeños, aproximadamente +0,05/−0,046 mV, sin imponer una P normal idéntica a todos los pacientes. Los eventos auriculares ectópicos/retrogrados conservan sus plantillas. Es una elección del simulador, no una reconstrucción anatómica individual.
 
@@ -43,7 +51,7 @@ T usa dos ramas de coseno con pico en el 62% de su soporte (50% y mayor concentr
 
 ### Contrato de amplitud T
 
-`tAmp` escala toda la T respecto de la amplitud de referencia 0,28: componentes X/Y/Z, variantes de conducción/sobrecarga y ajustes regionales de Wellens/de Winter. Cero anula esa contribución. No significa que toda la ventana de repolarización quede en cero: pueden persistir ST primario o secundario, U y artefactos independientes. El control QRS no actúa como escala oculta de los ajustes T locales.
+En la rama de núcleos, `tAmp` escala la contribución T respecto de la amplitud de referencia 0,28: componentes X/Y/Z, variantes de conducción/sobrecarga y ajustes regionales de Wellens/de Winter. Cero anula esa contribución. No significa que toda la ventana de repolarización quede en cero: pueden persistir ST primario o secundario, U y artefactos independientes. El control QRS no actúa como escala oculta de los ajustes T locales. En las poblaciones aprendidas CLBBB/CRBBB/IRBBB/LVH, ST–T escala con la ganancia QRS y el control T independiente no se aplica; las formas ectópicas/estimuladas tienen su propia ruta. La disponibilidad de un control debe leerse según la selección efectiva, no extenderse desde este contrato de núcleos.
 
 El escalado de Z corrige un componente que antes permanecía fijo. Entre los presets por defecto cambia únicamente bajo voltaje, que usa `tAmp = 0,15`; los efectos cuantitativos y hashes se publican en [aceptacion-fenotipos.md](aceptacion-fenotipos.md).
 
@@ -57,7 +65,7 @@ RR_efectivo[n] = RR_efectivo[n-1]
 QT[n] = QTc_F * cbrt(RR_efectivo[n])
 ```
 
-Se limita QT entre `QRS + 120 ms` y 900 ms. Se inicializa la historia con el RR ventricular nominal, incluyendo razón de conducción cuando corresponde. Los latidos conservan `qrs`, `qt` y `adaptedRR`; el resumen de referencia usa los valores realmente sintetizados.
+En los latidos gobernados por QTc se limita QT entre `QRS + 120 ms` y 900 ms. Se inicializa la historia con el RR ventricular nominal, incluyendo razón de conducción cuando corresponde. Los latidos conservan `qrs`, `qt` y `adaptedRR`; el resumen de referencia usa los valores realmente sintetizados. Los complejos ectópicos aprendidos con duraciones propias no heredan esta promesa de control QTc; el [contrato de límites](qt-model-limits.md) distingue duración solicitada y realizada.
 
 La recurrencia de memoria infinita es una adaptación de ingeniería inspirada en Malik et al.; el artículo emplea una ventana finita de cinco minutos y pesos exponenciales. La escala universal de adaptación es 95% en dos minutos. No implementa restitución rápida del potencial de acción ni adaptación individual. [Malik et al., 2018, método y apéndice](https://link.springer.com/article/10.1007/s10928-018-9587-8).
 
@@ -90,7 +98,7 @@ Wellens y de Winter, la R anterior del patrón posterior y el PR de pericarditis
 
 ### Intensidad, fases y contexto del caso
 
-En los ajustes locales, `st / 2` escala la modificación T de Wellens y el ST/T de de Winter; 2 conserva el ejemplo de referencia. Con intensidad cero se recupera su repolarización basal. Las transformaciones globales de T de las fases hiperaguda/evolutiva también dependen de la intensidad, con mezcla acotada. La fase interna `chronic`, presentada como «ST resuelto», desactiva los aportes ST/T de lesión. No simula cicatriz, ondas Q ni una historia clínica de infarto; las fases son estados paramétricos, no una secuencia temporal validada. El ST secundario a BRI/activación ventricular, U y QRS son independientes de este control. La nota junto al control declara si su efecto actual recae en ST, T o ambos.
+En los ajustes locales de núcleos, `st / 2` escala la modificación T de Wellens y el ST/T de de Winter; 2 conserva el ejemplo de referencia. Con intensidad cero se recupera su repolarización basal. Las transformaciones globales de T de las fases hiperaguda/evolutiva también dependen de la intensidad, con mezcla acotada. En esta rama, `chronic` («ST resuelto») desactiva los aportes ST/T de lesión sin generar cicatriz ni ondas Q. En las combinaciones aprendidas admitidas, `chronic` selecciona las poblaciones IMI/ASMI con infarto antiguo; no es el mismo basal sin lesión ni permite datar un infarto. Las fases no constituyen una secuencia temporal validada. El ST secundario a BRI/activación ventricular, U y QRS de la rama de núcleos son independientes de la retirada de lesión. STAFF III puede modificar QRS–ST–T en la ruta aprendida, según la [matriz vigente](alcance-actual.md). La nota junto al control declara el alcance aplicable.
 
 Al seleccionar «BRI con lesión concordante», la transición de controles aplica el ejemplo del catálogo: conducción BRI, QRS 160 ms, eje −15°, Q septal desactivada e intensidad de referencia del preset. Una importación con esta opción y conducción distinta de BRI o QRS <120 ms conserva sus parámetros y presenta advertencia. Esta configuración docente no implementa una evaluación de Sgarbossa original ni modificada.
 
@@ -109,7 +117,7 @@ La Quinta Definición Universal de Infarto de 2026 mantiene los umbrales clásic
 
 ## 5. Filtros y muestreo
 
-Se sintetiza a 1000 Hz con 4 s previos y 100 ms reales posteriores de guarda. El paso alto causal es 0,05 Hz en diagnóstico, 0,5 Hz en monitor y 2 Hz en demostración agresiva. Monitor/agresivo incorporan un biquad de paso bajo a 40 Hz. La salida siempre pasa por un FIR Blackman simétrico de 81 coeficientes (corte de diseño 170 Hz) antes de decimar a 500 Hz. La convolución centrada compensa sus 40 ms de retardo y utiliza muestras de guarda, conservando el prefijo de la señal al cambiar la duración.
+Se sintetiza a 1000 Hz con 4 s previos y guarda posterior: 100 ms en la ruta ordinaria y 4 s en monitor. El paso alto diagnóstico es causal a 0,05 Hz; el monitor utiliza el [perfil de fase cero 0,5–40 Hz](monitor-phase-revision.md) y el modo agresivo conserva su corte de 2 Hz y paso bajo a 40 Hz. La salida pasa por un FIR Blackman simétrico de 81 coeficientes (corte de diseño 170 Hz) antes de decimar a 500 Hz. La convolución centrada compensa sus 40 ms de retardo y utiliza muestras de guarda. Esto no garantiza que ampliar la duración conserve el prefijo de toda adquisición: el ruido realista aún depende de la longitud solicitada. La comparación basal usa igual duración y adquisición; [ese contrato](causal-comparison.md) no declara resuelta la dependencia temporal del ruido.
 
 El FIR mantiene la banda hasta 150 Hz y suprime componentes por encima del Nyquist de salida; las pruebas verifican ganancia >0,90 a 150 Hz y <0,001 a 260 Hz, además de ausencia de desplazamiento del impulso. Son comprobaciones seleccionadas, no certificación de toda la respuesta.
 
@@ -169,7 +177,7 @@ El pulso representa 1 mV y 200 ms: 10 mm de alto y 5 mm de ancho a 10 mm/mV y 25
 
 ### Detalle y selección de un latido
 
-«Ondas» y la ampliación usan `DelineatedBeat`, exactamente el mismo resultado que genera las medidas. No consultan eventos del generador para colocar etiquetas. El punto J visible es una estimación a partir del final QRS medido, no una anotación infalible. El panel conserva muestras de la derivación elegida, ejes mV y ms relativos a QRS, navegación por latido y comparación separada de retorno/tangente.
+El detalle «Ondas» basado en `DelineatedBeat` utiliza el mismo resultado que genera las medidas; sus etiquetas no se colocan a partir de eventos del generador. Su final QRS es una estimación medida, no una anotación infalible. El panel conserva muestras de la derivación elegida, ejes mV y ms relativos a QRS, navegación por latido y comparación separada de retorno/tangente. El [zoom ST](visual-metrology.md) es otra vista: conserva un evento del modelo entre derivaciones y sitúa J en su final QRS conocido. No se debe presentar ese J del modelo como resultado de delineación independiente, ni confundir un latido concreto con un resumen de varios latidos.
 
 El papel ofrece segmentos secuenciales o simultáneos. En el segundo modo cada segmento de las 12 derivaciones parte de t=0; la tira adicional conserva los 10 s completos. El modo no inventa más tiempo por derivación ni altera la señal.
 

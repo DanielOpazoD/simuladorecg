@@ -1,5 +1,11 @@
 # Secondary ST: complete source intervention
 
+> This report describes the secondary-ST source change before the subsequent
+> [WPW repolarization change](wpw-repolarization-resolution.md). Its exclusion of
+> WPW applies to this intervention and its frozen comparisons, not to the current
+> product. The [current scope matrix](alcance-actual.md) identifies both routes.
+> The results and adverse comparisons below retain their original scope.
+
 ## Defect and domain
 
 The secondary T followed abnormal ventricular activation, but its ST component

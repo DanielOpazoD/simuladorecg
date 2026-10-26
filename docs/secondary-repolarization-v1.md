@@ -1,4 +1,13 @@
-# Repolarización secundaria: alcance vigente tras A02/A03
+# Repolarización secundaria: registro histórico de A02/A03
+
+> Nota de alcance añadida el 2026-10-26: este documento conserva la descripción
+> de A02/A03, anterior a la incorporación de ST secundario y de repolarización
+> WPW. No describe el producto actual. Sus afirmaciones de ausencia y su
+> candidato rechazado se mantienen como evidencia histórica. Para el estado
+> posterior consultar [ST secundario implementado](secondary-st-resolution.md),
+> [repolarización WPW](wpw-repolarization-resolution.md) y la
+> [matriz vigente](alcance-actual.md). La implementación posterior no valida
+> clínicamente sus coeficientes ni convierte aquel ensayo adverso en aprobado.
 
 ## Lo que representa el programa
 

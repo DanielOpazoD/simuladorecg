@@ -1,21 +1,19 @@
 import { defineConfig } from 'vite';
 import { execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
+import { sourceIdentity } from './scripts/lib/build-source-identity';
 /** Build identity is an artefact, not a promise of deployment or clinical validation. */
 function identity() {
  const root=process.cwd(),files: string[]=[];
  const walk=(dir: string)=>{for(const e of readdirSync(dir,{withFileTypes:true}))e.isDirectory()?walk(path.join(dir,e.name)):files.push(path.relative(root,path.join(dir,e.name)));};
  walk(path.join(root,'src'));
  if(existsSync(path.join(root,'public')))walk(path.join(root,'public'));
- files.push('index.html','package.json','package-lock.json','vite.config.ts');files.sort();
- const hash=createHash('sha256');for(const file of files)hash.update(file+'\0').update(readFileSync(file)).update('\0');
- // Conservative analysis source identity: every engine source, path-ordered and byte-exact.
- const analysisHash=createHash('sha256');for(const file of files.filter(f=>f.startsWith('src/engine/')))analysisHash.update(file+'\0').update(readFileSync(file)).update('\0');
+ files.push('index.html','package.json','package-lock.json','vite.config.ts','scripts/lib/build-source-identity.ts');
+ const sources=sourceIdentity(root,files);
  let commit='unknown',dirty=true;
  try{commit=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();dirty=!!execFileSync('git',['status','--porcelain','--',...files],{encoding:'utf8'}).trim();}catch{/* archive builds have no Git metadata */}
- return {commit,dirty,analysisSourceSha256:analysisHash.digest('hex'),sourceSha256:hash.digest('hex'),packageVersion:JSON.parse(readFileSync('package.json','utf8')).version,revision:'v'+JSON.parse(readFileSync('package.json','utf8')).version,clinicalValidation:false};
+ return {commit,dirty,analysisSourceSha256:sources.analysisSourceSha256,sourceSha256:sources.sourceSha256,packageVersion:JSON.parse(readFileSync('package.json','utf8')).version,revision:'v'+JSON.parse(readFileSync('package.json','utf8')).version,clinicalValidation:false};
 }
 const build=identity();
 export default defineConfig({
