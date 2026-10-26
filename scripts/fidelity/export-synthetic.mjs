@@ -7,13 +7,18 @@ import { build } from "esbuild";
 import { mkdtemp, mkdir, writeFile, rm, readdir, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const [outDir, nArg = "300", presetId = "sinus", mode = "", offsetArg = "0"] = process.argv.slice(2);
 // Desplazamiento de semillas: lotes de entrenamiento y de prueba sin pacientes en común.
 const offset = Number(offsetArg);
 if (!outDir) throw new Error("Falta el directorio de salida");
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../..");
+const n = Number(nArg);
+if (!Number.isSafeInteger(n) || n < 1) throw new Error("El número de ECG debe ser un entero positivo.");
+if (!Number.isSafeInteger(offset) || offset < 0 || offset + n > 2147483647)
+  throw new Error("El desplazamiento y el lote deben conservar semillas entre 1 y 2147483647.");
+if (!["", "ideal", "realistic"].includes(mode)) throw new Error("Adquisición desconocida: usa ideal o realistic.");
+const root = fileURLToPath(new URL("../../", import.meta.url));
 
 const tmp = await mkdtemp(path.join(tmpdir(), "ecg-fidelity-"));
 const bundle = path.join(tmp, "engine.mjs");
@@ -23,6 +28,7 @@ await build({
 export { PRESETS, fromPreset } from "./src/presets/catalog.ts";
 export { LEADS } from "./src/engine/lead-registry.ts";
 export { registerShapeModel } from "./src/engine/realistic/shape-model.ts";
+export { registerIschemiaModel } from "./src/engine/realistic/ischemia.ts";
 export { withNaturalControls } from "./src/engine/realistic/natural.ts";`,
     resolveDir: root,
     loader: "ts",
@@ -33,13 +39,16 @@ export { withNaturalControls } from "./src/engine/realistic/natural.ts";`,
   outfile: bundle,
   logLevel: "error",
 });
-const { synthesize, PRESETS, fromPreset, LEADS, registerShapeModel, withNaturalControls } = await import(pathToFileURL(bundle).href);
+const { synthesize, PRESETS, fromPreset, LEADS, registerShapeModel, registerIschemiaModel, withNaturalControls } = await import(pathToFileURL(bundle).href);
 await rm(tmp, { recursive: true, force: true });
 // Modelos por clase: en la app los carga el worker bajo demanda (import.meta.glob);
 // aquí se registran desde el disco.
 const modelsDir = path.join(root, "src/engine/realistic/models");
 for (const f of await readdir(modelsDir))
   if (f.endsWith(".json")) registerShapeModel(f.slice(0, -5), JSON.parse(await readFile(path.join(modelsDir, f), "utf8")));
+// The bundle runs independently of process.cwd(): acute cases need this model
+// registered explicitly too, rather than the engine's cwd-based Node fallback.
+registerIschemiaModel(JSON.parse(await readFile(path.join(root, "src/engine/realistic/ischemia/ischemia-model.json"), "utf8")));
 
 // Población "normal": desde F2.3 cada semilla trae su eje, amplitudes, PR, QRS y QT
 // (paciente natural); el lote solo varía lo que no es del paciente: frecuencia,
@@ -59,7 +68,11 @@ const index = [];
 const write = async (c, file, extra = {}) => {
   const s = synthesize(c, 10), len = s.leads.I.length, data = new Float32Array(len * LEADS.length);
   for (let k = 0; k < len; k++)
-    for (let j = 0; j < LEADS.length; j++) data[k * LEADS.length + j] = Math.round(s.leads[LEADS[j]][k] * 1000) / 1000; // 1 µV, como PTB-XL
+    for (let j = 0; j < LEADS.length; j++) {
+      const at = k * LEADS.length + j;
+      data[at] = Math.round(s.leads[LEADS[j]][k] * 1000) / 1000; // 1 µV, como PTB-XL
+      if (!Number.isFinite(data[at])) throw new Error(`Muestra no finita en ${file}: ${LEADS[j]}, ${k}`);
+    }
   await writeFile(path.join(outDir, file), Buffer.from(data.buffer));
   index.push({ file, fs: s.fs, samples: len, leads: LEADS, ...extra });
 };
@@ -76,7 +89,6 @@ if (presetId === "catalog") {
 }
 const preset = PRESETS.find((p) => p.id === presetId);
 if (!preset) throw new Error(`Preset desconocido: ${presetId}`);
-const n = Number(nArg);
 for (let i = 0; i < n; i++) {
   const r = rng(9001 + offset + i);
   const u = (a, b) => a + (b - a) * r();

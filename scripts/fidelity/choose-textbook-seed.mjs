@@ -5,9 +5,11 @@ import { build } from "esbuild";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../..");
+const root = fileURLToPath(new URL("../../", import.meta.url));
+const n = Number(process.argv[2] ?? 4000);
+if (!Number.isSafeInteger(n) || n < 1 || n > 2147483647) throw new Error("El número de pacientes debe ser un entero entre 1 y 2147483647.");
 const tmp = await mkdtemp(path.join(tmpdir(), "ecg-seed-"));
 const bundle = path.join(tmp, "m.mjs");
 await build({
@@ -17,7 +19,6 @@ await build({
 const M = await import(pathToFileURL(bundle).href);
 await rm(tmp, { recursive: true, force: true });
 
-const c = M.DEFAULT_CASE, n = Number(process.argv[2] ?? 4000);
 const LEADS = ["I", "II", "V1", "V2", "V3", "V4", "V5", "V6"];
 const results = [];
 for (let seed = 1; seed <= n; seed++) {
