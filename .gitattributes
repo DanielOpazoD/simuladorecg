@@ -1,0 +1,5 @@
+# Source and fixture hashes must read the same bytes on Windows and Unix.
+* text=auto eol=lf
+# This third-party license is stored with CRLF; preserve its original bytes.
+tests/reference/ludb/fixtures/LICENSE-LUDB.txt -text -eol
+*.dat -text

@@ -9,7 +9,8 @@ const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 async function files(root, prefix='src') {
  const result=[];
  for(const entry of await readdir(path.join(root,prefix),{withFileTypes:true})) {
-  const file=path.join(prefix,entry.name);
+  // Source identities use repository paths, independent of the host separator.
+  const file=path.posix.join(prefix,entry.name);
   if(entry.isDirectory())result.push(...await files(root,file));
   else {assert.ok(entry.isFile(),'Source must contain ordinary files: '+file);result.push(file);}
  }

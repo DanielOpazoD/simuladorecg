@@ -20,6 +20,7 @@ Punto de entrada a `docs/`. La navegación vigente empieza en el [README](../REA
 - [P9 · Calibres, teclado y contraste](p9-keyboard-calipers.md)
 
 ## Generador: despolarización
+- [Unión PR–QRS aprendida: eliminación del impulso y comparación emparejada](learned-atrial-handoff.md)
 - [Fuente ventricular separada del ritmo (v1.5)](ventricular-source-v1.5.md)
 - [Activación regional BRD](regional-rbbb-activation.md)
 - [Eje en ritmos ventriculares polimórficos](polymorphic-axis.md)
