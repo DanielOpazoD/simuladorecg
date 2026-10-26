@@ -10,6 +10,33 @@ concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
+  fidelity-characterization:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Auditar exposición, unidades y aptitud de referencias
+        run: node scripts/audit-fidelity-evidence.mjs --output "$RUNNER_TEMP/ecg-fidelity/evidence.json"
+      - name: Caracterizar adaptación ventricular en muestras finales
+        if: ${{ !cancelled() }}
+        run: node scripts/audit-ventricular-timing.mjs --output "$RUNNER_TEMP/ecg-fidelity/temporal.json"
+      - name: Caracterizar relaciones conjuntas QRS–ST–T
+        if: ${{ !cancelled() }}
+        run: node scripts/audit-joint-morphology.mjs --output "$RUNNER_TEMP/ecg-fidelity/joint"
+      - name: Conservar caracterizaciones, incluidos resultados adversos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fidelity-characterization
+          path: ${{ runner.temp }}/ecg-fidelity/**/*.json
+          if-no-files-found: error
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 20

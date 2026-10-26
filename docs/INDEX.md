@@ -29,6 +29,7 @@ Punto de entrada a `docs/`. La navegación vigente empieza en el [README](../REA
 - Amplitud QRS: [R posterior](posterior-qrs-amplitude.md) · [sobrecarga del VD](rv-qrs-amplitude.md) · [onda delta WPW](wpw-qrs-amplitude.md)
 
 ## Generador: repolarización
+- [Adaptación ventricular y relaciones QRS–ST–T](fidelity-round2-decision.md): criterios previos, exposición de pacientes, instrumentos sobre muestras finales y condiciones para aceptar una corrección.
 - [ST secundario: implementación y evaluación de la fuente](secondary-st-resolution.md) · [WPW: intervención posterior](wpw-repolarization-resolution.md). Las constantes son ilustrativas; la proporcionalidad clínica sigue sin calibrar.
 - [Contratos de intervención electrofisiológica](electrophysiology-intervention-contract.md) · [comparación causal con el basal del mismo caso](causal-comparison.md).
 - [Continuidad local de los controles](control-continuity-contract.md): barridos sobre muestras y transiciones explícitas entre familias de síntesis.
