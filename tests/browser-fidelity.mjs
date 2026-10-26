@@ -283,7 +283,10 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
    const baseline=mean(baselineGroups[0]),ys=[];
    for(let y=Math.floor(baseline-(gain+1)*ppm);y<=Math.ceil(baseline+ppm);y++)if(dark((2+.1*speed)*ppm,y))ys.push(y);
    const xs=[];for(let x=Math.floor(ppm);x<=Math.ceil((3+.2*speed)*ppm);x++)if(dark(x,baseline-gain*.5*ppm))xs.push(x);
-   const sides=groups(xs),tops=groups(ys),majors=[],gy=Math.round(15.4*ppm);
+   // The first 16 mm are a deliberately blank editorial band. Sample the actual
+   // grid below that band, away from horizontal major/minor lines; keep the
+   // independent colour detector, physical pitch and error limits unchanged.
+   const sides=groups(xs),tops=groups(ys),majors=[],gy=Math.round(18.4*ppm);
    for(let x=Math.round(20*ppm);x<Math.round(80*ppm);x++){const i=4*(gy*img.width+x);if(data[i]>190&&data[i]<240&&data[i+1]<210&&data[i+2]<218)majors.push(x);}
    const centers=groups(majors).map(mean),steps=centers.slice(1).map((v,i)=>v-centers[i]);
    const result={speed,gain,widthPx:sides.length===2?mean(sides[1])-mean(sides[0]):null,heightPx:tops.length===1?baseline-mean(tops[0]):null,expectedWidthPx:.2*speed*ppm,expectedHeightPx:gain*ppm,grid5mmPx:steps.length?mean(steps):null,expectedGrid5mmPx:5*ppm};
