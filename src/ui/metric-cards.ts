@@ -1,5 +1,6 @@
 import type { ECGCase, Measurement, MetricKey, Reliability, Signal } from "../engine/types";
 import { esc } from "./helpers";
+import { modelIntervals } from "./model-intervals";
 
 export interface MetricCard {
   key: MetricKey;
@@ -94,29 +95,18 @@ export function availableMetricValue(m:Measurement,key:MetricKey):number|null {
  */
 export function modelMetricCards(c: ECGCase, s: Signal): MetricCard[] {
   const none = unorganized(c), t = s.truth, model = "Valor del modelo que generó este trazado. La estimación automática desde las muestras está en «Medidas».";
-  const beats = s.events.beats, rr = beats.length > 1 ? (beats[beats.length - 1].time - beats[0].time) / (beats.length - 1) : null;
-  const conducted = beats.filter((b) => b.pr !== undefined).map((b) => Math.round(b.pr! * 1000));
-  const prRange = conducted.length ? [Math.min(...conducted), Math.max(...conducted)] : null;
-  const variablePr = prRange !== null && prRange[1] - prRange[0] >= 10;
-  // Interval cards describe the dominant conducted beat: in bigeminy the median of
-  // every beat would mix in the ectopics. Rhythms without conducted beats keep the
-  // generated QRS but have no meaningful QTc.
-  const normal = beats.filter((b) => b.kind === "normal" && b.qrs !== undefined && b.qt !== undefined);
-  const middle = (xs: number[]) => xs.sort((a, b) => a - b)[Math.floor(xs.length / 2)];
-  const qrsMs = normal.length ? middle(normal.map((b) => b.qrs! * 1000)) : t.qrs;
-  const qtMs = normal.length ? middle(normal.map((b) => b.qt! * 1000)) : null;
-  const qtc = qtMs !== null && rr ? qtMs / Math.cbrt(rr) : null;
+  const intervals = modelIntervals(c, s);
   const card = (key: MetricKey, label: string, value: string, note: string): MetricCard =>
     value === "—"
       ? { key, label, value, note: "No aplica", status: "unavailable", reason: "Sin este componente en el ritmo generado." }
       : { key, label, value, note, status: "usable", reason: model };
   return [
     card("hr", "FC ventricular", none || !t.hr ? "—" : display(t.hr, "lpm"), "modelo · media 10 s"),
-    variablePr
-      ? card("pr", "PR", `${prRange![0]}–${prRange![1]}<small>ms</small>`, c.av === "mobitz1" ? "modelo · progresivo" : "modelo · variable")
-      : card("pr", "PR", none || t.pr === null ? "—" : display(t.pr, "ms"), "modelo"),
-    card("qrs", "QRS", none ? "—" : display(qrsMs, "ms"), "modelo"),
-    card("qt", "QTc", none || c.rhythm === "torsades" ? "—" : display(qtc, "ms"), "modelo · Fridericia"),
+    intervals.prRange
+      ? card("pr", "PR", `${intervals.prRange[0]}–${intervals.prRange[1]}<small>ms</small>`, intervals.progressivePr ? "modelo · progresivo" : "modelo · variable")
+      : card("pr", "PR", display(intervals.pr, "ms"), "modelo"),
+    card("qrs", "QRS", display(intervals.qrs, "ms"), "modelo"),
+    card("qt", "QTc", display(intervals.qtc, "ms"), "modelo · Fridericia"),
     card("axis", "Eje QRS", none ? "—" : display(t.axis, "°"), "modelo"),
   ];
 }
