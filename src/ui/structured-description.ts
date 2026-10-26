@@ -1,6 +1,7 @@
 import type { ECGCase, Lead, Signal } from "../engine/types";
 import { stMarks, ST_LENS } from "../render/st-lens";
 import { modelIntervals } from "./model-intervals";
+import { acquiredModelAxis } from "./acquired-model-axis";
 
 /**
  * Structured description of the trace shown (A3): the ABCDE reading of ECGsmith's
@@ -174,9 +175,9 @@ function atrialRate(s: Signal): number | null {
 }
 
 export type DescriptionInfo = "st" | "t" | "q" | "axis";
-export interface StructuredDescription { lines: { key: string; text: string; info?: DescriptionInfo }[]; summary: string; measures: LeadMeasure[]; axis: number | null }
+export interface StructuredDescription { lines: { key: string; text: string; info?: DescriptionInfo }[]; summary: string; measures: LeadMeasure[]; axis: number | null; axisContext?: string }
 export function structuredDescription(c: ECGCase, s: Signal, impression?: string): StructuredDescription {
-  const t = s.truth, model = modelIntervals(c, s);
+  const t = s.truth, model = modelIntervals(c, s), acquiredAxis = acquiredModelAxis(c, s);
   // The same applicability and generated intervals as the model cards; ST/T/Q
   // below still read the sampled dominant complexes.
   const dominant = dominantBeats(s).map((i) => s.events.beats[i]);
@@ -189,7 +190,10 @@ export function structuredDescription(c: ECGCase, s: Signal, impression?: string
   const { qrs, qtc, pr, prRange, progressivePr } = model;
   const prText = prRange ? `PR ${prRange[0]}–${prRange[1]} ms (${progressivePr ? "progresivo" : "variable"})` : pr !== null ? `PR ${n0(pr)} ms` : "PR no medible";
   const intervals = [prText, qrs !== null ? `QRS ${n0(qrs)} ms` : null, qtc !== null ? `QTc ${n0(qtc)} ms` : "QTc no aplicable"].filter(Boolean).join(" · ");
-  const axis = t.axis === null ? "Eje no determinable" : `Eje QRS ${n0(t.axis)}° (${t.axis >= -30 && t.axis <= 90 ? "normal" : t.axis < -30 && t.axis >= -90 ? "desviado a la izquierda" : t.axis > 90 && t.axis <= 180 ? "desviado a la derecha" : "extremo"})`;
+  const angle = acquiredAxis.displayed;
+  const axis = acquiredAxis.reversed
+    ? `Eje del registro ${angle === null ? "no determinable" : `${n0(angle)}°`} (brazos invertidos)`
+    : angle === null ? "Eje no determinable" : `Eje QRS ${n0(angle)}° (${angle >= -30 && angle <= 90 ? "normal" : angle < -30 && angle >= -90 ? "desviado a la izquierda" : angle > 90 && angle <= 180 ? "desviado a la derecha" : "extremo"})`;
   const m = leadMeasures(s);
   const ventricularDominant = dominant.length > 0 && dominant[0].kind !== "normal";
   const wide = (qrs ?? 0) >= 120 || ventricularDominant;
@@ -222,9 +226,11 @@ export function structuredDescription(c: ECGCase, s: Signal, impression?: string
   const lower = (x: string) => x[0].toLowerCase() + x.slice(1);
   const spokenPr = prRange ? `PR ${progressivePr ? "progresivo" : "variable"} de ${prRange[0]} a ${prRange[1]} ms` : pr !== null ? `PR de ${n0(pr)} ms` : "";
   const spokenIntervals = [spokenPr, qrs !== null ? `QRS de ${n0(qrs)} ms` : "", qtc !== null ? `QTc de ${n0(qtc)} ms` : ""].filter(Boolean);
-  const spokenAxis = t.axis === null ? "eje no determinable" : `eje QRS ${lower(axis.slice(axis.indexOf("(") + 1, -1))} (${n0(t.axis)}°)`;
+  const spokenAxis = acquiredAxis.reversed
+    ? `eje del registro ${angle === null ? "no determinable" : `${n0(angle)}°`} con inversión de brazos`
+    : angle === null ? "eje no determinable" : `eje QRS ${lower(axis.slice(axis.indexOf("(") + 1, -1))} (${n0(angle)}°)`;
   const summary = `Electrocardiograma de 12 derivaciones (${c.view.speed} mm/s, ${c.view.gain} mm/mV) en ${lower(rhythm)}` +
     (spokenIntervals.length ? `, con ${spokenIntervals.length > 1 ? `${spokenIntervals.slice(0, -1).join(", ")} y ${spokenIntervals.at(-1)}` : spokenIntervals[0]}` : "") +
     `, y ${spokenAxis}. ${lines.slice(4).map((l) => l.text).join(" ")}${impression ? ` En suma: ${lower(impression)}.` : ""}`;
-  return { lines, summary, measures: m, axis: t.axis };
+  return { lines, summary, measures: m, axis: angle, ...(acquiredAxis.context ? { axisContext: acquiredAxis.context } : {}) };
 }
