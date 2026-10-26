@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "id": "ventricular-timing-characterization-v1",
+  "purpose": "Characterize current production samples before any timing adjustment; this protocol does not authorize clinical promotion.",
+  "seeds": [17, 91, 701],
+  "ratesBpm": [40, 60, 75, 100, 140],
+  "families": [
+    {"preset": "idioventricular", "kind": "ventricular"},
+    {"preset": "vt", "kind": "ventricular"},
+    {"preset": "complete_v", "kind": "ventricular"},
+    {"preset": "pvc", "kind": "pvc"},
+    {"preset": "vvi", "kind": "paced"}
+  ],
+  "durationSeconds": 12,
+  "acquisition": "ideal",
+  "filter": "off",
+  "pAmplitudeMv": 0,
+  "variability": 0,
+  "sampleMeasurement": {
+    "leads": ["I", "II", "V1", "V2", "V3", "V4", "V5", "V6"],
+    "baselineBeforeQrsMs": [40, 10],
+    "windowAfterJMs": [20, 500],
+    "minimumEnergyMv2Seconds": 1e-10,
+    "boundaryAndNextQrsGuardMs": 10,
+    "independence": "Uses final 500 Hz samples and a fixed post-J window, not renderer paths or model T apex/T end; generator QRS onset and J anchor are explicitly not clinical annotations."
+  },
+  "negativeControls": {
+    "inactiveQtcMs": [350, 550],
+    "isolatedVentricularAndPacedMaxSampleDifferenceMv": 1e-10,
+    "pvcAndPacedOwnSttMaxRangeMs": 1e-8,
+    "instrumentTranslationToleranceMs": 2,
+    "instrumentGainRelativeEnergyTolerance": 1e-10
+  },
+  "historyProbe": {"family": "pvc", "rateBpm": 60, "couplings": [0.45, 0.7], "variabilities": [0, 0.15]},
+  "acceptance": {
+    "software": "Finite nonzero sample features, retained failed/excluded cells, unchanged source/model hashes, inactive-control and own-duration negative controls pass. No monotonic clinical threshold is imposed on an unvalidated surrogate.",
+    "correction": "No correction accepted by this characterization alone. Freeze independent patient holdout, units and temporal annotations before adjustment; require paired improvement and family-specific noninferiority margins fixed before access, causal controls and no relevant regressions.",
+    "clinical": "Independent human clinical review and external patient evidence required; absent here."
+  },
+  "clinicalValidation": false
+}

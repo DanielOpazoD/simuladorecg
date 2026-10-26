@@ -1,0 +1,3030 @@
+{
+  "schemaVersion": 1,
+  "role": "Recovered previously exposed development membership only; no new reserve or clinical calibration",
+  "dataset": "PTB-XL",
+  "version": "1.0.3",
+  "derivative": {
+    "dataset": "PTB-XL+",
+    "version": "1.0.1"
+  },
+  "provenance": {
+    "repository": "DanielOpazoD/simuladorecg",
+    "workflowRun": 37578264897,
+    "artifactId": 11463268449,
+    "artifactUrl": "https://github.com/DanielOpazoD/simuladorecg/actions/runs/37578264897/artifacts/11463268449",
+    "artifactDate": "2026-10-07",
+    "artifactZipSha256": "2ca39a3e77279fc12f80fb097fcc1e04813ad1ace2e62b77f1e1abab01d9a1d1",
+    "commits": {
+      "pullRequestHead": "b39a5efe03d42713cdd8882c73f2e91a4612d9d8",
+      "workflowMerge": "5ee10fbffd16dd44c9bdcd028c06a7c2ae751c1d",
+      "frozenAcquisition": "b783fbae5819c3bb3313931d8f2fce43420a9d85"
+    },
+    "commitRoleEvidence": ".github/workflows/ptbxl-morphology.yml uses frozen acquisition worktree and verifies unchanged acquisition scripts/protocol; commit.txt is run merge checkout, not acquisition revision",
+    "sourceFileSha256": {
+      "selection.json": "15df567a09e2b25fe06fcd250c7648ab01d4c8b628c54bbc8cd8f7a94adce0c8",
+      "secondary-stt-reference.json": "212564b1218e4ed0fad0b40fcaeaf84acb2542f472a3df2fe434b72a30748c63",
+      "protocol.json": "a99335cc2a1e494e6c5f2b5e0075f7a4ee1baaf3c0139aebec1a4f513d47cc60",
+      "provenance.json": "f29f823fbdb54806817a07a8159ea56afd8019bcaec35d74fa97c252956ead7f",
+      "commit.txt": "6b1023083410f1c23117a636c8f8e9dda46fb02436b18b39e763af6705118687",
+      "isolated-selection.json": "4917641098d5cb86ac0b8d7ca7e508770575bbc9fb44a3a0f2c81fcea7b98861"
+    },
+    "metadataSha256": "7600de9c1b27d181d850b3c6038a35d7c3ddb6bb33b702e3a20252a6859d216b",
+    "protocolSha256": "a99335cc2a1e494e6c5f2b5e0075f7a4ee1baaf3c0139aebec1a4f513d47cc60",
+    "sourceReleaseManifestSha256": {
+      "PTB-XL": "b7224b92b341511ec3ceb13dc6652079b2c36a06504bcb49506f157f51dc695d",
+      "PTB-XL+": "1bed47b5cc4584f0b2fd9da66187efd473f43f0410392669aa3435bb8fd5bd10"
+    },
+    "verification": {
+      "zipMatchesReportedGitHubDigest": true,
+      "selectionMatchesSecondaryReportInput": true,
+      "protocolMatchesSelection": true,
+      "isolatedSelectionMatchesRepository": true,
+      "originalScaleAuditRecordSetMatchesMedianIds": true
+    },
+    "clinicalValidation": false
+  },
+  "records": [
+    {
+      "ecg_id": 12667,
+      "patient_id": 1429,
+      "fold": 6
+    },
+    {
+      "ecg_id": 15869,
+      "patient_id": 13486,
+      "fold": 8
+    },
+    {
+      "ecg_id": 4811,
+      "patient_id": 15012,
+      "fold": 6
+    },
+    {
+      "ecg_id": 10299,
+      "patient_id": 14070,
+      "fold": 6
+    },
+    {
+      "ecg_id": 20895,
+      "patient_id": 14082,
+      "fold": 3
+    },
+    {
+      "ecg_id": 11572,
+      "patient_id": 9657,
+      "fold": 6
+    },
+    {
+      "ecg_id": 13343,
+      "patient_id": 10889,
+      "fold": 5
+    },
+    {
+      "ecg_id": 5644,
+      "patient_id": 8054,
+      "fold": 8
+    },
+    {
+      "ecg_id": 20635,
+      "patient_id": 20896,
+      "fold": 3
+    },
+    {
+      "ecg_id": 10817,
+      "patient_id": 20423,
+      "fold": 5
+    },
+    {
+      "ecg_id": 13738,
+      "patient_id": 20865,
+      "fold": 5
+    },
+    {
+      "ecg_id": 10042,
+      "patient_id": 14459,
+      "fold": 2
+    },
+    {
+      "ecg_id": 19341,
+      "patient_id": 8334,
+      "fold": 3
+    },
+    {
+      "ecg_id": 15794,
+      "patient_id": 12168,
+      "fold": 3
+    },
+    {
+      "ecg_id": 9181,
+      "patient_id": 21493,
+      "fold": 2
+    },
+    {
+      "ecg_id": 15956,
+      "patient_id": 1159,
+      "fold": 1
+    },
+    {
+      "ecg_id": 19949,
+      "patient_id": 10838,
+      "fold": 1
+    },
+    {
+      "ecg_id": 9331,
+      "patient_id": 16429,
+      "fold": 4
+    },
+    {
+      "ecg_id": 10780,
+      "patient_id": 2049,
+      "fold": 8
+    },
+    {
+      "ecg_id": 4915,
+      "patient_id": 19944,
+      "fold": 8
+    },
+    {
+      "ecg_id": 9762,
+      "patient_id": 15948,
+      "fold": 7
+    },
+    {
+      "ecg_id": 14101,
+      "patient_id": 6033,
+      "fold": 7
+    },
+    {
+      "ecg_id": 20526,
+      "patient_id": 11707,
+      "fold": 2
+    },
+    {
+      "ecg_id": 8500,
+      "patient_id": 18129,
+      "fold": 3
+    },
+    {
+      "ecg_id": 6671,
+      "patient_id": 21020,
+      "fold": 5
+    },
+    {
+      "ecg_id": 6647,
+      "patient_id": 6456,
+      "fold": 3
+    },
+    {
+      "ecg_id": 17845,
+      "patient_id": 5963,
+      "fold": 6
+    },
+    {
+      "ecg_id": 18453,
+      "patient_id": 21182,
+      "fold": 5
+    },
+    {
+      "ecg_id": 19673,
+      "patient_id": 10968,
+      "fold": 4
+    },
+    {
+      "ecg_id": 877,
+      "patient_id": 11920,
+      "fold": 7
+    },
+    {
+      "ecg_id": 12415,
+      "patient_id": 6280,
+      "fold": 6
+    },
+    {
+      "ecg_id": 7874,
+      "patient_id": 15284,
+      "fold": 1
+    },
+    {
+      "ecg_id": 746,
+      "patient_id": 927,
+      "fold": 3
+    },
+    {
+      "ecg_id": 21034,
+      "patient_id": 21642,
+      "fold": 2
+    },
+    {
+      "ecg_id": 16020,
+      "patient_id": 4291,
+      "fold": 3
+    },
+    {
+      "ecg_id": 21358,
+      "patient_id": 17706,
+      "fold": 4
+    },
+    {
+      "ecg_id": 8390,
+      "patient_id": 3201,
+      "fold": 8
+    },
+    {
+      "ecg_id": 19022,
+      "patient_id": 19344,
+      "fold": 4
+    },
+    {
+      "ecg_id": 11436,
+      "patient_id": 9327,
+      "fold": 8
+    },
+    {
+      "ecg_id": 19820,
+      "patient_id": 17417,
+      "fold": 5
+    },
+    {
+      "ecg_id": 5334,
+      "patient_id": 21601,
+      "fold": 8
+    },
+    {
+      "ecg_id": 1484,
+      "patient_id": 14886,
+      "fold": 5
+    },
+    {
+      "ecg_id": 92,
+      "patient_id": 10239,
+      "fold": 8
+    },
+    {
+      "ecg_id": 2847,
+      "patient_id": 15204,
+      "fold": 4
+    },
+    {
+      "ecg_id": 1446,
+      "patient_id": 10445,
+      "fold": 4
+    },
+    {
+      "ecg_id": 10914,
+      "patient_id": 10739,
+      "fold": 4
+    },
+    {
+      "ecg_id": 8566,
+      "patient_id": 11655,
+      "fold": 5
+    },
+    {
+      "ecg_id": 15263,
+      "patient_id": 13996,
+      "fold": 2
+    },
+    {
+      "ecg_id": 14102,
+      "patient_id": 4097,
+      "fold": 2
+    },
+    {
+      "ecg_id": 18686,
+      "patient_id": 16966,
+      "fold": 4
+    },
+    {
+      "ecg_id": 9681,
+      "patient_id": 11062,
+      "fold": 8
+    },
+    {
+      "ecg_id": 17698,
+      "patient_id": 10805,
+      "fold": 5
+    },
+    {
+      "ecg_id": 10400,
+      "patient_id": 2322,
+      "fold": 2
+    },
+    {
+      "ecg_id": 18341,
+      "patient_id": 3526,
+      "fold": 2
+    },
+    {
+      "ecg_id": 21312,
+      "patient_id": 16037,
+      "fold": 4
+    },
+    {
+      "ecg_id": 16491,
+      "patient_id": 12025,
+      "fold": 5
+    },
+    {
+      "ecg_id": 16439,
+      "patient_id": 5634,
+      "fold": 2
+    },
+    {
+      "ecg_id": 14001,
+      "patient_id": 1268,
+      "fold": 7
+    },
+    {
+      "ecg_id": 5128,
+      "patient_id": 10050,
+      "fold": 4
+    },
+    {
+      "ecg_id": 18657,
+      "patient_id": 11322,
+      "fold": 1
+    },
+    {
+      "ecg_id": 8895,
+      "patient_id": 21509,
+      "fold": 1
+    },
+    {
+      "ecg_id": 15832,
+      "patient_id": 17904,
+      "fold": 3
+    },
+    {
+      "ecg_id": 4843,
+      "patient_id": 12230,
+      "fold": 7
+    },
+    {
+      "ecg_id": 10123,
+      "patient_id": 2778,
+      "fold": 4
+    },
+    {
+      "ecg_id": 20882,
+      "patient_id": 19543,
+      "fold": 8
+    },
+    {
+      "ecg_id": 12477,
+      "patient_id": 1936,
+      "fold": 8
+    },
+    {
+      "ecg_id": 21822,
+      "patient_id": 15134,
+      "fold": 7
+    },
+    {
+      "ecg_id": 1338,
+      "patient_id": 7035,
+      "fold": 4
+    },
+    {
+      "ecg_id": 18301,
+      "patient_id": 8271,
+      "fold": 2
+    },
+    {
+      "ecg_id": 11005,
+      "patient_id": 3067,
+      "fold": 3
+    },
+    {
+      "ecg_id": 20598,
+      "patient_id": 12271,
+      "fold": 5
+    },
+    {
+      "ecg_id": 7791,
+      "patient_id": 1979,
+      "fold": 8
+    },
+    {
+      "ecg_id": 4638,
+      "patient_id": 7928,
+      "fold": 5
+    },
+    {
+      "ecg_id": 14402,
+      "patient_id": 12151,
+      "fold": 7
+    },
+    {
+      "ecg_id": 7693,
+      "patient_id": 4686,
+      "fold": 2
+    },
+    {
+      "ecg_id": 15998,
+      "patient_id": 13966,
+      "fold": 8
+    },
+    {
+      "ecg_id": 7151,
+      "patient_id": 18610,
+      "fold": 3
+    },
+    {
+      "ecg_id": 9061,
+      "patient_id": 8059,
+      "fold": 6
+    },
+    {
+      "ecg_id": 3153,
+      "patient_id": 5695,
+      "fold": 3
+    },
+    {
+      "ecg_id": 10852,
+      "patient_id": 14181,
+      "fold": 3
+    },
+    {
+      "ecg_id": 19472,
+      "patient_id": 12460,
+      "fold": 3
+    },
+    {
+      "ecg_id": 12541,
+      "patient_id": 3166,
+      "fold": 5
+    },
+    {
+      "ecg_id": 21141,
+      "patient_id": 17975,
+      "fold": 1
+    },
+    {
+      "ecg_id": 11938,
+      "patient_id": 6100,
+      "fold": 8
+    },
+    {
+      "ecg_id": 11756,
+      "patient_id": 4091,
+      "fold": 8
+    },
+    {
+      "ecg_id": 1499,
+      "patient_id": 14984,
+      "fold": 2
+    },
+    {
+      "ecg_id": 18004,
+      "patient_id": 354,
+      "fold": 8
+    },
+    {
+      "ecg_id": 6010,
+      "patient_id": 19799,
+      "fold": 8
+    },
+    {
+      "ecg_id": 19014,
+      "patient_id": 10390,
+      "fold": 5
+    },
+    {
+      "ecg_id": 11469,
+      "patient_id": 15560,
+      "fold": 5
+    },
+    {
+      "ecg_id": 11881,
+      "patient_id": 11787,
+      "fold": 1
+    },
+    {
+      "ecg_id": 235,
+      "patient_id": 15405,
+      "fold": 4
+    },
+    {
+      "ecg_id": 16117,
+      "patient_id": 17966,
+      "fold": 7
+    },
+    {
+      "ecg_id": 10345,
+      "patient_id": 16636,
+      "fold": 3
+    },
+    {
+      "ecg_id": 15387,
+      "patient_id": 11306,
+      "fold": 8
+    },
+    {
+      "ecg_id": 19521,
+      "patient_id": 12610,
+      "fold": 6
+    },
+    {
+      "ecg_id": 9714,
+      "patient_id": 16951,
+      "fold": 6
+    },
+    {
+      "ecg_id": 5641,
+      "patient_id": 10238,
+      "fold": 8
+    },
+    {
+      "ecg_id": 12111,
+      "patient_id": 6999,
+      "fold": 1
+    },
+    {
+      "ecg_id": 16555,
+      "patient_id": 12711,
+      "fold": 2
+    },
+    {
+      "ecg_id": 4988,
+      "patient_id": 18877,
+      "fold": 6
+    },
+    {
+      "ecg_id": 10750,
+      "patient_id": 2521,
+      "fold": 7
+    },
+    {
+      "ecg_id": 12612,
+      "patient_id": 5531,
+      "fold": 1
+    },
+    {
+      "ecg_id": 15466,
+      "patient_id": 19854,
+      "fold": 5
+    },
+    {
+      "ecg_id": 9963,
+      "patient_id": 15875,
+      "fold": 2
+    },
+    {
+      "ecg_id": 20935,
+      "patient_id": 13120,
+      "fold": 3
+    },
+    {
+      "ecg_id": 19183,
+      "patient_id": 17590,
+      "fold": 3
+    },
+    {
+      "ecg_id": 960,
+      "patient_id": 2411,
+      "fold": 1
+    },
+    {
+      "ecg_id": 17933,
+      "patient_id": 8892,
+      "fold": 8
+    },
+    {
+      "ecg_id": 18218,
+      "patient_id": 19950,
+      "fold": 1
+    },
+    {
+      "ecg_id": 14204,
+      "patient_id": 17476,
+      "fold": 5
+    },
+    {
+      "ecg_id": 1602,
+      "patient_id": 7959,
+      "fold": 1
+    },
+    {
+      "ecg_id": 18331,
+      "patient_id": 19634,
+      "fold": 7
+    },
+    {
+      "ecg_id": 10803,
+      "patient_id": 1501,
+      "fold": 8
+    },
+    {
+      "ecg_id": 531,
+      "patient_id": 16818,
+      "fold": 7
+    },
+    {
+      "ecg_id": 15730,
+      "patient_id": 4044,
+      "fold": 7
+    },
+    {
+      "ecg_id": 12892,
+      "patient_id": 4281,
+      "fold": 2
+    },
+    {
+      "ecg_id": 20668,
+      "patient_id": 15928,
+      "fold": 5
+    },
+    {
+      "ecg_id": 6495,
+      "patient_id": 8886,
+      "fold": 8
+    },
+    {
+      "ecg_id": 16659,
+      "patient_id": 16578,
+      "fold": 4
+    },
+    {
+      "ecg_id": 5502,
+      "patient_id": 15724,
+      "fold": 5
+    },
+    {
+      "ecg_id": 1837,
+      "patient_id": 5795,
+      "fold": 8
+    },
+    {
+      "ecg_id": 17772,
+      "patient_id": 6649,
+      "fold": 8
+    },
+    {
+      "ecg_id": 6299,
+      "patient_id": 3759,
+      "fold": 6
+    },
+    {
+      "ecg_id": 5202,
+      "patient_id": 19285,
+      "fold": 3
+    },
+    {
+      "ecg_id": 10440,
+      "patient_id": 5422,
+      "fold": 7
+    },
+    {
+      "ecg_id": 19602,
+      "patient_id": 20528,
+      "fold": 1
+    },
+    {
+      "ecg_id": 2000,
+      "patient_id": 6645,
+      "fold": 2
+    },
+    {
+      "ecg_id": 3072,
+      "patient_id": 21478,
+      "fold": 8
+    },
+    {
+      "ecg_id": 13390,
+      "patient_id": 10452,
+      "fold": 8
+    },
+    {
+      "ecg_id": 8381,
+      "patient_id": 10417,
+      "fold": 6
+    },
+    {
+      "ecg_id": 9356,
+      "patient_id": 12344,
+      "fold": 3
+    },
+    {
+      "ecg_id": 5820,
+      "patient_id": 8663,
+      "fold": 8
+    },
+    {
+      "ecg_id": 4855,
+      "patient_id": 9482,
+      "fold": 5
+    },
+    {
+      "ecg_id": 16962,
+      "patient_id": 6958,
+      "fold": 2
+    },
+    {
+      "ecg_id": 20363,
+      "patient_id": 8780,
+      "fold": 6
+    },
+    {
+      "ecg_id": 3113,
+      "patient_id": 925,
+      "fold": 3
+    },
+    {
+      "ecg_id": 19871,
+      "patient_id": 8467,
+      "fold": 3
+    },
+    {
+      "ecg_id": 882,
+      "patient_id": 3906,
+      "fold": 2
+    },
+    {
+      "ecg_id": 1489,
+      "patient_id": 21183,
+      "fold": 2
+    },
+    {
+      "ecg_id": 15991,
+      "patient_id": 5137,
+      "fold": 3
+    },
+    {
+      "ecg_id": 5659,
+      "patient_id": 10705,
+      "fold": 2
+    },
+    {
+      "ecg_id": 16983,
+      "patient_id": 11563,
+      "fold": 8
+    },
+    {
+      "ecg_id": 17903,
+      "patient_id": 14110,
+      "fold": 8
+    },
+    {
+      "ecg_id": 9668,
+      "patient_id": 13384,
+      "fold": 5
+    },
+    {
+      "ecg_id": 11258,
+      "patient_id": 9153,
+      "fold": 2
+    },
+    {
+      "ecg_id": 17842,
+      "patient_id": 4271,
+      "fold": 8
+    },
+    {
+      "ecg_id": 12657,
+      "patient_id": 17095,
+      "fold": 8
+    },
+    {
+      "ecg_id": 11563,
+      "patient_id": 15312,
+      "fold": 3
+    },
+    {
+      "ecg_id": 2956,
+      "patient_id": 3424,
+      "fold": 2
+    },
+    {
+      "ecg_id": 9948,
+      "patient_id": 11224,
+      "fold": 5
+    },
+    {
+      "ecg_id": 16378,
+      "patient_id": 5146,
+      "fold": 2
+    },
+    {
+      "ecg_id": 15310,
+      "patient_id": 19230,
+      "fold": 2
+    },
+    {
+      "ecg_id": 18106,
+      "patient_id": 13331,
+      "fold": 2
+    },
+    {
+      "ecg_id": 19759,
+      "patient_id": 15825,
+      "fold": 7
+    },
+    {
+      "ecg_id": 5512,
+      "patient_id": 11653,
+      "fold": 3
+    },
+    {
+      "ecg_id": 16509,
+      "patient_id": 15309,
+      "fold": 7
+    },
+    {
+      "ecg_id": 15148,
+      "patient_id": 21147,
+      "fold": 2
+    },
+    {
+      "ecg_id": 221,
+      "patient_id": 18264,
+      "fold": 2
+    },
+    {
+      "ecg_id": 18751,
+      "patient_id": 10570,
+      "fold": 4
+    },
+    {
+      "ecg_id": 16474,
+      "patient_id": 1771,
+      "fold": 2
+    },
+    {
+      "ecg_id": 11171,
+      "patient_id": 15141,
+      "fold": 4
+    },
+    {
+      "ecg_id": 5694,
+      "patient_id": 3875,
+      "fold": 8
+    },
+    {
+      "ecg_id": 444,
+      "patient_id": 6513,
+      "fold": 4
+    },
+    {
+      "ecg_id": 15256,
+      "patient_id": 9606,
+      "fold": 7
+    },
+    {
+      "ecg_id": 18366,
+      "patient_id": 3964,
+      "fold": 7
+    },
+    {
+      "ecg_id": 13897,
+      "patient_id": 9554,
+      "fold": 8
+    },
+    {
+      "ecg_id": 16520,
+      "patient_id": 1922,
+      "fold": 7
+    },
+    {
+      "ecg_id": 1568,
+      "patient_id": 20225,
+      "fold": 7
+    },
+    {
+      "ecg_id": 4828,
+      "patient_id": 9803,
+      "fold": 4
+    },
+    {
+      "ecg_id": 13802,
+      "patient_id": 19463,
+      "fold": 5
+    },
+    {
+      "ecg_id": 18917,
+      "patient_id": 18483,
+      "fold": 2
+    },
+    {
+      "ecg_id": 5392,
+      "patient_id": 9355,
+      "fold": 3
+    },
+    {
+      "ecg_id": 11877,
+      "patient_id": 19557,
+      "fold": 4
+    },
+    {
+      "ecg_id": 8051,
+      "patient_id": 2972,
+      "fold": 1
+    },
+    {
+      "ecg_id": 12064,
+      "patient_id": 3295,
+      "fold": 7
+    },
+    {
+      "ecg_id": 20327,
+      "patient_id": 13632,
+      "fold": 7
+    },
+    {
+      "ecg_id": 5865,
+      "patient_id": 6225,
+      "fold": 4
+    },
+    {
+      "ecg_id": 8878,
+      "patient_id": 2075,
+      "fold": 4
+    },
+    {
+      "ecg_id": 3890,
+      "patient_id": 13205,
+      "fold": 4
+    },
+    {
+      "ecg_id": 1274,
+      "patient_id": 15458,
+      "fold": 5
+    },
+    {
+      "ecg_id": 6214,
+      "patient_id": 10978,
+      "fold": 5
+    },
+    {
+      "ecg_id": 6649,
+      "patient_id": 6195,
+      "fold": 7
+    },
+    {
+      "ecg_id": 10044,
+      "patient_id": 18218,
+      "fold": 8
+    },
+    {
+      "ecg_id": 13719,
+      "patient_id": 10597,
+      "fold": 2
+    },
+    {
+      "ecg_id": 8087,
+      "patient_id": 5981,
+      "fold": 4
+    },
+    {
+      "ecg_id": 2850,
+      "patient_id": 1069,
+      "fold": 7
+    },
+    {
+      "ecg_id": 13354,
+      "patient_id": 10573,
+      "fold": 4
+    },
+    {
+      "ecg_id": 15984,
+      "patient_id": 4084,
+      "fold": 2
+    },
+    {
+      "ecg_id": 12860,
+      "patient_id": 18898,
+      "fold": 6
+    },
+    {
+      "ecg_id": 11709,
+      "patient_id": 21203,
+      "fold": 8
+    },
+    {
+      "ecg_id": 14416,
+      "patient_id": 5842,
+      "fold": 5
+    },
+    {
+      "ecg_id": 15149,
+      "patient_id": 9305,
+      "fold": 3
+    },
+    {
+      "ecg_id": 20965,
+      "patient_id": 8441,
+      "fold": 8
+    },
+    {
+      "ecg_id": 15117,
+      "patient_id": 2320,
+      "fold": 3
+    },
+    {
+      "ecg_id": 3856,
+      "patient_id": 10667,
+      "fold": 2
+    },
+    {
+      "ecg_id": 21359,
+      "patient_id": 9165,
+      "fold": 7
+    },
+    {
+      "ecg_id": 13700,
+      "patient_id": 7673,
+      "fold": 6
+    },
+    {
+      "ecg_id": 420,
+      "patient_id": 3406,
+      "fold": 5
+    },
+    {
+      "ecg_id": 15284,
+      "patient_id": 20839,
+      "fold": 4
+    },
+    {
+      "ecg_id": 8839,
+      "patient_id": 9915,
+      "fold": 4
+    },
+    {
+      "ecg_id": 3008,
+      "patient_id": 956,
+      "fold": 1
+    },
+    {
+      "ecg_id": 1211,
+      "patient_id": 4452,
+      "fold": 2
+    },
+    {
+      "ecg_id": 5082,
+      "patient_id": 10422,
+      "fold": 1
+    },
+    {
+      "ecg_id": 20852,
+      "patient_id": 11048,
+      "fold": 8
+    },
+    {
+      "ecg_id": 6940,
+      "patient_id": 3134,
+      "fold": 5
+    },
+    {
+      "ecg_id": 610,
+      "patient_id": 441,
+      "fold": 6
+    },
+    {
+      "ecg_id": 1312,
+      "patient_id": 18967,
+      "fold": 5
+    },
+    {
+      "ecg_id": 11091,
+      "patient_id": 21040,
+      "fold": 4
+    },
+    {
+      "ecg_id": 16176,
+      "patient_id": 19641,
+      "fold": 3
+    },
+    {
+      "ecg_id": 20343,
+      "patient_id": 18531,
+      "fold": 6
+    },
+    {
+      "ecg_id": 2460,
+      "patient_id": 4235,
+      "fold": 2
+    },
+    {
+      "ecg_id": 10612,
+      "patient_id": 3388,
+      "fold": 1
+    },
+    {
+      "ecg_id": 13114,
+      "patient_id": 14799,
+      "fold": 4
+    },
+    {
+      "ecg_id": 19296,
+      "patient_id": 16281,
+      "fold": 2
+    },
+    {
+      "ecg_id": 10800,
+      "patient_id": 6398,
+      "fold": 8
+    },
+    {
+      "ecg_id": 13243,
+      "patient_id": 12938,
+      "fold": 8
+    },
+    {
+      "ecg_id": 21778,
+      "patient_id": 17965,
+      "fold": 7
+    },
+    {
+      "ecg_id": 17527,
+      "patient_id": 17215,
+      "fold": 7
+    },
+    {
+      "ecg_id": 19244,
+      "patient_id": 9382,
+      "fold": 8
+    },
+    {
+      "ecg_id": 10669,
+      "patient_id": 7563,
+      "fold": 6
+    },
+    {
+      "ecg_id": 6673,
+      "patient_id": 10271,
+      "fold": 8
+    },
+    {
+      "ecg_id": 7166,
+      "patient_id": 20289,
+      "fold": 6
+    },
+    {
+      "ecg_id": 7593,
+      "patient_id": 10591,
+      "fold": 2
+    },
+    {
+      "ecg_id": 17011,
+      "patient_id": 16988,
+      "fold": 8
+    },
+    {
+      "ecg_id": 8518,
+      "patient_id": 18973,
+      "fold": 4
+    },
+    {
+      "ecg_id": 12734,
+      "patient_id": 12480,
+      "fold": 3
+    },
+    {
+      "ecg_id": 14302,
+      "patient_id": 17325,
+      "fold": 5
+    },
+    {
+      "ecg_id": 21280,
+      "patient_id": 11877,
+      "fold": 7
+    },
+    {
+      "ecg_id": 11264,
+      "patient_id": 11594,
+      "fold": 1
+    },
+    {
+      "ecg_id": 4497,
+      "patient_id": 1504,
+      "fold": 5
+    },
+    {
+      "ecg_id": 10663,
+      "patient_id": 12986,
+      "fold": 5
+    },
+    {
+      "ecg_id": 1052,
+      "patient_id": 637,
+      "fold": 1
+    },
+    {
+      "ecg_id": 19018,
+      "patient_id": 14643,
+      "fold": 1
+    },
+    {
+      "ecg_id": 2990,
+      "patient_id": 841,
+      "fold": 7
+    },
+    {
+      "ecg_id": 1806,
+      "patient_id": 1562,
+      "fold": 8
+    },
+    {
+      "ecg_id": 15521,
+      "patient_id": 15342,
+      "fold": 5
+    },
+    {
+      "ecg_id": 829,
+      "patient_id": 6035,
+      "fold": 3
+    },
+    {
+      "ecg_id": 19391,
+      "patient_id": 14394,
+      "fold": 5
+    },
+    {
+      "ecg_id": 18402,
+      "patient_id": 3772,
+      "fold": 5
+    },
+    {
+      "ecg_id": 6712,
+      "patient_id": 4788,
+      "fold": 5
+    },
+    {
+      "ecg_id": 8371,
+      "patient_id": 13326,
+      "fold": 4
+    },
+    {
+      "ecg_id": 2735,
+      "patient_id": 6555,
+      "fold": 5
+    },
+    {
+      "ecg_id": 10678,
+      "patient_id": 6896,
+      "fold": 4
+    },
+    {
+      "ecg_id": 18844,
+      "patient_id": 16013,
+      "fold": 5
+    },
+    {
+      "ecg_id": 15673,
+      "patient_id": 9351,
+      "fold": 3
+    },
+    {
+      "ecg_id": 21271,
+      "patient_id": 20413,
+      "fold": 5
+    },
+    {
+      "ecg_id": 3963,
+      "patient_id": 4726,
+      "fold": 1
+    },
+    {
+      "ecg_id": 9672,
+      "patient_id": 15137,
+      "fold": 3
+    },
+    {
+      "ecg_id": 5942,
+      "patient_id": 7370,
+      "fold": 7
+    },
+    {
+      "ecg_id": 15346,
+      "patient_id": 19694,
+      "fold": 5
+    },
+    {
+      "ecg_id": 7705,
+      "patient_id": 21357,
+      "fold": 2
+    },
+    {
+      "ecg_id": 3365,
+      "patient_id": 21682,
+      "fold": 7
+    },
+    {
+      "ecg_id": 4886,
+      "patient_id": 11887,
+      "fold": 4
+    },
+    {
+      "ecg_id": 1975,
+      "patient_id": 3075,
+      "fold": 7
+    },
+    {
+      "ecg_id": 7558,
+      "patient_id": 21696,
+      "fold": 6
+    },
+    {
+      "ecg_id": 1547,
+      "patient_id": 1359,
+      "fold": 3
+    },
+    {
+      "ecg_id": 13958,
+      "patient_id": 1109,
+      "fold": 5
+    },
+    {
+      "ecg_id": 11506,
+      "patient_id": 17413,
+      "fold": 3
+    },
+    {
+      "ecg_id": 3140,
+      "patient_id": 7987,
+      "fold": 7
+    },
+    {
+      "ecg_id": 13377,
+      "patient_id": 9343,
+      "fold": 2
+    },
+    {
+      "ecg_id": 1642,
+      "patient_id": 4640,
+      "fold": 1
+    },
+    {
+      "ecg_id": 20712,
+      "patient_id": 9466,
+      "fold": 4
+    },
+    {
+      "ecg_id": 10256,
+      "patient_id": 16864,
+      "fold": 6
+    },
+    {
+      "ecg_id": 17062,
+      "patient_id": 11581,
+      "fold": 7
+    },
+    {
+      "ecg_id": 11507,
+      "patient_id": 10141,
+      "fold": 6
+    },
+    {
+      "ecg_id": 8770,
+      "patient_id": 3205,
+      "fold": 7
+    },
+    {
+      "ecg_id": 21184,
+      "patient_id": 19740,
+      "fold": 4
+    },
+    {
+      "ecg_id": 8773,
+      "patient_id": 1352,
+      "fold": 7
+    },
+    {
+      "ecg_id": 12420,
+      "patient_id": 5904,
+      "fold": 6
+    },
+    {
+      "ecg_id": 8350,
+      "patient_id": 20089,
+      "fold": 3
+    },
+    {
+      "ecg_id": 9058,
+      "patient_id": 832,
+      "fold": 8
+    },
+    {
+      "ecg_id": 7203,
+      "patient_id": 11422,
+      "fold": 1
+    },
+    {
+      "ecg_id": 13256,
+      "patient_id": 12707,
+      "fold": 6
+    },
+    {
+      "ecg_id": 16608,
+      "patient_id": 10159,
+      "fold": 7
+    },
+    {
+      "ecg_id": 11688,
+      "patient_id": 9347,
+      "fold": 4
+    },
+    {
+      "ecg_id": 15186,
+      "patient_id": 12254,
+      "fold": 2
+    },
+    {
+      "ecg_id": 6510,
+      "patient_id": 2209,
+      "fold": 7
+    },
+    {
+      "ecg_id": 1665,
+      "patient_id": 11283,
+      "fold": 5
+    },
+    {
+      "ecg_id": 10915,
+      "patient_id": 15122,
+      "fold": 2
+    },
+    {
+      "ecg_id": 7925,
+      "patient_id": 8040,
+      "fold": 1
+    },
+    {
+      "ecg_id": 2018,
+      "patient_id": 6906,
+      "fold": 3
+    },
+    {
+      "ecg_id": 7119,
+      "patient_id": 15409,
+      "fold": 4
+    },
+    {
+      "ecg_id": 17509,
+      "patient_id": 14647,
+      "fold": 4
+    },
+    {
+      "ecg_id": 3601,
+      "patient_id": 20825,
+      "fold": 2
+    },
+    {
+      "ecg_id": 2636,
+      "patient_id": 16875,
+      "fold": 4
+    },
+    {
+      "ecg_id": 21003,
+      "patient_id": 17024,
+      "fold": 6
+    },
+    {
+      "ecg_id": 9536,
+      "patient_id": 9586,
+      "fold": 4
+    },
+    {
+      "ecg_id": 5505,
+      "patient_id": 17211,
+      "fold": 8
+    },
+    {
+      "ecg_id": 6156,
+      "patient_id": 7187,
+      "fold": 1
+    },
+    {
+      "ecg_id": 6203,
+      "patient_id": 17426,
+      "fold": 3
+    },
+    {
+      "ecg_id": 1738,
+      "patient_id": 12778,
+      "fold": 3
+    },
+    {
+      "ecg_id": 19032,
+      "patient_id": 9507,
+      "fold": 4
+    },
+    {
+      "ecg_id": 2817,
+      "patient_id": 7494,
+      "fold": 6
+    },
+    {
+      "ecg_id": 16141,
+      "patient_id": 18805,
+      "fold": 1
+    },
+    {
+      "ecg_id": 6890,
+      "patient_id": 10065,
+      "fold": 1
+    },
+    {
+      "ecg_id": 2069,
+      "patient_id": 3311,
+      "fold": 2
+    },
+    {
+      "ecg_id": 503,
+      "patient_id": 7535,
+      "fold": 5
+    },
+    {
+      "ecg_id": 3244,
+      "patient_id": 7807,
+      "fold": 3
+    },
+    {
+      "ecg_id": 10495,
+      "patient_id": 383,
+      "fold": 8
+    },
+    {
+      "ecg_id": 21604,
+      "patient_id": 8686,
+      "fold": 2
+    },
+    {
+      "ecg_id": 14576,
+      "patient_id": 21149,
+      "fold": 5
+    },
+    {
+      "ecg_id": 13660,
+      "patient_id": 18025,
+      "fold": 5
+    },
+    {
+      "ecg_id": 15931,
+      "patient_id": 5312,
+      "fold": 8
+    },
+    {
+      "ecg_id": 19845,
+      "patient_id": 8104,
+      "fold": 7
+    },
+    {
+      "ecg_id": 21113,
+      "patient_id": 14058,
+      "fold": 6
+    },
+    {
+      "ecg_id": 12114,
+      "patient_id": 7549,
+      "fold": 4
+    },
+    {
+      "ecg_id": 9640,
+      "patient_id": 15937,
+      "fold": 5
+    },
+    {
+      "ecg_id": 1019,
+      "patient_id": 2182,
+      "fold": 7
+    },
+    {
+      "ecg_id": 411,
+      "patient_id": 589,
+      "fold": 1
+    },
+    {
+      "ecg_id": 8216,
+      "patient_id": 19713,
+      "fold": 3
+    },
+    {
+      "ecg_id": 16330,
+      "patient_id": 401,
+      "fold": 4
+    },
+    {
+      "ecg_id": 9970,
+      "patient_id": 9416,
+      "fold": 3
+    },
+    {
+      "ecg_id": 3134,
+      "patient_id": 349,
+      "fold": 4
+    },
+    {
+      "ecg_id": 15657,
+      "patient_id": 18783,
+      "fold": 6
+    },
+    {
+      "ecg_id": 10056,
+      "patient_id": 5572,
+      "fold": 4
+    },
+    {
+      "ecg_id": 1198,
+      "patient_id": 966,
+      "fold": 6
+    },
+    {
+      "ecg_id": 10769,
+      "patient_id": 4112,
+      "fold": 1
+    },
+    {
+      "ecg_id": 12718,
+      "patient_id": 6930,
+      "fold": 6
+    },
+    {
+      "ecg_id": 21752,
+      "patient_id": 18356,
+      "fold": 7
+    },
+    {
+      "ecg_id": 18524,
+      "patient_id": 12450,
+      "fold": 4
+    },
+    {
+      "ecg_id": 3983,
+      "patient_id": 6888,
+      "fold": 1
+    },
+    {
+      "ecg_id": 2166,
+      "patient_id": 12414,
+      "fold": 6
+    },
+    {
+      "ecg_id": 11689,
+      "patient_id": 21101,
+      "fold": 3
+    },
+    {
+      "ecg_id": 4910,
+      "patient_id": 8058,
+      "fold": 3
+    },
+    {
+      "ecg_id": 11762,
+      "patient_id": 1012,
+      "fold": 1
+    },
+    {
+      "ecg_id": 15527,
+      "patient_id": 18830,
+      "fold": 7
+    },
+    {
+      "ecg_id": 12738,
+      "patient_id": 11476,
+      "fold": 3
+    },
+    {
+      "ecg_id": 15944,
+      "patient_id": 18604,
+      "fold": 7
+    },
+    {
+      "ecg_id": 10303,
+      "patient_id": 10757,
+      "fold": 2
+    },
+    {
+      "ecg_id": 15483,
+      "patient_id": 8680,
+      "fold": 5
+    },
+    {
+      "ecg_id": 7604,
+      "patient_id": 12794,
+      "fold": 8
+    },
+    {
+      "ecg_id": 14132,
+      "patient_id": 3106,
+      "fold": 7
+    },
+    {
+      "ecg_id": 3523,
+      "patient_id": 7034,
+      "fold": 4
+    },
+    {
+      "ecg_id": 2816,
+      "patient_id": 6596,
+      "fold": 8
+    },
+    {
+      "ecg_id": 6059,
+      "patient_id": 6064,
+      "fold": 7
+    },
+    {
+      "ecg_id": 17212,
+      "patient_id": 12028,
+      "fold": 4
+    },
+    {
+      "ecg_id": 4723,
+      "patient_id": 2786,
+      "fold": 1
+    },
+    {
+      "ecg_id": 20099,
+      "patient_id": 12764,
+      "fold": 2
+    },
+    {
+      "ecg_id": 19765,
+      "patient_id": 11286,
+      "fold": 7
+    },
+    {
+      "ecg_id": 17019,
+      "patient_id": 12452,
+      "fold": 8
+    },
+    {
+      "ecg_id": 8695,
+      "patient_id": 4823,
+      "fold": 7
+    },
+    {
+      "ecg_id": 10885,
+      "patient_id": 17845,
+      "fold": 7
+    },
+    {
+      "ecg_id": 3974,
+      "patient_id": 784,
+      "fold": 7
+    },
+    {
+      "ecg_id": 17479,
+      "patient_id": 12343,
+      "fold": 4
+    },
+    {
+      "ecg_id": 3997,
+      "patient_id": 9146,
+      "fold": 3
+    },
+    {
+      "ecg_id": 3294,
+      "patient_id": 6101,
+      "fold": 1
+    },
+    {
+      "ecg_id": 12022,
+      "patient_id": 7457,
+      "fold": 6
+    },
+    {
+      "ecg_id": 5734,
+      "patient_id": 3227,
+      "fold": 8
+    },
+    {
+      "ecg_id": 6473,
+      "patient_id": 4748,
+      "fold": 6
+    },
+    {
+      "ecg_id": 20022,
+      "patient_id": 11771,
+      "fold": 3
+    },
+    {
+      "ecg_id": 4658,
+      "patient_id": 20394,
+      "fold": 2
+    },
+    {
+      "ecg_id": 8249,
+      "patient_id": 8242,
+      "fold": 4
+    },
+    {
+      "ecg_id": 10649,
+      "patient_id": 5323,
+      "fold": 5
+    },
+    {
+      "ecg_id": 10858,
+      "patient_id": 14077,
+      "fold": 8
+    },
+    {
+      "ecg_id": 15529,
+      "patient_id": 10540,
+      "fold": 1
+    },
+    {
+      "ecg_id": 8692,
+      "patient_id": 3982,
+      "fold": 5
+    },
+    {
+      "ecg_id": 12854,
+      "patient_id": 17385,
+      "fold": 7
+    },
+    {
+      "ecg_id": 21212,
+      "patient_id": 11394,
+      "fold": 1
+    },
+    {
+      "ecg_id": 13005,
+      "patient_id": 17594,
+      "fold": 1
+    },
+    {
+      "ecg_id": 396,
+      "patient_id": 14726,
+      "fold": 3
+    },
+    {
+      "ecg_id": 21086,
+      "patient_id": 20640,
+      "fold": 7
+    },
+    {
+      "ecg_id": 12105,
+      "patient_id": 9035,
+      "fold": 8
+    },
+    {
+      "ecg_id": 14479,
+      "patient_id": 14756,
+      "fold": 4
+    },
+    {
+      "ecg_id": 10523,
+      "patient_id": 7266,
+      "fold": 5
+    },
+    {
+      "ecg_id": 12721,
+      "patient_id": 4095,
+      "fold": 4
+    },
+    {
+      "ecg_id": 10974,
+      "patient_id": 6720,
+      "fold": 5
+    },
+    {
+      "ecg_id": 13704,
+      "patient_id": 4421,
+      "fold": 2
+    },
+    {
+      "ecg_id": 15804,
+      "patient_id": 10625,
+      "fold": 1
+    },
+    {
+      "ecg_id": 17596,
+      "patient_id": 10522,
+      "fold": 8
+    },
+    {
+      "ecg_id": 12757,
+      "patient_id": 5929,
+      "fold": 7
+    },
+    {
+      "ecg_id": 903,
+      "patient_id": 2586,
+      "fold": 1
+    },
+    {
+      "ecg_id": 15582,
+      "patient_id": 21377,
+      "fold": 4
+    },
+    {
+      "ecg_id": 5632,
+      "patient_id": 18781,
+      "fold": 5
+    },
+    {
+      "ecg_id": 7187,
+      "patient_id": 18704,
+      "fold": 8
+    },
+    {
+      "ecg_id": 2072,
+      "patient_id": 944,
+      "fold": 2
+    },
+    {
+      "ecg_id": 2873,
+      "patient_id": 9869,
+      "fold": 4
+    },
+    {
+      "ecg_id": 1305,
+      "patient_id": 10716,
+      "fold": 5
+    },
+    {
+      "ecg_id": 20628,
+      "patient_id": 9726,
+      "fold": 3
+    },
+    {
+      "ecg_id": 3125,
+      "patient_id": 10199,
+      "fold": 2
+    },
+    {
+      "ecg_id": 5233,
+      "patient_id": 15357,
+      "fold": 6
+    },
+    {
+      "ecg_id": 794,
+      "patient_id": 10287,
+      "fold": 7
+    },
+    {
+      "ecg_id": 11919,
+      "patient_id": 16998,
+      "fold": 4
+    },
+    {
+      "ecg_id": 20185,
+      "patient_id": 8400,
+      "fold": 8
+    },
+    {
+      "ecg_id": 16654,
+      "patient_id": 7333,
+      "fold": 4
+    },
+    {
+      "ecg_id": 13289,
+      "patient_id": 20327,
+      "fold": 7
+    },
+    {
+      "ecg_id": 17514,
+      "patient_id": 16506,
+      "fold": 7
+    },
+    {
+      "ecg_id": 14686,
+      "patient_id": 1414,
+      "fold": 6
+    },
+    {
+      "ecg_id": 5938,
+      "patient_id": 14893,
+      "fold": 8
+    },
+    {
+      "ecg_id": 21585,
+      "patient_id": 11901,
+      "fold": 5
+    },
+    {
+      "ecg_id": 12655,
+      "patient_id": 443,
+      "fold": 6
+    },
+    {
+      "ecg_id": 6926,
+      "patient_id": 7145,
+      "fold": 6
+    },
+    {
+      "ecg_id": 20998,
+      "patient_id": 20771,
+      "fold": 6
+    },
+    {
+      "ecg_id": 6795,
+      "patient_id": 6516,
+      "fold": 3
+    },
+    {
+      "ecg_id": 1601,
+      "patient_id": 4219,
+      "fold": 7
+    },
+    {
+      "ecg_id": 19532,
+      "patient_id": 17747,
+      "fold": 4
+    },
+    {
+      "ecg_id": 2604,
+      "patient_id": 11109,
+      "fold": 3
+    },
+    {
+      "ecg_id": 8714,
+      "patient_id": 7633,
+      "fold": 1
+    },
+    {
+      "ecg_id": 5836,
+      "patient_id": 16450,
+      "fold": 6
+    },
+    {
+      "ecg_id": 17441,
+      "patient_id": 18387,
+      "fold": 4
+    },
+    {
+      "ecg_id": 1720,
+      "patient_id": 18142,
+      "fold": 6
+    },
+    {
+      "ecg_id": 10533,
+      "patient_id": 6272,
+      "fold": 2
+    },
+    {
+      "ecg_id": 20209,
+      "patient_id": 8627,
+      "fold": 2
+    },
+    {
+      "ecg_id": 8696,
+      "patient_id": 5100,
+      "fold": 6
+    },
+    {
+      "ecg_id": 7089,
+      "patient_id": 3610,
+      "fold": 8
+    },
+    {
+      "ecg_id": 4882,
+      "patient_id": 7341,
+      "fold": 2
+    },
+    {
+      "ecg_id": 20639,
+      "patient_id": 20460,
+      "fold": 5
+    },
+    {
+      "ecg_id": 8129,
+      "patient_id": 7713,
+      "fold": 6
+    },
+    {
+      "ecg_id": 19646,
+      "patient_id": 17943,
+      "fold": 4
+    },
+    {
+      "ecg_id": 6805,
+      "patient_id": 10107,
+      "fold": 2
+    },
+    {
+      "ecg_id": 11556,
+      "patient_id": 10616,
+      "fold": 8
+    },
+    {
+      "ecg_id": 5720,
+      "patient_id": 15021,
+      "fold": 6
+    },
+    {
+      "ecg_id": 10055,
+      "patient_id": 7652,
+      "fold": 8
+    },
+    {
+      "ecg_id": 6906,
+      "patient_id": 12362,
+      "fold": 5
+    },
+    {
+      "ecg_id": 3973,
+      "patient_id": 4036,
+      "fold": 7
+    },
+    {
+      "ecg_id": 21500,
+      "patient_id": 9702,
+      "fold": 7
+    },
+    {
+      "ecg_id": 5497,
+      "patient_id": 20533,
+      "fold": 1
+    },
+    {
+      "ecg_id": 17359,
+      "patient_id": 19803,
+      "fold": 6
+    },
+    {
+      "ecg_id": 6584,
+      "patient_id": 14210,
+      "fold": 8
+    },
+    {
+      "ecg_id": 10104,
+      "patient_id": 18043,
+      "fold": 1
+    },
+    {
+      "ecg_id": 7563,
+      "patient_id": 12257,
+      "fold": 7
+    },
+    {
+      "ecg_id": 6813,
+      "patient_id": 17238,
+      "fold": 2
+    },
+    {
+      "ecg_id": 7844,
+      "patient_id": 18370,
+      "fold": 2
+    },
+    {
+      "ecg_id": 4675,
+      "patient_id": 20459,
+      "fold": 8
+    },
+    {
+      "ecg_id": 5775,
+      "patient_id": 9138,
+      "fold": 6
+    },
+    {
+      "ecg_id": 11509,
+      "patient_id": 13716,
+      "fold": 1
+    },
+    {
+      "ecg_id": 14972,
+      "patient_id": 21631,
+      "fold": 7
+    },
+    {
+      "ecg_id": 7711,
+      "patient_id": 21185,
+      "fold": 5
+    },
+    {
+      "ecg_id": 13331,
+      "patient_id": 19120,
+      "fold": 2
+    },
+    {
+      "ecg_id": 8659,
+      "patient_id": 20215,
+      "fold": 2
+    },
+    {
+      "ecg_id": 5663,
+      "patient_id": 15365,
+      "fold": 5
+    },
+    {
+      "ecg_id": 20016,
+      "patient_id": 11364,
+      "fold": 3
+    },
+    {
+      "ecg_id": 19431,
+      "patient_id": 19451,
+      "fold": 1
+    },
+    {
+      "ecg_id": 11888,
+      "patient_id": 18953,
+      "fold": 8
+    },
+    {
+      "ecg_id": 1244,
+      "patient_id": 11302,
+      "fold": 3
+    },
+    {
+      "ecg_id": 15661,
+      "patient_id": 15105,
+      "fold": 6
+    },
+    {
+      "ecg_id": 3255,
+      "patient_id": 825,
+      "fold": 4
+    },
+    {
+      "ecg_id": 9077,
+      "patient_id": 15136,
+      "fold": 4
+    },
+    {
+      "ecg_id": 7321,
+      "patient_id": 20677,
+      "fold": 4
+    },
+    {
+      "ecg_id": 4968,
+      "patient_id": 609,
+      "fold": 7
+    },
+    {
+      "ecg_id": 12078,
+      "patient_id": 3625,
+      "fold": 8
+    },
+    {
+      "ecg_id": 1968,
+      "patient_id": 5511,
+      "fold": 2
+    },
+    {
+      "ecg_id": 13950,
+      "patient_id": 3266,
+      "fold": 1
+    },
+    {
+      "ecg_id": 16652,
+      "patient_id": 1673,
+      "fold": 4
+    },
+    {
+      "ecg_id": 3962,
+      "patient_id": 7875,
+      "fold": 1
+    },
+    {
+      "ecg_id": 19174,
+      "patient_id": 16036,
+      "fold": 6
+    },
+    {
+      "ecg_id": 21543,
+      "patient_id": 16428,
+      "fold": 6
+    },
+    {
+      "ecg_id": 19216,
+      "patient_id": 21360,
+      "fold": 1
+    },
+    {
+      "ecg_id": 3848,
+      "patient_id": 12953,
+      "fold": 6
+    },
+    {
+      "ecg_id": 159,
+      "patient_id": 10669,
+      "fold": 3
+    },
+    {
+      "ecg_id": 3216,
+      "patient_id": 6629,
+      "fold": 6
+    },
+    {
+      "ecg_id": 18030,
+      "patient_id": 6559,
+      "fold": 3
+    },
+    {
+      "ecg_id": 18474,
+      "patient_id": 14416,
+      "fold": 3
+    },
+    {
+      "ecg_id": 18220,
+      "patient_id": 2900,
+      "fold": 1
+    },
+    {
+      "ecg_id": 17702,
+      "patient_id": 2032,
+      "fold": 8
+    },
+    {
+      "ecg_id": 20633,
+      "patient_id": 19914,
+      "fold": 2
+    },
+    {
+      "ecg_id": 4078,
+      "patient_id": 6584,
+      "fold": 1
+    },
+    {
+      "ecg_id": 6623,
+      "patient_id": 20700,
+      "fold": 2
+    },
+    {
+      "ecg_id": 8132,
+      "patient_id": 2794,
+      "fold": 5
+    },
+    {
+      "ecg_id": 4641,
+      "patient_id": 7008,
+      "fold": 5
+    },
+    {
+      "ecg_id": 1829,
+      "patient_id": 2887,
+      "fold": 5
+    },
+    {
+      "ecg_id": 19817,
+      "patient_id": 17457,
+      "fold": 4
+    },
+    {
+      "ecg_id": 12050,
+      "patient_id": 21403,
+      "fold": 8
+    },
+    {
+      "ecg_id": 14665,
+      "patient_id": 2431,
+      "fold": 5
+    },
+    {
+      "ecg_id": 7694,
+      "patient_id": 4824,
+      "fold": 8
+    },
+    {
+      "ecg_id": 14748,
+      "patient_id": 5280,
+      "fold": 3
+    },
+    {
+      "ecg_id": 20547,
+      "patient_id": 13860,
+      "fold": 5
+    },
+    {
+      "ecg_id": 2718,
+      "patient_id": 21167,
+      "fold": 8
+    },
+    {
+      "ecg_id": 6566,
+      "patient_id": 3048,
+      "fold": 6
+    },
+    {
+      "ecg_id": 8810,
+      "patient_id": 9399,
+      "fold": 4
+    },
+    {
+      "ecg_id": 11145,
+      "patient_id": 5427,
+      "fold": 4
+    },
+    {
+      "ecg_id": 7749,
+      "patient_id": 304,
+      "fold": 3
+    },
+    {
+      "ecg_id": 1317,
+      "patient_id": 15358,
+      "fold": 3
+    },
+    {
+      "ecg_id": 635,
+      "patient_id": 392,
+      "fold": 1
+    },
+    {
+      "ecg_id": 17350,
+      "patient_id": 19899,
+      "fold": 1
+    },
+    {
+      "ecg_id": 19648,
+      "patient_id": 9460,
+      "fold": 4
+    },
+    {
+      "ecg_id": 21037,
+      "patient_id": 8055,
+      "fold": 3
+    },
+    {
+      "ecg_id": 16585,
+      "patient_id": 3708,
+      "fold": 5
+    },
+    {
+      "ecg_id": 1848,
+      "patient_id": 5893,
+      "fold": 4
+    },
+    {
+      "ecg_id": 13618,
+      "patient_id": 21470,
+      "fold": 6
+    },
+    {
+      "ecg_id": 19880,
+      "patient_id": 17625,
+      "fold": 5
+    },
+    {
+      "ecg_id": 10578,
+      "patient_id": 6943,
+      "fold": 7
+    },
+    {
+      "ecg_id": 4642,
+      "patient_id": 2346,
+      "fold": 8
+    },
+    {
+      "ecg_id": 4180,
+      "patient_id": 9996,
+      "fold": 2
+    },
+    {
+      "ecg_id": 9925,
+      "patient_id": 17176,
+      "fold": 8
+    },
+    {
+      "ecg_id": 16311,
+      "patient_id": 20378,
+      "fold": 7
+    },
+    {
+      "ecg_id": 10462,
+      "patient_id": 7522,
+      "fold": 4
+    },
+    {
+      "ecg_id": 15812,
+      "patient_id": 16224,
+      "fold": 1
+    },
+    {
+      "ecg_id": 1512,
+      "patient_id": 2911,
+      "fold": 6
+    },
+    {
+      "ecg_id": 14975,
+      "patient_id": 796,
+      "fold": 7
+    },
+    {
+      "ecg_id": 4221,
+      "patient_id": 20552,
+      "fold": 7
+    },
+    {
+      "ecg_id": 5364,
+      "patient_id": 8839,
+      "fold": 1
+    },
+    {
+      "ecg_id": 8003,
+      "patient_id": 13228,
+      "fold": 2
+    },
+    {
+      "ecg_id": 16709,
+      "patient_id": 15522,
+      "fold": 6
+    },
+    {
+      "ecg_id": 7698,
+      "patient_id": 6469,
+      "fold": 7
+    },
+    {
+      "ecg_id": 10604,
+      "patient_id": 4038,
+      "fold": 1
+    },
+    {
+      "ecg_id": 21394,
+      "patient_id": 15227,
+      "fold": 1
+    },
+    {
+      "ecg_id": 14464,
+      "patient_id": 6710,
+      "fold": 8
+    },
+    {
+      "ecg_id": 12879,
+      "patient_id": 14233,
+      "fold": 5
+    },
+    {
+      "ecg_id": 7289,
+      "patient_id": 21144,
+      "fold": 3
+    },
+    {
+      "ecg_id": 16494,
+      "patient_id": 14403,
+      "fold": 2
+    },
+    {
+      "ecg_id": 11041,
+      "patient_id": 8108,
+      "fold": 6
+    },
+    {
+      "ecg_id": 321,
+      "patient_id": 4188,
+      "fold": 7
+    },
+    {
+      "ecg_id": 9834,
+      "patient_id": 12951,
+      "fold": 1
+    },
+    {
+      "ecg_id": 19706,
+      "patient_id": 21097,
+      "fold": 2
+    },
+    {
+      "ecg_id": 17552,
+      "patient_id": 11614,
+      "fold": 5
+    },
+    {
+      "ecg_id": 16770,
+      "patient_id": 14182,
+      "fold": 1
+    },
+    {
+      "ecg_id": 6995,
+      "patient_id": 20253,
+      "fold": 4
+    },
+    {
+      "ecg_id": 14786,
+      "patient_id": 9748,
+      "fold": 1
+    },
+    {
+      "ecg_id": 8930,
+      "patient_id": 10519,
+      "fold": 2
+    },
+    {
+      "ecg_id": 9524,
+      "patient_id": 11233,
+      "fold": 3
+    },
+    {
+      "ecg_id": 1360,
+      "patient_id": 8726,
+      "fold": 8
+    }
+  ],
+  "medianIds": [
+    12667,
+    15869,
+    4811,
+    10299,
+    20895,
+    11572,
+    13343,
+    5644,
+    20635,
+    10817,
+    13738,
+    10042,
+    19341,
+    15794,
+    9181,
+    15956,
+    19949,
+    9331,
+    10780,
+    4915,
+    9762,
+    14101,
+    20526,
+    8500,
+    6671,
+    6647,
+    17845,
+    18453,
+    19673,
+    877,
+    12415,
+    7874,
+    746,
+    21034,
+    16020,
+    21358,
+    8390,
+    19022,
+    11436,
+    19820,
+    5334,
+    1484,
+    92,
+    2847,
+    1446,
+    10914,
+    8566,
+    15263,
+    14102,
+    18686,
+    9681,
+    17698,
+    10400,
+    18341,
+    21312,
+    16491,
+    16439,
+    14001,
+    5128,
+    18657,
+    8895,
+    15832,
+    4843,
+    10123
+  ],
+  "medianRecords": [
+    {
+      "ecg_id": 12667,
+      "patient_id": 1429,
+      "fold": 6
+    },
+    {
+      "ecg_id": 15869,
+      "patient_id": 13486,
+      "fold": 8
+    },
+    {
+      "ecg_id": 4811,
+      "patient_id": 15012,
+      "fold": 6
+    },
+    {
+      "ecg_id": 10299,
+      "patient_id": 14070,
+      "fold": 6
+    },
+    {
+      "ecg_id": 20895,
+      "patient_id": 14082,
+      "fold": 3
+    },
+    {
+      "ecg_id": 11572,
+      "patient_id": 9657,
+      "fold": 6
+    },
+    {
+      "ecg_id": 13343,
+      "patient_id": 10889,
+      "fold": 5
+    },
+    {
+      "ecg_id": 5644,
+      "patient_id": 8054,
+      "fold": 8
+    },
+    {
+      "ecg_id": 20635,
+      "patient_id": 20896,
+      "fold": 3
+    },
+    {
+      "ecg_id": 10817,
+      "patient_id": 20423,
+      "fold": 5
+    },
+    {
+      "ecg_id": 13738,
+      "patient_id": 20865,
+      "fold": 5
+    },
+    {
+      "ecg_id": 10042,
+      "patient_id": 14459,
+      "fold": 2
+    },
+    {
+      "ecg_id": 19341,
+      "patient_id": 8334,
+      "fold": 3
+    },
+    {
+      "ecg_id": 15794,
+      "patient_id": 12168,
+      "fold": 3
+    },
+    {
+      "ecg_id": 9181,
+      "patient_id": 21493,
+      "fold": 2
+    },
+    {
+      "ecg_id": 15956,
+      "patient_id": 1159,
+      "fold": 1
+    },
+    {
+      "ecg_id": 19949,
+      "patient_id": 10838,
+      "fold": 1
+    },
+    {
+      "ecg_id": 9331,
+      "patient_id": 16429,
+      "fold": 4
+    },
+    {
+      "ecg_id": 10780,
+      "patient_id": 2049,
+      "fold": 8
+    },
+    {
+      "ecg_id": 4915,
+      "patient_id": 19944,
+      "fold": 8
+    },
+    {
+      "ecg_id": 9762,
+      "patient_id": 15948,
+      "fold": 7
+    },
+    {
+      "ecg_id": 14101,
+      "patient_id": 6033,
+      "fold": 7
+    },
+    {
+      "ecg_id": 20526,
+      "patient_id": 11707,
+      "fold": 2
+    },
+    {
+      "ecg_id": 8500,
+      "patient_id": 18129,
+      "fold": 3
+    },
+    {
+      "ecg_id": 6671,
+      "patient_id": 21020,
+      "fold": 5
+    },
+    {
+      "ecg_id": 6647,
+      "patient_id": 6456,
+      "fold": 3
+    },
+    {
+      "ecg_id": 17845,
+      "patient_id": 5963,
+      "fold": 6
+    },
+    {
+      "ecg_id": 18453,
+      "patient_id": 21182,
+      "fold": 5
+    },
+    {
+      "ecg_id": 19673,
+      "patient_id": 10968,
+      "fold": 4
+    },
+    {
+      "ecg_id": 877,
+      "patient_id": 11920,
+      "fold": 7
+    },
+    {
+      "ecg_id": 12415,
+      "patient_id": 6280,
+      "fold": 6
+    },
+    {
+      "ecg_id": 7874,
+      "patient_id": 15284,
+      "fold": 1
+    },
+    {
+      "ecg_id": 746,
+      "patient_id": 927,
+      "fold": 3
+    },
+    {
+      "ecg_id": 21034,
+      "patient_id": 21642,
+      "fold": 2
+    },
+    {
+      "ecg_id": 16020,
+      "patient_id": 4291,
+      "fold": 3
+    },
+    {
+      "ecg_id": 21358,
+      "patient_id": 17706,
+      "fold": 4
+    },
+    {
+      "ecg_id": 8390,
+      "patient_id": 3201,
+      "fold": 8
+    },
+    {
+      "ecg_id": 19022,
+      "patient_id": 19344,
+      "fold": 4
+    },
+    {
+      "ecg_id": 11436,
+      "patient_id": 9327,
+      "fold": 8
+    },
+    {
+      "ecg_id": 19820,
+      "patient_id": 17417,
+      "fold": 5
+    },
+    {
+      "ecg_id": 5334,
+      "patient_id": 21601,
+      "fold": 8
+    },
+    {
+      "ecg_id": 1484,
+      "patient_id": 14886,
+      "fold": 5
+    },
+    {
+      "ecg_id": 92,
+      "patient_id": 10239,
+      "fold": 8
+    },
+    {
+      "ecg_id": 2847,
+      "patient_id": 15204,
+      "fold": 4
+    },
+    {
+      "ecg_id": 1446,
+      "patient_id": 10445,
+      "fold": 4
+    },
+    {
+      "ecg_id": 10914,
+      "patient_id": 10739,
+      "fold": 4
+    },
+    {
+      "ecg_id": 8566,
+      "patient_id": 11655,
+      "fold": 5
+    },
+    {
+      "ecg_id": 15263,
+      "patient_id": 13996,
+      "fold": 2
+    },
+    {
+      "ecg_id": 14102,
+      "patient_id": 4097,
+      "fold": 2
+    },
+    {
+      "ecg_id": 18686,
+      "patient_id": 16966,
+      "fold": 4
+    },
+    {
+      "ecg_id": 9681,
+      "patient_id": 11062,
+      "fold": 8
+    },
+    {
+      "ecg_id": 17698,
+      "patient_id": 10805,
+      "fold": 5
+    },
+    {
+      "ecg_id": 10400,
+      "patient_id": 2322,
+      "fold": 2
+    },
+    {
+      "ecg_id": 18341,
+      "patient_id": 3526,
+      "fold": 2
+    },
+    {
+      "ecg_id": 21312,
+      "patient_id": 16037,
+      "fold": 4
+    },
+    {
+      "ecg_id": 16491,
+      "patient_id": 12025,
+      "fold": 5
+    },
+    {
+      "ecg_id": 16439,
+      "patient_id": 5634,
+      "fold": 2
+    },
+    {
+      "ecg_id": 14001,
+      "patient_id": 1268,
+      "fold": 7
+    },
+    {
+      "ecg_id": 5128,
+      "patient_id": 10050,
+      "fold": 4
+    },
+    {
+      "ecg_id": 18657,
+      "patient_id": 11322,
+      "fold": 1
+    },
+    {
+      "ecg_id": 8895,
+      "patient_id": 21509,
+      "fold": 1
+    },
+    {
+      "ecg_id": 15832,
+      "patient_id": 17904,
+      "fold": 3
+    },
+    {
+      "ecg_id": 4843,
+      "patient_id": 12230,
+      "fold": 7
+    },
+    {
+      "ecg_id": 10123,
+      "patient_id": 2778,
+      "fold": 4
+    }
+  ],
+  "secondary": {
+    "coveredByExposedSelection": true,
+    "selectionSha256": "15df567a09e2b25fe06fcd250c7648ab01d4c8b628c54bbc8cd8f7a94adce0c8",
+    "selectionPatients": 512,
+    "groupCounts": {
+      "CLBBB": 13,
+      "CRBBB": 13,
+      "WPW": 1
+    },
+    "exactSubsetIdentityAvailable": false,
+    "reason": "Archived report provides aggregate CLBBB/CRBBB/WPW counts but no subgroup patient or record IDs; metadata was not archived. Membership is known to be inside exposed512, exact subgroup identities remain unresolved."
+  },
+  "sourceAttribution": [
+    {
+      "title": "PTB-XL, a large publicly available electrocardiography dataset",
+      "authors": "Wagner et al.",
+      "version": "1.0.3",
+      "url": "https://physionet.org/content/ptb-xl/1.0.3/",
+      "license": "Creative Commons Attribution4.0 International (CC BY4.0)",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "artifactLicenseFile": "LICENSE-PTB-XL.txt",
+      "artifactLicenseSha256": "9a78e7f22742dde9f66ae235ec793ba2212019dc4d0ced75c4da09ced0b35fb2"
+    },
+    {
+      "title": "PTB-XL+, a comprehensive electrocardiographic feature dataset",
+      "authors": "Strodthoff et al.",
+      "version": "1.0.1",
+      "url": "https://physionet.org/content/ptb-xl-plus/1.0.1/",
+      "license": "Creative Commons Attribution4.0 International (CC BY4.0)",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "artifactLicenseFile": "LICENSE-PTB-XL-plus.txt",
+      "artifactLicenseSha256": "9a78e7f22742dde9f66ae235ec793ba2212019dc4d0ced75c4da09ced0b35fb2"
+    }
+  ]
+}

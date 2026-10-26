@@ -1,0 +1,44 @@
+{
+  "id": "joint-final-samples-v1",
+  "status": "preregistered-before-first-audit-run",
+  "instrumentAmendments": [{"date": "2026-10-26", "revision": 2, "reason": "Cross-review found NaN reference metrics could pass the perturbation checker, and unsupported repolarization could receive a peak time. Reject nonfinite references and return null timing below the existing support floor. No threshold, model or seed changed; preserve v1 outputs and rerun v2."}],
+  "purpose": "Descriptive characterization of final QRS–ST–T relationships; no model selection or clinical validation",
+  "families": {"NORM": "sinus", "CLBBB": "lbbb", "CRBBB": "rbbb"},
+  "seeds": [1103, 2213, 3313, 4421, 5521, 6637, 7741, 8861, 9973, 11083, 12197, 13309],
+  "durationSeconds": 10,
+  "heartRateBpm": 70,
+  "acquisition": "ideal",
+  "filter": "off",
+  "variability": 0,
+  "variants": ["configured-defaults", "natural", "natural-qrs-gain-1.2", "natural-axis-plus-20deg"],
+  "interventions": {"qrsGainFactor": 1.2, "axisDeltaDegrees": 20},
+  "windows": {
+    "anchor": "production beat.time (QRS onset); beat.qrs and beat.qt are durations in seconds, not annotations",
+    "baselineRelativeToQrsSeconds": [-0.04, -0.01],
+    "qrs": "[onset, onset + qrs], inclusive sample centers",
+    "j": "onset + qrs; nearest final sample",
+    "j60": "J + 0.060 seconds; nearest final sample, null if beyond QT end",
+    "repolarization": "[J + 0.040, onset + qt], inclusive sample centers; not an independently delineated T wave",
+    "peak": "largest absolute baseline-referred sample in repolarization window, retaining sign",
+    "halfHeightWidth": "contiguous same-polarity support at >= half peak; null when either crossing lies outside window"
+  },
+  "instrumentThresholds": {
+    "minimumQrsPeakToPeakMv": 0.01,
+    "minimumRepolarizationPeakMv": 0.005,
+    "minimumQrsSamples": 10,
+    "minimumRepolarizationSamples": 10,
+    "minimumBeatsPerRecordingLead": 3,
+    "minimumRecordingsForCorrelation": 6,
+    "negativeControlAbsoluteTolerance": 0.00000001
+  },
+  "thresholdInterpretation": "Numerical support guards only; not clinical normal ranges, not minimum clinical improvement",
+  "analysisUnit": "median of eligible beats per seed/variant/lead; seeds are synthetic recordings, never patients",
+  "negativeControls": ["DC +0.3 mV preserves baseline-referred metrics", "scale 1.7 multiplies amplitudes/areas, preserves dimensionless ratios and widths", "polarity -1 reverses signed metrics, preserves ratios of signed quantities only where defined and absolute widths", "zero QRS suppresses ratios", "truncated/nonfinite/overlapping windows return null with reason"],
+  "retention": "Keep every recording, every excluded beat, all null reasons, coverage, warnings and negative-control failures",
+  "acceptance": {
+    "auditInstrument": "Analytic fixture tests and all evaluable final-sample negative controls pass; report inadequate coverage rather than infer fidelity",
+    "modelCorrection": "Not eligible in this protocol: no untouched independently calibrated and delineated external reserve, no predefined external effect size or noninferiority margins",
+    "clinicalPlausibilityPromotion": "Requires external evidence and independent human clinical review; synthetic descriptive agreement is insufficient"
+  },
+  "limitations": ["Natural values apply only to NORM; BBB natural/default comparison is an identity control", "Configured/default versus natural changes several controls and does not isolate normalization", "All phases remain normalized/transformed by production synthesis; latent model covariance is not final waveform covariance", "No T onset annotation: J60 may overlap T and is never automatically classified as pure ST", "Fixed-rate, ideal acquisition panel does not evaluate noise, rate adaptation, other families or rendering"]
+}

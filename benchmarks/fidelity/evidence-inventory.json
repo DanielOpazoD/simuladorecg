@@ -1,0 +1,567 @@
+{
+  "schemaVersion": 1,
+  "baseCommit": "cdd55811bf260e0b74c564d454f658495f72d67e",
+  "coverageComplete": false,
+  "requiredMetrics": [
+    "withinLeadRatio",
+    "timing",
+    "absoluteAmplitude",
+    "crossLeadVoltage"
+  ],
+  "identityPolicy": "dataset is canonical origin, so PTB-XL+ rows map to PTB-XL patient_id. Versions remain provenance; absent cross-version crosswalks block independence. Record IDs never silently become patient IDs.",
+  "cacheCandidates": [
+    "~/datos/ecg-referencia",
+    "~/Documents/datos/ecg-referencia",
+    "~/Documents/ECG-QA",
+    "~/Documents/ECG-Q"
+  ],
+  "unitProfiles": {
+    "unresolved": {
+      "allowedMetrics": [],
+      "reason": "No source-specific unit/time audit for the executed pipeline is available."
+    },
+    "ludb80": {
+      "allowedMetrics": [
+        "withinLeadRatio",
+        "timing"
+      ],
+      "reason": "Only the 80 audited records: gains equal channel digital ranges, compatible with per-channel normalization. Absolute/cross-lead amplitudes blocked; annotated timing and same-lead scale-invariant ratios remain descriptive."
+    },
+    "ptbxl-original64": {
+      "allowedMetrics": [
+        "withinLeadRatio",
+        "absoluteAmplitude",
+        "crossLeadVoltage"
+      ],
+      "reason": "64 exposed original records passed byte/gain/limb-relation checks; this does not supply independently adjudicated QRS/ST/T boundaries."
+    },
+    "12sl-disputed": {
+      "allowedMetrics": [
+        "withinLeadRatio"
+      ],
+      "reason": "Historical paired sample/table amplitude ratio near 1000 conflicts with declared units. Builder raw-alignment route makes a separate claim; neither silently repairs the historical median cohort. Automatic vendor timing is a distinct reference."
+    },
+    "12sl-tabular": {
+      "allowedMetrics": [
+        "withinLeadRatio",
+        "timing",
+        "absoluteAmplitude",
+        "crossLeadVoltage"
+      ],
+      "reason": "Harmonized 12SL/UniG features as documented, descriptive only. ST_Amp is STJ, QRS_AmpPP is peak-to-peak; timing is automatic vendor timing, not independent human annotation."
+    }
+  },
+  "sources": [
+    {
+      "id": "ptbxl-shape-training",
+      "dataset": "PTB-XL",
+      "version": "1.0.3",
+      "role": "exposed",
+      "identityEvidence": "policy-only",
+      "membershipComplete": false,
+      "records": [],
+      "unitsProfile": "unresolved",
+      "modelPaths": [
+        "src/engine/realistic/normal-shape-model.json",
+        "src/engine/realistic/models/LAFB.json",
+        "src/engine/realistic/models/IRBBB.json",
+        "src/engine/realistic/models/CRBBB.json",
+        "src/engine/realistic/models/CLBBB.json",
+        "src/engine/realistic/models/LVH.json",
+        "src/engine/realistic/models/ASMI.json",
+        "src/engine/realistic/models/IMI.json"
+      ],
+      "evidencePaths": [
+        "scripts/fidelity/build_shape_model.py"
+      ],
+      "missingReason": "Published models and optional builder reports store subject counts, not accepted/rejected patient or record manifests. Fold1-8 policy does not prove executed membership. Raw-aligned and optional 12SL routes must remain distinct."
+    },
+    {
+      "id": "ptbxl-pvc-training",
+      "dataset": "PTB-XL",
+      "version": "1.0.3",
+      "role": "exposed",
+      "identityEvidence": "policy-only",
+      "membershipComplete": false,
+      "records": [],
+      "unitsProfile": "unresolved",
+      "modelPaths": [
+        "src/engine/realistic/models/PVC.json"
+      ],
+      "evidencePaths": [
+        "scripts/fidelity/build_pvc_model.py"
+      ],
+      "missingReason": "No accepted/rejected patient manifest; automatic fiducials and per-record ectopic medians, fold1-8 policy only."
+    },
+    {
+      "id": "ptbxl-vpace-training",
+      "dataset": "PTB-XL",
+      "version": "1.0.3",
+      "role": "exposed",
+      "identityEvidence": "policy-only",
+      "membershipComplete": false,
+      "records": [],
+      "unitsProfile": "unresolved",
+      "modelPaths": [
+        "src/engine/realistic/models/VPACE.json"
+      ],
+      "evidencePaths": [
+        "scripts/fidelity/build_paced_model.py"
+      ],
+      "missingReason": "No accepted/rejected patient manifest; spike removal, filtered medians and automatic fiducials, fold1-8 policy only."
+    },
+    {
+      "id": "ptbxl-af-training",
+      "dataset": "PTB-XL",
+      "version": "1.0.3",
+      "role": "exposed",
+      "identityEvidence": "policy-only",
+      "membershipComplete": false,
+      "records": [],
+      "unitsProfile": "unresolved",
+      "modelPaths": [
+        "src/engine/realistic/af-model.json"
+      ],
+      "evidencePaths": [],
+      "missingReason": "Published AF model stores subjects but no patient membership."
+    },
+    {
+      "id": "flutter-training-ptbxl",
+      "dataset": "PTB-XL",
+      "version": "1.0.3",
+      "role": "exposed",
+      "identityEvidence": "policy-only",
+      "membershipComplete": false,
+      "records": [],
+      "unitsProfile": "unresolved",
+      "modelPaths": [
+        "src/engine/realistic/flutter-model.json"
+      ],
+      "evidencePaths": [
+        "scripts/fidelity/build_flutter_model.py"
+      ],
+      "missingReason": "Mixed Georgia/PTB-XL subjects count cannot be assigned to source or patient from the published model."
+    },
+    {
+      "id": "flutter-training-georgia",
+      "dataset": "Georgia-Challenge2021",
+      "version": "1.0.3",
+      "role": "exposed",
+      "identityEvidence": "policy-only",
+      "membershipComplete": false,
+      "records": [],
+      "unitsProfile": "unresolved",
+      "modelPaths": [
+        "src/engine/realistic/flutter-model.json"
+      ],
+      "evidencePaths": [
+        "scripts/fidelity/build_flutter_model.py"
+      ],
+      "missingReason": "Mixed model lacks patient linkage and executed membership; dataset labels are not cross-dataset independence evidence."
+    },
+    {
+      "id": "vf-training-vfdb",
+      "dataset": "VFDB",
+      "version": "1.0.0",
+      "role": "exposed",
+      "identityEvidence": "policy-only",
+      "membershipComplete": false,
+      "records": [],
+      "unitsProfile": "unresolved",
+      "modelPaths": [
+        "src/engine/realistic/vf-model.json"
+      ],
+      "evidencePaths": [
+        "scripts/fidelity/build_vf_model.py"
+      ],
+      "missingReason": "Combined VFDB/CUDB model records/windows counts; optional per-record report not available here. Historical reserved record names do not resolve patients."
+    },
+    {
+      "id": "vf-training-cudb",
+      "dataset": "CUDB",
+      "version": "1.0.0",
+      "role": "exposed",
+      "identityEvidence": "policy-only",
+      "membershipComplete": false,
+      "records": [],
+      "unitsProfile": "unresolved",
+      "modelPaths": [
+        "src/engine/realistic/vf-model.json"
+      ],
+      "evidencePaths": [
+        "scripts/fidelity/build_vf_model.py"
+      ],
+      "missingReason": "Combined model lacks patient-level membership and linkage."
+    },
+    {
+      "id": "staff-current-training-and-evaluation",
+      "dataset": "STAFFIII",
+      "version": "1.0.0",
+      "role": "exposed",
+      "identityEvidence": "policy-only",
+      "membershipComplete": false,
+      "records": [],
+      "unitsProfile": "unresolved",
+      "modelPaths": [
+        "src/engine/realistic/ischemia/ischemia-model.json"
+      ],
+      "evidencePaths": [
+        "scripts/fidelity/build_ischemia_model.py"
+      ],
+      "missingReason": "Current builder fits non-multiples of5 and evaluates multiples of5; its model/report does not retain patient IDs. This supersedes assumptions based only on the historical six-case development policy."
+    },
+    {
+      "id": "staff-historical-development",
+      "dataset": "STAFFIII",
+      "version": "1.0.0",
+      "role": "exposed",
+      "identityEvidence": "observed",
+      "membershipComplete": true,
+      "records": [
+        {
+          "recordId": "patient3-selected-inflation",
+          "patientId": 3
+        },
+        {
+          "recordId": "patient9-selected-inflation",
+          "patientId": 9
+        },
+        {
+          "recordId": "patient10-selected-inflation",
+          "patientId": 10
+        },
+        {
+          "recordId": "patient12-selected-inflation",
+          "patientId": 12
+        },
+        {
+          "recordId": "patient14-selected-inflation",
+          "patientId": 14
+        },
+        {
+          "recordId": "patient30-selected-inflation",
+          "patientId": 30
+        }
+      ],
+      "unitsProfile": "unresolved",
+      "evidencePaths": [
+        "docs/staff-selection-v1.4.md",
+        "docs/staff-exploration-v1.4.md"
+      ],
+      "identityNote": "Patient IDs explicitly reported in historical selection/exploration; recordId is a ledger label, not a recovered WFDB record name."
+    },
+    {
+      "id": "staff-historical-reserve-candidate",
+      "dataset": "STAFFIII",
+      "version": "1.0.0",
+      "role": "candidate",
+      "identityEvidence": "observed",
+      "membershipComplete": true,
+      "records": [
+        {
+          "recordId": "patient24-selected-inflation",
+          "patientId": 24
+        },
+        {
+          "recordId": "patient19-selected-inflation",
+          "patientId": 19
+        },
+        {
+          "recordId": "patient37-selected-inflation",
+          "patientId": 37
+        }
+      ],
+      "unitsProfile": "unresolved",
+      "evidencePaths": [
+        "docs/staff-selection-v1.4.md"
+      ],
+      "identityNote": "Historical proposed IDs only; current untouched status is unknown because later executed training/evaluation manifests are missing."
+    },
+    {
+      "id": "ptbxl-norm600-fold9-10",
+      "dataset": "PTB-XL",
+      "version": "1.0.3",
+      "role": "exposed",
+      "identityEvidence": "policy-only",
+      "membershipComplete": false,
+      "records": [],
+      "unitsProfile": "unresolved",
+      "declaredCount": {
+        "maximum": 600,
+        "unit": "patients",
+        "kind": "selection-policy"
+      },
+      "evidencePaths": [
+        "scripts/fidelity/prepare_data.py",
+        "docs/fidelidad.md"
+      ],
+      "missingReason": "holdout_norm600.txt record list and corresponding ptbxl_database.csv patient lookup not available in inspected caches. Repeated benchmark use is exposure even in folds9-10."
+    },
+    {
+      "id": "ptbxl-plus-tabular512",
+      "dataset": "PTB-XL",
+      "version": "1.0.3",
+      "derivativeVersion": "PTB-XL+1.0.1",
+      "role": "exposed",
+      "identityEvidence": "observed",
+      "membershipComplete": true,
+      "records": [],
+      "unitsProfile": "12sl-tabular",
+      "declaredCount": {
+        "value": 512,
+        "unit": "patients",
+        "kind": "protocol"
+      },
+      "evidencePaths": [
+        "benchmarks/ptbxl-plus/protocol.json",
+        "docs/ptbxl-morphology-reference.md"
+      ],
+      "expectedRecords": 512,
+      "requireFold": true,
+      "adapter": {
+        "path": "benchmarks/fidelity/ptbxl-exposed-selection.json",
+        "rows": "records",
+        "recordKey": "ecg_id",
+        "patientKey": "patient_id",
+        "foldKey": "fold"
+      },
+      "identityNote": "Recovered existing artifact membership. Canonical patient IDs from512 selection;64 median IDs match original-scale audit IDs exactly. All remain exposed."
+    },
+    {
+      "id": "ptbxl-plus-12sl-medians64",
+      "dataset": "PTB-XL",
+      "version": "1.0.3",
+      "derivativeVersion": "PTB-XL+1.0.1",
+      "role": "exposed",
+      "identityEvidence": "observed",
+      "membershipComplete": true,
+      "records": [],
+      "unitsProfile": "12sl-disputed",
+      "declaredCount": {
+        "value": 64,
+        "unit": "median-records",
+        "kind": "protocol"
+      },
+      "evidencePaths": [
+        "benchmarks/ptbxl-plus/protocol.json",
+        "docs/generator-ptbxl-gap.md",
+        "scripts/fidelity/prepare_data.py"
+      ],
+      "expectedRecords": 64,
+      "requireFold": true,
+      "adapter": {
+        "path": "benchmarks/fidelity/ptbxl-exposed-selection.json",
+        "rows": "medianRecords",
+        "recordKey": "ecg_id",
+        "patientKey": "patient_id",
+        "foldKey": "fold"
+      },
+      "identityNote": "Recovered existing artifact membership. Canonical patient IDs from512 selection;64 median IDs match original-scale audit IDs exactly. All remain exposed."
+    },
+    {
+      "id": "ptbxl-secondary13-13-1",
+      "dataset": "PTB-XL",
+      "version": "1.0.3",
+      "derivativeVersion": "PTB-XL+1.0.1",
+      "role": "exposed",
+      "identityEvidence": "policy-only",
+      "membershipComplete": false,
+      "records": [],
+      "unitsProfile": "12sl-tabular",
+      "declaredCount": {
+        "CLBBB": 13,
+        "CRBBB": 13,
+        "WPW": 1,
+        "unit": "patients-per-overlapping-group",
+        "kind": "published-summary"
+      },
+      "evidencePaths": [
+        "docs/secondary-stt-reference.md",
+        "scripts/secondary-stt-reference.py",
+        "benchmarks/fidelity/ptbxl-exposed-selection.json"
+      ],
+      "missingReason": "Recovered secondary report verifies exact512 selection hash and13/13/1 group counts; group-level IDs are absent. All subgroup patients are covered by exposed512, but subgroup membership cannot be reconstructed from superclasses without original metadata.",
+      "coveredByExposedSource": "ptbxl-plus-tabular512"
+    },
+    {
+      "id": "ptbxl-isolated-phenotypes",
+      "dataset": "PTB-XL",
+      "version": "1.0.3",
+      "role": "exposed",
+      "identityEvidence": "observed",
+      "membershipComplete": true,
+      "records": [],
+      "requireFold": true,
+      "unitsProfile": "unresolved",
+      "adapter": {
+        "path": "docs/evidence/isolated-phenotypes-selection.json",
+        "rows": "records",
+        "recordKey": "ecg_id",
+        "patientKey": "patient_id",
+        "foldKey": "fold"
+      },
+      "evidencePaths": [
+        "docs/reference-protocols/isolated-phenotypes-v1.json"
+      ]
+    },
+    {
+      "id": "ptbxl-original64-scale-audit",
+      "dataset": "PTB-XL",
+      "version": "1.0.3",
+      "role": "exposed",
+      "identityEvidence": "observed",
+      "membershipComplete": true,
+      "records": [],
+      "unitsProfile": "ptbxl-original64",
+      "expectedRecords": 64,
+      "adapter": {
+        "path": "benchmarks/fidelity/ptbxl-exposed-selection.json",
+        "rows": "medianRecords",
+        "recordKey": "ecg_id",
+        "patientKey": "patient_id",
+        "foldKey": "fold"
+      },
+      "evidencePaths": [
+        "docs/annotated-morphology-reference.md",
+        "docs/evidence/source-scale-reference.json"
+      ],
+      "requireFold": true,
+      "identityNote": "Recovered existing artifact membership. Canonical patient IDs from512 selection;64 median IDs match original-scale audit IDs exactly. All remain exposed."
+    },
+    {
+      "id": "ludb-original40-calibration40-scale-audit",
+      "dataset": "LUDB",
+      "version": "1.0.1",
+      "role": "exposed",
+      "identityEvidence": "observed",
+      "membershipComplete": false,
+      "records": [],
+      "unitsProfile": "ludb80",
+      "expectedRecords": 80,
+      "adapter": {
+        "path": "docs/evidence/source-scale-reference.json",
+        "rows": "ludbScale.recordsEvidence",
+        "recordKey": "id"
+      },
+      "evidencePaths": [
+        "docs/annotated-morphology-reference.md"
+      ],
+      "missingReason": "Record IDs and source hashes observed; explicit patient identity crosswalk not encoded. Unit finding applies only to these80 records."
+    },
+    {
+      "id": "ludb-fixtures-and-clinical-review8",
+      "dataset": "LUDB",
+      "version": "1.0.1",
+      "role": "exposed",
+      "identityEvidence": "observed",
+      "membershipComplete": false,
+      "records": [],
+      "unitsProfile": "unresolved",
+      "expectedRecords": 8,
+      "adapter": {
+        "path": "tests/reference/ludb/fixtures/manifest.json",
+        "rows": "records",
+        "recordKey": "record"
+      },
+      "evidencePaths": [
+        "benchmarks/clinical-review/protocol-v1.json"
+      ],
+      "missingReason": "Record IDs available but patient crosswalk not encoded. Already used fixtures/review; independent human adjudication remains pending."
+    },
+    {
+      "id": "ludb-previous-reserve40-now-exposed",
+      "dataset": "LUDB",
+      "version": "1.0.1",
+      "role": "exposed",
+      "identityEvidence": "observed",
+      "membershipComplete": false,
+      "records": [],
+      "unitsProfile": "unresolved",
+      "expectedRecords": 40,
+      "adapter": {
+        "path": "docs/evidence/t-end-reserved-results.json",
+        "rows": "records",
+        "recordKey": "id"
+      },
+      "evidencePaths": [
+        "docs/t-end-reserved-protocol.json"
+      ],
+      "missingReason": "Result explicitly states exposed after2026-10-07 evaluation. Patient crosswalk absent; historical holdout flags do not restore reserve status."
+    },
+    {
+      "id": "ludb-qt-reconciliation40-now-exposed",
+      "dataset": "LUDB",
+      "version": "1.0.1",
+      "role": "exposed",
+      "identityEvidence": "observed",
+      "membershipComplete": false,
+      "records": [],
+      "unitsProfile": "unresolved",
+      "expectedRecords": 40,
+      "adapter": {
+        "path": "docs/evidence/qt-reconciliation-v1-protocol.json",
+        "rows": "cohort.records"
+      },
+      "evidencePaths": [
+        "docs/evidence/qt-reconciliation-v1-results.json"
+      ],
+      "missingReason": "Protocol IDs linked to published failed prospective results; patient crosswalk absent."
+    },
+    {
+      "id": "ludb-terminal-consensus32-now-exposed",
+      "dataset": "LUDB",
+      "version": "1.0.1",
+      "role": "exposed",
+      "identityEvidence": "observed",
+      "membershipComplete": false,
+      "records": [],
+      "unitsProfile": "unresolved",
+      "expectedRecords": 32,
+      "adapter": {
+        "path": "docs/terminal-consensus-prospective-protocol.json",
+        "rows": "cohort.records"
+      },
+      "evidencePaths": [
+        "docs/evidence/terminal-consensus-reserved-results.json"
+      ],
+      "missingReason": "Protocol IDs linked to published results including failed paired criterion; patient crosswalk absent."
+    },
+    {
+      "id": "incart-existing-evaluation",
+      "dataset": "INCART",
+      "version": "1.0.0",
+      "role": "exposed",
+      "identityEvidence": "policy-only",
+      "membershipComplete": false,
+      "records": [],
+      "unitsProfile": "unresolved",
+      "adapter": {
+        "path": "docs/complete-complex-incart-protocol.json",
+        "rows": "dataset.records"
+      },
+      "evidencePaths": [
+        "docs/complete-complex-incart-protocol.json"
+      ],
+      "missingReason": "Protocol75 recordings/150 windows are not75 independent patients; executed patient linkage missing."
+    },
+    {
+      "id": "ltafdb-existing-development-evaluation",
+      "dataset": "LTAFDB",
+      "version": "1.0.0",
+      "role": "exposed",
+      "identityEvidence": "policy-only",
+      "membershipComplete": false,
+      "records": [],
+      "unitsProfile": "unresolved",
+      "evidencePaths": [
+        "docs/ltafdb-development-protocol.json"
+      ],
+      "missingReason": "Existing development/evaluation record policies require executed manifests and patient linkage before independent reuse."
+    }
+  ],
+  "limitations": [
+    "This inventory covers identified repository pipelines and bounded local cache locations; it does not claim exhaustive historical cloud artifact recovery.",
+    "No fresh reserve is downloaded or evaluated. Missing executed manifests block independence and promotion.",
+    "Patient membership, unit eligibility, temporal-reference validity and independent human clinical review are separate gates."
+  ]
+}
