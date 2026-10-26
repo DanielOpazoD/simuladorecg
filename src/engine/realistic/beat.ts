@@ -65,11 +65,16 @@ export const TA_DECAY_MS = 80;
  * junctional) has the inherited Ta removed (taKeep = 0).
  */
 function place(acc: Float64Array[], fs: number, start: number, x: Float64Array, p: Patient, segs: Segment[],
-  mode: "atrial-conducted" | "atrial-blocked" | "ventricular", endAt?: ArrayLike<number>, taKeep = 0) {
+  mode: "atrial-conducted" | "atrial-blocked" | "ventricular", endAt?: ArrayLike<number>, taKeep = 0, until?: number) {
   const m = p.model, phasesMs = segs.reduce((s, g) => s + g.ms, 0);
   const tailMs = mode === "atrial-blocked" ? 5 * TA_DECAY_MS : 0, totalMs = phasesMs + tailMs;
   const first = m.phases[segs[0].phase], last = m.phases[segs[segs.length - 1].phase];
-  const lo = Math.max(0, Math.ceil(start * fs)), hi = Math.min(acc[0].length - 1, Math.floor(start * fs + (totalMs * fs) / 1000));
+  // A conducted PR ends immediately before the first ventricular sample. Use
+  // the same absolute event time as QRS placement, rather than rebuilding it
+  // from the pre-P lead-in and phase durations (which can round differently).
+  // ceil(until * fs) is also correct when the handoff falls between samples.
+  const lo = Math.max(0, Math.ceil(start * fs)), hi = Math.min(acc[0].length - 1,
+    until === undefined ? Math.floor(start * fs + (totalMs * fs) / 1000) : Math.ceil(until * fs) - 1);
   const lastStartMs = phasesMs - segs[segs.length - 1].ms;
   for (let lead = 0; lead < NL; lead++) {
     const v0 = x[first.offset * NL + lead], vEnd = x[(last.offset + last.points - 1) * NL + lead];
@@ -111,9 +116,10 @@ export function qrsOnsetLevel(x: Float64Array, p: Patient): Float64Array {
   const o = p.model.phases.qrs.offset * NL;
   return x.slice(o, o + NL);
 }
-export function addAtrial(acc: Float64Array[], fs: number, start: number, pMs: number, pqMs: number, x: Float64Array, p: Patient, conductsTo?: ArrayLike<number>) {
+export function addAtrial(acc: Float64Array[], fs: number, start: number, pMs: number, pqMs: number, x: Float64Array, p: Patient,
+  conductsTo?: ArrayLike<number>, conductsAt = start + (pMs + pqMs) / 1000) {
   // The learned lead-in starts before P onset (`start` is P onset).
-  place(acc, fs, start - p.model.preMs / 1000, x, p, [{ phase: "pre", ms: p.model.preMs }, { phase: "p", ms: pMs }, { phase: "pq", ms: pqMs }], conductsTo ? "atrial-conducted" : "atrial-blocked", conductsTo);
+  place(acc, fs, start - p.model.preMs / 1000, x, p, [{ phase: "pre", ms: p.model.preMs }, { phase: "p", ms: pMs }, { phase: "pq", ms: pqMs }], conductsTo ? "atrial-conducted" : "atrial-blocked", conductsTo, 0, conductsTo ? conductsAt : undefined);
 }
 export function addVentricular(acc: Float64Array[], fs: number, start: number, qrsMs: number, sttMs: number, x: Float64Array, p: Patient, taKeep: number) {
   const st = sttMs * p.tApexFraction;

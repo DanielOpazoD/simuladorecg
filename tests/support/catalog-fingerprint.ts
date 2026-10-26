@@ -21,6 +21,11 @@ export interface CatalogFingerprint {
 }
 
 const FILE = new URL("../__snapshots__/catalog-fingerprints.json", import.meta.url);
+// Only the 19 reviewed PR–QRS changes use a new baseline. The original
+// fingerprints remain intact; scripts/verify-learned-handoff.mjs reproduces
+// their predecessor and bounds every raw delta to the handoff's grid samples.
+const HANDOFF_FILE = new URL("../__snapshots__/catalog-pr-qrs-v2.json", import.meta.url);
+const handoff: Record<string, CatalogFingerprint> = JSON.parse(readFileSync(HANDOFF_FILE, "utf8"));
 const STRIDE = 100;
 const SAMPLE_TOL_MV = 1e-5;
 const AGGREGATE_REL_TOL = 1e-6;
@@ -51,12 +56,13 @@ function close(actual: number, expected: number, tol: number, label: string) {
 export function expectCatalogFingerprint(id: string, x: ArrayLike<number>) {
   const actual = catalogFingerprint(x);
   if (update) {
+    if (handoff[id]) throw new Error(`${id}: use scripts/verify-learned-handoff.mjs --write-fingerprints; preserve the historical fingerprint`);
     stored[id] = actual;
     const sorted = Object.fromEntries(Object.entries(stored).sort(([a], [b]) => a.localeCompare(b)));
     writeFileSync(FILE, JSON.stringify(sorted, null, 1) + "\n");
     return;
   }
-  const expected = stored[id];
+  const expected = handoff[id] ?? stored[id];
   expect(expected, `${id}: missing fingerprint; run UPDATE_CATALOG_FINGERPRINTS=1 npx vitest run tests/engine.test.ts`).toBeDefined();
   expect(actual.n).toBe(expected.n);
   expect(actual.samples.length).toBe(expected.samples.length);

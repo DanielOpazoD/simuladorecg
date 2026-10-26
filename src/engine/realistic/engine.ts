@@ -131,18 +131,19 @@ export class RealisticTrack {
   /** Sinus P wave and PQ segment; conducted P waves end exactly at QRS onset. */
   addAtrial(a: AtrialEvent) {
     const p = this.patient;
-    let pMs = p.pMs, pqMs = p.pqMs, target: Float64Array | undefined;
+    let pMs = p.pMs, pqMs = p.pqMs, target: Float64Array | undefined, conductsAt: number | undefined;
     if (a.conducted && a.pr) {
       const pr = a.pr * 1000, beat = this.key(a.time + a.pr), x = this.templates.get(beat);
       pMs = Math.min(pMs, pr - 12);
       pqMs = pr - pMs;
       if (x) {
         target = qrsOnsetLevel(x, p).map((v) => v * this.taKeep);
+        conductsAt = a.time + a.pr;
         this.conducted.add(beat);
       }
     }
     const x = beatTemplate(p, this.atrial, a.time, this.c.respiratoryRate);
-    addAtrial(this.acc, this.fs, a.time, pMs, pqMs, x, p, target);
+    addAtrial(this.acc, this.fs, a.time, pMs, pqMs, x, p, target, conductsAt);
   }
   /** Net-area frontal QRS axis (degrees) of the noise-free learned component over
    * the given conducted beats, from the QRS-onset level: the axis the trace shows. */
