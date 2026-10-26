@@ -92,7 +92,7 @@ export function paperLayout(
   const pxPerMm =
     pxOverride ??
     (c.view.fit
-      ? Math.min(c.view.pxPerMm, Math.max(640, availableWidth) / widthMm)
+      ? Math.min(c.view.pxPerMm, Math.max(960, availableWidth) / widthMm)
       : c.view.pxPerMm);
   const leads = orderedLeads(c.view.cabrera);
   const segments: Segment[] = [];
@@ -475,7 +475,7 @@ export function renderRhythm(
     widthMm,
     heightMm: 18 + rows * rowHeight + 7,
     pxPerMm: c.view.fit
-      ? Math.min(c.view.pxPerMm, Math.max(640, availableWidth) / widthMm)
+      ? Math.min(c.view.pxPerMm, Math.max(960, availableWidth) / widthMm)
       : c.view.pxPerMm,
     segments: [],
     mode: "rhythm",
