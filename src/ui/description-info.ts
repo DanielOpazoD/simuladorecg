@@ -92,13 +92,13 @@ CONTENT.axis = {
 /** Hexaxial reference system with the six frontal leads, the normal sector and the
  * case's axis. Own drawing; angles follow the clinical convention (clockwise
  * positive, 0° = lead I). */
-export function hexaxialSvg(axis: number | null): string {
+export function hexaxialSvg(axis: number | null, invertedAcquisition = false): string {
   const c = 150, r = 112, at = (deg: number, k = r) => [c + k * Math.cos(deg * Math.PI / 180), c + k * Math.sin(deg * Math.PI / 180)];
   const arc = (a0: number, a1: number, color: string) => { const [x0, y0] = at(a0), [x1, y1] = at(a1), large = Math.abs(a1 - a0) > 180 ? 1 : 0; return `<path d="M${c},${c} L${x0.toFixed(1)},${y0.toFixed(1)} A${r},${r} 0 ${large} 1 ${x1.toFixed(1)},${y1.toFixed(1)} Z" fill="${color}"/>`; };
   const leads: [string, number][] = [["I", 0], ["II", 60], ["III", 120], ["aVF", 90], ["aVL", -30], ["aVR", -150]];
   const label = (text: string, deg: number, k: number, cls = "") => { const [x, y] = at(deg, k); return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle"${cls ? ` class="${cls}"` : ""}>${text}</text>`; };
   const arrow = axis === null ? "" : (() => { const [x, y] = at(axis, r - 6); return `<line x1="${c}" y1="${c}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" class="hex-axis" marker-end="url(#hex-head)"/>${label(`${Math.round(axis)}°`, axis, r + 44, "hex-axis-label")}`; })();
-  return `<svg class="hexaxial" viewBox="-48 -40 396 380" role="img" aria-label="Sistema hexaxial: eje normal de −30° a +90°${axis === null ? "" : `; eje de este caso ${Math.round(axis)}°`}"><defs><marker id="hex-head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="hex-head"/></marker></defs>` +
+  return `<svg class="hexaxial" viewBox="-48 -40 396 380" role="img" aria-label="Sistema hexaxial: eje normal de −30° a +90°${axis === null ? "" : `; ${invertedAcquisition ? "eje del registro con brazos invertidos" : "eje de este caso"} ${Math.round(axis)}°`}"><defs><marker id="hex-head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="hex-head"/></marker></defs>` +
     arc(-30, 90, "var(--hex-normal)") + arc(-90, -30, "var(--hex-left)") + arc(90, 180, "var(--hex-right)") + arc(180, 270, "var(--hex-extreme)") +
     `<circle cx="${c}" cy="${c}" r="${r}" class="hex-ring"/>` +
     leads.map(([name, deg]) => { const [x0, y0] = at(deg + 180), [x1, y1] = at(deg); return `<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}" class="hex-lead"/>${label(name, deg, r + 14, "hex-lead-label")}`; }).join("") +
@@ -114,13 +114,13 @@ const marked = (kind: DescriptionInfo, m: LeadMeasure[]): Set<string> => {
 };
 
 export function descriptionInfoTitle(kind: DescriptionInfo): string { return CONTENT[kind].title; }
-export function descriptionInfoHtml(kind: DescriptionInfo, measures: LeadMeasure[], axis: number | null = null): string {
+export function descriptionInfoHtml(kind: DescriptionInfo, measures: LeadMeasure[], axis: number | null = null, axisContext?: string): string {
   const x = CONTENT[kind], hit = marked(kind, measures);
   const table = x.columns.length && measures.some((r) => r.beats > 0)
     ? `<details class="info-measures"><summary>Valores medidos en este trazado</summary><p class="control-note">Mediana de los latidos dominantes, respecto del segmento PR. Destacadas: las derivaciones que entran en la descripción.</p><div class="measurement-table-wrap"><table><thead><tr><th>Derivación</th>${x.columns.map(([h]) => `<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${measures.map((r) => `<tr${hit.has(r.lead) ? ' class="info-hit"' : ""}><td>${esc(r.lead)}</td>${x.columns.map(([, f]) => `<td>${esc(f(r))}</td>`).join("")}</tr>`).join("")}</tbody></table></div></details>`
     : "";
   const items = (list: [string, string][]) => `<dl class="info-items">${list.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>`;
-  return `<p class="dialog-lead">${esc(x.intro)}</p>${kind === "axis" ? hexaxialSvg(axis) : ""}${items(x.items)}` +
+  return `<p class="dialog-lead">${esc(x.intro)}</p>${kind === "axis" ? `${axisContext ? `<p class="control-note">${esc(axisContext)}</p>` : ""}${hexaxialSvg(axis, !!axisContext)}` : ""}${items(x.items)}` +
     (x.more ? `<details class="info-more"><summary>${esc(x.more.title)}</summary>${items(x.more.items)}</details>` : "") +
     (kind === "st" && measures.some((r) => r.beats > 0) ? `<button type="button" class="btn" data-action="st-zoom">Ampliar y medir el ST</button>` : "") + table +
     `<h3 class="info-refs-title">Referencias</h3><ol class="info-refs">${x.refs.map((id) => { const r = SOURCES[id]; return `<li><span class="ref-level">${esc(r.level)}</span> ${esc(r.cite)} <a href="${esc(r.url)}" target="_blank" rel="noopener">Abrir</a></li>`; }).join("")}</ol>`;

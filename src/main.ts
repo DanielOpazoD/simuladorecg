@@ -775,7 +775,7 @@ const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
   "description-info": (target) => {
     if (!description) return;
     const kind = target.closest<HTMLElement>("[data-info]")!.dataset.info as DescriptionInfo;
-    openDialog(descriptionInfoTitle(kind), descriptionInfoHtml(kind, description.measures, description.axis));
+    openDialog(descriptionInfoTitle(kind), descriptionInfoHtml(kind, description.measures, description.axis, description.axisContext));
   },
   "st-zoom": () => openStZoom(),
   "present-30": () => {

@@ -1,6 +1,7 @@
 import type { ECGCase, Measurement, MetricKey, Reliability, Signal } from "../engine/types";
 import { esc } from "./helpers";
 import { modelIntervals } from "./model-intervals";
+import { acquiredModelAxis } from "./acquired-model-axis";
 
 export interface MetricCard {
   key: MetricKey;
@@ -95,7 +96,7 @@ export function availableMetricValue(m:Measurement,key:MetricKey):number|null {
  */
 export function modelMetricCards(c: ECGCase, s: Signal): MetricCard[] {
   const none = unorganized(c), t = s.truth, model = "Valor del modelo que generó este trazado. La estimación automática desde las muestras está en «Medidas».";
-  const intervals = modelIntervals(c, s);
+  const intervals = modelIntervals(c, s), axis = acquiredModelAxis(c, s);
   const card = (key: MetricKey, label: string, value: string, note: string): MetricCard =>
     value === "—"
       ? { key, label, value, note: "No aplica", status: "unavailable", reason: "Sin este componente en el ritmo generado." }
@@ -107,6 +108,9 @@ export function modelMetricCards(c: ECGCase, s: Signal): MetricCard[] {
       : card("pr", "PR", display(intervals.pr, "ms"), "modelo"),
     card("qrs", "QRS", display(intervals.qrs, "ms"), "modelo"),
     card("qt", "QTc", display(intervals.qtc, "ms"), "modelo · Fridericia"),
-    card("axis", "Eje QRS", none ? "—" : display(t.axis, "°"), "modelo"),
+    {
+      ...card("axis", "Eje QRS", none ? "—" : display(axis.displayed, "°"), axis.reversed ? "modelo · adquisición invertida" : "modelo"),
+      ...(axis.context ? { reason: `${model} ${axis.context}` } : {}),
+    },
   ];
 }
