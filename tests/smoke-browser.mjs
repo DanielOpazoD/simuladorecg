@@ -35,9 +35,10 @@ const ready = async (label) => {
 const diagnoses = await page.locator(".case-button:not([disabled])").evaluateAll((es) => es.map((e) => e.dataset.diagnosis));
 let checked = 0, expected = 0;
 for (const diagnosis of diagnoses) {
-  // The library is an accordion: open the family that holds the entry first.
+  // Select the stable index family before its example.
   const group = page.locator(".case-group").filter({ has: page.locator(`[data-diagnosis="${diagnosis}"]`) }).first();
-  if (!await group.evaluate(e => e.open)) await group.locator("summary").click();
+  const family = await group.getAttribute("data-index-family");
+  await page.locator(`[data-catalog-family="${family}"]`).click();
   await page.locator(`.case-button[data-diagnosis="${diagnosis}"]`).first().click();
   await ready(diagnosis);
   const variants = await page.locator(".variant-tabs [data-variant]").evaluateAll((es) => es.map((e) => e.dataset.variant));

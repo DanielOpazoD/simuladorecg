@@ -4,25 +4,31 @@ import { diagnosisFamilies, diagnosisForPreset } from "./diagnosis-navigation";
 import { esc, icon } from "./helpers";
 import { catalogGroup, familyLabel, isIschemiaFamily } from "./catalog-presentation";
 
-/** The library as an accordion: every family fits on one line, so all of them are
- * visible at once; the family of the case shown opens, plus those the reader opened
- * (`open`), and all of them while searching or filtering. */
+const indexGroup = (id: string) => isIschemiaFamily(id) ? 'Isquemia y ST' : id;
+const shortFamilies: Record<string, string> = {Ritmos:'Sinusal y auricular', 'Ritmos ventriculares':'Ventriculares', Sobrecarga:'Sobrecargas'};
+const shortCases: Record<string, string> = {anterior:'DA · anterior', lateral:'Cx · lateral'};
+/** A stable family index above one result area. Searching spans every family. */
 export function catalogView(
   presets: readonly Preset[],
   search = "",
   group = "",
   selectedId?: string,
-  open: ReadonlySet<string> = new Set(),
+  activeFamily = "",
 ) {
   // Examples not yet available stay out of the library.
   const families = diagnosisFamilies(presets.filter(p => p.strategy !== "pending"), search, group, selectedId);
+  const all = diagnosisFamilies(presets.filter(p => p.strategy !== 'pending'));
+  const keys = [...new Set(all.map(f => indexGroup(f.id)))].sort((a,b) => Number(b === 'Isquemia y ST') - Number(a === 'Isquemia y ST'));
+  const selected = presets.find(p => p.id === selectedId);
+  const active = keys.includes(activeFamily) ? activeFamily : selected ? indexGroup(catalogGroup(selected)) : keys[0];
+  const navigation = keys.map(id => `<button type="button" data-action="catalog-family" data-catalog-family="${esc(id)}" aria-pressed="${!search && id === active}" aria-controls="case-list">${esc(shortFamilies[id] ?? familyLabel(id))}</button>`).join('');
   // Cross-listed entries (imitators also shown in their own family) count once.
   const own = families.flatMap(f => f.sections.filter(s => !s.crossListed).flatMap(s => s.entries));
   const available = own.reduce((sum, e) => sum + e.matches.filter(p => p.strategy !== "pending").length, 0);
   const entries = own.filter(e => e.target.strategy !== "pending").length;
   const count = `${entries} ${entries === 1 ? "patrón" : "patrones"} · ${available} ${available === 1 ? "ejemplo" : "ejemplos"}`;
   const renderFamily = (family: typeof families[number]) =>
-    `<details class="case-group" data-family="${esc(family.id)}"${search || group || open.has(family.id) || family.sections.some(sec => !sec.crossListed && sec.entries.some(e => e.selected)) ? " open" : ""}><summary><span>${esc(family.label)}</span></summary>${family.guide ? `<p class="case-group-guide">${esc(family.guide)}</p>` : ""}${family.sections.map(section =>
+    `<section class="case-group" data-family="${esc(family.id)}" data-index-family="${esc(indexGroup(family.id))}"${!search && !group && indexGroup(family.id) !== active ? ' hidden' : ''}><h3 class="family-result-title${!search && !isIschemiaFamily(family.id) ? ' sr-only' : ''}">${esc(family.id === 'OMI evidente' ? 'Territorios' : family.label)}</h3>${family.guide ? `<p class="case-group-guide">${esc(family.guide)}</p>` : ""}${family.sections.map(section =>
       `${section.title && !(section.entries.length === 1 && section.title === section.entries[0].diagnosis.title) ? `<h4 class="case-subgroup">${esc(section.title)}</h4>` : ""}${section.entries.map(entry => {
         const {diagnosis, target, selected, matches} = entry;
         const pending = target.strategy === "pending";
@@ -30,12 +36,12 @@ export function catalogView(
         const detail = pending ? "Pendiente" : section.crossListed ? `También en ${familyLabel(catalogGroup(target))}` : search && matches.length === 1 && multiple
           ? `Coincide: ${diagnosis.variants.find(v => v.id === target.id)!.label}`
           : multiple ? `${diagnosis.variants.length} variantes` : "";
-        return `<button type="button" class="case-button ${selected ? "selected" : ""}" data-diagnosis="${esc(diagnosis.id)}" data-preset="${esc(target.id)}" title="${esc(presetTitle(target))}" aria-label="${esc(diagnosis.title)}${detail ? ` · ${esc(detail)}` : ""}" ${pending ? "disabled" : ""} ${selected ? 'aria-current="true"' : ""}><span>${esc(diagnosis.title)}${detail ? `<small class="case-variants-count">${esc(detail)}</small>` : ""}</span>${selected ? icon("check") : multiple ? icon("chevron") : ""}</button>`;
+        return `<button type="button" class="case-button ${selected ? "selected" : ""}" data-diagnosis="${esc(diagnosis.id)}" data-preset="${esc(target.id)}" title="${esc(presetTitle(target))}" aria-label="${shortCases[target.id] ? esc(shortCases[target.id]) + " · " : ""}${esc(diagnosis.title)}${detail ? ` · ${esc(detail)}` : ""}" ${pending ? "disabled" : ""} ${selected ? 'aria-current="true"' : ""}><span>${esc(shortCases[target.id] ?? diagnosis.title)}${detail ? `<small class="case-variants-count">${esc(detail)}</small>` : ""}</span>${selected ? icon("check") : multiple ? icon("chevron") : ""}</button>`;
       }).join("")}`
-    ).join("")}</details>`;
+    ).join("")}</section>`;
   const ischemia = families.filter(f => isIschemiaFamily(f.id));
-  const html = (ischemia.length ? `<section class="ischemia-library" aria-labelledby="ischemia-library-title"><h3 id="ischemia-library-title">Isquemia y ST</h3>${ischemia.map(renderFamily).join('')}</section>` : '') + families.filter(f => !isIschemiaFamily(f.id)).map(renderFamily).join('') || '<div class="catalog-empty"><strong>No encontramos ese patrón</strong><p>Prueba con el nombre completo o una sigla como FA, BRI o WPW.</p></div>';
-  return { count, html, clearFiltersVisible: !!search || !!group };
+  const html = (ischemia.length ? `<section class="ischemia-library" aria-label="Isquemia y ST"${!search && !group && active !== 'Isquemia y ST' ? ' hidden' : ''}>${ischemia.map(renderFamily).join('')}</section>` : '') + families.filter(f => !isIschemiaFamily(f.id)).map(renderFamily).join('') || '<div class="catalog-empty"><strong>No encontramos ese patrón</strong><p>Prueba con el nombre completo o una sigla como FA, BRI o WPW.</p></div>';
+  return { count, html, navigation, active, clearFiltersVisible: !!search || !!group };
 }
 
 export class VariantNavigation {

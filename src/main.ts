@@ -126,7 +126,7 @@ try {
 applyTheme(readTheme());
 const root = $("#app");
 root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="ECG Lab, inicio">${icon("pulse")}<span>ECG<span class="brand-light">lab</span></span></a><nav aria-label="Herramientas"><button class="btn mobile-cases" data-action="catalog">${icon("menu")}<span>Casos</span></button>${btn("quiz", "Practicar", "quiz")}${btn("export", "Exportar", "download")}${btn("theme", "Tema", "sun", "icon-button")}</nav></header>
- <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><h2>Biblioteca de patrones</h2>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Patrón, sigla o palabra…" aria-label="Buscar caso"/></label><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div></aside>
+ <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><h2 class="sr-only">Biblioteca de patrones</h2>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Buscar ECG…" aria-label="Buscar caso"/></label><nav id="catalog-families" class="catalog-families" aria-label="Familias de ECG"></nav><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div></aside>
  <main class="workspace"><section class="case-heading"><div><div class="case-category sr-only" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><div id="exploration-context" class="exploration-context" hidden></div></div><div class="heading-tools"><section id="metrics" class="metrics" aria-label="Valores del modelo que generó el ECG"><div class="loading-metrics">Generando señal…</div></section><div class="case-state">${btn("reset", "Restablecer", "reset", "subtle")}</div></div></section>
  <section id="diagnosis-navigation" class="diagnosis-navigation" aria-label="Variantes del patrón" hidden></section>
  <div id="diagnosis-content">
@@ -167,8 +167,8 @@ if (!location.hash) { const p=presetById(c.presetId); if(p) explorationOrigin=cr
 function currentPreset() {
   return caseContext(c).preset;
 }
-/** Library families the reader opened (the family of the case shown opens by itself). */
-const openFamilies = new Set<string>();
+/** Browsing a family is independent of the currently displayed ECG. */
+let activeCatalogFamily = "";
 // The paper menu closes on a click outside it or on Escape.
 document.addEventListener("click", (e) => {
   const menu = document.querySelector<HTMLDetailsElement>(".paper-menu[open]");
@@ -178,14 +178,10 @@ document.addEventListener("keydown", (e) => {
   const menu = document.querySelector<HTMLDetailsElement>(".paper-menu[open]");
   if (e.key === "Escape" && menu) { menu.open = false; menu.querySelector("summary")?.focus(); }
 });
-// From the reader's click, not the toggle event: re-rendered open families also fire it.
-document.addEventListener("click", (e) => {
-  const family = (e.target as Element).closest(".case-group > summary")?.parentElement as HTMLDetailsElement | undefined;
-  if (!family || search) return;
-  if (family.open) openFamilies.delete(family.dataset.family!); else openFamilies.add(family.dataset.family!);
-});
 function renderCatalog() {
-  const view = catalogView(PRESETS, search, group, currentPreset()?.id, openFamilies);
+  const view = catalogView(PRESETS, search, group, currentPreset()?.id, activeCatalogFamily);
+  activeCatalogFamily = view.active;
+  $("#catalog-families").innerHTML = view.navigation;
   $("#catalog-count").textContent = view.count;
   $("[data-action=clear-search]").hidden = !view.clearFiltersVisible;
   $("#case-list").innerHTML = view.html;
@@ -932,6 +928,12 @@ async function openTeachingWorkspace() {
   $("#dialog-content [data-action=close-dialog]").focus();
 }
 const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
+  "catalog-family": (target) => {
+    activeCatalogFamily = target.dataset.catalogFamily!; search = ""; group = "";
+    $<HTMLInputElement>("#case-search").value = ""; renderCatalog();
+    $("#case-list").scrollTop = 0;
+    Array.from(document.querySelectorAll<HTMLButtonElement>("[data-catalog-family]")).find(b => b.dataset.catalogFamily === activeCatalogFamily)?.focus({preventScroll:true});
+  },
   compare: () => openComparison(),
   teaching: () => openTeachingWorkspace(),
   "teaching-marks": () => { teachingMarksVisible = !teachingMarksVisible; draw(); },

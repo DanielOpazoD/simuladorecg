@@ -38,6 +38,21 @@
 .case-group { border-top:0; }
 .case-group + .case-group { border-top:0; }
 .case-group > summary { min-height:44px; }
+.sidebar { min-height:0; overflow-y:auto; }
+.sidebar .sidebar-head { padding:0; min-height:12px; flex-shrink:0; justify-content:flex-end; }
+.sidebar-head .icon-button span { display:none; }
+.sidebar .search-box { margin:0 12px 8px; flex-shrink:0; }
+.catalog-families { --ischemia-ink:#893745; --ischemia-soft:#fbf2f3; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:2px; padding:0 10px 10px; flex-shrink:0; }
+.dark .catalog-families { --ischemia-ink:#ffb4c1; --ischemia-soft:#342932; }
+.catalog-families button { min-width:0; min-height:44px; padding:7px 8px; border:0; border-radius:5px; background:transparent; color:var(--ink); font:inherit; font-size:var(--text-sm); line-height:1.25; text-align:left; cursor:pointer; }
+.catalog-families button:hover { background:var(--soft); }
+.catalog-families button[aria-pressed=true] { background:var(--soft); box-shadow:inset 2px 0 var(--accent); }
+.catalog-families button[data-catalog-family="Isquemia y ST"][aria-pressed=true] { color:var(--ischemia-ink); background:var(--ischemia-soft); box-shadow:inset 2px 0 var(--ischemia-ink); }
+.sidebar .case-list { min-height:80px; border-top:1px solid var(--line); padding-top:6px; }
+.family-result-title { margin:10px 8px 4px; font-size:var(--text-sm); font-weight:600; }
+.case-group .case-subgroup { margin:8px 8px 2px; }
+.quiz-concealed .catalog-families { display:none; }
+@media(max-height:550px) { .sidebar { overflow-y:auto; } .sidebar .case-list { flex:none; overflow:visible; } }
 .case-button, .ischemia-library .case-button { background:transparent; border-color:transparent; margin-block:0; box-shadow:none; }
 .case-button:hover, .ischemia-library .case-button:hover { background:var(--soft); border-color:transparent; }
 .case-button.selected { background:var(--soft); box-shadow:inset 3px 0 var(--accent); }
