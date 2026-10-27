@@ -66,8 +66,9 @@ try{
   await page.locator('[data-reading-segment="0"]').click();assert.equal(await page.locator('.lead-detail-orientation svg').count(),0);assert.match(await page.locator('.lead-detail-observe').innerText(),/invertidos/);await page.keyboard.press('Escape');
   await importCase(page,saved);
   if(v.width<600){
-   await page.evaluate(()=>scrollTo(0,0));await page.locator('#canvas-wrap').evaluate(e=>e.scrollLeft=0);
-   const r=await page.locator('#ecg').boundingBox(),cdp=await page.context().newCDPSession(page),y=Math.min(800,r.y+200);
+   await page.locator('#canvas-wrap').evaluate(e=>{e.scrollLeft=0;e.scrollIntoView({block:'start'});});
+   const r=await page.locator('#ecg').boundingBox(),cdp=await page.context().newCDPSession(page),y=Math.max(0,r.y)+200;
+   assert(y>r.y&&y<r.y+r.height&&y<1000,'Touch starts inside the visible paper, including enlarged text');
    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:v.width-50,y}]});
    for(let k=1;k<=5;k++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:v.width-50-k*30,y}]});
    await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
