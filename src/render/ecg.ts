@@ -249,6 +249,12 @@ function pulse(
  * visible height, never below `minWidthPx` of paper width (readability floor). */
 export const heightFittedPxPerMm = (layout: Layout, maxHeightPx: number, minWidthPx = 760) =>
   Math.min(layout.pxPerMm, Math.max(minWidthPx / layout.widthMm, maxHeightPx / layout.heightMm));
+/** The workspace supplies the case title; remove only its 8 mm editorial band.
+ * Row heights, sample windows and calibrated units stay unchanged. */
+function workspacePaper(layout: Layout, compact = false): Layout {
+  return compact ? {...layout, heightMm: layout.heightMm - 8,
+    segments: layout.segments.map(s => ({...s, y: s.y - 8, baseline: s.baseline - 8}))} : layout;
+}
 /** Reserve an empty paper sheet; the new signal may require taller rows. */
 export function renderPaperSkeleton(
   canvas: HTMLCanvasElement,
@@ -258,10 +264,11 @@ export function renderPaperSkeleton(
   /** The previous trace's amplitude; a 2 mV deflection before the first one. */
   amplitudeMm = 2 * Math.max(c.view.gain, c.view.chestGain),
   rowExtents?: Layout["rowExtents"],
+  compactHeader = false,
 ): Layout {
-  const natural = paperLayout(c, availableWidth, undefined, amplitudeMm, rowExtents),
+  const natural = workspacePaper(paperLayout(c, availableWidth, undefined, amplitudeMm, rowExtents), compactHeader),
     layout = maxHeight && c.view.fit
-      ? paperLayout(c, availableWidth, heightFittedPxPerMm(natural, maxHeight), amplitudeMm, rowExtents)
+      ? {...natural, pxPerMm: heightFittedPxPerMm(natural, maxHeight)}
       : natural,
     ctx = setup(canvas, layout, Math.min(2, window.devicePixelRatio || 1));
   grid(ctx, layout.widthMm, layout.heightMm, palettes[c.view.palette], c.view.grid);
@@ -301,10 +308,10 @@ export function renderPaper(
   }
   const ratio = options.ratio ?? Math.min(2, window.devicePixelRatio || 1);
   const extents = paperRowExtents(c, s, options.previous);
-  const natural = paperLayout(c, availableWidth, options.pxPerMm, amplitude, extents),
+  const natural = workspacePaper(paperLayout(c, availableWidth, options.pxPerMm, amplitude, extents), options.compactHeader),
     layout =
       options.maxHeight && options.pxPerMm === undefined && c.view.fit
-        ? paperLayout(c, availableWidth, heightFittedPxPerMm(natural, options.maxHeight), amplitude, extents)
+        ? {...natural, pxPerMm: heightFittedPxPerMm(natural, options.maxHeight)}
         : natural,
     ctx = setup(
       canvas,
@@ -316,11 +323,11 @@ export function renderPaper(
   // Editorial bands stay inside the existing non-signal margins. The same
   // millimetre typography is used on screen and in the 300 dpi export.
   ctx.fillStyle = palette.bg;
-  ctx.fillRect(0, 0, layout.widthMm, 16);
+  ctx.fillRect(0, 0, layout.widthMm, options.compactHeader ? 10 : 16);
   ctx.fillRect(0, layout.heightMm - 8, layout.widthMm, 8);
   ctx.fillStyle = palette.text;
   ctx.font = "600 3.8px ui-monospace, monospace";
-  ctx.fillText(
+  if (!options.compactHeader) ctx.fillText(
     "ECG LAB  /  " +
       (options.hideName ? "CASO DE PRÁCTICA" : (options.displayName ?? c.name).toUpperCase()),
     5,
@@ -331,7 +338,7 @@ export function renderPaper(
   ctx.fillText(
     `${c.view.speed} mm/s  ·  ${c.view.gain} mm/mV${c.view.chestGain !== c.view.gain ? " / precordiales " + c.view.chestGain + " mm/mV" : ""}`,
     5,
-    10.5,
+    options.compactHeader ? 5 : 10.5,
     layout.widthMm - 10,
   );
   ctx.font = "2.7px ui-monospace, monospace";
@@ -341,7 +348,7 @@ export function renderPaper(
   if (acquisitionNote) ctx.fillText(
     acquisitionNote,
     5,
-    14.5,
+    options.compactHeader ? 8.5 : 14.5,
     layout.widthMm - 10,
   );
   ctx.strokeStyle = palette.trace;

@@ -5,6 +5,7 @@ import {createHash} from 'node:crypto';
 import {chromium} from 'playwright';
 import {installWorkerTap,readTrace,workerReplies,waitForReply} from './support/worker-tap.mjs';
 import {chooseCatalogPreset} from './support/catalog-navigation.mjs';
+import {startManualMeasurement} from './support/manual-measurement.mjs';
 const out=resolve(process.argv[2]||'../ECG-QA/paper-first-browser');await mkdir(out,{recursive:true});
 const browser=await chromium.launch(),report={cases:[],errors:[]};let page,failure;
 const hash=x=>createHash('sha256').update(JSON.stringify(x)).digest('hex');
@@ -25,6 +26,11 @@ try{
    const trace=await readTrace(page),signature=hash(trace),n=await workerReplies(page),layout=JSON.parse(await page.locator('#reading-overlay').getAttribute('data-geometry'));
    assert.equal(await page.locator('#metrics .metric').count(),1);assert.doesNotMatch(await page.locator('#metrics').innerText(),/PR|QRS|QTc|Eje/);
    assert.equal(await page.getByRole('tab',{name:'Monitor',exact:true}).isVisible(),false);
+   assert.equal(await page.locator('.trace-tools [data-action=caliper]').isHidden(),true);
+   assert.equal(await page.locator('.case-group-count').count(),0);
+   assert.equal(await page.locator('#case-subtitle').isHidden(),true);
+   assert.equal(await page.locator('#reading-details > summary').innerText(),'Explicación');
+   assert.equal(await page.locator('.workspace-footer [data-product-version]').count(),0);
    const paperTop=(await page.locator('#ecg').boundingBox()).y;if(!v.zoom)assert(paperTop<260,`Paper starts too low: ${paperTop}`);
    for(const seg of layout.segments){
     const gain=seg.lead.startsWith('V')?trace.case.view.chestGain:trace.case.view.gain;
@@ -33,6 +39,9 @@ try{
    }
    if(id==='anterior')await page.screenshot({path:resolve(out,`workspace-${v.width}-${v.height}-${v.dark?'dark':v.zoom?'zoom':'light'}.png`)});
    await page.locator('.trace-tools [data-action=measurements]').click();await page.getByRole('dialog',{name:'Medidas',exact:true}).waitFor();
+   const header=await page.locator('#dialog .dialog-head').evaluate(e=>[...e.children].map(c=>{const r=c.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,overflow:c.scrollWidth-c.clientWidth};}));
+   assert(header.every(r=>r.overflow<=2),JSON.stringify(header));
+   for(let a=0;a<header.length;a++)for(let b=a+1;b<header.length;b++){const x=header[a],y=header[b];assert(x.right<=y.x+1||y.right<=x.x+1||x.bottom<=y.y+1||y.bottom<=x.y+1,'Measurement header controls overlap');}
    assert.deepEqual(await page.locator('.measurements-summary thead th').allTextContents(),['Medida','Modelo','Estimación']);
    assert.equal(await page.locator('.measurements-summary tbody tr').count(),5);assert.equal(await page.locator('#analyzer-info').evaluate(e=>e.open),false);
    if(id==='vf')assert.deepEqual(await page.locator('.measurements-summary td').evaluateAll(es=>es.map(e=>e.firstChild.textContent)),Array(10).fill('—'));
@@ -40,6 +49,17 @@ try{
    if(id==='anterior')await page.screenshot({path:resolve(out,`measures-${v.width}-${v.height}-${v.dark?'dark':v.zoom?'zoom':'light'}.png`)});
    await page.locator('#analyzer-info > summary').click();assert(await page.locator('#analyzer-info .evidence-badge').count()>0);
    await closeDialog();assert.equal(hash(await readTrace(page)),signature);assert.equal(await workerReplies(page),n);
+   if(id==='anterior'){
+    await startManualMeasurement(page);assert.equal(await page.locator('#ecg').evaluate(e=>e===document.activeElement),true);
+    assert.equal(await page.getByRole('button',{name:'Terminar medición',exact:true}).isVisible(),true);
+    await page.locator('#caliper-segment').selectOption('0');
+    await page.locator('#caliper-endpoint').selectOption('1');await page.locator('#caliper-time').fill('200');await page.locator('#caliper-time').press('Tab');
+    await page.locator('#caliper-endpoint').selectOption('2');await page.locator('#caliper-time').fill('400');await page.locator('#caliper-time').press('Tab');
+    assert(Math.abs(Number(await page.locator('#measurement-values').getAttribute('data-ms'))-200)<.01);
+    await page.getByRole('button',{name:'Terminar medición',exact:true}).click();assert.equal(await page.locator('#caliper-editor').isHidden(),true);
+    assert.equal(await page.locator('#ecg').evaluate(e=>e===document.activeElement),true);
+    assert.equal(hash(await readTrace(page)),signature);assert.equal(await workerReplies(page),n);
+   }
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
    report.cases.push({...v,id,paperTop,heightMm:layout.heightMm});await writeFile(resolve(out,'progress.json'),JSON.stringify(report.cases));
   }
@@ -51,10 +71,13 @@ try{
   await page.locator('.view-aids > summary').click();assert.equal(await page.locator('[data-action=teaching]').isVisible(),true);await page.locator('.view-aids > summary').click();await page.keyboard.press('Escape');
   await view('monitor');assert.equal(await page.locator('[data-action=pause]').isVisible(),true);assert.equal(await page.locator('[data-action=caliper]').isHidden(),true);
   await view('rhythm');assert.match(await page.locator('#ecg').getAttribute('aria-label'),/ECG sintético/);
-  await view('paper');assert.equal(await page.locator('[data-action=caliper]').isVisible(),true);
+  await view('paper');assert.equal(await page.locator('[data-action=caliper]').isHidden(),true);
   await page.locator('[data-action=about]').click();assert.deepEqual(await page.locator('.information-content > details > summary').allTextContents(),['Cómo se genera este ECG','Referencias y atribución','Atajos de teclado']);
   await page.getByText('Cómo se genera este ECG',{exact:true}).click();assert.match(await page.locator('#dialog').innerText(),/sin ruido de adquisición añadido/);assert.equal(await page.locator('#analyzer-info').count(),0);await closeDialog();
   await page.locator('[data-action=quiz]').click();await page.locator('#signal-loading').waitFor({state:'hidden'});assert.match(await page.locator('#metrics').innerText(),/\?/);assert.equal(await page.locator('.trace-tools [data-action=measurements]').isDisabled(),true);
+  await startManualMeasurement(page);assert.equal(await page.locator('#caliper-editor').isVisible(),true);
+  await page.locator('#ecg').press('c');assert.equal(await page.locator('#caliper-editor').isHidden(),true);
+  assert.equal(await page.locator('#dialog').evaluate(d=>d.open),false);
   await page.locator('[data-action=about]').click();assert.equal(await page.locator('.model-note').count(),0);await closeDialog();
   await page.close();
  }

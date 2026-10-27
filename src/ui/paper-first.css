@@ -34,8 +34,21 @@
 .adjust-panel > summary { padding-inline:0; }
 .adjust-panel .inspector { padding-inline:0; border:0; border-radius:0; }
 .workspace-footer { margin-top:16px; }
+/* Cases read as a list; only selection, hover and keyboard focus need a surface. */
+.case-group { border-top:0; }
+.case-group + .case-group { border-top:0; }
+.case-group > summary { min-height:44px; }
+.case-button, .ischemia-library .case-button { background:transparent; border-color:transparent; margin-block:0; box-shadow:none; }
+.case-button:hover, .ischemia-library .case-button:hover { background:var(--soft); border-color:transparent; }
+.case-button.selected { background:var(--soft); box-shadow:inset 3px 0 var(--accent); }
+.ischemia-library { background:transparent; border:0; border-radius:0; padding-inline:0; }
+.ischemia-library h3 { margin-inline:10px; }
+.ischemia-library .case-group { border-top:0; }
+.ischemia-library .case-button.selected { background:var(--ischemia-soft); border-color:transparent; box-shadow:inset 3px 0 var(--ischemia-ink); }
 .measurements-overview { font-size:var(--text-sm); }
 dialog:has(.measurements-overview) { width:min(680px,calc(100% - 24px)); }
+dialog:has(.measurements-overview) .dialog-head { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:6px; align-items:center; }
+.measurement-start { padding-inline:6px; white-space:normal; }
 .measurements-overview > .control-note { margin:8px 0 12px; line-height:1.5; }
 .measurements-summary { width:100%; border-collapse:collapse; table-layout:fixed; }
 .measurements-summary th,.measurements-summary td { padding:10px 8px; border:0; border-bottom:1px solid var(--line); text-align:left; font-size:var(--text-sm); font-variant-numeric:tabular-nums; vertical-align:top; }
@@ -76,5 +89,9 @@ dialog:has(.measurements-overview) { width:min(680px,calc(100% - 24px)); }
  .topbar nav > .btn[data-action=catalog] svg { display:none; }
  .topbar nav > .btn:not(.icon-button) { padding-inline:6px; }
  .trace-tools > .btn,.trace-tools .paper-menu > summary { padding-inline:7px; }
- .measurements-summary th,.measurements-summary td { padding:6px 4px; }
+ dialog:has(.measurements-overview) #dialog-content { padding:10px 12px; }
+ dialog:has(.measurements-overview) .dialog-head { grid-template-columns:minmax(0,1fr) 44px; margin-bottom:6px; padding-block:0; gap:0 6px; }
+ .measurement-start { grid-column:1 / -1; grid-row:2; justify-self:start; }
+ .measurements-overview > .control-note { margin:6px 0 8px; }
+ .measurements-summary th,.measurements-summary td { padding:4px; }
 }
