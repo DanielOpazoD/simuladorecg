@@ -10,8 +10,8 @@ await mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:true}),report={cases:[],errors:[],warnings:[]};
 let page,failure;
 async function closeDialog(){
-  const closed=page.evaluate(()=>new Promise(resolve=>document.querySelector('#dialog').addEventListener('close',()=>resolve(null),{once:true})));
-  await page.keyboard.press('Escape');await closed;
+  await page.evaluate(()=>{window.__compactDialogClosed=false;document.querySelector('#dialog').addEventListener('close',()=>{window.__compactDialogClosed=true;},{once:true});});
+  await page.keyboard.press('Escape');await page.waitForFunction(()=>window.__compactDialogClosed);
 }
 async function catalog(){
   await page.waitForFunction(()=>!document.querySelector('#catalog').inert || document.querySelector('[data-action=catalog]').getClientRects().length);
@@ -53,6 +53,7 @@ try{
    if(id==='anterior')await page.screenshot({path:resolve(out,`lead-${view.width}-${view.height}-${view.dark?'dark':view.zoom?'zoom':'light'}.png`)});
    await closeDialog();assert.equal(await opener.evaluate(e=>e===document.activeElement),true);
    report.cases.push({...view,id,completeDialog:!view.zoom});
+   await writeFile(resolve(out,'progress.json'),JSON.stringify(report.cases));
   }
   // Search still reaches the exact variant after navigation, and resets cleanly.
   await catalog();await page.locator('#case-search').fill('Wellens B');assert.equal(await page.locator('#case-list [data-preset="wellens_b"]').count(),1);
