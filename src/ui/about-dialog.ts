@@ -1,7 +1,3 @@
-import { presetTitle } from "../presets/nomenclature";
-import type { Preset } from "../presets/catalog";
-import { esc } from "./helpers";
-
 export function keyboardHelpHtml() {
   const shortcuts = [
     ["M", "Monitor"],
@@ -19,11 +15,12 @@ export function keyboardHelpHtml() {
 }
 
 /** Technical material lives together, folded until the reader asks for it. */
-export function aboutDialogHtml(
-  presets: readonly Pick<Preset, "id" | "name" | "strategy" | "limitation">[],
-) {
-  return `<details class="information-section"><summary>Cómo se genera</summary>
+export function aboutDialogHtml() {
+  return `<details class="information-section"><summary>Modelo y límites</summary>
     <p>Activaciones auriculares y ventriculares → kernels vectoriales XYZ → 8 derivaciones independientes → filtros → 12 derivaciones. No utiliza trazados grabados ni imágenes de pacientes.</p>
+    <p>Todos los patrones son aproximaciones educativas. Las pruebas técnicas no constituyen validación clínica.</p>
+    <p>Describe primero el patrón observado. Integra territorio, reciprocidad, proporcionalidad respecto del QRS y contexto; la etiqueta del caso no demuestra una arteria ocluida. Las fases son estados paramétricos y no una cronología de un paciente.</p>
+    <p>V7–V9 y V3R–V4R; captura/fusión en TV; comienzo corto–largo–corto de torsades: pendientes. VVI a demanda y secuencias programadas de flutter son modelos idealizados. La pérdida total de captura VVI solo se representa sin escape intrínseco; no simula umbrales ni captura mecánica.</p>
     <ul class="about-list">
       <li>Modelo de dipolo único inspirado en ECGSYN y Clifford. No es un modelo celular, de torso individual ni una implementación literal de ECGSYN.</li>
       <li>QT con memoria exponencial de RR (≈40 s), activación auricular en dos componentes y T asimétrica. Transición de lesión durante el final del QRS para conservar el nivel de ST en J. Son aproximaciones educativas, no un modelo de potenciales celulares.</li>
@@ -45,12 +42,6 @@ export function aboutDialogHtml(
       <li><a href="https://link.springer.com/article/10.1007/s10928-018-9587-8" target="_blank" rel="noopener">Malik et al. (2018): historia de RR y adaptación del QT</a></li>
       <li><a href="https://link.springer.com/article/10.1186/1471-2261-5-29" target="_blank" rel="noopener">Hunt (2005): métodos y sesgo de medición de QT</a></li>
     </ol>
-  </details>
-  <details class="information-section"><summary>Catálogo y límites</summary>
-    <p>Todos los patrones son aproximaciones educativas. Las pruebas técnicas no constituyen validación clínica.</p>
-    <p>Describe primero el patrón observado. Integra territorio, reciprocidad, proporcionalidad respecto del QRS y contexto; la etiqueta del caso no demuestra una arteria ocluida. Las fases son estados paramétricos y no una cronología de un paciente.</p>
-    <p>V7–V9 y V3R–V4R; captura/fusión en TV; comienzo corto–largo–corto de torsades: pendientes. VVI a demanda y secuencias programadas de flutter son modelos idealizados. La pérdida total de captura VVI solo se representa sin escape intrínseco; no simula umbrales ni captura mecánica.</p>
-    <div class="status-table"><table><caption>Límites de cada patrón</caption><thead><tr><th scope="col">Patrón</th><th scope="col">Estado / estrategia</th><th scope="col">Límite</th></tr></thead><tbody>${presets.map((p) => `<tr><td>${esc(presetTitle(p))}</td><td>${p.strategy === "pending" ? "Pendiente" : p.strategy === "local" ? "Aproximado · ajuste local" : "Aproximado · vectorial"}</td><td>${esc(p.limitation)}</td></tr>`).join("")}</tbody></table></div>
   </details>
   <details class="keyboard-help"><summary>Atajos de teclado</summary>${keyboardHelpHtml()}</details>`;
 }

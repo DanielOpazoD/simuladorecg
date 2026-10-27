@@ -81,13 +81,15 @@ export function paperLayout(
     rows = 12 / cols,
     extra = f === "3x4+1" ? 1 : f === "3x4+3" ? 3 : 0;
   const segDuration = 10 / cols,
-    colWidth = 6 + c.view.speed * segDuration,
+    colWidth = 1 + c.view.speed * segDuration,
     rowHeight = Math.max(
       32,
       (24 * Math.max(c.view.gain, c.view.chestGain)) / 10,
-      amplitudeMm * 2 + 6,
+      // Reserve 6 mm for the lead label, then 3 mm clearance on either
+      // side of the signal envelope. Labels never cover an extreme sample.
+      amplitudeMm * 2 + 12,
     ),
-    widthMm = 16 + colWidth * cols,
+    widthMm = 22 + c.view.speed * 10 + (cols - 1),
     heightMm = 18 + (rows + extra) * rowHeight + 8;
   const pxPerMm =
     pxOverride ??
@@ -99,14 +101,14 @@ export function paperLayout(
   for (let col = 0; col < cols; col++)
     for (let row = 0; row < rows; row++) {
       const lead = leads[col * rows + row],
-        x = 10 + col * colWidth + 6,
+        x = 16 + col * colWidth,
         y = 18 + row * rowHeight;
       segments.push({
         x,
         y,
         width: c.view.speed * segDuration,
         height: rowHeight,
-        baseline: y + rowHeight * 0.5,
+        baseline: y + rowHeight * 0.5 + 3,
         start: c.view.timing === "simultaneous" ? 0 : col * segDuration,
         duration: segDuration,
         lead,
@@ -121,7 +123,7 @@ export function paperLayout(
       // The strip spans its 10 s of trace, not the blank margin after it.
       width: c.view.speed * 10,
       height: rowHeight,
-      baseline: y + rowHeight * 0.5,
+      baseline: y + rowHeight * 0.5 + 3,
       start: 0,
       duration: 10,
       lead: (["II", "V1", "V5"] as Lead[])[row],
@@ -337,7 +339,7 @@ export function renderPaper(
     ctx.font = "600 3.5px ui-monospace,monospace";
     ctx.fillText(
       (seg.polarity < 0 ? "−" : "") + seg.lead,
-      seg.x - 5,
+      seg.x + 1,
       seg.y + 5,
     );
     if (!doneRows.has(seg.y)) {
@@ -350,14 +352,14 @@ export function renderPaper(
       );
       doneRows.add(seg.y);
     }
-    if (seg.start > 0) {
-      ctx.setLineDash([0.8, 0.8]);
+    if (seg.x > layout.segments[0].x) {
+      // A short boundary marker identifies the new lead even in simultaneous
+      // acquisition; no separator crosses or joins the sampled waveform.
       ctx.strokeStyle = palette.bold;
       ctx.beginPath();
-      ctx.moveTo(seg.x - 6, seg.y + 3);
-      ctx.lineTo(seg.x - 6, seg.y + seg.height - 2);
+      ctx.moveTo(seg.x - 0.5, seg.y + 1);
+      ctx.lineTo(seg.x - 0.5, seg.y + 5);
       ctx.stroke();
-      ctx.setLineDash([]);
       ctx.strokeStyle = palette.trace;
     }
   }

@@ -16,6 +16,12 @@ const settledTrace=(page,action)=>settledTraceWindow(page,action,{seconds:65});
 const results=[],errors=[],warnings=[];
 const oracle=(s,lead,beat)=>{const a=s.leads[lead],b=s.events.beats[beat],j=b.time+b.qrs;const mean=(from,to)=>{const v=a.slice(Math.round(from*s.fs),Math.round(to*s.fs)+1);return v.reduce((x,y)=>x+y,0)/v.length;};return mean(j,j+.01)-mean(b.time-.04,b.time-.02);};
 const browser=await chromium.launch({headless:true});let failure,activePage,activeFamily,activeVariant;
+async function openTeaching(page){
+ if(!await page.locator('.paper-menu').evaluate(d=>d.open))await page.locator('.paper-menu > summary').click();
+ const insideViewport=await page.locator('.view-options').evaluate(e=>{const b=e.getBoundingClientRect();return b.left>=0&&b.right<=innerWidth;});
+ assert(insideViewport,'The secondary menu must remain within the viewport when its trigger wraps');
+ await page.locator('[data-action=teaching]').click();
+}
 async function selectTeachingCase(page,id){
  assert.equal(await page.locator('#dialog').evaluate(d=>d.open),false,'Close the teaching modal before navigating the catalog');
  const variant=page.locator(`[data-variant="${id}"]`);
@@ -36,7 +42,7 @@ try{
    activeFamily=family;const trace=await settledTrace(page,()=>selectTeachingCase(page,family));
    assert.equal(trace.case.presetId,family,'The real worker case must match the requested family');
    const before=hash(trace),count=await workerReplies(page);
-   await page.locator('[data-action=teaching]').click();await page.locator('#teaching-root').waitFor();
+   await openTeaching(page);await page.locator('#teaching-root').waitFor();
    assert.equal(await page.locator('#dialog').evaluate(d=>d.open),true);
    assert.equal(await page.locator('[data-teach-lead]').count(),12);
    const beat=Number(await page.locator('#teach-beat').inputValue());
@@ -65,9 +71,9 @@ try{
    const overflow=await page.locator('#teaching-root').evaluate(root=>{const bounds=root.getBoundingClientRect();return [...root.querySelectorAll('button,select,input,textarea,p,summary')].filter(e=>e.checkVisibility()).filter(e=>{const r=e.getBoundingClientRect();return r.left<bounds.left-2||r.right>bounds.right+2;}).map(e=>({text:e.textContent?.slice(0,100),width:e.clientWidth}));});
    assert.deepEqual(overflow,[],`${family}/${JSON.stringify(variant)} controls overflow`);
    await page.keyboard.press('Escape');assert.equal(await page.locator('#dialog').evaluate(d=>d.open),false);
-   assert.equal(await page.locator('[data-action=teaching]').evaluate(b=>b===document.activeElement),true,'Dialogfocusreturns toopener');
+   assert.equal(await page.locator('.paper-menu > summary').evaluate(b=>b===document.activeElement),true,'Dialogfocusreturns toopener');
    assert.equal(await workerReplies(page),count,'View and note actions must not resynthesize');assert.equal(hash(await readTrace(page)),before,'View and note actions must not mutate samples orcase');
-   await page.locator('[data-action=teaching]').click();assert.equal(await page.locator('[data-note-edit]').count(),1,'Notes retained whenreopening same signal');
+   await openTeaching(page);assert.equal(await page.locator('[data-note-edit]').count(),1,'Notes retained whenreopening same signal');
    if(variant.width===1440&&family==='sinus'){
     await page.locator('[data-teach=capture]').click();const id=await page.locator('#teach-reference option').last().getAttribute('value');capturedId=id;assert(id,'Capturedstate must have anidentity');await page.locator('#teach-reference').selectOption(id);await page.locator('#teach-mode').selectOption('difference');
     const ys=await page.locator('.teach-current-trace').getAttribute('d').then(d=>[...d.matchAll(/[ML]([\d.-]+) ([\d.-]+)/g)].map(m=>Number(m[2])));assert(ys.length>50);assert(ys.every(y=>y===ys[0]),'Same acquiredrecord delta mustbe exactlyzero');
@@ -100,7 +106,7 @@ try{
   if(variant.width===1440){
    const trace=await settledTrace(page,()=>chooseCatalogPreset(page,'inferior'));
    await settledTrace(page,()=>page.locator('#file-input').setInputFiles({name:'reversed.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({...trace.case,artifacts:{...trace.case.artifacts,reversed:true}}))}));
-   await page.locator('[data-action=teaching]').click();await page.locator('[data-teach=echo]').click();assert.equal(await page.locator('[data-echo-lead]').count(),0);assert.equal(await page.locator('.anatomy-related').count(),0);assert.match(await page.locator('[data-echo-related]').textContent(),/desactivadas/);await page.keyboard.press('Escape');results.push({reversedLeadAnatomyBlocked:true});
+   await openTeaching(page);await page.locator('[data-teach=echo]').click();assert.equal(await page.locator('[data-echo-lead]').count(),0);assert.equal(await page.locator('.anatomy-related').count(),0);assert.match(await page.locator('[data-echo-related]').textContent(),/desactivadas/);await page.keyboard.press('Escape');results.push({reversedLeadAnatomyBlocked:true});
    await page.getByRole('button',{name:'Practicar',exact:true}).click();await page.locator('#signal-loading').waitFor({state:'hidden'});assert.equal(await page.locator('[data-action=teaching]').isHidden(),true);
    await page.evaluate(()=>{const b=document.createElement('button');b.dataset.action='teaching';document.body.append(b);b.click();b.remove();});assert.equal(await page.locator('#dialog').evaluate(d=>d.open),false);results.push({concealedQuizForgedRouteBlocked:true});
   }

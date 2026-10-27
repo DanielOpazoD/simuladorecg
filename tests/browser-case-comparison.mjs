@@ -52,8 +52,8 @@ async function mainSnapshot(page) {
 async function calibrationPixels(page,speed,gain) {
  return page.locator('.comparison-paper canvas').evaluateAll((canvases,{speed,gain})=>canvases.map(canvas=>{
   const cssWidth=parseFloat(canvas.style.width),ratio=canvas.width/cssWidth;
-  // Standard3x4+rhythm paper:10s times speed plus40mm lead/calibration margins.
-  const pxPerMm=canvas.width/(speed*10+40),width=Math.min(canvas.width,Math.floor(15*pxPerMm));
+  // Initial6x2 paper:10s times speed plus22mm outer margins and one1mm lead gap.
+  const pxPerMm=canvas.width/(speed*10+23),width=Math.min(canvas.width,Math.floor(15*pxPerMm));
   const y0=Math.floor(18*pxPerMm),height=Math.min(Math.ceil(60*pxPerMm),canvas.height-y0);
   const rgba=canvas.getContext('2d').getImageData(0,y0,width,height).data,seen=new Uint8Array(width*height),components=[];
   const dark=i=>rgba[i*4+3]>128&&rgba[i*4]<185&&rgba[i*4+1]<190&&rgba[i*4+2]<195;
@@ -83,10 +83,11 @@ try {
   page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());if(m.type()==='warning')warnings.push(m.text());});
   await installAudit(page);await page.goto(url);assert.match(await page.title(),/ECG/i);
   await page.locator('#signal-loading').waitFor({state:'hidden'});await chooseCatalogPreset(page,'anterior');
+  assert.equal(await page.locator('[data-key="view.format"]').inputValue(),'6x2','Five seconds per lead remains the default after choosing a case');
   await page.waitForFunction(()=>document.querySelector('#signal-loading').hidden&&window.__comparisonAudit.workers.some(w=>w.last?.ecg.presetId==='anterior'));
   await page.evaluate(()=>{window.__comparisonAudit.mainId=window.__comparisonAudit.workers.findLast(w=>!w.terminated&&w.last?.ecg.presetId==='anterior').id;});
   const visibleControls=await page.locator('.trace-toolbar button, .trace-toolbar summary').evaluateAll(es=>es.filter(e=>e.checkVisibility()).length);
-  assert(visibleControls<=7,'Reading starts with at most7 visible trace controls');
+  assert(visibleControls<=6,'Reading starts with at most6 visible trace controls');
   assert.equal(await page.locator('#reading-details').evaluate(e=>e.open),false);
   const info=page.locator('[data-action=about]:visible');assert.equal(await info.count(),1);assert.match(await info.innerText(),/Información y fuentes/);
   assert.equal(await page.locator('[data-action=lens-previous], [data-action=lens-change]').count(),0);
@@ -105,7 +106,7 @@ try {
   await page.screenshot({path:resolve(out,`comparison-${width}.png`)});
   // Negative control: removing the calibration margin must fail the pixel oracle.
   // Choosing the next reference redraws the image from the untouched samples.
-  await page.locator('#comparison-example').evaluate((canvas,speed)=>canvas.getContext('2d').clearRect(0,0,Math.ceil(15*canvas.width/(speed*10+40)),canvas.height),speed);
+  await page.locator('#comparison-example').evaluate((canvas,speed)=>canvas.getContext('2d').clearRect(0,0,Math.ceil(15*canvas.width/(speed*10+23)),canvas.height),speed);
   const erasedCalibration=await calibrationPixels(page,speed,gain);
   await writeFile(resolve(out,`negative-calibration-${width}.json`),JSON.stringify(erasedCalibration,null,2));
   assert.equal(erasedCalibration[1].pulse,null,'Missing raster calibration must be rejected');
