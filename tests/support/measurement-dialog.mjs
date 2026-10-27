@@ -8,8 +8,9 @@ const KEYS = { 'FC ventricular': 'hr', PR: 'pr', QRS: 'qrs', QT: 'qt', 'Eje QRS'
 const STATUS = { Reproducible: 'usable', Revisar: 'review', 'No estimable': 'unavailable' };
 export async function readMeasurements(page, { close = true, screenshot = null } = {}) {
   await page.locator('.main-metric').click();
-  const dialog = page.getByRole('dialog', { name: 'Medidas, límites y consistencia' });
+  const dialog = page.getByRole('dialog', { name: 'Medidas', exact: true });
   await dialog.waitFor();
+  await dialog.locator('#analyzer-info > summary').click();
   const rows = await dialog.locator('.measurement-table-wrap').first().locator('tbody tr').evaluateAll(trs => trs.map(tr => {
     const cells = [...tr.querySelectorAll('td')];
     return { label: cells[0].textContent.trim(), value: cells[1].textContent.trim(), badge: cells[3].querySelector('.evidence-badge').textContent.trim(),

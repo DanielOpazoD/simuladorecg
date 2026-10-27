@@ -18,6 +18,7 @@ const oracle=(s,lead,beat)=>{const a=s.leads[lead],b=s.events.beats[beat],j=b.ti
 const browser=await chromium.launch({headless:true});let failure,activePage,activeFamily,activeVariant;
 async function openTeaching(page){
  if(!await page.locator('.paper-menu').evaluate(d=>d.open))await page.locator('.paper-menu > summary').click();
+ if(!await page.locator('.view-aids').evaluate(d=>d.open))await page.locator('.view-aids > summary').click();
  const insideViewport=await page.locator('.view-options').evaluate(e=>{const b=e.getBoundingClientRect();return b.left>=0&&b.right<=innerWidth;});
  assert(insideViewport,'The secondary menu must remain within the viewport when its trigger wraps');
  await page.locator('[data-action=teaching]').click();

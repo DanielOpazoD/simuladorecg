@@ -15,22 +15,23 @@ export function keyboardHelpHtml() {
 }
 
 /** Technical material lives together, folded until the reader asks for it. */
-export function aboutDialogHtml() {
-  return `<details class="information-section"><summary>Modelo y límites</summary>
+export function aboutDialogHtml(context = '', references = '') {
+  return `<details class="information-section"><summary>Cómo se genera este ECG</summary>
+    ${context}
     <p>Activaciones auriculares y ventriculares → kernels vectoriales XYZ → 8 derivaciones independientes → filtros → 12 derivaciones. No utiliza trazados grabados ni imágenes de pacientes.</p>
-    <p>Todos los patrones son aproximaciones educativas. Las pruebas técnicas no constituyen validación clínica.</p>
+    ${context ? '' : '<p>Todos los patrones son aproximaciones educativas. Las pruebas técnicas no constituyen validación clínica.</p>'}
     <p>Las ayudas de «Qué observar» señalan ventanas del modelo sobre las muestras mostradas: QRS, ST entre J y J+80 ms, o repolarización desde J+80 hasta el final del QT. No son delimitaciones clínicas independientes.</p>
     <p>Describe primero el patrón observado. Integra territorio, reciprocidad, proporcionalidad respecto del QRS y contexto; la etiqueta del caso no demuestra una arteria ocluida. Las fases son estados paramétricos y no una cronología de un paciente.</p>
     <p>V7–V9 y V3R–V4R; captura/fusión en TV; comienzo corto–largo–corto de torsades: pendientes. VVI a demanda y secuencias programadas de flutter son modelos idealizados. La pérdida total de captura VVI solo se representa sin escape intrínseco; no simula umbrales ni captura mecánica.</p>
     <ul class="about-list">
-      <li>Modelo de dipolo único inspirado en ECGSYN y Clifford. No es un modelo celular, de torso individual ni una implementación literal de ECGSYN.</li>
+      <li>Dipolo único inspirado en ECGSYN y Clifford; no es una implementación literal de ECGSYN ni un torso individual.</li>
       <li>QT con memoria exponencial de RR (≈40 s), activación auricular en dos componentes y T asimétrica. Transición de lesión durante el final del QRS para conservar el nivel de ST en J. Son aproximaciones educativas, no un modelo de potenciales celulares.</li>
-      <li>Medición automática heurística. En casos complejos utiliza calibres y comparación con eventos; PR/QT pueden no ser estimables. Los límites medidos se muestran por latido; una auditoría contra los mismos latidos sintéticos comprueba cada límite y retira resultados discordantes, sin sustituir las medidas por valores del generador.</li>
       <li>Monitor: barrido de un buffer sintético reproducible. Se vuelve a usar el buffer durante sesiones largas; cambios de parámetros reinician la señal.</li>
       <li>Paso alto diagnóstico causal de 0,05 Hz y antialias FIR centrado antes de reducir a 500 Hz. El paso alto de 2 Hz permite explorar distorsión del ST. La interferencia de red se configura aparte del notch.</li>
     </ul>
   </details>
   <details class="information-section"><summary>Referencias y atribución</summary>
+    ${references}
     <p>Morfología normal aprendida de <a href="https://physionet.org/content/ptb-xl/1.0.3/" target="_blank" rel="noopener">PTB-XL</a> y <a href="https://physionet.org/content/ptb-xl-plus/1.0.1/" target="_blank" rel="noopener">PTB-XL+</a> (Wagner et al. 2020; Strodthoff et al. 2023), <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>; se distribuyen solo coeficientes derivados.</p>
     <ol class="references">
       <li><a href="https://physionet.org/content/ecgsyn/1.0.0/" target="_blank" rel="noopener">McSharry et al. ECGSYN (2003)</a> · Ritmo, variabilidad y generación sintética.</li>

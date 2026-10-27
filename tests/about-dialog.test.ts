@@ -22,8 +22,6 @@ describe("about dialog content", () => {
     for (const text of [
       "Las pruebas técnicas no constituyen validación clínica.",
       "No utiliza trazados grabados ni imágenes de pacientes.",
-      "PR/QT pueden no ser estimables.",
-      "sin sustituir las medidas por valores del generador.",
       "la etiqueta del caso no demuestra una arteria ocluida.",
       "Las fases son estados paramétricos y no una cronología de un paciente.",
       "V7–V9 y V3R–V4R; captura/fusión en TV;",
@@ -50,7 +48,7 @@ describe("about dialog content", () => {
     const html = aboutDialogHtml();
     const summaries = [...html.matchAll(/<summary>(.*?)<\/summary>/gs)].map(m => m[1]);
     expect(summaries).toEqual([
-      "Modelo y límites", "Referencias y atribución", "Atajos de teclado",
+      "Cómo se genera este ECG", "Referencias y atribución", "Atajos de teclado",
     ]);
     expect(html).not.toMatch(/<details[^>]*\sopen(?:\s|>)/);
     for (const summary of summaries) expect(summary).not.toMatch(/<(?:button|a)\b/);

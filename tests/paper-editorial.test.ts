@@ -76,9 +76,17 @@ describe("paper editorial bands preserve calibrated signal space", () => {
     const columns = format === "6x2" ? 2 : format === "12x1" ? 1 : 4;
     const rows = 12 / columns + (format === "3x4+1" ? 1 : format === "3x4+3" ? 3 : 0);
     expect(layout.widthMm).toBe(22 + (columns - 1) + 125);
-    expect(layout.heightMm).toBe(26 + rows * 172); // ±80 mm, 6 mm label band and 6 mm signal clearance
+    expect(layout.heightMm).toBeLessThan(26 + rows * 172); // a large deflection no longer expands every row
     expect(layout.segments[0].y).toBe(18);
-    expect(layout.segments[0].baseline).toBe(107);
+    for (const seg of layout.segments) {
+      const gain = seg.lead.startsWith('V') ? c.view.chestGain : c.view.gain;
+      const shown = s.leads[seg.lead].slice(Math.round(seg.start*s.fs), Math.round((seg.start+seg.duration)*s.fs));
+      for (const sample of shown) {
+        const y = seg.baseline - sample * gain * seg.polarity;
+        expect(y).toBeGreaterThanOrEqual(seg.y + 9);
+        expect(y).toBeLessThanOrEqual(seg.y + seg.height - 3);
+      }
+    }
     expect(s.leads.II).toEqual(before);
     const header = r.texts.filter(t => t.y < 18), footer = r.texts.filter(t => t.y > layout.heightMm - 8);
     expect(header).toHaveLength(3); expect(footer).toHaveLength(2);

@@ -29,6 +29,8 @@ export interface Layout {
   mode: "paper" | "monitor" | "rhythm";
   /** Paper only: the largest deflection (mm) the row height was sized for. */
   amplitudeMm?: number;
+  /** Per-row positive/negative sample extents in calibrated millimetres. */
+  rowExtents?: { above: number; below: number }[];
 }
 export interface Caliper {
   x1: number;
@@ -75,6 +77,7 @@ export function paperLayout(
   availableWidth: number,
   pxOverride?: number,
   amplitudeMm = 0,
+  rowExtents?: { above: number; below: number }[],
 ): Layout {
   const f = c.view.format,
     cols = f === "6x2" ? 2 : f === "12x1" ? 1 : 4,
@@ -90,7 +93,13 @@ export function paperLayout(
       amplitudeMm * 2 + 12,
     ),
     widthMm = 22 + c.view.speed * 10 + (cols - 1),
-    heightMm = 18 + (rows + extra) * rowHeight + 8;
+    rowSizes = Array.from({length: rows + extra}, (_, i) => {
+      const extent = rowExtents?.[i];
+      const height = extent ? Math.max(24, extent.above + extent.below + 12) : rowHeight;
+      return {height, offset: extent ? 9 + extent.above + (height - extent.above - extent.below - 12) / 2 : height * .5 + 3};
+    }),
+    rowY = rowSizes.map((_, i) => 18 + rowSizes.slice(0, i).reduce((sum, r) => sum + r.height, 0)),
+    heightMm = 18 + rowSizes.reduce((sum, r) => sum + r.height, 0) + 8;
   const pxPerMm =
     pxOverride ??
     (c.view.fit
@@ -102,13 +111,13 @@ export function paperLayout(
     for (let row = 0; row < rows; row++) {
       const lead = leads[col * rows + row],
         x = 16 + col * colWidth,
-        y = 18 + row * rowHeight;
+        y = rowY[row];
       segments.push({
         x,
         y,
         width: c.view.speed * segDuration,
-        height: rowHeight,
-        baseline: y + rowHeight * 0.5 + 3,
+        height: rowSizes[row].height,
+        baseline: y + rowSizes[row].offset,
         start: c.view.timing === "simultaneous" ? 0 : col * segDuration,
         duration: segDuration,
         lead,
@@ -116,21 +125,44 @@ export function paperLayout(
       });
     }
   for (let row = 0; row < extra; row++) {
-    const y = 18 + (rows + row) * rowHeight;
+    const y = rowY[rows + row];
     segments.push({
       x: 16,
       y,
       // The strip spans its 10 s of trace, not the blank margin after it.
       width: c.view.speed * 10,
-      height: rowHeight,
-      baseline: y + rowHeight * 0.5 + 3,
+      height: rowSizes[rows + row].height,
+      baseline: y + rowSizes[rows + row].offset,
       start: 0,
       duration: 10,
       lead: (["II", "V1", "V5"] as Lead[])[row],
       polarity: 1,
     });
   }
-  return { widthMm, heightMm, pxPerMm, segments, mode: "paper", amplitudeMm };
+  return { widthMm, heightMm, pxPerMm, segments, mode: "paper", amplitudeMm, ...(rowExtents ? {rowExtents} : {}) };
+}
+
+/** Size only the displayed windows, without altering or resampling their signal.
+ * Rows share a baseline across columns; the label band and calibration stay clear. */
+export function paperRowExtents(c: ECGCase, s: Signal, previous?: Signal) {
+  const provisional = paperLayout(c, 1000), ys = [...new Set(provisional.segments.map(seg => seg.y))];
+  return ys.map(y => {
+    let above = 0, below = 0;
+    for (const seg of provisional.segments.filter(seg => seg.y === y)) {
+      const gain = leadGain(seg.lead, c.view);
+      above = Math.max(above, gain); // the 1 mV calibration pulse
+      for (const signal of previous ? [s, previous] : [s]) {
+        const values = signal.leads[seg.lead], from = Math.max(0, Math.floor(seg.start * signal.fs));
+        const to = Math.min(values.length - 1, Math.ceil((seg.start + seg.duration) * signal.fs));
+        for (let i = from; i <= to; i++) {
+          const mm = values[i] * gain * seg.polarity;
+          if (!Number.isFinite(mm)) continue;
+          above = Math.max(above, mm); below = Math.max(below, -mm);
+        }
+      }
+    }
+    return {above, below};
+  });
 }
 function grid(
   ctx: CanvasRenderingContext2D,
@@ -225,10 +257,11 @@ export function renderPaperSkeleton(
   maxHeight?: number,
   /** The previous trace's amplitude; a 2 mV deflection before the first one. */
   amplitudeMm = 2 * Math.max(c.view.gain, c.view.chestGain),
+  rowExtents?: Layout["rowExtents"],
 ): Layout {
-  const natural = paperLayout(c, availableWidth, undefined, amplitudeMm),
+  const natural = paperLayout(c, availableWidth, undefined, amplitudeMm, rowExtents),
     layout = maxHeight && c.view.fit
-      ? paperLayout(c, availableWidth, heightFittedPxPerMm(natural, maxHeight), amplitudeMm)
+      ? paperLayout(c, availableWidth, heightFittedPxPerMm(natural, maxHeight), amplitudeMm, rowExtents)
       : natural,
     ctx = setup(canvas, layout, Math.min(2, window.devicePixelRatio || 1));
   grid(ctx, layout.widthMm, layout.heightMm, palettes[c.view.palette], c.view.grid);
@@ -267,10 +300,11 @@ export function renderPaper(
       amplitude = Math.max(amplitude, Math.abs(s.leads[lead][i]) * gain);
   }
   const ratio = options.ratio ?? Math.min(2, window.devicePixelRatio || 1);
-  const natural = paperLayout(c, availableWidth, options.pxPerMm, amplitude),
+  const extents = paperRowExtents(c, s, options.previous);
+  const natural = paperLayout(c, availableWidth, options.pxPerMm, amplitude, extents),
     layout =
       options.maxHeight && options.pxPerMm === undefined && c.view.fit
-        ? paperLayout(c, availableWidth, heightFittedPxPerMm(natural, options.maxHeight), amplitude)
+        ? paperLayout(c, availableWidth, heightFittedPxPerMm(natural, options.maxHeight), amplitude, extents)
         : natural,
     ctx = setup(
       canvas,
