@@ -1,0 +1,71 @@
+{
+  "id": "existing-ideal-reading-20261026",
+  "baselineCommit": "e8ba017698cd9a2ec82a3ee8cad0ec1fd7ceaeee",
+  "purpose": "Characterize the existing ideal acquisition as a reader-selected teaching setting. Automatic promotion still requires the strict paired engineering gates.",
+  "candidate": {
+    "profile": "existing-ideal",
+    "floorScale": 0,
+    "selection": "Existing ideal acquisition, no fitting or parameter search"
+  },
+  "legacyProfile": "resting-v1",
+  "durationSeconds": 10,
+  "developmentSeeds": [
+    12066,
+    15,
+    36
+  ],
+  "reserveSeeds": [
+    84011,
+    84017,
+    84047,
+    84053,
+    84059,
+    84061
+  ],
+  "families": [
+    "sinus",
+    "lbbb",
+    "rbbb",
+    "anterior",
+    "af",
+    "vvi"
+  ],
+  "filters": [
+    "diagnostic",
+    "monitor"
+  ],
+  "textureGate": {
+    "rmsRatioMin": 0,
+    "rmsRatioMax": 0,
+    "peakRatioMax": 0,
+    "quantizationSlackMv": 0
+  },
+  "morphologyGate": {
+    "perWindowAbsoluteErrorWorseningMv": 0.005,
+    "areaAbsoluteErrorWorseningMvS": 0.001,
+    "reference": "Same case with ideal acquisition; paired engineering comparison only"
+  },
+  "analysisGate": {
+    "eventToleranceSeconds": 0.15,
+    "hrReviewBpm": 5,
+    "qrsReviewMs": 20,
+    "qtReviewMs": 50,
+    "maximumAdditionalFalsePositivesPerFamily": 0,
+    "maximumAdditionalFalseNegativesPerFamily": 0,
+    "maximumAdditionalUsableErroneousEstimatesPerFamily": 0,
+    "maximumLostUsableCorrectEstimatesPerFamily": 0
+  },
+  "negativeControls": [
+    "ideal profile identity",
+    "event and truth identity",
+    "legacy exported case sample hashes",
+    "same-seed repeatability",
+    "manual artifacts remain independent of the floor profile"
+  ],
+  "residualMorphology": "Characterize ideal-acquisition irregularities; do not smooth or retrain learned shapes without source support.",
+  "referenceData": "No new patients or clinical claims; current learned models are already exposed.",
+  "screenExport": "Existing independent pixel oracle, unchanged 2 px tolerance and negative controls; inspect actual production PNG and independent sample plots.",
+  "failurePolicy": "Keep every adverse result. A failed analyzer gate prevents changing the automatic default; an explicitly selected existing acquisition setting may be exposed with its measured limitations.",
+  "clinicalValidation": false,
+  "independentClinicalReview": "Not available; required before claiming improved clinical plausibility."
+}

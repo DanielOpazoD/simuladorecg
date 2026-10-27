@@ -1,4 +1,5 @@
 import { applyTheme, currentTheme, readTheme } from "./ui/theme";
+import { acquisitionDescription, readAcquisitionPreference, saveAcquisitionPreference } from "./ui/acquisition-preference";
 import { aboutDialogHtml, keyboardHelpHtml } from "./ui/about-dialog";
 import { regionalActivationControls } from "./ui/regional-activation";
 import "./style.css";
@@ -92,6 +93,7 @@ let c = fromPreset(presetById("sinus")!),
 // Five seconds per lead makes the initial reading less fragmented. Imported
 // cases keep their selected format, and catalog changes retain the current view.
 c.view.format = "6x2";
+c.acquisition = readAcquisitionPreference() ?? c.acquisition;
 let stHighlight = false;
 // The contrafactual remains inside the advanced Aula, never presented as a prior recording.
 let previousSignal: Signal | null = null;
@@ -360,7 +362,7 @@ function renderScales() {
           c.view.duration,
         )
       : ""
-  }<div class="scale-toggles"><label class="toggle"><input type="checkbox" data-key="view.grid" ${c.view.grid ? "checked" : ""}/>Grilla</label></div>${filterSelect(c)}`;
+  }<div class="scale-toggles"><label class="toggle"><input type="checkbox" data-key="view.grid" ${c.view.grid ? "checked" : ""}/>Grilla</label></div>${select("acquisition", "Señal", [["ideal", "Limpia"], ["realistic", "Con ruido de fondo"]], c.acquisition ?? "realistic")}${filterSelect(c)}`;
   document
     .querySelectorAll("[data-mode]")
     .forEach((el) =>
@@ -596,7 +598,9 @@ function beep() {
 function selectPreset(id: string) {
   const p = presetById(id);
   if (!p || p.strategy === "pending") return;
+  const acquisition = c.acquisition;
   c = fromPreset(p, c.view);
+  c.acquisition = acquisition;
   explorationOrigin=createExplorationOrigin(p,c);
   caliper = null;
   session.resetTools();
@@ -682,6 +686,7 @@ document.addEventListener("change", (e) => {
       : el.value,
   );
   setValue(key, value);
+  if (key === "acquisition") saveAcquisitionPreference(c.acquisition ?? "realistic");
   renderControls();
   renderInfo();
   if (key.startsWith("view.")) {
@@ -718,7 +723,7 @@ function showAbout(showAnalyzer = false) {
   }
   openDialog(
     "Información y fuentes",
-    `<div class="information-content"><p class="dialog-lead">ECG sintéticos para aprender. Las cifras de la pantalla son valores del modelo; las mediciones automáticas se consultan aquí.</p>${caseInfo}${aboutDialogHtml()}</div>`,
+    `<div class="information-content"><p class="dialog-lead">ECG sintéticos para aprender. Las cifras de la pantalla son valores del modelo; las mediciones automáticas se consultan aquí.</p><p class="control-note">${esc(acquisitionDescription(c))}</p>${caseInfo}${aboutDialogHtml()}</div>`,
   );
   if (showAnalyzer) $("#analyzer-info")?.scrollIntoView({ block: "start" });
 }

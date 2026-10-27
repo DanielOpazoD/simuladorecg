@@ -82,6 +82,7 @@ try {
   const page=await browser.newPage({viewport:{width,height:1000},reducedMotion:'reduce'});activePage=page;
   page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());if(m.type()==='warning')warnings.push(m.text());});
   await installAudit(page);await page.goto(url);assert.match(await page.title(),/ECG/i);
+  if(width===390){await page.locator('#signal-loading').waitFor({state:'hidden'});await page.locator('.paper-menu > summary').click();await page.locator('[data-key="acquisition"]').selectOption('ideal');await page.locator('#signal-loading').waitFor({state:'hidden'});await page.locator('.paper-menu > summary').click();}
   await page.locator('#signal-loading').waitFor({state:'hidden'});await chooseCatalogPreset(page,'anterior');
   assert.equal(await page.locator('[data-key="view.format"]').inputValue(),'6x2','Five seconds per lead remains the default after choosing a case');
   await page.waitForFunction(()=>document.querySelector('#signal-loading').hidden&&window.__comparisonAudit.workers.some(w=>w.last?.ecg.presetId==='anterior'));
@@ -117,6 +118,7 @@ try {
   assert.equal(await page.locator('#comparison-reference').inputValue(),'lateral');assert.match(await page.locator('#comparison-reference-name').textContent(),/lateral/i);
   const reference=await page.evaluate(()=>window.__comparisonAudit.workers.findLast(w=>!w.terminated&&w.id!==window.__comparisonAudit.mainId).last.ecg);
   assert.equal(reference.presetId,'lateral');assert.equal(reference.view.speed,speed);assert.equal(reference.view.gain,gain);
+  assert.equal(reference.acquisition,width===390?'ideal':'realistic');
   await page.locator('.comparison-paper').first().evaluate(e=>e.scrollLeft=100);
   await page.waitForFunction(()=>{const e=[...document.querySelectorAll('.comparison-paper')];return Math.abs(e[0].scrollLeft-e[1].scrollLeft)<=1;});
   const overflow=await page.locator('.case-comparison').evaluate(root=>{const bounds=root.getBoundingClientRect();return [...root.querySelectorAll('select,label,p,figcaption')].filter(e=>e.checkVisibility()).filter(e=>{const b=e.getBoundingClientRect();return b.left<bounds.left-2||b.right>bounds.right+2;}).map(e=>e.outerHTML);});assert.deepEqual(overflow,[]);

@@ -1,0 +1,43 @@
+{
+  "base": "e8ba017698cd9a2ec82a3ee8cad0ec1fd7ceaeee",
+  "evidenceDirectory": "ECG-QA/clean-reading-20261026",
+  "entries": [
+    {
+      "path": "protocol.json",
+      "bytes": 2431,
+      "sha256": "f67115b7ca5fe0fb72218e2fe07f6568f1bf800737b6be829d56d9299f7d5f2a"
+    },
+    {
+      "path": "audit.mjs",
+      "bytes": 22749,
+      "sha256": "22a17ba46f99e0b5e36043401a016a1f4f64ab3804f87c9438a68daa16ed9f37"
+    },
+    {
+      "path": "audit-v2.mjs",
+      "bytes": 22751,
+      "sha256": "f6af8af3dab38dd96fcfe88dd4296c55f652fd8e5cdb0a53cad1229454dd87c9"
+    },
+    {
+      "path": "audit-v3.mjs",
+      "bytes": 22770,
+      "sha256": "77de3669f5357db5e8f9ffa2160b01e3314e9f8084f9db59e1589ff454a4d186"
+    },
+    {
+      "path": "ideal-review/report.json",
+      "bytes": 11897,
+      "sha256": "1c895cb0b62d588758904decec14fe1d6015b2c1cb4584cb693073b57a1a94a0"
+    },
+    {
+      "path": "ideal-review-v2/report.json",
+      "bytes": 11900,
+      "sha256": "74f6e3d137ebd4bfc83afc3760437ccc82bd0f060bcff9d0355d313211eafa09"
+    },
+    {
+      "path": "ideal-review-v3/report.json",
+      "bytes": 64626054,
+      "sha256": "037798d996995bb7e7c4fa239ca2fbb94bccfee75f997c0907eb19ce3a41ea3d"
+    }
+  ],
+  "changesToEngine": false,
+  "clinicalValidation": false
+}

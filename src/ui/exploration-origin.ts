@@ -9,7 +9,7 @@ const LABELS:Record<string,string>={seed:"Semilla",rhythm:"Ritmo",ventricularSou
 const equal=(a:unknown,b:unknown)=>JSON.stringify(a)===JSON.stringify(b);
 export function createExplorationOrigin(preset:Preset,c:ECGCase):ExplorationOrigin{return{presetId:preset.id,presetName:presetTitle(preset),case:cloneCase(c)}}
 export function explorationChanges(origin:ExplorationOrigin,current:ECGCase):ExplorationChange[]{const out:ExplorationChange[]=[];for(const key of Object.keys(LABELS)){const [group,item]=key.split(".");const before=item?(origin.case[group as "artifacts"] as unknown as Record<string,unknown>)[item]:(origin.case as unknown as Record<string,unknown>)[key];const after=item?(current[group as "artifacts"] as unknown as Record<string,unknown>)[item]:(current as unknown as Record<string,unknown>)[key];if(!equal(before,after))out.push({key,label:LABELS[key],before,after,...rateContext(key,origin.case,current)})}return out}
-export function restoreExplorationOrigin(origin:ExplorationOrigin,current:ECGCase):ECGCase{const restored=cloneCase(origin.case);restored.view=cloneCase(current).view;return restored}
+export function restoreExplorationOrigin(origin:ExplorationOrigin,current:ECGCase):ECGCase{const restored=cloneCase(origin.case);restored.view=cloneCase(current).view;restored.acquisition=current.acquisition;return restored}
 export function sameExplorationModel(origin:ExplorationOrigin,current:ECGCase):boolean{return explorationChanges(origin,current).length===0}
 
 /** Explain each state separately: a stored value can change meaning or become
