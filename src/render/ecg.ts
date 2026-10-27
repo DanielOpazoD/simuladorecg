@@ -245,6 +245,8 @@ export function renderPaper(
     selectedBeat?: number;
     hideName?: boolean;
     displayName?: string;
+    /** The interactive workspace already supplies the technical context outside the paper. */
+    compactHeader?: boolean;
     /** OMI lens: the same patient's previous ECG, drawn in grey behind the trace. */
     previous?: Signal;
     /** OMI lens: J point (end of the generated QRS) and ST from J to J+80 ms against
@@ -297,8 +299,11 @@ export function renderPaper(
     layout.widthMm - 10,
   );
   ctx.font = "2.7px ui-monospace, monospace";
-  ctx.fillText(
-    `${filterLabel(c)}  ·  señal sintética`,
+  const acquisitionNote = options.compactHeader
+    ? [c.filter === "aggressive" ? "Filtro de demostración: modifica el ST" : c.filter === "monitor" ? "Filtro de monitor" : c.filter === "off" ? "Sin filtro diagnóstico" : "", c.notch ? `notch ${c.notch} Hz` : ""].filter(Boolean).join(" · ")
+    : `${filterLabel(c)}  ·  señal sintética`;
+  if (acquisitionNote) ctx.fillText(
+    acquisitionNote,
     5,
     14.5,
     layout.widthMm - 10,
@@ -358,7 +363,7 @@ export function renderPaper(
   }
   ctx.font = "2.7px ui-monospace,monospace";
   ctx.fillStyle = palette.text;
-  ctx.fillText(
+  if (!options.compactHeader) ctx.fillText(
     "Registro de 10 s · " +
       (c.view.timing === "simultaneous"
         ? "segmentos simultáneos"

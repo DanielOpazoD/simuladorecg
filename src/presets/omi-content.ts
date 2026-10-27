@@ -53,7 +53,7 @@ export const OMI_SHEETS: Readonly<Record<string, OmiSheet>> = {
     notes: [
       { kind: "Perla", text: "La elevación en I y aVL junto a V2–V4 puede orientar a afectación anterior y lateral alta; la anatomía coronaria varía." },
       { kind: "Trampa", text: "Usar una sola pista para descartar oclusión. La fórmula de 4 variables tiene un contexto de aplicación específico: repolarización precoz frente a oclusión anterior sutil." },
-      { kind: "Consejo", text: "Activa «ECG previo» y «Solo el cambio» para observar la diferencia generada por la lesión en este escenario." },
+      { kind: "Consejo", text: "Usa «Comparar» para contrastar este patrón con un ejemplo sinusal. Son ejemplos independientes, no una evolución del mismo paciente." },
     ],
     refs: ["omi2021", "mclaren2024", "formula2017", "acc2025", "esc2023", "staff3"],
     chapter: { slug: "03-oclusion-da", title: "Oclusión de la descendente anterior" },
@@ -79,7 +79,7 @@ export const OMI_SHEETS: Readonly<Record<string, OmiSheet>> = {
     notes: [
       { kind: "Perla", text: "V7–V9, no registradas en este simulador, pueden aportar evidencia de lesión posterior. Un resultado negativo no excluye oclusión." },
       { kind: "Trampa", text: "Etiquetar el caso como SCASEST por el descenso en V1–V3 y retrasar la reperfusión." },
-      { kind: "Consejo", text: "Con «Punto J y ST», el azul de V1–V3 y el rojo de V5–V6 son un mismo vector de lesión." },
+      { kind: "Consejo", text: "En «Vista → Resaltar ST», observa la relación entre la depresión de V1–V3 y la elevación de V5–V6." },
     ],
     refs: ["omi2021", "omiFindings2021", "difoccult", "ricci2025", "acc2025", "staff3", "posterior2021"],
     chapter: { slug: "09-omi-inferior-posterior", title: "OMI inferior, posterior y de VD" },
@@ -235,7 +235,7 @@ export const OMI_SHEETS: Readonly<Record<string, OmiSheet>> = {
     notes: [
       { kind: "Perla", text: "El descenso del PR, más visible en II, es una pista de pericarditis." },
       { kind: "Trampa", text: "El descenso en aVL junto a elevación inferior favorece oclusión frente a pericarditis; su ausencia no descarta oclusión y no es una regla sin excepciones." },
-      { kind: "Consejo", text: "Activa «Punto J y ST»: en la pericarditis casi todo es rojo y el azul queda en aVR." },
+      { kind: "Consejo", text: "En «Vista → Resaltar ST», observa la elevación extensa y el descenso en aVR de este ejemplo." },
     ],
     refs: ["ricci2025", "tenSteps2021", "avl2016"],
     chapter: { slug: "11-stemi-mimics", title: "STEMI mimics" },

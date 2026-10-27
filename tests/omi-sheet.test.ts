@@ -8,7 +8,7 @@ import { OMI_FAMILIES, catalogGroup } from "../src/ui/catalog-presentation";
 import { OMI_SHEETS, REFERENCES } from "../src/presets/omi-content";
 import { leadList, leadMeasures, structuredDescription } from "../src/ui/structured-description";
 import { stMarks } from "../src/render/st-lens";
-import { omiSheetHtml, structuredDescriptionHtml } from "../src/ui/omi-sheet";
+import { omiReferencesHtml, omiSheetHtml, structuredDescriptionHtml } from "../src/ui/omi-sheet";
 import { descriptionInfoHtml } from "../src/ui/description-info";
 
 const preset = (id: string) => ({ ...fromPreset(presetById(id)!), variability: 0 });
@@ -38,6 +38,19 @@ describe("fichas OMI", () => {
     expect(omiSheetHtml("sinus")).toBe("");
     expect(omiSheetHtml("constructor")).toBe("");
     expect(omiSheetHtml("anterior", true)).toContain('class="omi-refs" open');
+  });
+  it("puede trasladar todas las fuentes a información sin duplicarlas en la lectura", () => {
+    for (const id of Object.keys(OMI_SHEETS)) {
+      const sheet = omiSheetHtml(id, false, false), refs = omiReferencesHtml(id);
+      expect(sheet).toContain("Ficha del caso");
+      expect(sheet).not.toContain("<details");
+      expect(sheet).not.toContain("ECGsmith");
+      expect(refs).not.toContain("<details");
+      expect(omiSheetHtml(id)).toContain(refs);
+      expect([...refs.matchAll(/<li>/g)]).toHaveLength(OMI_SHEETS[id].refs.length + 1);
+    }
+    expect(omiReferencesHtml("constructor")).toBe("");
+    expect(omiReferencesHtml("sinus")).toBe("");
   });
   it("separa el escenario docente de las inferencias clínicas de alto impacto", () => {
     for (const s of Object.values(OMI_SHEETS)) {
@@ -170,5 +183,16 @@ describe("descripción estructurada", () => {
     expect(q).toMatch(/<tr class="info-hit"><td>III<\/td>/);
     expect(descriptionInfoHtml("st", d.measures)).toContain("1,5 mm en mujeres");
     expect(descriptionInfoHtml("t", d.measures)).toContain("10.1161/CIRCULATIONAHA.108.191096");
+  });
+  it("permite una sola lectura desplegable conservando datos y herramientas ST", () => {
+    const d = read("old_inferior"), html = structuredDescriptionHtml(d, false, true);
+    expect(html).not.toContain("<details");
+    expect(html).not.toContain('data-action="description-info"');
+    for (const action of ["st-zoom", "st-distribution", "present-30"])
+      expect(html).toContain(`data-action="${action}"`);
+    expect([...html.matchAll(/<dt>/g)]).toHaveLength(d.lines.length);
+    const folded = structuredDescriptionHtml(d, false);
+    expect(folded).toContain("<summary>Descripción estructurada</summary>");
+    expect(folded).not.toMatch(/<summary>[^]*?<button[^]*?<\/summary>/);
   });
 });
