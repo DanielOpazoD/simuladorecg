@@ -1,0 +1,82 @@
+.teaching-echo { color:var(--ink); overflow-wrap:anywhere; }
+.teaching-echo h3 { margin:0 0 8px; font-size:1.4rem; }
+.echo-eyebrow { margin:0 0 6px; color:var(--accent); font-size:.72rem; letter-spacing:.12em; font-weight:750; }
+.echo-intro, .echo-status, .echo-timing-note, .echo-variation-note, .echo-method { font-size:var(--text-sm); line-height:1.6; }
+.echo-intro { margin:0 0 12px; max-width:72ch; }
+.echo-status { border-left:3px solid var(--accent); background:var(--soft); padding:10px 12px; margin:12px 0; }
+.echo-view-buttons { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; margin:14px 0; }
+.echo-view-buttons button { display:flex; flex-direction:column; gap:3px; min-height:55px; white-space:normal; text-align:left; align-items:flex-start; }
+.echo-view-buttons span { font-size:.7rem; font-weight:400; }
+.teaching-echo button[aria-pressed=true] { box-shadow:inset 0 0 0 1px var(--accent); border-color:var(--accent); background:var(--soft); }
+.echo-panes { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:14px; align-items:start; }
+.echo-panes figure { min-width:0; margin:0; border:1px solid var(--line); border-radius:12px; overflow:hidden; padding:10px; }
+.echo-panes figcaption { color:var(--muted); font-size:var(--text-xs); line-height:1.5; margin:8px 0; }
+.echo-image, .echo-anatomy { width:100%; display:block; max-height:340px; }
+.echo-image-bg { fill:#101f2b; }
+.echo-wall { stroke:#d4e0e5; stroke-width:1; cursor:pointer; }
+.echo-normal { fill:#72999c; }
+.echo-hypo { fill:#e9b768; }
+.echo-aki { fill:#d87573; }
+.echo-dys { fill:#af8fd8; }
+.echo-related { stroke:#e4f1f3; stroke-width:2; }
+.echo-selected { stroke:white; stroke-width:3.5; stroke-dasharray:5 2; }
+.echo-number { fill:#eaf2f5; font:11px 'DM Sans',sans-serif; text-anchor:middle; pointer-events:none; }
+.echo-label { fill:#b3c6d1; font:13px 'DM Sans',sans-serif; text-anchor:middle; }
+.echo-view-label { fill:#b3c6d1; font:10px 'DM Sans',sans-serif; letter-spacing:1px; }
+.echo-other { fill:none; stroke:#789399; stroke-width:2; }
+.echo-papillary { fill:#789399; }
+.echo-anatomy { min-height:160px; }
+.anatomy-segment { fill:#cbdad8; stroke:#5d7978; stroke-width:1; cursor:pointer; }
+.anatomy-hypo { fill:#e9b768; }
+.anatomy-aki { fill:#d87573; }
+.anatomy-dys { fill:#af8fd8; }
+.anatomy-related { stroke:#256675; stroke-width:2.5; }
+.anatomy-selected { stroke:#172f36; stroke-width:3; stroke-dasharray:4 2; }
+.anatomy-number { fill:#17323d; text-anchor:middle; pointer-events:none; font:9px 'DM Sans',sans-serif; }
+.anatomy-label { fill:var(--muted); text-anchor:middle; font:11px 'DM Sans',sans-serif; }
+.anatomy-rv { fill:none; stroke:var(--muted); stroke-width:2; stroke-dasharray:4 3; }
+:root.dark .anatomy-segment { fill:#405c5e; stroke:#8facac; }
+:root.dark .anatomy-hypo { fill:#c3944c; }
+:root.dark .anatomy-aki { fill:#c97876; }
+:root.dark .anatomy-dys { fill:#a28acb; }
+:root.dark .anatomy-related { stroke:#abe1e6; }
+:root.dark .anatomy-selected { stroke:#efffff; }
+:root.dark .anatomy-number { fill:#efffff; }
+.echo-transport, .echo-orientations, .echo-related-leads { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.echo-transport { margin:16px 0 12px; }
+.echo-orientations .btn, .echo-related-leads .btn { min-height:40px; white-space:normal; }
+.teaching-echo label { display:block; margin:8px 0 4px; font-weight:600; font-size:var(--text-xs); }
+.echo-transport label { margin:0 0 0 6px; }
+.teaching-echo input[type=range] { width:100%; margin:8px 0; accent-color:var(--accent); min-height:28px; }
+.teaching-echo select { max-width:100%; min-height:42px; padding:8px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--ink); font:inherit; font-size:var(--text-sm); }
+.echo-time-readout { display:block; color:var(--muted); font-size:var(--text-xs); font-variant-numeric:tabular-nums; line-height:1.5; }
+.echo-strip { display:block; width:100%; border:1px solid var(--line); border-radius:6px; margin:10px 0; }
+.echo-strip text { fill:var(--muted); font:10px 'DM Sans',sans-serif; }
+.echo-strip-trace { fill:none; stroke:var(--ink); stroke-width:1.3; }
+.echo-strip line { stroke:var(--accent); stroke-width:2; stroke-dasharray:4 3; }
+.echo-timing-note, .echo-variation-note { color:var(--muted); font-size:var(--text-xs); }
+.echo-legend { display:flex; flex-wrap:wrap; gap:8px 16px; padding:0; margin:14px 0; list-style:none; font-size:var(--text-xs); }
+.echo-legend li { display:flex; align-items:center; gap:6px; }
+.echo-swatch { display:inline-block; width:12px; height:12px; border:1px solid #52636b; border-radius:3px; }
+.echo-swatch.echo-normal { background:#72999c; }.echo-swatch.echo-hypo { background:#e9b768; }.echo-swatch.echo-aki { background:#d87573; }.echo-swatch.echo-dys { background:#af8fd8; }
+.echo-selection { padding:12px; border:1px solid var(--line); border-radius:8px; }
+.echo-selection select { width:100%; }
+.echo-selection p { font-size:var(--text-xs); line-height:1.5; margin:8px 0; }
+.echo-method { margin-top:14px; border-top:1px solid var(--line); padding-top:12px; font-size:var(--text-xs); }
+.echo-method summary { cursor:pointer; min-height:36px; font-weight:650; }
+.teaching-echo button:focus-visible, .teaching-echo select:focus-visible, .teaching-echo input:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+.teaching-echo [hidden] { display:none !important; }
+.teaching-echo[data-echo-available=false] .echo-panes { grid-template-columns:1fr; }
+.teaching-echo[data-echo-available=false] .echo-anatomy-panel { max-width:420px; }
+@media(max-width:650px) { .echo-panes { grid-template-columns:1fr; } .echo-view-buttons { grid-template-columns:repeat(2,minmax(0,1fr)); } .echo-anatomy { max-height:220px; } .echo-transport .btn, .echo-orientations .btn, .echo-related-leads .btn { min-height:44px; } }
+@media(forced-colors:active) { .echo-wall, .anatomy-segment { fill:Canvas; stroke:CanvasText; } .echo-selected, .anatomy-selected { stroke:Highlight; } .echo-image-bg { fill:Canvas; } .echo-label,.echo-number,.echo-view-label,.anatomy-number { fill:CanvasText; } }
+.echo-strip-caption { color:var(--muted); font-size:var(--text-xs); line-height:1.5; margin:4px 0 10px; }
+@media(max-width:650px) {
+  .echo-number { font-size:18px; }
+  .echo-label { font-size:17px; }
+  .echo-view-label { font-size:14px; }
+  .anatomy-number { font-size:17px; }
+  .anatomy-label { font-size:15px; }
+  .echo-strip text { font-size:22px; }
+}
+
