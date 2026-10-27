@@ -95,7 +95,7 @@ export function availableMetricValue(m:Measurement,key:MetricKey):number|null {
  * measurements dialog as an independent estimate, and for imported signals.
  */
 export function modelMetricCards(c: ECGCase, s: Signal): MetricCard[] {
-  const none = unorganized(c), t = s.truth, model = "Valor del modelo que generó este trazado. La estimación automática desde las muestras está en «Información y fuentes».";
+  const none = unorganized(c), t = s.truth, model = "Valor del modelo que generó este trazado. La estimación automática desde las muestras está en «Medidas».";
   const intervals = modelIntervals(c, s), axis = acquiredModelAxis(c, s);
   const card = (key: MetricKey, label: string, value: string, note: string): MetricCard =>
     value === "—"

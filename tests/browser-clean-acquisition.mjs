@@ -22,6 +22,7 @@ async function snapshot(page) {
 }
 async function chooseAcquisition(page,mode) {
  if(!await page.locator('.paper-menu').evaluate(d=>d.open))await page.locator('.paper-menu > summary').click();
+ if(!await page.locator('.view-settings').evaluate(d=>d.open))await page.locator('.view-settings > summary').click();
  const bounds=await page.locator('.view-options').boundingBox();assert(bounds.x>=0&&bounds.x+bounds.width<=page.viewportSize().width);
  const count=await workerReplies(page);await page.locator('[data-key="acquisition"]').selectOption(mode);await waitForReply(page,count);
  await page.locator('.paper-menu > summary').click();
@@ -75,7 +76,7 @@ try {
   await page.locator('[data-action=quiz]').click();await page.locator('#signal-loading').waitFor({state:'hidden'});
   const quizText=await page.locator('#quiz-panel').innerText();await chooseAcquisition(page,'ideal');assert.equal(await page.locator('#quiz-panel').innerText(),quizText);
   assert.equal(await page.locator('[data-action=compare]').isHidden(),true);await page.getByRole('button',{name:'Salir de práctica'}).click();
-  await page.locator('[data-action=about]').click();await page.getByText('El ECG actual: origen y límites',{exact:true}).click();assert.match(await page.locator('#dialog').innerText(),/sin ruido de adquisición añadido/);
+  await page.locator('[data-action=about]').click();await page.getByText('Cómo se genera este ECG',{exact:true}).click();assert.match(await page.locator('#dialog').innerText(),/sin ruido de adquisición añadido/);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   await page.close();
  }

@@ -72,6 +72,8 @@ jobs:
         run: node tests/browser-reading-pixels.mjs "$RUNNER_TEMP/ecg-reading/pixels"
       - name: Biblioteca de isquemia y diálogos compactos
         run: node tests/browser-compact-navigation.mjs "$RUNNER_TEMP/ecg-reading/compact-navigation"
+      - name: Papel compacto, medidas reunidas y selector de vista
+        run: node tests/browser-paper-first.mjs "$RUNNER_TEMP/ecg-reading/paper-first"
       - name: Conservar pruebas de lectura interactiva, incluidos fallos
         if: always()
         uses: actions/upload-artifact@v4

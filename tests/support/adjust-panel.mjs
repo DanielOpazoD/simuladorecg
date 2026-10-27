@@ -15,8 +15,10 @@ export async function openControlPanel(page, name) {
   await page.locator(`[data-control-panel="${name}"]`).waitFor({ state: 'visible' });
 }
 
-/** Speed, gain, format, filter, grid, lead and duration live in the «Papel» menu of the trace
- * toolbar; a click elsewhere closes it, so open it before each use. */
-export async function openPaper(page) {
-  await page.evaluate(() => document.querySelector('.paper-menu')?.setAttribute('open', ''));
+/** View settings and reading aids are folded inside «Vista».
+ * A click elsewhere closes the outer menu; open the requested section before use. */
+export async function openPaper(page, section = 'settings') {
+  if (!await page.locator('.paper-menu').evaluate(e => e.open)) await page.locator('.paper-menu > summary').click();
+  const details = page.locator(section === 'aids' ? '.view-aids' : '.view-settings');
+  if (!await details.evaluate(e => e.open)) await details.locator('summary').click();
 }

@@ -82,7 +82,7 @@ try {
   const page=await browser.newPage({viewport:{width,height:1000},reducedMotion:'reduce'});activePage=page;
   page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());if(m.type()==='warning')warnings.push(m.text());});
   await installAudit(page);await page.goto(url);assert.match(await page.title(),/ECG/i);
-  if(width===390){await page.locator('#signal-loading').waitFor({state:'hidden'});await page.locator('.paper-menu > summary').click();await page.locator('[data-key="acquisition"]').selectOption('ideal');await page.locator('#signal-loading').waitFor({state:'hidden'});await page.locator('.paper-menu > summary').click();}
+  if(width===390){await page.locator('#signal-loading').waitFor({state:'hidden'});await page.locator('.paper-menu > summary').click();if(!await page.locator('.view-settings').evaluate(e=>e.open))await page.locator('.view-settings > summary').click();await page.locator('[data-key="acquisition"]').selectOption('ideal');await page.locator('#signal-loading').waitFor({state:'hidden'});await page.locator('.paper-menu > summary').click();}
   await page.locator('#signal-loading').waitFor({state:'hidden'});await chooseCatalogPreset(page,'anterior');
   assert.equal(await page.locator('[data-key="view.format"]').inputValue(),'6x2','Five seconds per lead remains the default after choosing a case');
   await page.waitForFunction(()=>document.querySelector('#signal-loading').hidden&&window.__comparisonAudit.workers.some(w=>w.last?.ecg.presetId==='anterior'));
@@ -93,7 +93,7 @@ try {
   const info=page.locator('[data-action=about]:visible');assert.equal(await info.count(),1);assert.match(await info.innerText(),/Información y fuentes/);
   assert.equal(await page.locator('[data-action=lens-previous], [data-action=lens-change]').count(),0);
   const speed=width===1440?50:25,gain=width===1440?5:10;
-  if(width===1440){await page.locator('.paper-menu > summary').click();await page.locator('[data-key="view.speed"]').selectOption('50');await page.locator('[data-key="view.gain"]').selectOption('5');await page.locator('.paper-menu > summary').click();}
+  if(width===1440){await page.locator('.paper-menu > summary').click();if(!await page.locator('.view-settings').evaluate(e=>e.open))await page.locator('.view-settings > summary').click();await page.locator('[data-key="view.speed"]').selectOption('50');await page.locator('[data-key="view.gain"]').selectOption('5');await page.locator('.paper-menu > summary').click();}
   const before=await mainSnapshot(page);
   assert(before.leads.every(([,length])=>length===32500),'Identity includes the complete65s at500Hz');
   await page.locator('[data-action=compare]').click();await page.locator('#comparison-reference-sheet[aria-busy=false]').waitFor();
