@@ -60,6 +60,15 @@ jobs:
           for i in $(seq 1 60); do curl -sf http://127.0.0.1:4173 >/dev/null && break; sleep 1; done
           curl -sf http://127.0.0.1:4173 >/dev/null
           node tests/smoke-browser.mjs http://127.0.0.1:4173
+      - name: Distribución ST, muestras finales y navegación accesible
+        run: node tests/browser-st-distribution.mjs "$RUNNER_TEMP/ecg-st-distribution"
+      - name: Conservar pruebas de distribución ST, incluidos fallos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: st-distribution-results
+          path: ${{ runner.temp }}/ecg-st-distribution
+          if-no-files-found: ignore
       - name: Metrología independiente de pantalla y PNG
         run: node scripts/check-pixel-metrology.mjs "$RUNNER_TEMP/ecg-pixel-metrology"
       - name: Conservar resultados de metrología, incluidos fallos

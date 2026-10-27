@@ -18,6 +18,6 @@ export function omiSheetHtml(presetId: string, refsOpen = false): string {
 export function structuredDescriptionHtml(d: StructuredDescription, open = true): string {
   const info = (l: StructuredDescription["lines"][number]) => l.info
     ? `<button type="button" class="info-ref" data-action="description-info" data-info="${l.info}" aria-label="Criterios y referencias: ${esc(l.key)}"><sup>?</sup></button>` +
-      (l.info === "st" ? `<button type="button" class="info-ref" data-action="st-zoom" aria-label="Ampliar el ST y medir a mano">${icon("search")}</button>` : "") : "";
+      (l.info === "st" ? `<button type="button" class="info-ref" data-action="st-zoom" aria-label="Ampliar el ST y medir a mano">${icon("search")}</button><button type="button" class="text-button st-distribution-link" data-action="st-distribution">Explorar distribución ST ${icon("grid")}</button>` : "") : "";
   return `<details class="structured-description"${open ? " open" : ""}><summary>Descripción estructurada<button type="button" class="info-ref present-30-button" data-action="present-30" aria-label="Presentación en 30 segundos" title="Presentación en 30 s">${icon("book")}</button></summary><dl>${d.lines.map((l) => `<div><dt>${esc(l.key)}</dt><dd>${esc(l.text)}${info(l)}</dd></div>`).join("")}</dl></details>`;
 }

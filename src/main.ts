@@ -12,6 +12,7 @@ import { structuredDescription, type DescriptionInfo, type StructuredDescription
 import { descriptionInfoHtml, descriptionInfoTitle } from "./ui/description-info";
 import { concealMetricCards, metricsHtml, modelMetricCards } from "./ui/metric-cards";
 import { defaultZoomLead, mountStZoom, stZoomHtml } from "./ui/st-zoom";
+import { mountStDistribution, stDistributionHtml } from "./ui/st-distribution";
 import { visiblePaperLeads } from "./render/paper-viewport";
 import type { Lead } from "./engine/types";
 import { openDialog, closeDialog } from "./ui/dialog";
@@ -768,11 +769,18 @@ function toggleLens(key: keyof typeof lens) {
 }
 /** Buttons ([data-action]) owned here; workspace navigation and export have their own. */
 /** Magnified beat for reading J and the ST by hand (not during practice). */
-function openStZoom(lead?: Lead) {
+function openStZoom(lead?: Lead, beat?: number) {
   if (!session.signal || (quiz && !quiz.answer)) return;
   const chosen = lead ?? defaultZoomLead(session.signal);
   openDialog("ST ampliado: punto J y medición manual", stZoomHtml(chosen));
-  mountStZoom($("#dialog-content .st-zoom"), session.signal, chosen, palettes[currentTheme() === "dark" ? "dark" : "paper"]);
+  mountStZoom($("#dialog-content .st-zoom"), session.signal, chosen, palettes[currentTheme() === "dark" ? "dark" : "paper"], beat);
+  $("#dialog-content [data-action=close-dialog]").focus();
+}
+function openStDistribution(lead?: Lead, beat?: number) {
+  if (!session.signal || (quiz && !quiz.answer)) return;
+  openDialog("Distribución del ST: derivaciones y orientación", stDistributionHtml());
+  mountStDistribution($("#dialog-content .st-distribution"), session.signal, c.artifacts.reversed, openStZoom, { lead, beat });
+  $("#dialog-content [data-action=close-dialog]").focus();
 }
 const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
   "clear-search": () => {
@@ -787,6 +795,10 @@ const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
     openDialog(descriptionInfoTitle(kind), descriptionInfoHtml(kind, description.measures, description.axis, description.axisContext));
   },
   "st-zoom": () => openStZoom(),
+  "st-distribution": target => {
+    const zoom = target.closest<HTMLElement>(".st-zoom");
+    openStDistribution(zoom?.dataset.selectedLead as Lead | undefined, zoom?.dataset.zoomBeat === undefined ? undefined : Number(zoom.dataset.zoomBeat));
+  },
   "present-30": () => {
     if (!description) return;
     openDialog("Presentación en 30 s", `<p class="dialog-lead">${esc(description.summary)}</p><p class="control-note">Orden: técnica, ritmo y frecuencia, intervalos, eje, ST, onda T y ondas Q, y conclusión.</p>`);
