@@ -31,7 +31,7 @@ window.prepare = (settings) => {
   const s={fs:500,duration:10,leads:Object.fromEntries(LEADS.map(l=>[l,wave.slice()])),
     events:{beats:[],atria:[],spikes:[]},truth:{hr:null,pr:null,qrs:null,qt:null,axis:null},warnings:[]};
   const before=LEADS.map(l=>Array.from(s.leads[l]));
-  renderPaper(canvas,s,c,innerWidth-32);
+  renderPaper(canvas,s,c,innerWidth-32,{compactHeader:true});
   window.state={c,s,before};
   return {width:canvas.width,height:canvas.height,cssWidth:canvas.getBoundingClientRect().width,
     cssHeight:canvas.getBoundingClientRect().height,dpr:devicePixelRatio};

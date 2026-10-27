@@ -22,6 +22,22 @@ const fontSize = (font: string) => Number(font.match(/([\d.]+)px/)![1]);
 const formats: ECGCase["view"]["format"][] = ["3x4", "3x4+1", "3x4+3", "6x2", "12x1"];
 
 describe("paper editorial bands preserve calibrated signal space", () => {
+  it("the compact workspace preserves every lead and the export geometry without redundant technical captions", () => {
+    const c = cloneCase(DEFAULT_CASE), s = signal(), compact = recorder(), exported = recorder();
+    const a = renderPaper(compact.canvas, s, c, 1000, {ratio: 1, compactHeader: true});
+    const b = renderPaper(exported.canvas, s, c, 1000, {ratio: 1});
+    expect(a).toEqual(b);
+    for (const lead of Object.keys(s.leads)) expect(compact.texts.some(t => t.text === lead)).toBe(true);
+    const text = compact.texts.map(t => t.text).join(" ");
+    expect(text).toContain("25 mm/s"); expect(text).toContain("10 mm/mV");
+    expect(text).not.toMatch(/Hz|señal sintética|columnas secuenciales/);
+    expect(exported.texts.map(t => t.text).join(" ")).toMatch(/Hz.*señal sintética/);
+  });
+  it.each(["aggressive", "monitor", "off"] as const)("compact paper still identifies the nonstandard %s acquisition", filter => {
+    const c = cloneCase(DEFAULT_CASE); c.filter = filter;
+    const r = recorder(); renderPaper(r.canvas, signal(), c, 1000, {ratio: 1, compactHeader: true});
+    expect(r.texts.filter(t => t.y < 18).map(t => t.text).join(" ")).toContain({aggressive: "Filtro de demostración: modifica el ST", monitor: "Filtro de monitor", off: "Sin filtro diagnóstico"}[filter]);
+  });
   it.each(formats)("%s retains independent mm geometry and text outside signal rows", format => {
     const c = cloneCase(DEFAULT_CASE); c.view.format = format; c.view.speed = 12.5;
     c.view.gain = 20; c.view.chestGain = 5; c.view.cabrera = true;

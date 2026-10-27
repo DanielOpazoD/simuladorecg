@@ -43,22 +43,34 @@ describe("about dialog content", () => {
     expect(rows.map((row) => row.slice(1))).toEqual(PRESETS.map((preset) => [
       esc(presetTitle(preset)),
       { pending: "Pendiente", local: "Aproximado · ajuste local", vectorial: "Aproximado · vectorial" }[preset.strategy],
-      preset.limitation,
+      esc(preset.limitation),
     ]));
   });
 
   it("retains references as HTTPS links opening with noopener", () => {
     const html = aboutDialogHtml([]);
     const links = [...html.matchAll(/<a href="([^"]+)" target="_blank" rel="noopener">/g)];
-    expect(links).toHaveLength(9);
+    expect(links).toHaveLength(12);
     expect(links.every((link) => link[1].startsWith("https://"))).toBe(true);
     expect(html).toContain("https://physionet.org/content/ecgsyn/1.0.0/");
     expect(html).toContain("Quinta Definición Universal de Infarto (2026)");
+    for (const source of ["ptb-xl/1.0.3", "ptb-xl-plus/1.0.1", "creativecommons.org/licenses/by/4.0"])
+      expect(html).toContain(source);
   });
 
   it("keeps the table structure without inventing rows for an empty catalog", () => {
     const html = aboutDialogHtml([]);
-    expect(html).toContain("<th>Patrón</th><th>Estado / estrategia</th><th>Límite</th>");
+    expect(html).toContain('<th scope="col">Patrón</th><th scope="col">Estado / estrategia</th><th scope="col">Límite</th>');
     expect(html).toContain("<tbody></tbody>");
+  });
+
+  it("keeps technical material behind four native disclosures without nested controls", () => {
+    const html = aboutDialogHtml(PRESETS);
+    const summaries = [...html.matchAll(/<summary>(.*?)<\/summary>/gs)].map(m => m[1]);
+    expect(summaries).toEqual([
+      "Cómo se genera", "Referencias y atribución", "Catálogo y límites", "Atajos de teclado",
+    ]);
+    expect(html).not.toMatch(/<details[^>]*\sopen(?:\s|>)/);
+    for (const summary of summaries) expect(summary).not.toMatch(/<(?:button|a)\b/);
   });
 });

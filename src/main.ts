@@ -4,10 +4,9 @@ import { regionalActivationControls } from "./ui/regional-activation";
 import "./style.css";
 import { presetTitle } from "./presets/nomenclature";
 import { APP_VERSION } from "./ui/version";
-import { catalogGroup, familyGuide, familyLabel } from "./ui/catalog-presentation";
+import { catalogGroup, familyLabel } from "./ui/catalog-presentation";
 import { lesionBaseline } from "./engine/lesion-baseline";
-import { differenceSignal } from "./render/st-lens";
-import { omiSheetHtml, structuredDescriptionHtml } from "./ui/omi-sheet";
+import { omiSheetHtml, omiReferencesHtml, structuredDescriptionHtml } from "./ui/omi-sheet";
 import { structuredDescription, type DescriptionInfo, type StructuredDescription } from "./ui/structured-description";
 import { descriptionInfoHtml, descriptionInfoTitle } from "./ui/description-info";
 import { concealMetricCards, metricsHtml, modelMetricCards } from "./ui/metric-cards";
@@ -90,9 +89,8 @@ let c = fromPreset(presetById("sinus")!),
   layout: Layout | null = null,
   paperAmplitudeMm: number | undefined,
   monitor: Monitor | null = null;
-/** OMI lenses on the 12-lead paper: the same patient's previous ECG (grey), the
- * lesion alone (this trace minus that one) and the J point with SDST/IDST. */
-const lens = { previous: false, change: false, st: false };
+let stHighlight = false;
+// The contrafactual remains inside the advanced Aula, never presented as a prior recording.
 let previousSignal: Signal | null = null;
 let annotations = false,
   caliper: Caliper | null = null,
@@ -116,20 +114,20 @@ try {
 }
 applyTheme(readTheme());
 const root = $("#app");
-root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="ECG Lab, inicio">${icon("pulse")}<span>ECG<span class="brand-light">lab</span></span></a><nav aria-label="Herramientas"><button class="btn mobile-cases" data-action="catalog">${icon("menu")}<span>Casos</span></button>${btn("quiz", "Practicar", "quiz")}${btn("about", "Guía", "book")}${btn("export", "Exportar", "download")}${btn("theme", "Tema", "sun", "icon-button")}</nav></header>
+root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="ECG Lab, inicio">${icon("pulse")}<span>ECG<span class="brand-light">lab</span></span></a><nav aria-label="Herramientas"><button class="btn mobile-cases" data-action="catalog">${icon("menu")}<span>Casos</span></button>${btn("quiz", "Practicar", "quiz")}${btn("export", "Exportar", "download")}${btn("theme", "Tema", "sun", "icon-button")}</nav></header>
  <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><h2>Biblioteca de patrones</h2>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Patrón, sigla o palabra…" aria-label="Buscar caso"/></label><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div></aside>
  <main class="workspace"><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><div id="exploration-context" class="exploration-context" hidden></div></div><div class="case-state">${btn("parameters", "Ajustar", "settings", "subtle")}${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
  <section id="diagnosis-navigation" class="diagnosis-navigation" aria-label="Variantes del patrón" hidden></section>
  <div id="diagnosis-content">
  <section id="metrics" class="metrics" aria-label="Valores del modelo que generó el ECG"><div class="loading-metrics">Generando señal…</div></section>
- <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><div class="trace-tools">${btn("caliper", "Calibres", "ruler")}${btn("annotations", "Ondas", "eye")}${btn("teaching", "Aula ECG", "book")}${btn("teaching-marks", "Mis marcas", "eye")}<span class="lens-tools" role="group" aria-label="Lentes OMI">${btn("lens-previous", "ECG previo", "strip")}${btn("lens-change", "Solo el cambio", "pulse")}${btn("lens-st", "Punto J y ST", "ruler")}</span>${btn("pause", "Congelar", "pause")}<details class="paper-menu"><summary class="btn" data-action="paper" aria-label="Papel: velocidad, ganancia, formato y filtro">${icon("grid")}<span>Papel</span></summary><div class="scale-toolbar" id="scale-toolbar"></div></details></div></div>
+ <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><div class="trace-tools">${btn("caliper", "Medir", "ruler")}${btn("compare", "Comparar", "strip")}${btn("teaching", "Aula", "book")}${btn("pause", "Congelar", "pause")}<details class="paper-menu"><summary class="btn" data-action="paper">${icon("settings")}<span>Vista</span>${icon("chevron")}</summary><div class="view-options"><div class="scale-toolbar" id="scale-toolbar"></div><div class="view-overlays" aria-label="Ayudas visuales">${btn("annotations", "Marcar ondas", "eye")}${btn("lens-st", "Resaltar ST", "ruler")}${btn("teaching-marks", "Mostrar mis marcas", "eye")}</div></div></details></div></div>
  <div id="quiz-panel" hidden></div><div id="caliper-editor" class="caliper-editor" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small id="monitor-rate-note">No estimable</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
- <p class="trace-context" id="trace-context" hidden></p><div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-context trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div>
+ <p class="sr-only" id="trace-context" hidden></p><div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-context trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div><p class="trace-scroll-hint" id="trace-scroll-hint" hidden>Desliza para ver el trazado completo.</p>
  <div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><p id="trace-keyboard-help" class="sr-only">Con foco en el trazado: M, P y R cambian la vista; V y G, la escala; C activa los calibres y espacio congela el monitor. Con calibres, las flechas mueven el extremo seleccionado; Mayús mueve diez pasos. Pulsa ? para abrir la ayuda de atajos.</p></section>
  </div>
- <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><div class="section-label">Guía de lectura</div><h2 id="finding-title">Hallazgos esperados</h2><p id="case-subtitle" class="guide-lead">Activación auricular sinusal seguida de conducción AV 1:1.</p><ul id="findings"></ul><div id="structured-description"></div></div><div class="guide-side"><div id="omi-sheet"></div><details class="model-details"><summary>Sobre el modelo <span id="warning-count"></span></summary><div id="limitation" class="model-note"></div><div id="warnings"></div><button class="text-button" data-action="measurements">Medidas del analizador y valores del modelo ${icon("chevron")}</button></details><div class="guide-links"><button class="text-button" data-action="about">Estado y referencias ${icon("chevron")}</button></div></div></section>
+ <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><h2 id="finding-title">Qué observar</h2><p id="case-subtitle" class="guide-lead">Activación auricular sinusal seguida de conducción AV 1:1.</p><ul id="findings"></ul><details id="reading-details"><summary>Lectura paso a paso</summary><div class="reading-detail-content"><div id="structured-description"></div><div id="omi-sheet"></div></div></details></div></section>
  <details id="adjust" class="adjust-panel"><summary><span>Ajustar el caso</span><small>Parámetros del modelo</small></summary><div id="inspector" class="inspector"></div></details>
- <footer class="workspace-footer"><span>ECG Lab · Laboratorio de electrocardiografía</span><span>Morfología normal aprendida de <a href="https://physionet.org/content/ptb-xl/1.0.3/" target="_blank" rel="noopener">PTB-XL</a> y <a href="https://physionet.org/content/ptb-xl-plus/1.0.1/" target="_blank" rel="noopener">PTB-XL+</a> (Wagner et al. 2020; Strodthoff et al. 2023), <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>; se distribuyen solo coeficientes derivados.</span><span>Uso educativo. Sin validación clínica. <span data-product-version="${APP_VERSION}">v${APP_VERSION}</span></span></footer></main></div>
+ <footer class="workspace-footer"><button class="text-button" data-action="about">Información y fuentes ${icon("chevron")}</button><span>Uso educativo · sin validación clínica · <span data-product-version="${APP_VERSION}">v${APP_VERSION}</span></span></footer></main></div>
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
 
 const variantNavigation = new VariantNavigation($("#diagnosis-navigation"), $("#diagnosis-content"));
@@ -192,20 +190,14 @@ function renderExplorationContext(concealed:boolean) {
 }
 
 function showExplorationChanges(){if(!explorationOrigin)return;const changes=explorationChanges(explorationOrigin,c);openDialog("Cambios respecto al origen",`<p class="dialog-lead">Origen: <strong>${esc(explorationOrigin.presetName)}</strong>. Se muestran diferencias reales del modelo; la vista no cuenta como ajuste.</p><div class="measurement-table-wrap"><table><thead><tr><th>Parámetro</th><th>Origen</th><th>Actual</th></tr></thead><tbody>${changes.map(x=>`<tr><td>${esc(x.label)}</td><td>${esc(formatExplorationValue(x.before))}${x.beforeLabel?`<br><small>${esc(x.beforeLabel)}</small>`:""}</td><td>${esc(formatExplorationValue(x.after))}${x.afterLabel?`<br><small>${esc(x.afterLabel)}</small>`:""}</td></tr>`).join("")}</tbody></table></div><p class="control-note">Una acción puede cambiar varios parámetros coordinados; el recuento describe diferencias del estado resultante, no el número de clics.</p>`)}
-// Open state of the sheet's support and of the description, kept across re-renders.
-let refsOpen = false, descriptionOpen = true;
-document.addEventListener("toggle", (e) => {
-  const el = e.target as HTMLDetailsElement;
-  if (el.classList?.contains("omi-refs")) refsOpen = el.open;
-  else if (el.classList?.contains("structured-description")) descriptionOpen = el.open;
-}, true);
 /** The description is read from the signal shown: empty while a new one is computed. */
 let description: StructuredDescription | null = null;
 function renderDescription() {
   const concealed = quiz && !quiz.answer;
   const preset = caseContext(c).preset;
   description = !concealed && session.signal ? structuredDescription(c, session.signal, preset && !c.artifacts.reversed ? caseReading(c).title : undefined) : null;
-  $("#structured-description").innerHTML = description ? structuredDescriptionHtml(description, descriptionOpen) : "";
+  $("#structured-description").innerHTML = description ? structuredDescriptionHtml(description, true, true) : "";
+  $("#reading-details").hidden = !description;
 }
 function renderInfo() {
   const context = caseContext(c),
@@ -222,14 +214,14 @@ function renderInfo() {
   $("#case-category").textContent = concealed
     ? "PRÁCTICA"
     : customExploration ? "EXPLORACIÓN"
-    : p ? [familyLabel(catalogGroup(p)), familyGuide(catalogGroup(p))].filter(Boolean).join(" · ") : "Caso personalizado";
+    : p ? familyLabel(catalogGroup(p)) : "Caso personalizado";
   $("#case-subtitle").textContent = concealed
     ? "Identifica el patrón. Puedes cambiar la vista y utilizar los calibres."
     : customExploration ? "Interpreta la señal actual; el origen solo indica procedencia." : reading.subtitle;
   renderExplorationContext(!!concealed);
   $("#finding-title").textContent = concealed
     ? "Análisis sistemático"
-    : reading.findingsTitle;
+    : "Qué observar";
   $("#findings").innerHTML = (
     concealed
       ? [
@@ -244,21 +236,9 @@ function renderInfo() {
   // OMI families (A3): case sheet with expert notes and support; and, for any case,
   // the structured description read from the trace shown.
   // With reversed arm electrodes the trace no longer shows the sheet's picture.
-  $("#omi-sheet").innerHTML = !concealed && p && !customExploration && !c.artifacts.reversed ? omiSheetHtml(p.id, refsOpen) : "";
+  $("#omi-sheet").innerHTML = !concealed && p && !customExploration && !c.artifacts.reversed ? omiSheetHtml(p.id, false, false) : "";
   renderDescription();
-  $("#limitation").innerHTML = concealed
-    ? "El diagnóstico se mostrará al responder."
-    : (() => {
-      const provenance = modelProvenance(c, p);
-      return `<strong>Procedencia del modelo actual</strong><p>${esc(provenance.summary)}</p><p>${esc(provenance.evidence)}</p>${provenance.limitations.map(limit => `<p>${esc(limit)}</p>`).join("")}`;
-    })();
-  $("#warnings").innerHTML = (concealed ? [] : [...context.warnings, ...(session.signal?.warnings || []), ...(c.rhythm === "af" ? [usesRealisticBase(c)
-    ? "FA aprendida de pacientes reales (PTB-XL): ondas f e irregularidad del RR propias de cada paciente (CV del RR 0,10–0,35 según la semilla). Intervalos RR independientes (distribución gamma): no simula memoria del nodo AV ni cambios de organización de las ondas f dentro del trazado; la FC programada es una media de largo plazo."
-    : "FA representativa: intervalos RR positivos independientes (distribución gamma, CV 0,22). No simula memoria del nodo AV ni toda la variabilidad entre pacientes; la FC programada es una media de largo plazo."] : [])])
-    .map((w) => `<p class="warning">${esc(w)}</p>`)
-    .join("");
-  const notices = $("#warnings").childElementCount;
-  $("#warning-count").textContent = notices ? `· ${notices} ${notices === 1 ? "aviso" : "avisos"}` : "";
+  $<HTMLButtonElement>('[data-action="reset"]').hidden = !!concealed || (!!explorationOrigin && !customExploration);
   $<HTMLButtonElement>('[data-action="export"]').disabled = !!concealed;
   $("#adjust").hidden = !!concealed;
   $<HTMLButtonElement>('[data-action="parameters"]').disabled = !!concealed;
@@ -400,28 +380,27 @@ function syncTraceTools() {
   syncPauseControl(pause, session.paused, monitorMode && ready);
   // Tools that do not apply to this view or case are hidden, not greyed out.
   pause.hidden = !monitorMode;
-  $(".lens-tools").hidden = !paper;
   $("#monitor-state").textContent = !ready ? "SIN SEÑAL" : session.paused ? "CONGELADO" : "REPRODUCCIÓN";
   const waves = $<HTMLButtonElement>('[data-action="annotations"]');
   waves.disabled = !paper || !ready;
   waves.hidden = !paper;
   waves.classList.toggle("active", ready && paper && annotations);
   waves.setAttribute("aria-pressed", String(ready && paper && annotations));
-  const practice = !!quiz && !quiz.answer, lesion = !!lesionBaseline(c) && !practice;
+  const practice = !!quiz && !quiz.answer;
   const teaching = $<HTMLButtonElement>('[data-action="teaching"]');
   teaching.disabled = !ready || practice;
   teaching.hidden = practice;
+  const compare = $<HTMLButtonElement>('[data-action="compare"]');
+  compare.disabled = !ready || practice;
+  compare.hidden = practice;
   const marks = $<HTMLButtonElement>('[data-action="teaching-marks"]');
   marks.hidden = !ready || practice || !paper || !session.signal || !teachingNotes.get(teachingKey(session.signal))?.length;
   marks.setAttribute("aria-pressed", String(teachingMarksVisible));
-  // Lenses that would reveal the answer are hidden during an unanswered exercise.
-  for (const [action, on, enabled] of [["lens-previous", lens.previous, lesion], ["lens-change", lens.change, lesion], ["lens-st", lens.st, !practice]] as const) {
-    const b = $<HTMLButtonElement>(`[data-action="${action}"]`), active = ready && paper && enabled && on;
-    b.disabled = !paper || !ready || !enabled;
-    b.classList.toggle("active", active);
-    b.setAttribute("aria-pressed", String(active));
-    b.hidden = !enabled;
-  }
+  const st = $<HTMLButtonElement>('[data-action="lens-st"]');
+  st.disabled = !paper || !ready || practice;
+  st.hidden = !paper || practice;
+  st.setAttribute("aria-pressed", String(ready && paper && !practice && stHighlight));
+  st.classList.toggle("active", ready && paper && !practice && stHighlight);
   $('[data-action="theme"]').setAttribute("aria-pressed", String(currentTheme() === "dark"));
   const caliperButton = $<HTMLButtonElement>('[data-action="caliper"]');
   caliperButton.disabled = monitorMode || !ready;
@@ -498,7 +477,7 @@ function showUnavailableSignal(message: string, unavailable = false) {
   $("#monitor-rate").textContent = "—";
   $("#monitor-rate-note").textContent = "No estimable";
   $("#measurement-readout").hidden = true;
-  $("#warnings").innerHTML = "";
+  $("#trace-scroll-hint").hidden = true;
   syncTraceTools();
 }
 function invalidateSignal() {
@@ -514,7 +493,7 @@ function generate() {
   invalidateSignal();
   // Worker messages are asynchronous; register the returned ID before delivery.
   previousSignal = null;
-  session.expectRequest(controller.request(c, 65, { previous: (lens.previous || lens.change) && !!lesionBaseline(c) }));
+  session.expectRequest(controller.request(c, 65));
 }
 /** Preserve native paper scale; describe horizontal overflow without fading the trace. */
 const syncTraceOverflow = () => {
@@ -522,6 +501,7 @@ const syncTraceOverflow = () => {
   const more = wrap.scrollWidth > wrap.clientWidth + 2;
   wrap.toggleAttribute("data-more-right", wrap.scrollLeft + wrap.clientWidth < wrap.scrollWidth - 2);
   const context = $("#trace-context");
+  $("#trace-scroll-hint").hidden = !layout || c.view.mode === "monitor" || !more;
   context.hidden = !layout || c.view.mode === "monitor";
   if (layout && c.view.mode !== "monitor") {
     const leads = visiblePaperLeads(layout, wrap.scrollLeft, wrap.clientWidth).join(", ");
@@ -541,17 +521,15 @@ function draw() {
   );
   if (c.view.mode === "paper") {
     monitor = null;
-    const practice = !!quiz && !quiz.answer, prior = !practice && lesionBaseline(c) ? previousSignal : null;
-    const change = !!prior && lens.change;
-    layout = renderPaper(canvas, change ? differenceSignal(session.signal, prior) : session.signal, c, width, {
-      annotations: annotations && !change,
+    const practice = !!quiz && !quiz.answer;
+    layout = renderPaper(canvas, session.signal, c, width, {
+      compactHeader: true,
+      annotations,
       measurement: session.measurement ?? undefined,
       selectedBeat: session.selectedBeat,
       hideName: practice,
       displayName: caseReading(c).title,
-      previous: prior && lens.previous && !change ? prior : undefined,
-      stLens: lens.st && !practice,
-      traceNote: change ? "solo el cambio: este trazado menos el ECG previo del mismo paciente" : prior && lens.previous ? "gris: ECG previo del mismo paciente" : undefined,
+      stLens: stHighlight && !practice,
       // Fit the available width uniformly. Long sheets continue down the page,
       // rather than shrinking labels and the calibrated trace to viewport height.
     });
@@ -570,7 +548,7 @@ function draw() {
   );
   if (caliper && layout && session.caliperOn) drawCaliper(canvas, layout, caliper, c);
   syncTraceOverflow();
-  if (layout && c.view.mode === "paper" && !(quiz && !quiz.answer) && !lens.change && teachingMarksVisible) {
+  if (layout && c.view.mode === "paper" && !(quiz && !quiz.answer) && teachingMarksVisible) {
     const all = teachingNotes.get(teachingKey(session.signal)) ?? [];
     const visible = all.filter(n => layout!.segments.some(segment => projectTeachingNote(n, segment, c.view)));
     if (visible.length) {
@@ -719,19 +697,27 @@ $("#case-search").addEventListener("keydown", (e) => {
 });
 
 function showMeasurements() {
-  if (session.signal && session.measurement)
-    openDialog(
-      "Medidas, límites y consistencia",
-      measurementDialog(session.signal, session.measurement, c),
-    );
+  if (session.signal && session.measurement) showAbout(true);
   else
     toast("Las medidas estarán disponibles al generar correctamente la señal.");
 }
-function showAbout() {
+function showAbout(showAnalyzer = false) {
+  const concealed = !!quiz && !quiz.answer, p = currentPreset();
+  let caseInfo = "";
+  if (!concealed) {
+    const provenance = modelProvenance(c, p);
+    const warnings = [...caseContext(c).warnings, ...(session.signal?.warnings ?? [])];
+    if (c.rhythm === "af") warnings.push(usesRealisticBase(c)
+      ? "FA aprendida de PTB-XL: intervalos RR independientes (gamma, CV 0,10–0,35 según la semilla). No simula memoria del nodo AV ni cambios de organización de las ondas f; la FC programada es una media de largo plazo."
+      : "FA representativa: intervalos RR independientes (gamma, CV 0,22). No simula memoria del nodo AV ni toda la variabilidad entre pacientes; la FC programada es una media de largo plazo.");
+    caseInfo = `<details class="information-section"><summary>El ECG actual: origen y límites</summary><div class="model-note"><p>${esc(provenance.summary)}</p><p>${esc(provenance.evidence)}</p>${provenance.limitations.map(limit => `<p>${esc(limit)}</p>`).join("")}</div>${warnings.map(w => `<p class="warning">${esc(w)}</p>`).join("")}${p ? omiReferencesHtml(p.id) : ""}</details>`;
+    if (session.signal && session.measurement) caseInfo += `<details class="information-section" id="analyzer-info"${showAnalyzer ? " open" : ""}><summary>Medidas del analizador</summary>${measurementDialog(session.signal, session.measurement, c)}</details>`;
+  }
   openDialog(
-    "Modelo, alcance y referencias",
-    aboutDialogHtml(PRESETS),
+    "Información y fuentes",
+    `<div class="information-content"><p class="dialog-lead">ECG sintéticos para aprender. Las cifras de la pantalla son valores del modelo; las mediciones automáticas se consultan aquí.</p>${caseInfo}${aboutDialogHtml(PRESETS)}</div>`,
   );
+  if (showAnalyzer) $("#analyzer-info")?.scrollIntoView({ block: "start" });
 }
 let savedCaseSnapshot: ECGCase[] = [];
 function exportDialog() {
@@ -785,15 +771,6 @@ function restoreOrigin(origin: ExplorationOrigin) {
   generate();
   toast("Origen restaurado; se conserva la vista actual.");
 }
-function toggleLens(key: keyof typeof lens) {
-  lens[key] = !lens[key];
-  // "Only the change" redraws a smaller signal with other row heights: a caliper
-  // placed on the previous geometry would land on another lead.
-  if (key === "change") caliper = null;
-  // The previous ECG comes with the trace from the worker; ask for it once.
-  if ((lens.previous || lens.change) && lesionBaseline(c) && !previousSignal) generate();
-  else draw();
-}
 /** Buttons ([data-action]) owned here; workspace navigation and export have their own. */
 /** Magnified beat for reading J and the ST by hand (not during practice). */
 function openStZoom(lead?: Lead, beat?: number) {
@@ -808,6 +785,30 @@ function openStDistribution(lead?: Lead, beat?: number) {
   openDialog("Distribución del ST: derivaciones y orientación", stDistributionHtml());
   mountStDistribution($("#dialog-content .st-distribution"), session.signal, c.artifacts.reversed, openStZoom, { lead, beat });
   $("#dialog-content [data-action=close-dialog]").focus();
+}
+let comparisonOpening = false;
+async function openComparison() {
+  if (comparisonOpening || !session.signal || !session.canExport || (quiz && !quiz.answer)) return;
+  const signal = session.signal, ecg = cloneCase(c);
+  comparisonOpening = true;
+  try {
+    const { caseComparisonHtml, mountCaseComparison } = await import("./ui/case-comparison");
+    if (signal !== session.signal || !session.canExport || (quiz && !quiz.answer)) return;
+    openDialog("Comparar ECG", caseComparisonHtml());
+    const dialog = $<HTMLDialogElement>("#dialog"), host = $(".case-comparison");
+    dialog.classList.add("comparison-dialog");
+    const dispose = mountCaseComparison(host, signal, ecg);
+    let finished = false;
+    const cleanup = () => {
+      if (finished) return; finished = true;
+      dispose(); observer.disconnect(); dialog.classList.remove("comparison-dialog");
+      dialog.removeEventListener("close", cleanup);
+    };
+    const observer = new MutationObserver(() => { if (!host.isConnected) cleanup(); });
+    observer.observe($("#dialog-content"), { childList: true });
+    dialog.addEventListener("close", cleanup);
+  } catch { toast("No se pudo abrir la comparación. Inténtalo de nuevo."); }
+  finally { comparisonOpening = false; }
 }
 async function openTeachingWorkspace() {
   if (teachingOpening || !session.signal || !session.canExport || (quiz && !quiz.answer)) return;
@@ -853,6 +854,7 @@ async function openTeachingWorkspace() {
   $("#dialog-content [data-action=close-dialog]").focus();
 }
 const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
+  compare: () => openComparison(),
   teaching: () => openTeachingWorkspace(),
   "teaching-marks": () => { teachingMarksVisible = !teachingMarksVisible; draw(); },
   "clear-search": () => {
@@ -891,9 +893,7 @@ const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
   },
   "clear-caliper": () => { caliper = null; draw(); },
   annotations: () => { annotations = !annotations; draw(); },
-  "lens-previous": () => toggleLens("previous"),
-  "lens-change": () => toggleLens("change"),
-  "lens-st": () => toggleLens("st"),
+  "lens-st": () => { if (!quiz || quiz.answer) { stHighlight = !stHighlight; draw(); } },
   sound: async () => {
     audioOn = !audioOn;
     if (audioOn) {

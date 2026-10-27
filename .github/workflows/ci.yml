@@ -62,6 +62,15 @@ jobs:
           node tests/smoke-browser.mjs http://127.0.0.1:4173
       - name: Distribución ST, muestras finales y navegación accesible
         run: node tests/browser-st-distribution.mjs "$RUNNER_TEMP/ecg-st-distribution"
+      - name: Interfaz simplificada y comparación entre ejemplos
+        run: node tests/browser-case-comparison.mjs "$RUNNER_TEMP/ecg-case-comparison"
+      - name: Conservar pruebas de comparación, incluidos fallos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: case-comparison-results
+          path: ${{ runner.temp }}/ecg-case-comparison
+          if-no-files-found: ignore
       - name: Conservar pruebas de distribución ST, incluidos fallos
         if: always()
         uses: actions/upload-artifact@v4

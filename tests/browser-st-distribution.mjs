@@ -37,6 +37,7 @@ try {
    if (family !== 'sinus') { await chooseCatalogPreset(page, family); await page.locator('#signal-loading').waitFor({ state:'hidden' }); }
    const trace = await readTrace(page), before = fingerprint(trace), count = await workerReplies(page);
    const paperBefore = hash(await page.locator('#ecg').evaluate(c => c.toDataURL()));
+   if (!await page.locator('#reading-details').evaluate(d => d.open)) await page.locator('#reading-details > summary').click();
    await page.locator('#structured-description [data-action=st-distribution]').click();
    const map = page.locator('.st-distribution'); await map.waitFor();
    const beat = Number(await map.getAttribute('data-beat'));
