@@ -105,7 +105,7 @@ for (const source of sourceRecords.filter(s => s.role === 'exposed' && s.identit
 }
 const report = {
   ...ledger, baseCommit: inventory.baseCommit,
-  auditScope: 'Repository evidence plus bounded local cache file-name inventory; no new reserve downloaded or inspected.',
+  auditScope: 'Repository evidence, documented exploratory patient exposure and bounded local cache file-name inventory; no independent reserve established.',
   identityPolicy: inventory.identityPolicy,
   observedExposedRecordUnions: Object.fromEntries(Object.entries(recordUnions).map(([key, ids]) => [key, { recordCount: ids.length, recordIds: ids, independentPatientCount: null }])),
   provenance: sourceSummaries,

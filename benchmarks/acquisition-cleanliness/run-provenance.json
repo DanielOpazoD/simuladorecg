@@ -1,0 +1,241 @@
+{
+  "schemaVersion": 1,
+  "baselineCommit": "0b704cf00ca623c2062c5efb6dd7086922d7efa7",
+  "decision": "Reject quiet-v1 default; production source restored to baseline",
+  "clinicalValidation": false,
+  "independentClinicalReview": false,
+  "protocolSha256": "64217557e740329eb3b681a57b341999e51124eb9ede1a3dc0f70cc3cd46722f",
+  "evaluatedEvaluatorSha256": "fbe448e313c1090aad87d67c738b300f24fd5f2eb1e0951ab0cbee3e01c69699",
+  "experiment": {
+    "baselineSourceSha256": "d049659fb0117a7efc3ccc5cce2de2a69042db0350032ce1edc19316e1860d57",
+    "evaluatedSourceSha256": "509f40a30369c2979e0e176df8dddc3227a52cc434e920a2c082e4f25ec5714e",
+    "intervention": "Final acquisition floor ×0.5 only when the offline case has acquisitionProfile quiet-v1",
+    "changesProductionFiles": false,
+    "clinicalValidation": false
+  },
+  "sourceHashes": {
+    "src/engine/lead-registry.ts": "7f4fe698cd38931a47d41b99e005ca30f642b05553e4137869bda5f99a8990e3",
+    "src/engine/leads.ts": "ab4a73f2345e133cbbe80757d08c1c64f4c54894f1ca521b82eff7041d386706",
+    "src/engine/regional-activation.ts": "764f8297fcba5cc952d2ff1374dc81010eeab4c056d9c113b106ff4e3b3bd828",
+    "src/engine/ventricular-components.ts": "64ff855354a17e252649b55a43353065581e63f36b1eb52fdcf449f02949a6dc",
+    "src/engine/ventricular-source.ts": "b7755dc72aea392d5560adc5640391b1e65f5888e4159a8c01e032c293c61983",
+    "src/engine/regional-repolarization.ts": "aa4d9f772cb3b5acf523c6f70be451f46b9920692f10481fddfa350e0f05c669",
+    "src/engine/secondary-repolarization.ts": "204c9ed2280ca8f254d22787aa43f8b78fcb85b38a2eff869877a774f1e6dbd7",
+    "src/engine/torsades-frame.ts": "3f055e3d156fe6ec4cd90a250793420093088d11e0c2bba35ed337c9fcd507d3",
+    "src/engine/vvi-demand.ts": "26ea38326981afbfe06d5cd424d5c386c645ff48222bb5f65f8c3accc3f1d3fc",
+    "src/engine/types.ts": "8b1ffa4455d8aca8335c335c742426f3f11b2d7c21a3679597a7698d2af5f41c",
+    "src/engine/random.ts": "c43d0cde693f0587387850510dcf596baecfdbd27932024588005f6a0221b3fe",
+    "src/engine/af-rr.ts": "b559b955deffac0ee022439a6a1ced96591b977de8d158f71d12d510f2b9e2c1",
+    "src/engine/realistic/model-integrity.ts": "ad5c6f9a4623dc041f549c1c837c7d620ae5d03026e3ff2356e08e65f75fcbe8",
+    "src/engine/realistic/ischemia.ts": "05b00becd46b2d9f77e01cdf707c3c2bb1a6fe4ddd076eb215ba401d8556a0b4",
+    "src/engine/realistic/scope.ts": "e20f2d5d3cebd3bcb72dc4afbedafac9c56272fc00f57b617db22fe3b8ba99c1",
+    "src/engine/realistic/af-model.json": "f8e42d977ec54db2762df016e3b73753d58cca4b2ed52cf5f6322bd477041063",
+    "src/engine/realistic/spectral.ts": "ee8b2205bc37cf59be426f812ac0118b1ba5431f6b99f5e26ee1f12ade5377a0",
+    "src/engine/realistic/atrial-fibrillation.ts": "546bc7d4e6f7ed55fffe60fbba0783a0c196e7ff05977c43d614156be9b25f29",
+    "src/engine/flutter-conduction.ts": "bc76e35479f8080568a451ed4a2c2e038ae095ede7fe0e4f61904b66b025a22f",
+    "src/engine/event-calendar.ts": "ae66940fa13352936096d68de122fcc49be549560345fb005f8a16858d61a5fb",
+    "src/engine/rhythm.ts": "8b85452b2bb09f6d90908008e493e0a6461739196819801ee1cf5bb3daff293e",
+    "src/engine/morphology.ts": "30b8dccb6ee2573e9505083f6b11fc725de3ffd4f707dd0c250b9a754f8cb36b",
+    "src/engine/filter.ts": "4e1fe3f43ea33332b0fe13b68f23ce1bd40f0ca496178bcb1a32c8a1ef3bff16",
+    "src/engine/repolarization.ts": "4851f61ec022cd9e2b6310b670a281f368b77203a3739cef21b600f3e554112a",
+    "src/engine/constraints.ts": "df5b208a70190b21916e5e0fa06e32e7a8daa90b073b0fb2629b39df84714040",
+    "src/engine/analysis/statistics.ts": "bdc0b500a3a3883df095054ca9a8298b4c8ea7df7bb336fea01cf266d875e8a6",
+    "src/engine/realistic/normal-shape-model.json": "a519b6ece73a05f8b98a8a3f4b765121725d3f99cbde6db748b9c797d618649f",
+    "src/engine/realistic/shape-model.ts": "c6d5f559db76c43e2a58610b1b05f1a6a3ff7490290ee94dd48286355472aa97",
+    "src/engine/realistic/beat.ts": "394f223e4290fb4888a8327d0822e47861c1e20be0602322d3c639335bc5a63a",
+    "src/engine/realistic/engine.ts": "28b36d5c2fd8f0f33ba2865b3b76944aaee2559bc408cc3a8fc3bbe8db89ad6d",
+    "src/engine/realistic/acquisition.ts": "d049659fb0117a7efc3ccc5cce2de2a69042db0350032ce1edc19316e1860d57",
+    "src/engine/realistic/flutter-model.json": "ea7cf6e7148a7b6e2886148652902ca3b55a5e8b17c9b26224467e24b3bfe134",
+    "src/engine/realistic/atrial-flutter.ts": "2269ec1516ed0ea0e019dfe2741011fc1a3b9d7247567696b7a8e019b35e9fc5",
+    "src/engine/realistic/vf-model.json": "c9b7247e040746c1bca799c98673ab259652636e61c64da490bafff2db98f839",
+    "src/engine/realistic/ventricular-fibrillation.ts": "e0a30a10f54eb4c06dcb5fbdfad5f20ee80daebd25fd9b2c2c455a6e38983c12",
+    "src/engine/signal.ts": "5d273f12dabc01241ff9c1f4384a2823abe96bc8fe9f0d1f75c75ace34702c0e",
+    "src/presets/teaching-limits.ts": "c267affd69fc6d17a73954aeb930c7e38c797c287d06e86e85c5745d5c122985",
+    "src/engine/realistic/natural.ts": "58b3b51c711798578e6b74e9638295e24e5c37d5102bf929c12702598a7e9b45",
+    "src/presets/catalog.ts": "ce2fbfbe9a88035848e13afd7a05bb1e7958ad80306a9f4714cc50625aa6c345",
+    "tests/support/morphology-metrics.ts": "debf760223590e697c39f33dff3183c5a935f7ae8cf6c262c2a53c73c96c622f",
+    "src/engine/analysis/alternating-confidence.ts": "04bda5d6055a539a10d64b88063c9fa22df21122d4575f5acfed189b32d24e23",
+    "src/engine/analysis/ventricular-candidates.ts": "3bfba053cd1211e23f2d0ce5c2e44829b87fa80ba3c0b911f915b563c4a423f4",
+    "src/engine/analysis/impulse-confidence.ts": "c6b5c4a06cf5c65bacf325e8c77517613ee4427af2075b10575898e03dcee62d",
+    "src/engine/measurement-support.ts": "dc5947112104ef130d0ade4eb500deb5be3bc1747dd055f14bef5a590e7bf2e4",
+    "src/engine/terminal-delineation.ts": "5b8f04b5d57a333cdeb4f1b1cd381f8bbc417584a75ba740bfa27543edff8c70",
+    "src/engine/analysis/impulses.ts": "4ed73f13c6b8dc7460c34b9dd37ad5c5561511ea0f6585d30c6b1585ea14ebe2",
+    "src/engine/analysis/evidence.ts": "c6e05ae78b0c08718b3cbe848b47d7431d2ad3a3d41bf73f83608c11f3dfefa3",
+    "src/engine/measure.ts": "8cfb879439238a21b684eeb791c3357cd96bb9828d145b9b823475b1d0a3d693",
+    "src/engine/sample-analysis.ts": "845b22742cb314b61de97e7d538f2b1e267c955cf6f09aa7bff3a0eb70d9973a"
+  },
+  "supplementalProvenance": {
+    "collectedAfterRun": true,
+    "reason": "Original metafile hashes omitted runtime-loaded JSON and evaluator event/matching helpers; verified against the recorded baseline commit, not asserted as run-time capture.",
+    "entries": [
+      {
+        "path": "src/engine/realistic/models/ASMI.json",
+        "worktreeByteSha256": "5ddafdc350b964dd754f5b758e8abdff7b14689c8e321ed2398df774a1b9a1cc",
+        "canonicalLfSha256": "5ddafdc350b964dd754f5b758e8abdff7b14689c8e321ed2398df774a1b9a1cc",
+        "baselineMatches": true
+      },
+      {
+        "path": "src/engine/realistic/models/CLBBB.json",
+        "worktreeByteSha256": "a3af632b52c1f6f9256a31e0ab54ac497952d8e5b12bc352db9b0d40d7cdcc64",
+        "canonicalLfSha256": "a3af632b52c1f6f9256a31e0ab54ac497952d8e5b12bc352db9b0d40d7cdcc64",
+        "baselineMatches": true
+      },
+      {
+        "path": "src/engine/realistic/models/CRBBB.json",
+        "worktreeByteSha256": "2c008a29f022a2ff4ebf36e2502a0b52c6477fb1f1b94ca6b710cf8914a9d106",
+        "canonicalLfSha256": "2c008a29f022a2ff4ebf36e2502a0b52c6477fb1f1b94ca6b710cf8914a9d106",
+        "baselineMatches": true
+      },
+      {
+        "path": "src/engine/realistic/models/IMI.json",
+        "worktreeByteSha256": "d9817597cda563f4a79d7803504a13836cadf2181e248ce95b82516518bfd350",
+        "canonicalLfSha256": "d9817597cda563f4a79d7803504a13836cadf2181e248ce95b82516518bfd350",
+        "baselineMatches": true
+      },
+      {
+        "path": "src/engine/realistic/models/IRBBB.json",
+        "worktreeByteSha256": "d788f2ddfc443ae65861df2bc2c1507b72538cc1caa08e44773c4765efe855a8",
+        "canonicalLfSha256": "d788f2ddfc443ae65861df2bc2c1507b72538cc1caa08e44773c4765efe855a8",
+        "baselineMatches": true
+      },
+      {
+        "path": "src/engine/realistic/models/LAFB.json",
+        "worktreeByteSha256": "d57d7d9b82441d6dbacdc559a9f44b0f48c9fad02249eddc36b89463f309474c",
+        "canonicalLfSha256": "d57d7d9b82441d6dbacdc559a9f44b0f48c9fad02249eddc36b89463f309474c",
+        "baselineMatches": true
+      },
+      {
+        "path": "src/engine/realistic/models/LVH.json",
+        "worktreeByteSha256": "dfd489de9aba0aaa121b297945b7824f7d0da1040a916247d12306cb13d91c7c",
+        "canonicalLfSha256": "dfd489de9aba0aaa121b297945b7824f7d0da1040a916247d12306cb13d91c7c",
+        "baselineMatches": true
+      },
+      {
+        "path": "src/engine/realistic/models/PVC.json",
+        "worktreeByteSha256": "245bbddb130a264d9d76e93e631fe4b0d58116d3032fffaba9f675c1eee8614f",
+        "canonicalLfSha256": "245bbddb130a264d9d76e93e631fe4b0d58116d3032fffaba9f675c1eee8614f",
+        "baselineMatches": true
+      },
+      {
+        "path": "src/engine/realistic/models/VPACE.json",
+        "worktreeByteSha256": "32bea8b995ba9d929932ba25e8d25b2de68e50f49a9a8d9d055422d9a7a69635",
+        "canonicalLfSha256": "32bea8b995ba9d929932ba25e8d25b2de68e50f49a9a8d9d055422d9a7a69635",
+        "baselineMatches": true
+      },
+      {
+        "path": "src/engine/realistic/ischemia/ischemia-model.json",
+        "worktreeByteSha256": "e720c09f55f25ecd59f000676c1f53934bbc24dcc1f9b266e17e739ac5543757",
+        "canonicalLfSha256": "e720c09f55f25ecd59f000676c1f53934bbc24dcc1f9b266e17e739ac5543757",
+        "baselineMatches": true
+      },
+      {
+        "path": "scripts/lib/qrs-event-reference.mjs",
+        "worktreeByteSha256": "a81b2f2490f7c66a4c2d8a9063e3d734552f57062b3a118dfc921e71f76f419b",
+        "canonicalLfSha256": "a81b2f2490f7c66a4c2d8a9063e3d734552f57062b3a118dfc921e71f76f419b",
+        "baselineMatches": true
+      },
+      {
+        "path": "tests/reference/ludb/load-ludb.mjs",
+        "worktreeByteSha256": "f9d346bf75147fce13464bb83125545cb8adc0da1f6cf4db101b6daf39ff4498",
+        "canonicalLfSha256": "f9d346bf75147fce13464bb83125545cb8adc0da1f6cf4db101b6daf39ff4498",
+        "baselineMatches": true
+      }
+    ]
+  },
+  "legacyFixtureSha256": "d748dc234ad3d2d9d39c4661d47699038371acce177e81858f6e641e5d31b17e",
+  "prototypeAndOfflineSummaryIdentical": true,
+  "initialEvaluatorSummary": {
+    "recordings": 207,
+    "expectedRecordings": 207,
+    "historicalFixtures": 18,
+    "failedHistoricalFixtures": 0,
+    "negativeControls": 828,
+    "failedNegativeControls": 207,
+    "failuresByDomain": {
+      "negative-control": 207,
+      "morphology": 123,
+      "analysis": 14
+    },
+    "softwareExecutionFailures": 0
+  },
+  "initialEvaluatorLimitation": "Uniform 2 microvolt manual-artifact subtraction bound omitted limb-coefficient quantization propagation; original report retained. Morphology and analysis gates unchanged.",
+  "localArtifactRoot": "../ECG-QA (sibling of repository; not committed)",
+  "artifacts": [
+    {
+      "relativePath": "quiet-acquisition-20261026/audit-v1/report.json",
+      "bytes": 103914014,
+      "sha256": "aeb6bb82657bff27f55b357f545b0b441203b412c87bc458c0153e68c40027fb"
+    },
+    {
+      "relativePath": "quiet-acquisition-20261026/audit-v1/summary.json",
+      "bytes": 136783,
+      "sha256": "24854e65ce50096ee5f735f638f8bfd40764b981543729b2f3d0a55f0a093889"
+    },
+    {
+      "relativePath": "quiet-acquisition-20261026/audit-v1/evaluator-v1.mjs",
+      "bytes": 20644,
+      "sha256": "a204e95892572e5a2c246b717b532fbc1bcbc2aff4948e5dc69f5be18da5f2cd"
+    },
+    {
+      "relativePath": "quiet-acquisition-20261026/audit-v2/report.json",
+      "bytes": 104276388,
+      "sha256": "b03c9b111fb6d373c89c329c76c73c3a04e99ec2a7ab8afdd420576d4a8e56c8"
+    },
+    {
+      "relativePath": "quiet-acquisition-20261026/audit-v2/summary.json",
+      "bytes": 79930,
+      "sha256": "9ed973e5311dd5aa32f33f2a46b1ffe624bccd3bce5b972a0dac009a410f6e05"
+    },
+    {
+      "relativePath": "quiet-acquisition-20261026/audit-offline/report.json",
+      "bytes": 104276785,
+      "sha256": "9381ed53b0d6c51bc917e87878203ca85bb3afd958c079ee92bc88557db9df46"
+    },
+    {
+      "relativePath": "quiet-acquisition-20261026/audit-offline/summary.json",
+      "bytes": 79930,
+      "sha256": "9ed973e5311dd5aa32f33f2a46b1ffe624bccd3bce5b972a0dac009a410f6e05"
+    },
+    {
+      "relativePath": "noise-tuning-20261026/reference-texture-report.json",
+      "bytes": 575308,
+      "sha256": "d334d5be22201e3b39edf221b8d0a97b41e02efd1d02c39d4dae4b9a78702ea5"
+    },
+    {
+      "relativePath": "noise-tuning-20261026/reference-legacy-quiet.png",
+      "bytes": 266408,
+      "sha256": "6852fe8dc5d1f57d6541c9c785143ece6bcb66b1480768285918cdd2c026bf36"
+    },
+    {
+      "relativePath": "noise-tuning-20261026/exploratory-reference-selection.json",
+      "bytes": 9024,
+      "sha256": "29e42166339682a5e42e9c12468661d53162176109a656b91cfce6a1d257b15c"
+    },
+    {
+      "relativePath": "noise-tuning-20261026/waveform-downloads.json",
+      "bytes": 9750,
+      "sha256": "882c41a286fe4e4e364422cf0c10b4cc0ed0e34034afe02cdebc649822602abc"
+    },
+    {
+      "relativePath": "noise-tuning-20261026/rejected-product-prototype/types.ts",
+      "bytes": 17526,
+      "sha256": "425ccb0e7ca13c8c5455d5540445568063bba571acb99b685f87d399a9954f84"
+    },
+    {
+      "relativePath": "noise-tuning-20261026/rejected-product-prototype/acquisition.ts",
+      "bytes": 8737,
+      "sha256": "cb1a8acdeb8f5d3e339096ddb794799ce9b0a3711c18c3dc1fe4b0667a3ea839"
+    },
+    {
+      "relativePath": "noise-tuning-20261026/rejected-product-prototype/case-context.ts",
+      "bytes": 5372,
+      "sha256": "007fc44d666003a4e86740d98b8e2ecf720c0ce61e41a716487d4e46eab5552b"
+    },
+    {
+      "relativePath": "noise-tuning-20261026/rejected-product-prototype/acquisition-profile.test.ts",
+      "bytes": 4307,
+      "sha256": "72f2223e2146cb1bdd2bb6f71234b98103e12cd590314af128166aa7e48a35b8"
+    }
+  ],
+  "reproductionNote": "Output-directory overwrite protection and explicit provenance for runtime-loaded models/evaluator helpers were added after the offline run without changing evaluator mathematics. Full reports are generated locally by the committed script; rejected result exits 1."
+}
