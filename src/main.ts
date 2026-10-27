@@ -13,6 +13,9 @@ import { descriptionInfoHtml, descriptionInfoTitle } from "./ui/description-info
 import { concealMetricCards, metricsHtml, modelMetricCards } from "./ui/metric-cards";
 import { defaultZoomLead, mountStZoom, stZoomHtml } from "./ui/st-zoom";
 import { mountStDistribution, stDistributionHtml } from "./ui/st-distribution";
+import type { TeachingSnapshot } from "./ui/teaching-workspace";
+import { signalFingerprint, teachingCaseIdentity, type TeachingNote } from "./ui/teaching-notes";
+import { drawTeachingNotes, projectTeachingNote } from "./ui/teaching-export";
 import { visiblePaperLeads } from "./render/paper-viewport";
 import type { Lead } from "./engine/types";
 import { openDialog, closeDialog } from "./ui/dialog";
@@ -72,6 +75,15 @@ import {
 const $ = <T extends Element = HTMLElement>(selector: string) =>
   document.querySelector<T>(selector)!;
 const session = new TraceSession();
+const teachingNotes = new Map<string, TeachingNote[]>(), teachingSnapshots: TeachingSnapshot[] = [];
+const teachingSignalKeys = new WeakMap<Signal, string>();
+let teachingMarksVisible = true;
+let teachingOpening = false;
+function teachingKey(signal: Signal) {
+  let key = teachingSignalKeys.get(signal);
+  if (!key) { key = signalFingerprint(signal); teachingSignalKeys.set(signal, key); }
+  return key + teachingCaseIdentity(c);
+}
 // Start on the sinus preset itself (textbook patient, resting HRV), not on the
 // bare defaults it is built from.
 let c = fromPreset(presetById("sinus")!),
@@ -110,7 +122,7 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  <section id="diagnosis-navigation" class="diagnosis-navigation" aria-label="Variantes del patrón" hidden></section>
  <div id="diagnosis-content">
  <section id="metrics" class="metrics" aria-label="Valores del modelo que generó el ECG"><div class="loading-metrics">Generando señal…</div></section>
- <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><div class="trace-tools">${btn("caliper", "Calibres", "ruler")}${btn("annotations", "Ondas", "eye")}<span class="lens-tools" role="group" aria-label="Lentes OMI">${btn("lens-previous", "ECG previo", "strip")}${btn("lens-change", "Solo el cambio", "pulse")}${btn("lens-st", "Punto J y ST", "ruler")}</span>${btn("pause", "Congelar", "pause")}<details class="paper-menu"><summary class="btn" data-action="paper" aria-label="Papel: velocidad, ganancia, formato y filtro">${icon("grid")}<span>Papel</span></summary><div class="scale-toolbar" id="scale-toolbar"></div></details></div></div>
+ <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><div class="trace-tools">${btn("caliper", "Calibres", "ruler")}${btn("annotations", "Ondas", "eye")}${btn("teaching", "Aula ECG", "book")}${btn("teaching-marks", "Mis marcas", "eye")}<span class="lens-tools" role="group" aria-label="Lentes OMI">${btn("lens-previous", "ECG previo", "strip")}${btn("lens-change", "Solo el cambio", "pulse")}${btn("lens-st", "Punto J y ST", "ruler")}</span>${btn("pause", "Congelar", "pause")}<details class="paper-menu"><summary class="btn" data-action="paper" aria-label="Papel: velocidad, ganancia, formato y filtro">${icon("grid")}<span>Papel</span></summary><div class="scale-toolbar" id="scale-toolbar"></div></details></div></div>
  <div id="quiz-panel" hidden></div><div id="caliper-editor" class="caliper-editor" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small id="monitor-rate-note">No estimable</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
  <p class="trace-context" id="trace-context" hidden></p><div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-context trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div>
  <div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><p id="trace-keyboard-help" class="sr-only">Con foco en el trazado: M, P y R cambian la vista; V y G, la escala; C activa los calibres y espacio congela el monitor. Con calibres, las flechas mueven el extremo seleccionado; Mayús mueve diez pasos. Pulsa ? para abrir la ayuda de atajos.</p></section>
@@ -396,6 +408,12 @@ function syncTraceTools() {
   waves.classList.toggle("active", ready && paper && annotations);
   waves.setAttribute("aria-pressed", String(ready && paper && annotations));
   const practice = !!quiz && !quiz.answer, lesion = !!lesionBaseline(c) && !practice;
+  const teaching = $<HTMLButtonElement>('[data-action="teaching"]');
+  teaching.disabled = !ready || practice;
+  teaching.hidden = practice;
+  const marks = $<HTMLButtonElement>('[data-action="teaching-marks"]');
+  marks.hidden = !ready || practice || !paper || !session.signal || !teachingNotes.get(teachingKey(session.signal))?.length;
+  marks.setAttribute("aria-pressed", String(teachingMarksVisible));
   // Lenses that would reveal the answer are hidden during an unanswered exercise.
   for (const [action, on, enabled] of [["lens-previous", lens.previous, lesion], ["lens-change", lens.change, lesion], ["lens-st", lens.st, !practice]] as const) {
     const b = $<HTMLButtonElement>(`[data-action="${action}"]`), active = ready && paper && enabled && on;
@@ -552,6 +570,15 @@ function draw() {
   );
   if (caliper && layout && session.caliperOn) drawCaliper(canvas, layout, caliper, c);
   syncTraceOverflow();
+  if (layout && c.view.mode === "paper" && !(quiz && !quiz.answer) && !lens.change && teachingMarksVisible) {
+    const all = teachingNotes.get(teachingKey(session.signal)) ?? [];
+    const visible = all.filter(n => layout!.segments.some(segment => projectTeachingNote(n, segment, c.view)));
+    if (visible.length) {
+      const ctx = canvas.getContext("2d")!, scale = canvas.width / layout.widthMm;
+      ctx.save(); ctx.setTransform(scale, 0, 0, scale, 0, 0); drawTeachingNotes(ctx, layout, c.view, visible, visible.map(n => all.indexOf(n) + 1)); ctx.restore();
+    }
+    if (all.length) $("#trace-context").textContent += ` · ${visible.length}/${all.length} marcas personales visibles; abre Aula ECG para verlas todas.`;
+  }
   caliperEditor.update({active:session.caliperOn, layout, caliper, view:c.view, fs:session.signal.fs});
 }
 function animate(t: number) {
@@ -782,7 +809,52 @@ function openStDistribution(lead?: Lead, beat?: number) {
   mountStDistribution($("#dialog-content .st-distribution"), session.signal, c.artifacts.reversed, openStZoom, { lead, beat });
   $("#dialog-content [data-action=close-dialog]").focus();
 }
+async function openTeachingWorkspace() {
+  if (teachingOpening || !session.signal || !session.canExport || (quiz && !quiz.answer)) return;
+  const signal = session.signal, ecg = cloneCase(c), key = teachingKey(signal);
+  teachingOpening = true;
+  let mountTeachingWorkspace: typeof import("./ui/teaching-workspace").mountTeachingWorkspace;
+  try { ({ mountTeachingWorkspace } = await import("./ui/teaching-workspace")); }
+  catch { toast("No se pudo cargar el Aula ECG. Inténtalo de nuevo."); return; }
+  finally { teachingOpening = false; }
+  // A new case or practice question may have arrived while the optional module loaded.
+  if (signal !== session.signal || !session.canExport || (quiz && !quiz.answer)) return;
+  openDialog("Aula ECG · observar, anotar y relacionar", '<div id="teaching-root"></div>');
+  const dialog = $<HTMLDialogElement>("#dialog"), host = $("#teaching-root");
+  dialog.classList.add("teaching-dialog"); dialog.setAttribute("aria-label", "Aula ECG");
+  let auxiliary: SignalController | null = null, cancelLoad: (() => void) | null = null;
+  const dispose = mountTeachingWorkspace(host, {
+    signal, c: ecg, previous: previousSignal,
+    loadPrevious: lesionBaseline(ecg) ? () => new Promise<Signal>((resolve, reject) => {
+      if (previousSignal && signal === session.signal) { resolve(previousSignal); return; }
+      auxiliary = new SignalController((current, _m, _id, previous) => {
+        auxiliary?.dispose(); auxiliary = null; cancelLoad = null;
+        if (!previous || signalFingerprint(current) !== signalFingerprint(signal)) { reject(new Error("No se puede vincular el basal a estas muestras. El registro actual se conserva.")); return; }
+        if (signal === session.signal) previousSignal = previous;
+        resolve(previous);
+      }, message => { auxiliary?.dispose(); auxiliary = null; cancelLoad = null; reject(new Error(message)); });
+      cancelLoad = () => reject(new Error("Comparación cancelada al cerrar el Aula."));
+      auxiliary.request(ecg, signal.duration, { previous: true });
+    }) : undefined,
+    notes: teachingNotes.get(key) ?? [],
+    onNotesChange: notes => { teachingNotes.set(key, notes); draw(); },
+    snapshots: teachingSnapshots,
+    onSnapshot: snapshot => { teachingSnapshots.push(snapshot); },
+  });
+  let finished = false;
+  const cleanup = () => {
+    if (finished) return; finished = true;
+    dispose(); auxiliary?.dispose(); cancelLoad?.(); observer.disconnect();
+    dialog.classList.remove("teaching-dialog"); dialog.removeAttribute("aria-label"); dialog.removeEventListener("close", cleanup);
+  };
+  const observer = new MutationObserver(() => { if (!host.isConnected) cleanup(); });
+  observer.observe($("#dialog-content"), { childList: true });
+  dialog.addEventListener("close", cleanup);
+  $("#dialog-content [data-action=close-dialog]").focus();
+}
 const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
+  teaching: () => openTeachingWorkspace(),
+  "teaching-marks": () => { teachingMarksVisible = !teachingMarksVisible; draw(); },
   "clear-search": () => {
     search = ""; group = "";
     $<HTMLInputElement>("#case-search").value = "";

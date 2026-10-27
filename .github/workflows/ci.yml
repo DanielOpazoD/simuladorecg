@@ -71,6 +71,17 @@ jobs:
           if-no-files-found: ignore
       - name: Metrología independiente de pantalla y PNG
         run: node scripts/check-pixel-metrology.mjs "$RUNNER_TEMP/ecg-pixel-metrology"
+      - name: Aula ECG, anotaciones, comparación y eco ilustrativo
+        run: node tests/browser-teaching-workspace.mjs "$RUNNER_TEMP/ecg-teaching"
+      - name: Medir anotaciones del PNG desde sus píxeles
+        run: node tests/browser-teaching-pixels.mjs "$RUNNER_TEMP/ecg-teaching/pixels"
+      - name: Conservar pruebas del Aula, incluidos fallos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: teaching-workspace-results
+          path: ${{ runner.temp }}/ecg-teaching
+          if-no-files-found: ignore
       - name: Conservar resultados de metrología, incluidos fallos
         if: always()
         uses: actions/upload-artifact@v4
