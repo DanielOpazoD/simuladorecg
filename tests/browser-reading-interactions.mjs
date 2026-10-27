@@ -39,6 +39,7 @@ try{
    const overflowing=await detail.evaluate(root=>[...root.querySelectorAll('p,label,select,figure')].filter(e=>e.checkVisibility()).filter(e=>{const a=e.getBoundingClientRect(),b=root.getBoundingClientRect();return a.left<b.left-2||a.right>b.right+2;}).map(e=>e.className));assert.deepEqual(overflowing,[]);
    if(v.width<600){const box=await page.locator('#dialog').boundingBox();assert(Math.abs(box.x)<2);assert(Math.abs(box.y+box.height-1000)<2);}
    await page.keyboard.press('Escape');assert.equal(await opener.evaluate(e=>e===document.activeElement),true);
+   assert.equal(await opener.evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0)','Lead hit areas must never paint over acquired waves');
    const findings=page.locator('[data-finding]');assert(await findings.count()>0);
    await findings.first().click();assert.equal(await page.locator('[data-finding][aria-pressed=true]').count(),1);assert.equal(await page.locator('#finding-focus').isVisible(),true);
    const banner=await page.locator('#finding-focus').boundingBox();assert(banner.y>=-2&&banner.y<1000,'Explanation and close control stay in the viewport');

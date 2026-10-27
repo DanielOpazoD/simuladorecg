@@ -1,10 +1,9 @@
 #reading-overlay { position:absolute; left:0; top:0; pointer-events:none; }
 #reading-overlay[hidden],.lead-explorer [hidden],#finding-focus[hidden] { display:none!important; }
 .reading-lead-labels { position:relative; z-index:1; }
-.reading-lead-label { position:absolute; display:flex; align-items:center; gap:5px; min-width:44px; min-height:28px; padding:2px 5px; border:0; border-radius:4px; background:#fffdfd; color:#514950; font:500 12px 'IBM Plex Mono',monospace; cursor:pointer; pointer-events:auto; }
-.reading-lead-label span { color:var(--accent); font-size:11px; }
+.reading-lead-label { position:absolute; min-width:44px; min-height:28px; padding:0; border:0; border-radius:4px; background:transparent; cursor:pointer; pointer-events:auto; }
+.reading-lead-arrow { position:absolute; line-height:1; color:var(--accent); }
 .reading-lead-label:hover,.reading-lead-label:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
-.dark .reading-lead-label { background:#081811; color:#97b9a4; }
 .reading-focus-svg { position:absolute; inset:0; width:100%; height:100%; }
 .reading-dim { fill:var(--surface); opacity:.35; }
 .reading-focus-box { fill:none; stroke:var(--accent); stroke-width:.55; }
