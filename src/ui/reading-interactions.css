@@ -1,0 +1,52 @@
+#reading-overlay { position:absolute; left:0; top:0; pointer-events:none; }
+#reading-overlay[hidden],.lead-explorer [hidden],#finding-focus[hidden] { display:none!important; }
+.reading-lead-labels { position:relative; z-index:1; }
+.reading-lead-label { position:absolute; display:flex; align-items:center; gap:5px; min-width:44px; min-height:28px; padding:2px 5px; border:0; border-radius:4px; background:#fffdfd; color:#514950; font:500 12px 'IBM Plex Mono',monospace; cursor:pointer; pointer-events:auto; }
+.reading-lead-label span { color:var(--accent); font-size:11px; }
+.reading-lead-label:hover,.reading-lead-label:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+.dark .reading-lead-label { background:#081811; color:#97b9a4; }
+.reading-focus-svg { position:absolute; inset:0; width:100%; height:100%; }
+.reading-dim { fill:var(--surface); opacity:.35; }
+.reading-focus-box { fill:none; stroke:var(--accent); stroke-width:.55; }
+.finding-button { display:inline; border:0; border-bottom:1px dotted var(--accent); padding:6px 0; font:inherit; line-height:1.5; color:var(--ink); background:none; cursor:pointer; text-align:left; }
+.finding-button:hover,.finding-button[aria-pressed=true] { color:var(--accent); border-bottom-style:solid; }
+.finding-button:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+#finding-focus { position:sticky; top:0; z-index:3; display:flex; align-items:center; gap:12px; padding:10px 16px; background:var(--surface); border-bottom:1px solid var(--line); font-size:var(--text-sm); }
+#finding-focus > div { flex:1; min-width:0; }
+#finding-focus p { margin:3px 0 0; color:var(--muted); font-size:var(--text-xs); }
+#finding-focus button { flex:none; }
+.trace-panel.reading-focused { overflow:visible; }
+dialog.lead-dialog { width:min(820px,calc(100% - 24px)); max-height:88dvh; }
+.lead-dialog .dialog-head { position:sticky; top:-1px; z-index:2; background:var(--surface); padding:12px 0; margin-bottom:10px; }
+.lead-explorer { min-width:0; overflow-wrap:anywhere; }
+.lead-detail-top { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.lead-detail-top label { display:flex; gap:8px; align-items:center; font-size:var(--text-sm); }
+.lead-detail-top select { min-height:44px; background:var(--surface); color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:8px; font:inherit; }
+.lead-detail-time,.lead-detail-scale,.lead-detail-limit { color:var(--muted); font-size:var(--text-xs); line-height:1.5; }
+.lead-detail-observe { font-size:var(--text-sm); line-height:1.6; margin:14px 0; }
+.lead-detail-scroll { overflow:auto; max-height:44dvh; border:1px solid var(--line); border-radius:8px; }
+.lead-detail-scroll:focus-visible { outline:2px solid var(--accent); }
+.lead-detail-trace { display:block; max-width:none; height:auto; margin-inline:auto; }
+.lead-paper { fill:#fffdfd; }
+.lead-grid-fine { fill:none; stroke:#f4e3e6; stroke-width:.12; }
+.lead-grid-bold { fill:none; stroke:#dfb7bf; stroke-width:.18; }
+.lead-sample-path { fill:none; stroke:#22353c; stroke-width:.22; stroke-linejoin:round; }
+.dark .lead-paper { fill:#081811; }
+.dark .lead-grid-fine { stroke:#133125; }
+.dark .lead-grid-bold { stroke:#244333; }
+.dark .lead-sample-path { stroke:#70ef9c; }
+.lead-detail-orientation .st-projections { display:block; margin:0; }
+.lead-detail-orientation .st-projections figure { max-width:240px; margin:12px auto 0; }
+.lead-detail-orientation figcaption { text-align:center; }
+.lead-detail-limit { text-align:center; margin-bottom:0; }
+@media(max-width:600px) {
+ dialog.lead-dialog { position:fixed; inset:auto 0 0; margin:0; width:100%; max-width:100%; max-height:90dvh; border-radius:18px 18px 0 0; padding-bottom:env(safe-area-inset-bottom); }
+ .lead-dialog #dialog-content { padding:0 18px 18px; }
+ .lead-dialog .dialog-head { margin:0 -2px 8px; }
+ .lead-detail-top { gap:4px; }
+ .lead-detail-top label { flex:1; }
+ .lead-detail-time { flex-basis:100%; margin:4px 0; }
+ .lead-detail-orientation .st-projections figure { max-width:180px; }
+ .reading-lead-label { min-height:32px; }
+}
+@media print { #reading-overlay,#finding-focus { display:none!important; } }
