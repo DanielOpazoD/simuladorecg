@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_CASE, cloneCase, type ECGCase, type Signal } from "../src/engine/types";
 import { makeArrays } from "../src/engine/leads";
-import { renderPaper } from "../src/render/ecg";
+import { paperLayout, renderPaper } from "../src/render/ecg";
+import { caliperMeasurement, caliperPosition, segmentIndexAt } from "../src/render/caliper-geometry";
 
 type TextDraw = { text: string; x: number; y: number; maxWidth?: number; font: string };
 function recorder() {
@@ -22,6 +23,25 @@ const fontSize = (font: string) => Number(font.match(/([\d.]+)px/)![1]);
 const formats: ECGCase["view"]["format"][] = ["3x4", "3x4+1", "3x4+3", "6x2", "12x1"];
 
 describe("paper editorial bands preserve calibrated signal space", () => {
+  it.each(formats)("%s preserves time windows and caliper scale across narrow gaps", format => {
+    const c = cloneCase(DEFAULT_CASE); c.view.format = format;
+    for (const timing of ["sequential", "simultaneous"] as const) {
+      c.view.timing = timing;
+      const layout = paperLayout(c, 1000, undefined, 80);
+      const columns = format === "6x2" ? 2 : format === "12x1" ? 1 : 4, rows = 12 / columns;
+      for (let i = 0; i < 12; i++) {
+        const seg = layout.segments[i], col = Math.floor(i / rows);
+        expect(seg.duration).toBe(10 / columns);
+        expect(seg.start).toBe(timing === "sequential" ? col * 10 / columns : 0);
+        expect(seg.baseline - 80).toBeGreaterThan(seg.y + 6); // clear label band even at the extreme
+        const cal = {segment: i, x1: seg.x, x2: seg.x + 5, y1: seg.baseline, y2: seg.baseline - 10};
+        expect(caliperMeasurement(cal, layout, c.view)).toEqual({ms: 200, mm: 10, mv: 1});
+        expect(caliperPosition(cal, 1, layout, c.view).timeMs).toBe(seg.start * 1000);
+        if (col > 0) expect(segmentIndexAt(layout, {x: seg.x - .5, y: seg.baseline})).toBe(-1);
+      }
+      for (const strip of layout.segments.slice(12)) expect([strip.start, strip.duration]).toEqual([0, 10]);
+    }
+  });
   it("the compact workspace preserves every lead and the export geometry without redundant technical captions", () => {
     const c = cloneCase(DEFAULT_CASE), s = signal(), compact = recorder(), exported = recorder();
     const a = renderPaper(compact.canvas, s, c, 1000, {ratio: 1, compactHeader: true});
@@ -47,10 +67,10 @@ describe("paper editorial bands preserve calibrated signal space", () => {
     const r = recorder(), layout = renderPaper(r.canvas, s, c, 390, {ratio: 1});
     const columns = format === "6x2" ? 2 : format === "12x1" ? 1 : 4;
     const rows = 12 / columns + (format === "3x4+1" ? 1 : format === "3x4+3" ? 3 : 0);
-    expect(layout.widthMm).toBe(16 + 6 * columns + 125);
-    expect(layout.heightMm).toBe(26 + rows * 166); // 4 mV ×20 mm/mV, ±80 mm +6 mm padding
+    expect(layout.widthMm).toBe(22 + (columns - 1) + 125);
+    expect(layout.heightMm).toBe(26 + rows * 172); // ±80 mm, 6 mm label band and 6 mm signal clearance
     expect(layout.segments[0].y).toBe(18);
-    expect(layout.segments[0].baseline).toBe(101);
+    expect(layout.segments[0].baseline).toBe(107);
     expect(s.leads.II).toEqual(before);
     const header = r.texts.filter(t => t.y < 18), footer = r.texts.filter(t => t.y > layout.heightMm - 8);
     expect(header).toHaveLength(3); expect(footer).toHaveLength(2);

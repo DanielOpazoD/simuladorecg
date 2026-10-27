@@ -100,4 +100,5 @@ jobs:
             ${{ runner.temp }}/ecg-pixel-metrology/results.json
             ${{ runner.temp }}/ecg-pixel-metrology/screen-*.png
             ${{ runner.temp }}/ecg-pixel-metrology/export-*.png
+            ${{ runner.temp }}/ecg-pixel-metrology/continuity-*.png
           if-no-files-found: ignore

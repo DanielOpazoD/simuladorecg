@@ -128,3 +128,28 @@ para esa comprobación. La corrección afecta únicamente al instrumento, conser
 el criterio de dos píxeles y no cambia fuentes, muestras, renderer ni exportador.
 La reproducción de un artefacto aislado no sustituye una nueva ejecución de toda
 la matriz en Linux; el estado de esa ejecución se comunica por separado en CI.
+
+## Ampliación previa: continuidad entre derivaciones (26-10-2026)
+
+Sobre `0befbda`, antes de medir el candidato, se fijó una separación nominal de
+1 mm entre columnas. La petición posterior «ambas cosas» exige además más
+latidos: la interfaz empieza en 6×2, con 5 s por derivación; conserva el formato
+compacto 3×4+1 y los formatos de casos importados. No se unen señales de distintas
+derivaciones, se suavizan muestras ni se cambian las ventanas de cada formato.
+
+El instrumento adicional recibe una señal constante de +0,5 mV. Recupera la
+escala de la cuadrícula y los tramos largos de tinta desde capturas y descargas
+PNG reales, sin importar geometría de producción. Exige seis filas de dos
+tramos separados en 6×2; en 3×4+1, tres filas de cuatro tramos y una tira continua.
+El hueco óptico admisible es **0,3–1,5 mm**, incluyendo pluma y discretización.
+Se fija antes de ejecutar el candidato y no sustituye la tolerancia de 2 píxeles
+del instrumento de calibración. La matriz adicional cubre ambos formatos en
+1440 px/DPR 1 y 390 px/DPR 2, a 25 mm/s y 10 mm/mV, paleta de papel estándar.
+
+Dos corrupciones de píxeles por formato deben rechazarse: unir dos derivaciones
+con tinta y borrar un hueco de 5 mm. Se conservan sus métricas, todas las capturas
+y PNG, también ante fallo; las muestras originales deben permanecer idénticas.
+No prueba todos los formatos, estilos, valores de ganancia o velocidades, ni
+percepción de continuidad o comprensión en un estudio con alumnos. Los criterios
+de interfaz y la respuesta del usuario se conservan en la evidencia local de
+esta ronda. Estas comprobaciones no elevan la plausibilidad clínica del modelo.

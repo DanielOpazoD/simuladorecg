@@ -1,12 +1,9 @@
-import { esc } from "../src/ui/helpers";
-import { presetTitle } from "../src/presets/nomenclature";
 import { describe, expect, it } from "vitest";
-import { PRESETS } from "../src/presets/catalog";
 import { aboutDialogHtml, keyboardHelpHtml } from "../src/ui/about-dialog";
 
 describe("about dialog content", () => {
   it("offers the same keyboard help folded in the guide and alone", () => {
-    const html = aboutDialogHtml([]);
+    const html = aboutDialogHtml();
     expect(html).toContain(`<details class="keyboard-help"><summary>Atajos de teclado</summary>${keyboardHelpHtml()}</details>`);
     expect(html).not.toContain('class="keyboard-help" open');
   });
@@ -21,7 +18,7 @@ describe("about dialog content", () => {
     expect(html).not.toContain("Siguiente caso");
   });
   it("retains the educational and measurement limitations", () => {
-    const html = aboutDialogHtml([]);
+    const html = aboutDialogHtml();
     for (const text of [
       "Las pruebas técnicas no constituyen validación clínica.",
       "No utiliza trazados grabados ni imágenes de pacientes.",
@@ -36,19 +33,9 @@ describe("about dialog content", () => {
       expect(html).toContain(text);
   });
 
-  it("renders each preset with its existing strategy and limitation in order", () => {
-    const html = aboutDialogHtml(PRESETS);
-    const rows = [...html.matchAll(/<tr><td>(.*?)<\/td><td>(.*?)<\/td><td>(.*?)<\/td><\/tr>/g)];
-    expect(rows).toHaveLength(PRESETS.length);
-    expect(rows.map((row) => row.slice(1))).toEqual(PRESETS.map((preset) => [
-      esc(presetTitle(preset)),
-      { pending: "Pendiente", local: "Aproximado · ajuste local", vectorial: "Aproximado · vectorial" }[preset.strategy],
-      esc(preset.limitation),
-    ]));
-  });
 
   it("retains references as HTTPS links opening with noopener", () => {
-    const html = aboutDialogHtml([]);
+    const html = aboutDialogHtml();
     const links = [...html.matchAll(/<a href="([^"]+)" target="_blank" rel="noopener">/g)];
     expect(links).toHaveLength(12);
     expect(links.every((link) => link[1].startsWith("https://"))).toBe(true);
@@ -58,17 +45,12 @@ describe("about dialog content", () => {
       expect(html).toContain(source);
   });
 
-  it("keeps the table structure without inventing rows for an empty catalog", () => {
-    const html = aboutDialogHtml([]);
-    expect(html).toContain('<th scope="col">Patrón</th><th scope="col">Estado / estrategia</th><th scope="col">Límite</th>');
-    expect(html).toContain("<tbody></tbody>");
-  });
 
-  it("keeps technical material behind four native disclosures without nested controls", () => {
-    const html = aboutDialogHtml(PRESETS);
+  it("keeps technical material behind three native disclosures without nested controls", () => {
+    const html = aboutDialogHtml();
     const summaries = [...html.matchAll(/<summary>(.*?)<\/summary>/gs)].map(m => m[1]);
     expect(summaries).toEqual([
-      "Cómo se genera", "Referencias y atribución", "Catálogo y límites", "Atajos de teclado",
+      "Modelo y límites", "Referencias y atribución", "Atajos de teclado",
     ]);
     expect(html).not.toMatch(/<details[^>]*\sopen(?:\s|>)/);
     for (const summary of summaries) expect(summary).not.toMatch(/<(?:button|a)\b/);

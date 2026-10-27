@@ -89,6 +89,9 @@ let c = fromPreset(presetById("sinus")!),
   layout: Layout | null = null,
   paperAmplitudeMm: number | undefined,
   monitor: Monitor | null = null;
+// Five seconds per lead makes the initial reading less fragmented. Imported
+// cases keep their selected format, and catalog changes retain the current view.
+c.view.format = "6x2";
 let stHighlight = false;
 // The contrafactual remains inside the advanced Aula, never presented as a prior recording.
 let previousSignal: Signal | null = null;
@@ -116,11 +119,11 @@ applyTheme(readTheme());
 const root = $("#app");
 root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="ECG Lab, inicio">${icon("pulse")}<span>ECG<span class="brand-light">lab</span></span></a><nav aria-label="Herramientas"><button class="btn mobile-cases" data-action="catalog">${icon("menu")}<span>Casos</span></button>${btn("quiz", "Practicar", "quiz")}${btn("export", "Exportar", "download")}${btn("theme", "Tema", "sun", "icon-button")}</nav></header>
  <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><h2>Biblioteca de patrones</h2>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Patrón, sigla o palabra…" aria-label="Buscar caso"/></label><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div></aside>
- <main class="workspace"><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><div id="exploration-context" class="exploration-context" hidden></div></div><div class="case-state">${btn("parameters", "Ajustar", "settings", "subtle")}${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
+ <main class="workspace"><section class="case-heading"><div><div class="case-category" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><div id="exploration-context" class="exploration-context" hidden></div></div><div class="case-state">${btn("reset", "Restablecer", "reset", "subtle")}</div></section>
  <section id="diagnosis-navigation" class="diagnosis-navigation" aria-label="Variantes del patrón" hidden></section>
  <div id="diagnosis-content">
  <section id="metrics" class="metrics" aria-label="Valores del modelo que generó el ECG"><div class="loading-metrics">Generando señal…</div></section>
- <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><div class="trace-tools">${btn("caliper", "Medir", "ruler")}${btn("compare", "Comparar", "strip")}${btn("teaching", "Aula", "book")}${btn("pause", "Congelar", "pause")}<details class="paper-menu"><summary class="btn" data-action="paper">${icon("settings")}<span>Vista</span>${icon("chevron")}</summary><div class="view-options"><div class="scale-toolbar" id="scale-toolbar"></div><div class="view-overlays" aria-label="Ayudas visuales">${btn("annotations", "Marcar ondas", "eye")}${btn("lens-st", "Resaltar ST", "ruler")}${btn("teaching-marks", "Mostrar mis marcas", "eye")}</div></div></details></div></div>
+ <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><div class="trace-tools">${btn("caliper", "Medir", "ruler")}${btn("compare", "Comparar", "strip")}${btn("pause", "Congelar", "pause")}<details class="paper-menu"><summary class="btn" data-action="paper">${icon("settings")}<span>Vista</span>${icon("chevron")}</summary><div class="view-options"><div class="scale-toolbar" id="scale-toolbar"></div><div class="view-overlays" aria-label="Ayudas visuales">${btn("annotations", "Marcar ondas", "eye")}${btn("lens-st", "Resaltar ST", "ruler")}${btn("teaching-marks", "Mostrar mis marcas", "eye")}${btn("teaching", "Aula: anotar y explorar", "book")}</div></div></details></div></div>
  <div id="quiz-panel" hidden></div><div id="caliper-editor" class="caliper-editor" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small id="monitor-rate-note">No estimable</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
  <p class="sr-only" id="trace-context" hidden></p><div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-context trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div><p class="trace-scroll-hint" id="trace-scroll-hint" hidden>Desliza para ver el trazado completo.</p>
  <div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><p id="trace-keyboard-help" class="sr-only">Con foco en el trazado: M, P y R cambian la vista; V y G, la escala; C activa los calibres y espacio congela el monitor. Con calibres, las flechas mueven el extremo seleccionado; Mayús mueve diez pasos. Pulsa ? para abrir la ayuda de atajos.</p></section>
@@ -241,7 +244,7 @@ function renderInfo() {
   $<HTMLButtonElement>('[data-action="reset"]').hidden = !!concealed || (!!explorationOrigin && !customExploration);
   $<HTMLButtonElement>('[data-action="export"]').disabled = !!concealed;
   $("#adjust").hidden = !!concealed;
-  $<HTMLButtonElement>('[data-action="parameters"]').disabled = !!concealed;
+  $(".case-state").hidden = $<HTMLButtonElement>('[data-action="reset"]').hidden;
   $("#catalog").classList.toggle("quiz-concealed", !!concealed);
 }
 function renderMetrics() {
@@ -337,10 +340,10 @@ function renderScales() {
           "Formato",
           [
             ["3x4", "3 × 4"],
-            ["3x4+1", "3 × 4 + ritmo II"],
+            ["3x4+1", "Compacto · 3 × 4 + ritmo II"],
             ["3x4+3", "3 × 4 + 3 tiras"],
-            ["6x2", "6 × 2"],
-            ["12x1", "12 × 1"],
+            ["6x2", "5 s por derivación · 6 × 2"],
+            ["12x1", "10 s por derivación · 12 × 1"],
           ],
           c.view.format,
         )
@@ -715,7 +718,7 @@ function showAbout(showAnalyzer = false) {
   }
   openDialog(
     "Información y fuentes",
-    `<div class="information-content"><p class="dialog-lead">ECG sintéticos para aprender. Las cifras de la pantalla son valores del modelo; las mediciones automáticas se consultan aquí.</p>${caseInfo}${aboutDialogHtml(PRESETS)}</div>`,
+    `<div class="information-content"><p class="dialog-lead">ECG sintéticos para aprender. Las cifras de la pantalla son valores del modelo; las mediciones automáticas se consultan aquí.</p>${caseInfo}${aboutDialogHtml()}</div>`,
   );
   if (showAnalyzer) $("#analyzer-info")?.scrollIntoView({ block: "start" });
 }
@@ -820,6 +823,9 @@ async function openTeachingWorkspace() {
   finally { teachingOpening = false; }
   // A new case or practice question may have arrived while the optional module loaded.
   if (signal !== session.signal || !session.canExport || (quiz && !quiz.answer)) return;
+  const menu = $<HTMLDetailsElement>(".paper-menu");
+  menu.open = false;
+  menu.querySelector<HTMLElement>("summary")!.focus({ preventScroll: true });
   openDialog("Aula ECG · observar, anotar y relacionar", '<div id="teaching-root"></div>');
   const dialog = $<HTMLDialogElement>("#dialog"), host = $("#teaching-root");
   dialog.classList.add("teaching-dialog"); dialog.setAttribute("aria-label", "Aula ECG");

@@ -7,6 +7,7 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { build } from 'esbuild';
 import { chromium } from 'playwright';
+import { inspectPaperContinuity } from './lib/paper-continuity-oracle.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const started=performance.now();
@@ -42,6 +43,13 @@ window.exportPng=async()=>{
     toast:m=>message=m,refreshDialog:()=>{}});
   return message;
 };
+window.prepareContinuity=(settings)=>{
+  window.prepare(settings);
+  Object.assign(state.c.view,{format:settings.format,cabrera:false,timing:'sequential'});
+  for(const lead of LEADS)state.s.leads[lead].fill(.5);
+  state.before=LEADS.map(l=>Array.from(state.s.leads[l]));
+  renderPaper(canvas,state.s,state.c,innerWidth-32,{compactHeader:true});
+};
 window.samplesUnchanged=()=>Object.keys(state.s.leads).every((l,k)=>
   state.s.leads[l].every((v,i)=>Object.is(v,state.before[k][i])));
 `;
@@ -56,7 +64,7 @@ const url=`http://127.0.0.1:${server.address().port}/`;
 let browser;
 const report={protocol:'pixel-metrology-v1',browser:null,browserPlugin:'not available',
   oracle:'RGBA pixels; no production layout or geometry helpers',tolerancePixels:2,
-  cases:[],negativeControls:[],failures:[],clinicalValidation:false};
+  cases:[],negativeControls:[],continuity:[],continuityNegativeControls:[],failures:[],clinicalValidation:false};
 report.bundleSha256=createHash('sha256').update(bundle.outputFiles[0].text).digest('hex');
 report.scriptSha256=createHash('sha256').update(await readFile(fileURLToPath(import.meta.url))).digest('hex');
 report.protocolSha256=createHash('sha256').update(await readFile(path.join(root,'docs/pixel-metrology-contract.md'))).digest('hex');
@@ -314,11 +322,38 @@ try{
     }
     await context.close();
   }
+  for(const format of ['6x2','3x4+1'])for(const width of [1440,390]) {
+    const settings={format,width,speed:25,gain:10,cabrera:false},columns=format==='6x2'?2:4,rhythmRows=format==='6x2'?0:1;
+    const context=await browser.newContext({viewport:{width,height:960},deviceScaleFactor:width===390?2:1,acceptDownloads:true});
+    const page=await context.newPage(),errors=[];
+    page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+    await page.goto(url);await page.waitForFunction(()=>typeof window.prepareContinuity==='function');
+    await page.evaluate(s=>window.prepareContinuity(s),settings);
+    const stem=`continuity-${format}-${width}`;
+    const screenshot=await page.locator('canvas').screenshot({path:path.join(out,stem+'-screen.png')});
+    const input={base64:screenshot.toString('base64'),columns,rhythmRows};
+    const screen=await page.evaluate(inspectPaperContinuity,input);
+    const promise=page.waitForEvent('download');
+    assert.equal(await page.evaluate(()=>window.exportPng()),'PNG exportado a 300 dpi');
+    const download=await promise;await download.saveAs(path.join(out,stem+'-export.png'));
+    const png=await readFile(path.join(out,stem+'-export.png'));
+    const exported=await page.evaluate(inspectPaperContinuity,{...input,base64:png.toString('base64')});
+    const samplesUnchanged=await page.evaluate(()=>window.samplesUnchanged());
+    report.continuity.push({settings,screen,exported,density:pngDensity(png),samplesUnchanged,errors,
+      passed:screen.passed&&exported.passed&&samplesUnchanged&&!errors.length});
+    if(width===1440)for(const mutation of ['bridge','wide-gap']) {
+      const observed=await page.evaluate(inspectPaperContinuity,{...input,mutation});
+      report.continuityNegativeControls.push({format,mutation,observed,rejected:!observed.passed});
+    }
+    await context.close();
+  }
 }catch(error){report.failures.push(error.stack||String(error));}
 finally{await browser?.close();await new Promise(resolve=>server.close(resolve));}
 report.passed=report.cases.length===matrix.length&&report.failures.length===0&&report.cases.every(c=>c.failures.length===0)&&report.negativeControls.length===3&&report.negativeControls.every(c=>c.rejected);
+report.passed &&= report.continuity.length===4 && report.continuity.every(c=>c.passed) && report.continuityNegativeControls.length===4 && report.continuityNegativeControls.every(c=>c.rejected);
 report.elapsedMs=Math.round(performance.now()-started);
 await writeFile(path.join(out,'results.json'),JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify({passed:report.passed,cases:report.cases.length,negativeControls:report.negativeControls.length,
+  continuity:report.continuity.map(c=>({settings:c.settings,passed:c.passed})),continuityNegativeControls:report.continuityNegativeControls.map(c=>({format:c.format,mutation:c.mutation,rejected:c.rejected})),
   failures:report.failures,caseFailures:report.cases.flatMap((c,i)=>c.failures.map(f=>({case:i,error:f}))),evidence:out},null,2));
 if(!report.passed)process.exitCode=1;
