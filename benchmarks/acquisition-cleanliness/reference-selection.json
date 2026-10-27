@@ -1,0 +1,578 @@
+{
+  "schemaVersion": 1,
+  "role": "Exploratory descriptive comparison only; NOT independent holdout or clinical validation",
+  "dataset": "PTB-XL",
+  "version": "1.0.3",
+  "source": "https://physionet.org/files/ptb-xl/1.0.3/",
+  "metadataSha256": "7600de9c1b27d181d850b3c6038a35d7c3ddb6bb33b702e3a20252a6859d216b",
+  "checksumListSha256": "b7224b92b341511ec3ceb13dc6652079b2c36a06504bcb49506f157f51dc695d",
+  "exposureAuditSha256": "fcde6f77451ac663f4e58dd7363c8950b6ae5bacb5a376b57c44ac3cf9d32c91",
+  "knownExposedPatientsAllDatasets": 611,
+  "knownExposedPTBXLPatients": 605,
+  "selection": {
+    "seed": 20261026,
+    "perFold": 10,
+    "folds": [
+      9,
+      10
+    ],
+    "oneRecordPerPatient": true,
+    "chooseRecord": "smallest ecg_id within chosen patient",
+    "adultAgeInclusive": [
+      18,
+      89
+    ],
+    "codes": "NORM confidence >=100 and SR present",
+    "qualityFlagsMustBeEmpty": [
+      "pacemaker",
+      "electrodes_problems",
+      "burst_noise",
+      "static_noise",
+      "baseline_drift",
+      "extra_beats"
+    ],
+    "waveformsInspectedBeforeSelection": false
+  },
+  "eligiblePatientCounts": {
+    "9": 484,
+    "10": 472
+  },
+  "knownExposedEligibleRecordsExcluded": 0,
+  "independenceEstablished": false,
+  "holdoutReady": false,
+  "clinicalValidation": false,
+  "limitations": [
+    "The executed membership of shape/noise model training is incomplete.",
+    "Historical NORM600 fold9-10 cohort was repeatedly used for development and its patient membership is unavailable. These selected patients may overlap that cohort.",
+    "Exclusion of 605 observed PTB-XL patients is only an exclusion of known exposure, not proof of independence.",
+    "Empty quality annotations do not establish artifact-free waveforms.",
+    "NORM/SR comparison cannot validate disease-specific morphology or clinical plausibility."
+  ],
+  "mirror": "https://physionet-open.s3.amazonaws.com/ptb-xl/1.0.3/",
+  "license": "CC-BY-4.0",
+  "licenseUrl": "https://physionet.org/content/ptb-xl/1.0.3/",
+  "selectionPolicy": "Frozen metadata-only selection. Never regenerate or replace members to repair a failure.",
+  "historicalExposureAudit": "evidence-audit-final-v3.json, recovered outside repository; hash retained above",
+  "records": [
+    {
+      "recordId": 673,
+      "patientId": "2745",
+      "fold": 9,
+      "filename_hr": "records500/00000/00673_hr",
+      "qualityFlags": {
+        "pacemaker": "",
+        "electrodes_problems": "",
+        "burst_noise": "",
+        "static_noise": "",
+        "baseline_drift": "",
+        "extra_beats": ""
+      },
+      "files": {
+        ".hea": {
+          "path": "records500/00000/00673_hr.hea",
+          "sha256": "b5bc37d4277aa561d52800bfc7fd52e8a6bbd2c30723eb43464b8ec4d04416cd",
+          "bytes": 605
+        },
+        ".dat": {
+          "path": "records500/00000/00673_hr.dat",
+          "sha256": "ba6ae79c6621d86c1e65d1bbb0407c2036077192f49091ee5bd9b4a434545fa4",
+          "bytes": 120000
+        }
+      }
+    },
+    {
+      "recordId": 3404,
+      "patientId": "2293",
+      "fold": 9,
+      "filename_hr": "records500/03000/03404_hr",
+      "qualityFlags": {
+        "pacemaker": "",
+        "electrodes_problems": "",
+        "burst_noise": "",
+        "static_noise": "",
+        "baseline_drift": "",
+        "extra_beats": ""
+      },
+      "files": {
+        ".hea": {
+          "path": "records500/03000/03404_hr.hea",
+          "sha256": "bff2152554ae558aa91e0c79f024a857965a9c481d36b4655293fb27996e1c4c",
+          "bytes": 617
+        },
+        ".dat": {
+          "path": "records500/03000/03404_hr.dat",
+          "sha256": "5013d2719c060e1b22164137f96c3e7efa00f950b8a3ae184e594fd14965834e",
+          "bytes": 120000
+        }
+      }
+    },
+    {
+      "recordId": 3746,
+      "patientId": "12333",
+      "fold": 9,
+      "filename_hr": "records500/03000/03746_hr",
+      "qualityFlags": {
+        "pacemaker": "",
+        "electrodes_problems": "",
+        "burst_noise": "",
+        "static_noise": "",
+        "baseline_drift": "",
+        "extra_beats": ""
+      },
+      "files": {
+        ".hea": {
+          "path": "records500/03000/03746_hr.hea",
+          "sha256": "57ea82bc51fdf1f120093208e8e3f1688590ef0211dc351f2bfc7a12cc8a7071",
+          "bytes": 604
+        },
+        ".dat": {
+          "path": "records500/03000/03746_hr.dat",
+          "sha256": "2f28fa099bd063f2fcf17e8b8f55063a9aa638faf99be85c81c55748b9ba8370",
+          "bytes": 120000
+        }
+      }
+    },
+    {
+      "recordId": 5403,
+      "patientId": "19194",
+      "fold": 9,
+      "filename_hr": "records500/05000/05403_hr",
+      "qualityFlags": {
+        "pacemaker": "",
+        "electrodes_problems": "",
+        "burst_noise": "",
+        "static_noise": "",
+        "baseline_drift": "",
+        "extra_beats": ""
+      },
+      "files": {
+        ".hea": {
+          "path": "records500/05000/05403_hr.hea",
+          "sha256": "74ebaded73be5fb0a4bcce91432372739e6eaf984aa29d3b99be8c1b986a0417",
+          "bytes": 606
+        },
+        ".dat": {
+          "path": "records500/05000/05403_hr.dat",
+          "sha256": "149d745508352d7c0c58647fb44f387d20e3fc44a3b825e0eefe1fc491206f92",
+          "bytes": 120000
+        }
+      }
+    },
+    {
+      "recordId": 8248,
+      "patientId": "15738",
+      "fold": 9,
+      "filename_hr": "records500/08000/08248_hr",
+      "qualityFlags": {
+        "pacemaker": "",
+        "electrodes_problems": "",
+        "burst_noise": "",
+        "static_noise": "",
+        "baseline_drift": "",
+        "extra_beats": ""
+      },
+      "files": {
+        ".hea": {
+          "path": "records500/08000/08248_hr.hea",
+          "sha256": "62704df45119a0614e9b9b8ecd11fcb5b7c9f09bc73b9fde7cbaa7f85605e3a1",
+          "bytes": 607
+        },
+        ".dat": {
+          "path": "records500/08000/08248_hr.dat",
+          "sha256": "4de4d9629c63c50a2b81e4392faa25071f9be1f43bedba710a89c4ec3a3447f7",
+          "bytes": 120000
+        }
+      }
+    },
+    {
+      "recordId": 11791,
+      "patientId": "3007",
+      "fold": 9,
+      "filename_hr": "records500/11000/11791_hr",
+      "qualityFlags": {
+        "pacemaker": "",
+        "electrodes_problems": "",
+        "burst_noise": "",
+        "static_noise": "",
+        "baseline_drift": "",
+        "extra_beats": ""
+      },
+      "files": {
+        ".hea": {
+          "path": "records500/11000/11791_hr.hea",
+          "sha256": "71a45e456548411ad86f80120790baf24611aa4c743ef0528d81d14671d15042",
+          "bytes": 604
+        },
+        ".dat": {
+          "path": "records500/11000/11791_hr.dat",
+          "sha256": "bb9df552103fc60f493c2b86da3f1e768adf032961a0c247179d1a162d111cd6",
+          "bytes": 120000
+        }
+      }
+    },
+    {
+      "recordId": 13916,
+      "patientId": "8554",
+      "fold": 9,
+      "filename_hr": "records500/13000/13916_hr",
+      "qualityFlags": {
+        "pacemaker": "",
+        "electrodes_problems": "",
+        "burst_noise": "",
+        "static_noise": "",
+        "baseline_drift": "",
+        "extra_beats": ""
+      },
+      "files": {
+        ".hea": {
+          "path": "records500/13000/13916_hr.hea",
+          "sha256": "8ba3f934062985a9955232de0035f722031dbeab9d9b2e4c1f9ee508d1b007a2",
+          "bytes": 614
+        },
+        ".dat": {
+          "path": "records500/13000/13916_hr.dat",
+          "sha256": "7c2dfe39a0d2d2c71a735f99774e7a1556102388e754369c7cd148a5abaca926",
+          "bytes": 120000
+        }
+      }
+    },
+    {
+      "recordId": 16524,
+      "patientId": "4772",
+      "fold": 9,
+      "filename_hr": "records500/16000/16524_hr",
+      "qualityFlags": {
+        "pacemaker": "",
+        "electrodes_problems": "",
+        "burst_noise": "",
+        "static_noise": "",
+        "baseline_drift": "",
+        "extra_beats": ""
+      },
+      "files": {
+        ".hea": {
+          "path": "records500/16000/16524_hr.hea",
+          "sha256": "fe82b2ceaab35eabbf27c2735f1b0667de212edb3f1c956266aa4736784c7e05",
+          "bytes": 603
+        },
+        ".dat": {
+          "path": "records500/16000/16524_hr.dat",
+          "sha256": "436a26a7deb46f7dfb9568619bf9122297c9ad7288681891db75f98115ce888c",
+          "bytes": 120000
+        }
+      }
+    },
+    {
+      "recordId": 18518,
+      "patientId": "10890",
+      "fold": 9,
+      "filename_hr": "records500/18000/18518_hr",
+      "qualityFlags": {
+        "pacemaker": "",
+        "electrodes_problems": "",
+        "burst_noise": "",
+        "static_noise": "",
+        "baseline_drift": "",
+        "extra_beats": ""
+      },
+      "files": {
+        ".hea": {
+          "path": "records500/18000/18518_hr.hea",
+          "sha256": "b4f73bf83ea630a6e823008396ba864b628c320938102164bb81daa2c001e58a",
+          "bytes": 619
+        },
+        ".dat": {
+          "path": "records500/18000/18518_hr.dat",
+          "sha256": "f5d2ccb96b760be7d0efa529c242520a9856dbb97b141db0b19305909c7ae352",
+          "bytes": 120000
+        }
+      }
+    },
+    {
+      "recordId": 19196,
+      "patientId": "19598",
+      "fold": 9,
+      "filename_hr": "records500/19000/19196_hr",
+      "qualityFlags": {
+        "pacemaker": "",
+        "electrodes_problems": "",
+        "burst_noise": "",
+        "static_noise": "",
+        "baseline_drift": "",
+        "extra_beats": ""
+      },
+      "files": {
+        ".hea": {
+          "path": "records500/19000/19196_hr.hea",
+          "sha256": "a53d9e924b617466db40a7d604a374a680b539a0ce2c9659ba93b3e54f92e077",
+          "bytes": 606
+        },
+        ".dat": {
+          "path": "records500/19000/19196_hr.dat",
+          "sha256": "77b3a77a73fb83627ccbd126c4b2e0a87fb5551e5a37e0d5e0ed1fbffd8366a2",
+          "bytes": 120000
+        }
+      }
+    },
+    {
+      "recordId": 364,
+      "patientId": "15645",
+      "fold": 10,
+      "filename_hr": "records500/00000/00364_hr",
+      "qualityFlags": {
+        "pacemaker": "",
+        "electrodes_problems": "",
+        "burst_noise": "",
+        "static_noise": "",
+        "baseline_drift": "",
+        "extra_beats": ""
+      },
+      "files": {
+        ".hea": {
+          "path": "records500/00000/00364_hr.hea",
+          "sha256": "cb4da82f63f4b90ec3588c003a8f2df6ab69f30f20be1704bc89ee2c00577995",
+          "bytes": 619
+        },
+        ".dat": {
+          "path": "records500/00000/00364_hr.dat",
+          "sha256": "75ca854ca2c0b321c4150f2a3cc2820f89e226d165e52adbf42b961fe604ff16",
+          "bytes": 120000
+        }
+      }
+    },
+    {
+      "recordId": 779,
+      "patientId": "20190",
+      "fold": 10,
+      "filename_hr": "records500/00000/00779_hr",
+      "qualityFlags": {
+        "pacemaker": "",
+        "electrodes_problems": "",
+        "burst_noise": "",
+        "static_noise": "",
+        "baseline_drift": "",
+        "extra_beats": ""
+      },
+      "files": {
+        ".hea": {
+          "path": "records500/00000/00779_hr.hea",
+          "sha256": "dcdd6adffa00e697a66427264e276dd04f740cd87c93b3b4e1382f8d7c2ebf9e",
+          "bytes": 614
+        },
+        ".dat": {
+          "path": "records500/00000/00779_hr.dat",
+          "sha256": "720cfb75ab9c8de09102b0576979e10b606a94d6ab363019980531371088e4b0",
+          "bytes": 120000
+        }
+      }
+    },
+    {
+      "recordId": 6951,
+      "patientId": "7057",
+      "fold": 10,
+      "filename_hr": "records500/06000/06951_hr",
+      "qualityFlags": {
+        "pacemaker": "",
+        "electrodes_problems": "",
+        "burst_noise": "",
+        "static_noise": "",
+        "baseline_drift": "",
+        "extra_beats": ""
+      },
+      "files": {
+        ".hea": {
+          "path": "records500/06000/06951_hr.hea",
+          "sha256": "e8c8911198884b8757e0e893231cd4b001b8bff8582a7779ac90c1e8d9c6fe5b",
+          "bytes": 607
+        },
+        ".dat": {
+          "path": "records500/06000/06951_hr.dat",
+          "sha256": "31b2c06d75b722cd90e64102fe79d5be51a8deba6cb63a5c7b63c1b82907772b",
+          "bytes": 120000
+        }
+      }
+    },
+    {
+      "recordId": 7644,
+      "patientId": "14375",
+      "fold": 10,
+      "filename_hr": "records500/07000/07644_hr",
+      "qualityFlags": {
+        "pacemaker": "",
+        "electrodes_problems": "",
+        "burst_noise": "",
+        "static_noise": "",
+        "baseline_drift": "",
+        "extra_beats": ""
+      },
+      "files": {
+        ".hea": {
+          "path": "records500/07000/07644_hr.hea",
+          "sha256": "9735b04704deaadab4c893f8137f3989c595d1660d62d07e93978adf22697d2a",
+          "bytes": 609
+        },
+        ".dat": {
+          "path": "records500/07000/07644_hr.dat",
+          "sha256": "7d1bd379ebb24c5322a0eb5c4944e91b8e890fdb728efe00a76d184441c455a6",
+          "bytes": 120000
+        }
+      }
+    },
+    {
+      "recordId": 8410,
+      "patientId": "6783",
+      "fold": 10,
+      "filename_hr": "records500/08000/08410_hr",
+      "qualityFlags": {
+        "pacemaker": "",
+        "electrodes_problems": "",
+        "burst_noise": "",
+        "static_noise": "",
+        "baseline_drift": "",
+        "extra_beats": ""
+      },
+      "files": {
+        ".hea": {
+          "path": "records500/08000/08410_hr.hea",
+          "sha256": "199f8751a245c7efe5ae7bae1ea88fb925e52221ddd30ae541e7a76e0b81abd9",
+          "bytes": 611
+        },
+        ".dat": {
+          "path": "records500/08000/08410_hr.dat",
+          "sha256": "cda697a3e62cf564bbf093f05c2840d2d026df7e0e1eda5a075f3bbe23cd7eb9",
+          "bytes": 120000
+        }
+      }
+    },
+    {
+      "recordId": 12609,
+      "patientId": "511",
+      "fold": 10,
+      "filename_hr": "records500/12000/12609_hr",
+      "qualityFlags": {
+        "pacemaker": "",
+        "electrodes_problems": "",
+        "burst_noise": "",
+        "static_noise": "",
+        "baseline_drift": "",
+        "extra_beats": ""
+      },
+      "files": {
+        ".hea": {
+          "path": "records500/12000/12609_hr.hea",
+          "sha256": "8f9ef0a03c13374d353bb0c324a8f716f6f16ff4f1b25915387cd5dd4b362240",
+          "bytes": 604
+        },
+        ".dat": {
+          "path": "records500/12000/12609_hr.dat",
+          "sha256": "a3b6b66ba6b6d0615593fa04d20b7dcaf8e18dd0f9a967a692cb7e053763cdc1",
+          "bytes": 120000
+        }
+      }
+    },
+    {
+      "recordId": 14637,
+      "patientId": "3841",
+      "fold": 10,
+      "filename_hr": "records500/14000/14637_hr",
+      "qualityFlags": {
+        "pacemaker": "",
+        "electrodes_problems": "",
+        "burst_noise": "",
+        "static_noise": "",
+        "baseline_drift": "",
+        "extra_beats": ""
+      },
+      "files": {
+        ".hea": {
+          "path": "records500/14000/14637_hr.hea",
+          "sha256": "9ec89d227732fd5afb3fcda23668486324ec53f1146c276d51c5c09100d4c669",
+          "bytes": 609
+        },
+        ".dat": {
+          "path": "records500/14000/14637_hr.dat",
+          "sha256": "28461881d3284f933bdbc6fd95954f36c1c9d77602da02bf33a715914400b44b",
+          "bytes": 120000
+        }
+      }
+    },
+    {
+      "recordId": 14662,
+      "patientId": "6658",
+      "fold": 10,
+      "filename_hr": "records500/14000/14662_hr",
+      "qualityFlags": {
+        "pacemaker": "",
+        "electrodes_problems": "",
+        "burst_noise": "",
+        "static_noise": "",
+        "baseline_drift": "",
+        "extra_beats": ""
+      },
+      "files": {
+        ".hea": {
+          "path": "records500/14000/14662_hr.hea",
+          "sha256": "5deb5195105212d4fef39d1ca6fac1e9cce6dbd8ae612a8a9f65d0540bf3fbb4",
+          "bytes": 608
+        },
+        ".dat": {
+          "path": "records500/14000/14662_hr.dat",
+          "sha256": "d401c9fe0cb01e2a83c7f298c00f194731e78070671d215fd4e7a7b0373dc85b",
+          "bytes": 120000
+        }
+      }
+    },
+    {
+      "recordId": 15737,
+      "patientId": "7963",
+      "fold": 10,
+      "filename_hr": "records500/15000/15737_hr",
+      "qualityFlags": {
+        "pacemaker": "",
+        "electrodes_problems": "",
+        "burst_noise": "",
+        "static_noise": "",
+        "baseline_drift": "",
+        "extra_beats": ""
+      },
+      "files": {
+        ".hea": {
+          "path": "records500/15000/15737_hr.hea",
+          "sha256": "06eda4db38f14796c529f7df66f4c7b0528f96f02c34773a5239e003da6c7b49",
+          "bytes": 607
+        },
+        ".dat": {
+          "path": "records500/15000/15737_hr.dat",
+          "sha256": "aac911bd1f58c976b8c731e959f35cf52266793482c7e9d2ef8a32d01deec7d3",
+          "bytes": 120000
+        }
+      }
+    },
+    {
+      "recordId": 19077,
+      "patientId": "13689",
+      "fold": 10,
+      "filename_hr": "records500/19000/19077_hr",
+      "qualityFlags": {
+        "pacemaker": "",
+        "electrodes_problems": "",
+        "burst_noise": "",
+        "static_noise": "",
+        "baseline_drift": "",
+        "extra_beats": ""
+      },
+      "files": {
+        ".hea": {
+          "path": "records500/19000/19077_hr.hea",
+          "sha256": "5796d153a1177878cbddf28a5755d202dd57658671dd22f9eaf71813f06646cb",
+          "bytes": 607
+        },
+        ".dat": {
+          "path": "records500/19000/19077_hr.dat",
+          "sha256": "3747b1a9d69819956018d69ed438bf6745fcd8b1773676663e6920391334792a",
+          "bytes": 120000
+        }
+      }
+    }
+  ]
+}

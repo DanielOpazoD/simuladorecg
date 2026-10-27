@@ -1,0 +1,22 @@
+{
+  "id": "quiet-acquisition-v1",
+  "baselineCommit": "0b704cf00ca623c2062c5efb6dd7086922d7efa7",
+  "purpose": "An illustrative quieter acquisition for new cases, not a claim of greater clinical realism.",
+  "candidate": {"profile": "quiet-v1", "floorScale": 0.5, "selection": "Fixed before comparison; no parameter search"},
+  "legacyProfile": "resting-v1",
+  "durationSeconds": 10,
+  "developmentSeeds": [12066, 15, 36],
+  "reserveSeeds": [71003, 71017, 71039, 71059, 71069, 71081, 71119, 71129, 71143, 71147, 71153, 71167],
+  "families": ["sinus", "lbbb", "rbbb", "anterior", "af", "vvi"],
+  "filters": ["diagnostic", "monitor"],
+  "textureGate": {"rmsRatioMin": 0.45, "rmsRatioMax": 0.55, "peakRatioMax": 0.55, "quantizationSlackMv": 0.002},
+  "morphologyGate": {"perWindowAbsoluteErrorWorseningMv": 0.005, "areaAbsoluteErrorWorseningMvS": 0.001, "reference": "Same case with ideal acquisition; paired engineering comparison only"},
+  "analysisGate": {"eventToleranceSeconds": 0.15, "hrReviewBpm": 5, "qrsReviewMs": 20, "qtReviewMs": 50, "maximumAdditionalFalsePositivesPerFamily": 0, "maximumAdditionalFalseNegativesPerFamily": 0, "maximumAdditionalUsableErroneousEstimatesPerFamily": 0, "maximumLostUsableCorrectEstimatesPerFamily": 0},
+  "negativeControls": ["ideal profile identity", "event and truth identity", "legacy exported case sample hashes", "same-seed repeatability", "manual artifacts remain independent of the floor profile"],
+  "residualMorphology": "Characterize ideal-acquisition irregularities; do not smooth or retrain learned shapes without source support.",
+  "referenceData": "Original PTB-XL records with explicit quality selection and known-patient exclusion; exploratory only because historical exposure inventory is incomplete.",
+  "screenExport": "Existing independent pixel oracle, unchanged 2 px tolerance and negative controls; inspect actual production PNG and independent sample plots.",
+  "failurePolicy": "Retain all failures and per-family results. Do not promote the default if a preregistered gate fails. Do not silently revise thresholds or select seeds after seeing results.",
+  "clinicalValidation": false,
+  "independentClinicalReview": "Not available; required before claiming improved clinical plausibility."
+}

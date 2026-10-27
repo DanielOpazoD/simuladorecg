@@ -49,6 +49,14 @@
         "crossLeadVoltage"
       ],
       "reason": "Harmonized 12SL/UniG features as documented, descriptive only. ST_Amp is STJ, QRS_AmpPP is peak-to-peak; timing is automatic vendor timing, not independent human annotation."
+    },
+    "ptbxl-original20-texture": {
+      "allowedMetrics": [
+        "withinLeadRatio",
+        "absoluteAmplitude",
+        "crossLeadVoltage"
+      ],
+      "reason": "20 exposed original records: official byte checksums and headers verify 500 Hz and gain in mV. Texture windows are heuristic; no independent QRS/ST/T annotations or clinical timing validation."
     }
   },
   "sources": [
@@ -557,6 +565,30 @@
         "docs/ltafdb-development-protocol.json"
       ],
       "missingReason": "Existing development/evaluation record policies require executed manifests and patient linkage before independent reuse."
+    },
+    {
+      "id": "ptbxl-cleanliness-exploratory20-now-exposed",
+      "dataset": "PTB-XL",
+      "version": "1.0.3",
+      "role": "exposed",
+      "identityEvidence": "observed",
+      "membershipComplete": true,
+      "records": [],
+      "unitsProfile": "ptbxl-original20-texture",
+      "expectedRecords": 20,
+      "requireFold": true,
+      "adapter": {
+        "path": "benchmarks/acquisition-cleanliness/reference-selection.json",
+        "rows": "records",
+        "recordKey": "recordId",
+        "patientKey": "patientId",
+        "foldKey": "fold"
+      },
+      "evidencePaths": [
+        "benchmarks/acquisition-cleanliness/reference-selection.json",
+        "docs/acquisition-cleanliness-review.md"
+      ],
+      "identityNote": "Exploratory NORM/SR selection, 10 patients from each fold9/10, excludes605 previously known exposed PTB-XL patients. Historical norm600 and training membership unresolved: these20 are now exposed, never an accredited independent reserve."
     }
   ],
   "limitations": [
