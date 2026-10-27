@@ -9,7 +9,8 @@ const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));
 page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
 await page.goto(url);
-await page.waitForSelector(".case-button");
+// The first family may be folded; readiness does not depend on catalog order.
+await page.locator(".case-button:visible").first().waitFor();
 
 const inked = () => page.locator("canvas").first().evaluate((cv) => {
   const { data } = cv.getContext("2d").getImageData(0, 0, cv.width, cv.height);
@@ -35,7 +36,8 @@ const diagnoses = await page.locator(".case-button:not([disabled])").evaluateAll
 let checked = 0, expected = 0;
 for (const diagnosis of diagnoses) {
   // The library is an accordion: open the family that holds the entry first.
-  await page.evaluate((d) => { const b = document.querySelector(`.case-button[data-diagnosis="${d}"]`); b?.closest("details")?.setAttribute("open", ""); }, diagnosis);
+  const group = page.locator(".case-group").filter({ has: page.locator(`[data-diagnosis="${diagnosis}"]`) }).first();
+  if (!await group.evaluate(e => e.open)) await group.locator("summary").click();
   await page.locator(`.case-button[data-diagnosis="${diagnosis}"]`).first().click();
   await ready(diagnosis);
   const variants = await page.locator(".variant-tabs [data-variant]").evaluateAll((es) => es.map((e) => e.dataset.variant));

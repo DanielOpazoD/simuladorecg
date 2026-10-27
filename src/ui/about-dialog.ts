@@ -19,6 +19,7 @@ export function aboutDialogHtml() {
   return `<details class="information-section"><summary>Modelo y límites</summary>
     <p>Activaciones auriculares y ventriculares → kernels vectoriales XYZ → 8 derivaciones independientes → filtros → 12 derivaciones. No utiliza trazados grabados ni imágenes de pacientes.</p>
     <p>Todos los patrones son aproximaciones educativas. Las pruebas técnicas no constituyen validación clínica.</p>
+    <p>Las ayudas de «Qué observar» señalan ventanas del modelo sobre las muestras mostradas: QRS, ST entre J y J+80 ms, o repolarización desde J+80 hasta el final del QT. No son delimitaciones clínicas independientes.</p>
     <p>Describe primero el patrón observado. Integra territorio, reciprocidad, proporcionalidad respecto del QRS y contexto; la etiqueta del caso no demuestra una arteria ocluida. Las fases son estados paramétricos y no una cronología de un paciente.</p>
     <p>V7–V9 y V3R–V4R; captura/fusión en TV; comienzo corto–largo–corto de torsades: pendientes. VVI a demanda y secuencias programadas de flutter son modelos idealizados. La pérdida total de captura VVI solo se representa sin escape intrínseco; no simula umbrales ni captura mecánica.</p>
     <ul class="about-list">

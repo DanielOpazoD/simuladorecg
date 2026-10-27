@@ -9,7 +9,7 @@ export function readingOverlay(root: HTMLElement, signal: Signal, layout: Layout
   if (!available) { root.replaceChildren(); delete root.dataset.geometry; return []; }
   const geometry = JSON.stringify(layout);
   if (root.dataset.geometry !== geometry) {
-    root.innerHTML = `<div class="reading-lead-labels" role="group" aria-label="Ampliar una derivación">${layout.segments.map((seg,i)=>`<button type="button" class="reading-lead-label" data-reading-segment="${i}" style="left:${seg.x * layout.pxPerMm}px;top:${(seg.y + .5) * layout.pxPerMm}px" aria-label="Ampliar ${seg.polarity < 0 ? "−" : ""}${seg.lead}, tramo ${seg.start} a ${seg.start + seg.duration} segundos" title="Ampliar ${seg.lead}"><span class="reading-lead-arrow" aria-hidden="true" style="left:${(3 + (seg.lead.length + (seg.polarity < 0 ? 1 : 0)) * 2.3) * layout.pxPerMm}px;top:${layout.pxPerMm}px;font-size:${2.5 * layout.pxPerMm}px">↗</span></button>`).join("")}</div><div class="reading-focus-overlay"></div>`;
+    root.innerHTML = `<div class="reading-lead-labels" role="group" aria-label="Ampliar una derivación">${layout.segments.map((seg,i)=>`<button type="button" class="reading-lead-label" data-reading-segment="${i}" style="left:${seg.x * layout.pxPerMm}px;top:${(seg.y + .5) * layout.pxPerMm}px" aria-label="Ampliar ${seg.polarity < 0 ? "−" : ""}${seg.lead}, tramo ${seg.start} a ${seg.start + seg.duration} segundos" title="Ampliar ${seg.lead}"></button>`).join("")}</div><div class="reading-focus-overlay"></div>`;
     root.dataset.geometry = geometry;
   }
   root.style.width = `${layout.widthMm * layout.pxPerMm}px`; root.style.height = `${layout.heightMm * layout.pxPerMm}px`;

@@ -589,10 +589,9 @@ function syncReadingAids() {
   $(".trace-panel").classList.toggle("reading-focused", !!activeFinding);
   if (activeFinding) {
     note.querySelector("strong")!.textContent = activeFinding;
-    const kind = findingTarget(activeFinding)?.focus;
-    note.querySelector("p")!.textContent = !boxes.length ? "No hay una ventana completa disponible en este trazado para marcar este hallazgo." :
-      kind === "rhythm" ? "Observa la secuencia resaltada del registro." :
-      `${kind === "qrs" ? "QRS" : kind === "st" ? "ST desde J hasta J+80 ms" : "Repolarización desde J+80 hasta el final de QT"}: ventana del modelo sobre las muestras finales; no es una delimitación clínica independiente.`;
+    const explanation = note.querySelector("p")!;
+    explanation.textContent = boxes.length ? "" : "No hay un fragmento completo disponible para marcar este hallazgo.";
+    explanation.hidden = !!boxes.length;
   }
   document.querySelectorAll<HTMLButtonElement>("[data-finding]").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.finding === activeFinding)));
   return boxes;
@@ -771,12 +770,12 @@ function showAbout(showAnalyzer = false) {
     if (c.rhythm === "af") warnings.push(usesRealisticBase(c)
       ? "FA aprendida de PTB-XL: intervalos RR independientes (gamma, CV 0,10–0,35 según la semilla). No simula memoria del nodo AV ni cambios de organización de las ondas f; la FC programada es una media de largo plazo."
       : "FA representativa: intervalos RR independientes (gamma, CV 0,22). No simula memoria del nodo AV ni toda la variabilidad entre pacientes; la FC programada es una media de largo plazo.");
-    caseInfo = `<details class="information-section"><summary>El ECG actual: origen y límites</summary><div class="model-note"><p>${esc(provenance.summary)}</p><p>${esc(provenance.evidence)}</p>${provenance.limitations.map(limit => `<p>${esc(limit)}</p>`).join("")}</div>${warnings.map(w => `<p class="warning">${esc(w)}</p>`).join("")}${p ? omiReferencesHtml(p.id) : ""}</details>`;
+    caseInfo = `<details class="information-section"><summary>El ECG actual: origen y límites</summary><p>${esc(acquisitionDescription(c))}</p><div class="model-note"><p>${esc(provenance.summary)}</p><p>${esc(provenance.evidence)}</p>${provenance.limitations.map(limit => `<p>${esc(limit)}</p>`).join("")}</div>${warnings.map(w => `<p class="warning">${esc(w)}</p>`).join("")}${p ? omiReferencesHtml(p.id) : ""}</details>`;
     if (session.signal && session.measurement) caseInfo += `<details class="information-section" id="analyzer-info"${showAnalyzer ? " open" : ""}><summary>Medidas del analizador</summary>${measurementDialog(session.signal, session.measurement, c)}</details>`;
   }
   openDialog(
     "Información y fuentes",
-    `<div class="information-content"><p class="dialog-lead">ECG sintéticos para aprender. Las cifras de la pantalla son valores del modelo; las mediciones automáticas se consultan aquí.</p><p class="control-note">${esc(acquisitionDescription(c))}</p>${caseInfo}${aboutDialogHtml()}</div>`,
+    `<div class="information-content">${caseInfo}${aboutDialogHtml()}</div>`,
   );
   if (showAnalyzer) $("#analyzer-info")?.scrollIntoView({ block: "start" });
 }

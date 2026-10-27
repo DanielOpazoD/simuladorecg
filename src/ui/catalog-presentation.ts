@@ -11,30 +11,28 @@ const labels: Readonly<Record<string, string>> = {
   'Otros patrones': 'Electrolitos, QT y voltaje',
   Pendientes: 'Aún no disponibles',
 };
-/** The OMI paradigm (Meyers, Weingart, Smith; ECGsmith) replaces the territorial
- * «Isquemia y ST» family: four questions of care, each with its name in the current
- * guidelines (ACC/AHA 2025 and ESC 2023 keep STEMI / NSTE-ACS). Presets are unchanged;
- * only their place in the library moves. */
+/** Four teaching routes, not diagnostic classes or guideline equivalences.
+ * Legacy IDs remain stable for filters; presentation and placement may evolve.
+ * Diffuse depression/aVR is grouped by its pattern, not assigned a culprit artery
+ * (ACC 2022 chest pain pathway, table 1). Presets are unchanged. */
 interface OmiFamily { id: string; label: string; guide: string; sections: readonly { title: string; ids: readonly string[]; crossListed?: boolean }[] }
 export const OMI_FAMILIES: readonly OmiFamily[] = [
-  { id: 'OMI evidente', label: 'OMI evidente', guide: 'En las guías: STEMI', sections: [
-    { title: 'Descendente anterior', ids: ['anterior'] },
-    { title: 'Coronaria derecha', ids: ['inferior', 'rv_infarct'] },
-    { title: 'Circunfleja', ids: ['inferior_lcx', 'lateral'] },
+  { id: 'OMI evidente', label: 'Territorios coronarios', guide: '', sections: [
+    { title: 'Anterior', ids: ['anterior'] },
+    { title: 'Inferior y derecho', ids: ['inferior', 'inferior_lcx', 'rv_infarct'] },
+    { title: 'Lateral y posterior', ids: ['lateral', 'posterior'] },
   ] },
-  { id: 'OMI sutil', label: 'OMI sutil y equivalentes', guide: 'En las guías: equivalente de STEMI o SCASEST con oclusión', sections: [
-    { title: 'Sin elevación clásica del ST', ids: ['de_winter', 'posterior'] },
-    { title: 'Tronco o tres vasos', ids: ['diffuse'] },
-    { title: 'Con bloqueo de rama', ids: ['sgarbossa'] },
+  { id: 'OMI sutil', label: 'Patrones sutiles', guide: '', sections: [
+    { title: '', ids: ['de_winter', 'sgarbossa'] },
   ] },
-  { id: 'NOMI', label: 'NOMI y reperfusión', guide: 'En las guías: SCASEST sin oclusión', sections: [
-    { title: 'Isquemia sin oclusión', ids: ['subendo'] },
+  { id: 'NOMI', label: 'Evolución y reperfusión', guide: '', sections: [
     { title: 'Reperfusión', ids: ['wellens_a', 'wellens_b'] },
-    { title: 'Infarto establecido', ids: ['old_inferior', 'old_anterior'] },
+    { title: 'Isquemia difusa', ids: ['diffuse', 'subendo'] },
+    { title: 'Infarto antiguo', ids: ['old_inferior', 'old_anterior'] },
   ] },
-  { id: 'Imitadores', label: 'Imitadores del infarto', guide: 'Elevación del ST sin oclusión coronaria', sections: [
-    { title: 'Pericardio', ids: ['pericarditis'] },
-    { title: 'También en su familia', ids: ['lvh', 'hyperk', 'rv_acute'], crossListed: true },
+  { id: 'Imitadores', label: 'Imitadores', guide: '', sections: [
+    { title: '', ids: ['pericarditis'] },
+    { title: '', ids: ['lvh', 'hyperk', 'rv_acute'], crossListed: true },
   ] },
 ];
 const OMI_SOURCE = 'Isquemia y ST';
@@ -44,8 +42,9 @@ export function catalogGroup(preset: Pick<Preset, 'id' | 'group'>): string {
   return OMI_FAMILIES.find(f => f.sections.some(s => !s.crossListed && s.ids.includes(preset.id)))?.id ?? OMI_FAMILIES[0].id;
 }
 const omiFamily = (id: string) => OMI_FAMILIES.find(f => f.id === id);
+export const isIschemiaFamily = (group: string): boolean => !!omiFamily(group);
 export const familyLabel = (group: string): string => omiFamily(group)?.label ?? labels[group] ?? group;
-/** Name of an OMI family in the guidelines (empty for the other families). */
+/** Optional supporting copy; no OMI/STEMI or NOMI/NSTE-ACS equivalence. */
 export const familyGuide = (group: string): string => omiFamily(group)?.guide ?? '';
 /** Library families in display order: the OMI ones take the place of «Isquemia y ST». */
 export function catalogGroups(presets: readonly Pick<Preset, 'id' | 'group'>[]): string[] {
@@ -109,7 +108,7 @@ for (const f of OMI_FAMILIES) (subdivisions as Record<string, readonly Subdivisi
 export interface CatalogFamily {
   id: string;
   label: string;
-  /** Name in the guidelines (OMI families only). */
+  /** Optional supporting copy. */
   guide: string;
   count: number;
   available: number;
@@ -118,7 +117,7 @@ export interface CatalogFamily {
 const acronyms = new Set(['fa','af','tv','vt','fv','vf','brd','bri','tsv','svt','esa','esv','pac','pvc','wpw','qt','bav','riva']);
 export function matchesCatalog(preset: Preset, tokens: readonly string[], extra = ''): boolean {
   const family = catalogGroup(preset);
-  const text = searchText(`${preset.id} ${preset.name} ${presetTitle(preset)} ${preset.short} ${catalogLabel(preset)} ${family} ${familyLabel(family)} ${familyGuide(family)} ${aliases[preset.id] ?? ''} ${extra}`);
+  const text = searchText(`${preset.id} ${preset.name} ${presetTitle(preset)} ${preset.short} ${catalogLabel(preset)} ${family} ${familyLabel(family)} ${isIschemiaFamily(family) ? 'Isquemia ST' : ''} ${familyGuide(family)} ${aliases[preset.id] ?? ''} ${extra}`);
   const words = text.split(/[^a-z0-9]+/);
   // A short abbreviation must not match an unrelated fragment (FA ≠ fascículos).
   return tokens.every(token => acronyms.has(token) ? words.includes(token) : text.includes(token));
