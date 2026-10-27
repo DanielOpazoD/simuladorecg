@@ -66,6 +66,17 @@ jobs:
         run: node tests/browser-case-comparison.mjs "$RUNNER_TEMP/ecg-case-comparison"
       - name: Adquisición limpia seleccionada, persistencia y exportación
         run: node tests/browser-clean-acquisition.mjs "$RUNNER_TEMP/ecg-clean-acquisition"
+      - name: Lectura interactiva, muestras intactas y exportación
+        run: node tests/browser-reading-interactions.mjs "$RUNNER_TEMP/ecg-reading/interactions"
+      - name: Aumento contrastado con píxeles y controles negativos
+        run: node tests/browser-reading-pixels.mjs "$RUNNER_TEMP/ecg-reading/pixels"
+      - name: Conservar pruebas de lectura interactiva, incluidos fallos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interactive-reading-results
+          path: ${{ runner.temp }}/ecg-reading
+          if-no-files-found: ignore
       - name: Conservar pruebas de adquisición limpia, incluidos fallos
         if: always()
         uses: actions/upload-artifact@v4

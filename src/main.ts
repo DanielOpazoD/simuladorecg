@@ -3,6 +3,10 @@ import { acquisitionDescription, readAcquisitionPreference, saveAcquisitionPrefe
 import { aboutDialogHtml, keyboardHelpHtml } from "./ui/about-dialog";
 import { regionalActivationControls } from "./ui/regional-activation";
 import "./style.css";
+import "./ui/reading-interactions.css";
+import { findingTarget } from "./ui/reading-focus";
+import { readingOverlay } from "./ui/reading-overlay";
+import { mountLeadExplorer } from "./ui/lead-explorer";
 import { presetTitle } from "./presets/nomenclature";
 import { APP_VERSION } from "./ui/version";
 import { catalogGroup, familyLabel } from "./ui/catalog-presentation";
@@ -41,7 +45,7 @@ import { practiceFeedback, type PracticeId } from "./ui/practice-feedback";
 import { createPractice, answerPractice, type PracticeState } from "./ui/practice-session";
 import { practicePanelHtml } from "./ui/practice-panel";
 import { changeCase, isCaseControlKey, controlValue, keepsPractice, withInterfaceView } from "./ui/case-state";
-import { representativeBeat, nearestBeat } from "./ui/beat-selection";
+import { representativeBeat } from "./ui/beat-selection";
 import { measurementDialog } from "./ui/measurement-dialog";
 import { auditMeasurement } from "./engine/analysis/model-audit";
 import {
@@ -79,6 +83,7 @@ const teachingNotes = new Map<string, TeachingNote[]>(), teachingSnapshots: Teac
 const teachingSignalKeys = new WeakMap<Signal, string>();
 let teachingMarksVisible = true;
 let teachingOpening = false;
+let activeFinding: string | null = null;
 function teachingKey(signal: Signal) {
   let key = teachingSignalKeys.get(signal);
   if (!key) { key = signalFingerprint(signal); teachingSignalKeys.set(signal, key); }
@@ -136,6 +141,8 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
 
 const variantNavigation = new VariantNavigation($("#diagnosis-navigation"), $("#diagnosis-content"));
+$("#canvas-wrap").insertAdjacentHTML("beforeend", '<div id="reading-overlay" hidden></div>');
+$("#canvas-wrap").insertAdjacentHTML("beforebegin", '<div id="finding-focus" hidden><div><strong></strong><p role="status" aria-live="polite"></p></div><button type="button" class="btn" data-action="clear-finding" aria-label="Quitar explicación">Cerrar</button></div>');
 const caliperEditor = new CaliperEditor($("#caliper-editor"), $<HTMLCanvasElement>("#ecg"), next => { caliper = next; draw(); });
 let toastTimer = 0;
 function clearToast() {
@@ -236,7 +243,7 @@ function renderInfo() {
         ]
       : reading.findings
   )
-    .map((f) => `<li>${esc(f)}</li>`)
+    .map((f) => `<li>${!concealed && !c.artifacts.reversed && session.canExport && findingTarget(f) ? `<button type="button" class="finding-button" data-finding="${esc(f)}" aria-pressed="${activeFinding === f}" aria-controls="finding-focus">${esc(f)}</button>` : esc(f)}</li>`)
     .join("");
   // OMI families (A3): case sheet with expert notes and support; and, for any case,
   // the structured description read from the trace shown.
@@ -456,6 +463,12 @@ const controller = new SignalController(
 );
 /** Render caches and pointer coordinates are presentation, not session validity. */
 function resetTracePresentation() {
+  activeFinding = null;
+  $("#reading-overlay").replaceChildren();
+  delete $("#reading-overlay").dataset.geometry;
+  $("#reading-overlay").hidden = true;
+  $("#finding-focus").hidden = true;
+  $(".trace-panel").classList.remove("reading-focused");
   layout = null;
   monitor = null;
   caliper = null;
@@ -563,6 +576,46 @@ function draw() {
     if (all.length) $("#trace-context").textContent += ` · ${visible.length}/${all.length} marcas personales visibles; abre Aula ECG para verlas todas.`;
   }
   caliperEditor.update({active:session.caliperOn, layout, caliper, view:c.view, fs:session.signal.fs});
+  syncReadingAids();
+}
+function syncReadingAids() {
+  if (!layout || !session.signal) return;
+  const available = c.view.mode === "paper" && session.canExport && !(quiz && !quiz.answer) && !session.caliperOn;
+  if (!available) activeFinding = null;
+  const overlay = $("#reading-overlay");
+  const boxes = readingOverlay(overlay, session.signal, layout, c, activeFinding, available);
+  overlay.style.left = `${$<HTMLCanvasElement>("#ecg").offsetLeft}px`;
+  const note = $("#finding-focus"); note.hidden = !activeFinding;
+  $(".trace-panel").classList.toggle("reading-focused", !!activeFinding);
+  if (activeFinding) {
+    note.querySelector("strong")!.textContent = activeFinding;
+    const kind = findingTarget(activeFinding)?.focus;
+    note.querySelector("p")!.textContent = !boxes.length ? "No hay una ventana completa disponible en este trazado para marcar este hallazgo." :
+      kind === "rhythm" ? "Observa la secuencia resaltada del registro." :
+      `${kind === "qrs" ? "QRS" : kind === "st" ? "ST desde J hasta J+80 ms" : "Repolarización desde J+80 hasta el final de QT"}: ventana del modelo sobre las muestras finales; no es una delimitación clínica independiente.`;
+  }
+  document.querySelectorAll<HTMLButtonElement>("[data-finding]").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.finding === activeFinding)));
+  return boxes;
+}
+function openLeadDetail(segment: number, time?: number, opener?: HTMLElement) {
+  if (!layout || !session.signal || !session.canExport || c.view.mode !== "paper" || session.caliperOn || (quiz && !quiz.answer)) return;
+  const seg = layout.segments[segment]; if (!seg) return;
+  const returnTo = opener ?? $<HTMLCanvasElement>("#ecg"), dialog = $<HTMLDialogElement>("#dialog");
+  openDialog(`Explorar ${seg.polarity < 0 ? "−" : ""}${seg.lead}`, '<div id="lead-explorer"></div>');
+  dialog.classList.add("lead-dialog"); dialog.setAttribute("aria-label", "Explorar una derivación"); dialog.setAttribute("closedby", "any");
+  mountLeadExplorer($("#lead-explorer"), session.signal, c, seg, time);
+  const fallbackDismiss = (e: MouseEvent) => {
+    if (e.target !== dialog) return;
+    const r = dialog.getBoundingClientRect();
+    if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) dialog.close();
+  };
+  if (!("closedBy" in HTMLDialogElement.prototype)) dialog.addEventListener("click", fallbackDismiss);
+  dialog.addEventListener("close", () => {
+    dialog.classList.remove("lead-dialog"); dialog.removeAttribute("aria-label"); dialog.removeAttribute("closedby");
+    dialog.removeEventListener("click", fallbackDismiss);
+    if (returnTo.isConnected) returnTo.focus({preventScroll:true});
+  }, {once:true});
+  $("#dialog-content [data-action=close-dialog]").focus();
 }
 function animate(t: number) {
   if (c.view.mode === "monitor" && monitor && !session.paused) {
@@ -933,6 +986,23 @@ document.addEventListener("click", async (e) => {
     mode = target.closest<HTMLElement>("[data-mode]"),
     answer = target.closest<HTMLElement>("[data-answer]"),
     saved = target.closest<HTMLElement>("[data-saved]");
+  const leadButton = target.closest<HTMLElement>("[data-reading-segment]"), findingButton = target.closest<HTMLElement>("[data-finding]");
+  if (leadButton) { openLeadDetail(Number(leadButton.dataset.readingSegment), undefined, leadButton); return; }
+  if (findingButton && session.canExport && !(quiz && !quiz.answer)) {
+    const label = findingButton.dataset.finding!;
+    activeFinding = activeFinding === label ? null : label;
+    if (c.view.mode !== "paper") { c.view.mode = "paper"; session.changeMode("paper"); renderScales(); }
+    if (session.caliperOn) { session.toggleCaliper("paper"); caliper = null; }
+    draw();
+    const first = syncReadingAids()?.[0];
+    if (first) {
+      const wrap = $("#canvas-wrap"); wrap.scrollLeft = Math.max(0, first.x * layout!.pxPerMm - 32);
+      const top = window.scrollY + $("#ecg").getBoundingClientRect().top + first.y * layout!.pxPerMm - 120;
+      window.scrollTo({top:Math.max(0,top),behavior:"instant"});
+    }
+    return;
+  }
+  if (target.closest('[data-action="clear-finding"]')) { activeFinding = null; draw(); return; }
   if (variant) {
     if (quiz && !quiz.answer) return;
     const id = variant.dataset.variant!;
@@ -1006,21 +1076,17 @@ $<HTMLInputElement>("#file-input").addEventListener("change", async (e) => {
   el.value = "";
 });
 const canvas = $<HTMLCanvasElement>("#ecg");
+let leadTap: { x: number; y: number; segment: number; time: number; left: number; top: number; stamp: number } | null = null;
 function pointer(e: PointerEvent) {
   return layout ? sheetPoint(canvas.getBoundingClientRect(), e.clientX, e.clientY, layout) : null;
 }
 canvas.addEventListener("pointerdown", (e) => {
-  if (!session.caliperOn && layout && session.measurement && c.view.mode === "paper") {
+  if (!session.caliperOn && layout && session.signal && c.view.mode === "paper" && e.isPrimary && e.button === 0) {
     const pos = pointer(e);
     const seg = pos ? layout.segments[segmentIndexAt(layout, pos)] : undefined;
     if (seg && pos) {
-      session.selectBeat(nearestBeat(
-        session.measurement,
-        seg.start + (pos.x - seg.x) / c.view.speed,
-      ));
-      c.view.lead = seg.lead;
-      annotations = true;
-      draw();
+      leadTap = { x:e.clientX, y:e.clientY, segment:layout.segments.indexOf(seg), time:seg.start + (pos.x - seg.x) / c.view.speed,
+        left:$("#canvas-wrap").scrollLeft, top:window.scrollY, stamp:e.timeStamp };
     }
     return;
   }
@@ -1045,8 +1111,13 @@ canvas.addEventListener("pointermove", (e) => {
   caliper = placeCaliper(caliper,2,pos,layout,c.view,session.signal.fs);
   draw();
 });
-canvas.addEventListener("pointerup", () => (dragging = false));
-canvas.addEventListener("pointercancel", () => (dragging = false));
+canvas.addEventListener("pointerup", e => {
+  dragging = false;
+  const tap = leadTap; leadTap = null;
+  if (tap && Math.hypot(e.clientX-tap.x,e.clientY-tap.y)<6 && e.timeStamp-tap.stamp<800 &&
+      Math.abs($("#canvas-wrap").scrollLeft-tap.left)<2 && Math.abs(window.scrollY-tap.top)<2) openLeadDetail(tap.segment,tap.time);
+});
+canvas.addEventListener("pointercancel", () => { dragging = false; leadTap = null; });
 document.addEventListener("keydown", (e) => {
   // Character shortcuts belong to the focused trace only. Native fields/buttons
   // keep their keyboard behavior; do not intercept screen-reader modifiers.
