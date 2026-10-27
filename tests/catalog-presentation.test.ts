@@ -36,16 +36,20 @@ describe('Catalog presentation never changes clinical presets', () => {
     assert.deepEqual(ids('', group), PRESETS.filter(p => catalogGroup(p) === group).map(p => p.id).sort());
     assert.equal(catalogFamilies(PRESETS, '', group)[0].id, group);
   });
-  it('replaces «Isquemia y ST» by the four OMI families, in its place, with their guideline names', () => {
+  it('preserves four filter IDs while presenting teaching routes without diagnostic equivalences', () => {
     const groups = catalogGroups(PRESETS), first = groups.indexOf('OMI evidente');
     assert.deepEqual(groups.slice(first, first + 4), ['OMI evidente', 'OMI sutil', 'NOMI', 'Imitadores']);
     assert.ok(!groups.includes('Isquemia y ST'));
     for (const p of PRESETS.filter(p => p.group === 'Isquemia y ST'))
       assert.equal(OMI_FAMILIES.filter(f => f.sections.some(s => !s.crossListed && s.ids.includes(p.id))).length, 1, p.id);
-    assert.equal(familyGuide('OMI evidente'), 'En las guías: STEMI');
-    assert.equal(familyGuide('NOMI'), 'En las guías: SCASEST sin oclusión');
+    assert.equal(familyLabel('OMI evidente'), 'Territorios coronarios');
+    assert.equal(familyLabel('NOMI'), 'Evolución y reperfusión');
+    assert.equal(familyGuide('OMI evidente'), '');
+    assert.equal(familyGuide('NOMI'), '');
     assert.equal(familyGuide('Ritmos'), '');
     assert.equal(catalogGroup(PRESETS.find(p => p.id === 'wellens_a')!), 'NOMI');
+    assert.equal(catalogGroup(PRESETS.find(p => p.id === 'diffuse')!), 'NOMI');
+    assert.equal(catalogGroup(PRESETS.find(p => p.id === 'posterior')!), 'OMI evidente');
     // The data is untouched: only the library place moves.
     assert.equal(PRESETS.find(p => p.id === 'anterior')!.group, 'Isquemia y ST');
   });

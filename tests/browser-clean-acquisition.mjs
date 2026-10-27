@@ -75,7 +75,7 @@ try {
   await page.locator('[data-action=quiz]').click();await page.locator('#signal-loading').waitFor({state:'hidden'});
   const quizText=await page.locator('#quiz-panel').innerText();await chooseAcquisition(page,'ideal');assert.equal(await page.locator('#quiz-panel').innerText(),quizText);
   assert.equal(await page.locator('[data-action=compare]').isHidden(),true);await page.getByRole('button',{name:'Salir de práctica'}).click();
-  await page.locator('[data-action=about]').click();assert.match(await page.locator('#dialog').innerText(),/sin ruido de adquisición añadido/);
+  await page.locator('[data-action=about]').click();await page.getByText('El ECG actual: origen y límites',{exact:true}).click();assert.match(await page.locator('#dialog').innerText(),/sin ruido de adquisición añadido/);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   await page.close();
  }

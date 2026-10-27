@@ -10,7 +10,10 @@ describe("catalog presentation", () => {
     // 42 entries plus three imitators also shown under «Imitadores».
     expect(view.html.match(/data-diagnosis=/g)).toHaveLength(45);
     expect(view.html.match(/<small class="case-variants-count">También en /g)).toHaveLength(3);
-    expect(view.html).toContain("En las guías: STEMI");
+    expect(view.html).toContain('aria-labelledby="ischemia-library-title"');
+    expect(view.html).toContain("Territorios coronarios");
+    expect(view.html).not.toContain("En las guías:");
+    expect(view.html.indexOf('ischemia-library-title')).toBeLessThan(view.html.indexOf('data-family="Ritmos"'));
     expect(view.html).not.toMatch(/ disabled /);
     expect(view.html).not.toContain("Aún no disponibles");
     // Accordion: one line per family; with nothing selected none is open.

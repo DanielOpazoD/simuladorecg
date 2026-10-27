@@ -34,7 +34,8 @@ try{
    const opener=page.locator('[data-reading-segment="7"]');await opener.focus();await page.keyboard.press('Enter');
    const detail=page.locator('#lead-explorer');assert.equal(await detail.getAttribute('data-lead'),'V2');assert(Number(await detail.getAttribute('data-start'))>=5);
    const t0=await detail.getAttribute('data-start');await page.getByLabel('Derivación ampliada',{exact:true}).selectOption('aVL');assert.equal(await detail.getAttribute('data-start'),t0);
-   assert.equal(await page.locator('.lead-detail-orientation figure:visible').count(),1);
+   assert.equal(await page.locator('.lead-detail-orientation,.lead-detail-time,.reading-lead-arrow').count(),0);
+   assert.doesNotMatch(await detail.innerText(),/del registro|QRS \d+ del modelo|Orientación anatómica|Observa la forma/);
    if(id==='sinus')await page.screenshot({path:resolve(out,`lead-${v.width}-${v.theme}-${v.scale}.png`)});
    const overflowing=await detail.evaluate(root=>[...root.querySelectorAll('p,label,select,figure')].filter(e=>e.checkVisibility()).filter(e=>{const a=e.getBoundingClientRect(),b=root.getBoundingClientRect();return a.left<b.left-2||a.right>b.right+2;}).map(e=>e.className));assert.deepEqual(overflowing,[]);
    if(v.width<600){const box=await page.locator('#dialog').boundingBox();assert(Math.abs(box.x)<2);assert(Math.abs(box.y+box.height-1000)<2);}
@@ -59,7 +60,7 @@ try{
    // The simplified UI intentionally normalizes imported hidden view controls.
    await importCase(page,{...saved,view:{...saved.view,format:'3x4',timing:'simultaneous',cabrera:true,speed:50,gain:5,chestGain:20}});
    await page.getByRole('button',{name:/Ampliar aVR/}).click();assert.equal(await page.locator('#lead-explorer').getAttribute('data-polarity'),'1');assert(Number(await page.locator('#lead-explorer').getAttribute('data-start'))>=2.5);
-   assert.match(await page.locator('.projection-selected').textContent(),/aVR/);await page.keyboard.press('Escape');
+   assert.equal(await page.getByLabel('Derivación ampliada',{exact:true}).inputValue(),'aVR');await page.keyboard.press('Escape');
    await page.locator('[data-finding]').first().click();await assertBoxes(page,await readTrace(page));
   }
   await importCase(page,{...saved,artifacts:{...saved.artifacts,reversed:true}});
