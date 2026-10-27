@@ -43,7 +43,7 @@ export function teachingRegion(s: Signal, lead: Lead, beatIndex: number, focus: 
     start = b.time + b.qrs!; end = start + .08; value = row.j0;
     const a = s.leads[lead], p0 = Math.round((b.time - .04) * s.fs), p1 = Math.round((b.time - .02) * s.fs);
     baseline = 0; for (let i = p0; i <= p1; i++) baseline += a[i]; baseline /= p1 - p0 + 1;
-    source = "ST: J del modelo; media de los primeros 10 ms respecto a PR (−40 a −20 ms). Sin umbral diagnóstico.";
+    source = "ST: J del modelo; media de los primeros 10 ms respecto a la ventana pre-QRS (−40 a −20 ms). No confirma un segmento PR isoeléctrico ni establece un umbral diagnóstico.";
   } else if (focus === "repolarization") {
     if (!Number.isFinite(b.qt) || b.qt! <= b.qrs! + .08) return null;
     start = b.time + b.qrs! + .08; end = b.time + b.qt!;
