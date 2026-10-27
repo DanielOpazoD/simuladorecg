@@ -33,6 +33,12 @@ try{
   assert.match(await page.title(),/ECG Lab/);assert.equal(await page.locator('vite-error-overlay').count(),0);
   if(view.zoom)await page.addStyleTag({content:'html{font-size:200%!important}'});
   await catalog();
+  const catalogClose=page.locator('[data-action=close-catalog]');
+  if(await catalogClose.isVisible()){
+   const closeBox=await catalogClose.evaluate(e=>{const r=e.getBoundingClientRect();return {right:r.right,overflow:e.scrollWidth-e.clientWidth};});
+   assert(closeBox.right<=view.width+1 && closeBox.overflow<=1,JSON.stringify(closeBox));
+   assert.equal(await catalogClose.getAttribute('aria-label'),'Cerrar');
+  }
   const index = page.locator('#catalog-families');
   const families = await index.locator('button').evaluateAll(es=>es.map(e=>e.dataset.catalogFamily));
   assert.equal(families.length,9);

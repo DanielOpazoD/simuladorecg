@@ -40,6 +40,7 @@
 .case-group > summary { min-height:44px; }
 .sidebar { min-height:0; overflow-y:auto; }
 .sidebar .sidebar-head { padding:0; min-height:12px; flex-shrink:0; justify-content:flex-end; }
+.sidebar-head .icon-button span { display:none; }
 .sidebar .search-box { margin:0 12px 8px; flex-shrink:0; }
 .catalog-families { --ischemia-ink:#893745; --ischemia-soft:#fbf2f3; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:2px; padding:0 10px 10px; flex-shrink:0; }
 .dark .catalog-families { --ischemia-ink:#ffb4c1; --ischemia-soft:#342932; }
