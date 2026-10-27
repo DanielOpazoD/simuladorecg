@@ -14,6 +14,7 @@ function physiology(c: ECGCase) {
     seed,
     view,
     artifacts,
+    acquisition,
     filter,
     notch,
     mainsFrequency,

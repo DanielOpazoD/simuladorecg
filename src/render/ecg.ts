@@ -303,7 +303,7 @@ export function renderPaper(
   ctx.font = "2.7px ui-monospace, monospace";
   const acquisitionNote = options.compactHeader
     ? [c.filter === "aggressive" ? "Filtro de demostración: modifica el ST" : c.filter === "monitor" ? "Filtro de monitor" : c.filter === "off" ? "Sin filtro diagnóstico" : "", c.notch ? `notch ${c.notch} Hz` : ""].filter(Boolean).join(" · ")
-    : `${filterLabel(c)}  ·  señal sintética`;
+    : `${filterLabel(c)}  ·  señal sintética${c.acquisition === "ideal" ? " · sin ruido de adquisición añadido" : ""}`;
   if (acquisitionNote) ctx.fillText(
     acquisitionNote,
     5,

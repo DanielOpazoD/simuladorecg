@@ -10,12 +10,14 @@ describe("independent catalog comparison", () => {
     current.seed = 711;
     current.filter = "aggressive";
     current.artifacts.reversed = true;
+    current.acquisition = "realistic";
     current.view = { ...current.view, mode: "monitor", speed: 50, gain: 5, chestGain: 20, cabrera: true, timing: "simultaneous", format: "6x2", fit: false };
     const before = structuredClone(current);
     const comparison = comparisonCase("sinus", current)!;
     const sinus = fromPreset(presetById("sinus")!);
 
-    expect({ ...comparison, view: sinus.view }).toEqual(sinus);
+    expect({ ...comparison, view: sinus.view, acquisition: sinus.acquisition }).toEqual(sinus);
+    expect(comparison.acquisition).toBe("realistic");
     expect(comparison.view).toEqual({ ...current.view, mode: "paper" });
     expect(current).toEqual(before);
     comparison.view.speed = 25;

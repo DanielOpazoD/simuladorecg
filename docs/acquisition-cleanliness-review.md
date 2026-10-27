@@ -155,3 +155,41 @@ The portable reference pipeline reproduced all 39 synthetic files byte for byte
 and all 59 per-record measurements and group aggregates exactly. An independent
 code/evidence review checked the rejection, source isolation and provenance; this
 is not independent human clinical review.
+
+## Reader-selected existing ideal acquisition (26 October 2026)
+
+The interface now exposes the engine's existing `acquisition: "ideal"` as
+**Vista → Señal → Limpia**. An explicit choice is remembered locally and carried
+to other catalog examples and comparison references. Files and shared links retain
+their own acquisition setting, including the original realistic fallback for old
+files. No acquisition coefficients, filters, learned waves or analyzer algorithms
+were changed. The clean setting removes the added floor and its 1 µV quantization;
+it preserves manual artifacts, fibrillatory/flutter waves and residual morphology.
+The screen, analyzer and PNG use the same selected final samples. Restoring the
+original setting restores the original samples and measurements exactly.
+
+The existing ideal setting was characterized against the current product using
+the [fixed protocol](../benchmarks/clean-reading/protocol.json): 63 active presets
+and 72 synthetic reserve combinations (six families, six predeclared seeds and
+two filters). These seeds do not constitute new independent patients. The
+[adverse summary](../benchmarks/clean-reading/result-summary.json) is retained:
+18/18 historical sample fixtures and 540/540 negative controls passed; no paired
+morphology threshold failed. The analyzer produced **8 metric/stratum violations**:
+3 additional usable estimates outside the model-reference limits and 11 lost
+usable/correct estimates. There were no execution failures in the complete run.
+This is not evidence of three clinical diagnostic errors: the reference remains
+the model, with the same limitations described above.
+
+Consequently, **the automatic acquisition default is not promoted to clean**.
+Clean acquisition is a reader-selected educational setting, not a correction
+proven to improve analyzer accuracy or clinical plausibility. The information
+dialog explains this distinction; the exported PNG identifies the clean setting.
+The prior rejected half-floor experiment and all its adverse results remain intact.
+
+Full local evidence is in `ECG-QA/clean-reading-20261026`, outside the checkout.
+Two initial harness runs stopped before any case because the reused historical
+fixture guard compared its old source revision with the new protocol revision.
+The completed run checks the fixture's original revision explicitly and retains
+its original hashes; no sample fixture or acceptance tolerance was revised.
+The run-provenance index records the evaluator and report hashes. These tests do
+not replace independent human clinical review or validate every imported case.

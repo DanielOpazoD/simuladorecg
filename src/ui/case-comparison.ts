@@ -21,13 +21,14 @@ export function caseComparisonHtml(): string {
   </section>`;
 }
 
-/** Presentation only. Independent examples retain their physiology/acquisition;
- * the exact same display calibration, timing and lead order is used for both. */
+/** Independent examples retain their physiology and manual artifacts. Use the
+ * selected background-noise setting and the same paper calibration for both. */
 export function comparisonCase(referenceId: string, current: ECGCase): ECGCase | null {
   const preset = presetById(referenceId);
   if (!preset || preset.strategy === "pending") return null;
   const reference = fromPreset(preset);
   reference.view = { ...current.view, mode: "paper" };
+  reference.acquisition = current.acquisition ?? "realistic";
   return reference;
 }
 

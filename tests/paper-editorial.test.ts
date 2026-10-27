@@ -58,6 +58,14 @@ describe("paper editorial bands preserve calibrated signal space", () => {
     const r = recorder(); renderPaper(r.canvas, signal(), c, 1000, {ratio: 1, compactHeader: true});
     expect(r.texts.filter(t => t.y < 18).map(t => t.text).join(" ")).toContain({aggressive: "Filtro de demostración: modifica el ST", monitor: "Filtro de monitor", off: "Sin filtro diagnóstico"}[filter]);
   });
+  it("exports the chosen clean acquisition explicitly, without adding another workspace caption", () => {
+    const c = cloneCase(DEFAULT_CASE); c.acquisition = "ideal";
+    const screen = recorder(), exported = recorder();
+    renderPaper(screen.canvas, signal(), c, 1000, {ratio: 1, compactHeader: true});
+    renderPaper(exported.canvas, signal(), c, 1000, {ratio: 1});
+    expect(screen.texts.some(t => t.text.includes("sin ruido de adquisición"))).toBe(false);
+    expect(exported.texts.some(t => t.text.includes("sin ruido de adquisición añadido"))).toBe(true);
+  });
   it.each(formats)("%s retains independent mm geometry and text outside signal rows", format => {
     const c = cloneCase(DEFAULT_CASE); c.view.format = format; c.view.speed = 12.5;
     c.view.gain = 20; c.view.chestGain = 5; c.view.cabrera = true;

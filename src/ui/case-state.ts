@@ -48,6 +48,9 @@ export function changeCase(
       value;
   else (c as unknown as Record<string, unknown>)[key] = value;
   if (key === "view.gain") c.view.chestGain = c.view.gain;
+  // Acquisition changes the recorded samples, not the patient's physiology or
+  // natural-control targets. Keep the selected catalog explanation and seed.
+  if (key === "acquisition") return normalizeCase(c);
   // Moving an axis control fixes that axis; until then it follows the patient.
   if (key === "pAxis") c.naturalPAxis = false;
   if (key === "tAxis") c.naturalTAxis = false;
@@ -125,4 +128,4 @@ export function withInterfaceView(c: ECGCase): ECGCase {
 
 /** View settings and the acquisition filter (paper menu) do not change the
  * exercise: an unanswered practice survives them. */
-export const keepsPractice = (key: string) => key.startsWith("view.") || key === "filter";
+export const keepsPractice = (key: string) => key.startsWith("view.") || key === "filter" || key === "acquisition";

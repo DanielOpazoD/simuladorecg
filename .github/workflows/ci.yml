@@ -64,6 +64,15 @@ jobs:
         run: node tests/browser-st-distribution.mjs "$RUNNER_TEMP/ecg-st-distribution"
       - name: Interfaz simplificada y comparación entre ejemplos
         run: node tests/browser-case-comparison.mjs "$RUNNER_TEMP/ecg-case-comparison"
+      - name: Adquisición limpia seleccionada, persistencia y exportación
+        run: node tests/browser-clean-acquisition.mjs "$RUNNER_TEMP/ecg-clean-acquisition"
+      - name: Conservar pruebas de adquisición limpia, incluidos fallos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: clean-acquisition-results
+          path: ${{ runner.temp }}/ecg-clean-acquisition
+          if-no-files-found: ignore
       - name: Conservar pruebas de comparación, incluidos fallos
         if: always()
         uses: actions/upload-artifact@v4
