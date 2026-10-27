@@ -135,9 +135,9 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  <p class="sr-only" id="trace-context" hidden></p><div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-context trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div><p class="trace-scroll-hint" id="trace-scroll-hint" hidden>Desliza para ver el trazado completo.</p>
  <div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><p id="trace-keyboard-help" class="sr-only">Con foco en el trazado: M, P y R cambian la vista; V y G, la escala; C activa los calibres y espacio congela el monitor. Con calibres, las flechas mueven el extremo seleccionado; Mayús mueve diez pasos. Pulsa ? para abrir la ayuda de atajos.</p></section>
  </div>
- <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><h2 id="finding-title">Qué observar</h2><p id="case-subtitle" class="guide-lead">Activación auricular sinusal seguida de conducción AV 1:1.</p><ul id="findings"></ul><details id="reading-details"><summary>Lectura paso a paso</summary><div class="reading-detail-content"><div id="structured-description"></div><div id="omi-sheet"></div></div></details></div></section>
- <details id="adjust" class="adjust-panel"><summary><span>Ajustar el caso</span><small>Parámetros del modelo</small></summary><div id="inspector" class="inspector"></div></details>
- <footer class="workspace-footer"><button class="text-button" data-action="about">Información y fuentes ${icon("chevron")}</button><span>Uso educativo · sin validación clínica · <span data-product-version="${APP_VERSION}">v${APP_VERSION}</span></span></footer></main></div>
+ <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><h2 id="finding-title">Qué observar</h2><p id="case-subtitle" class="guide-lead">Activación auricular sinusal seguida de conducción AV 1:1.</p><ul id="findings"></ul><details id="reading-details"><summary>Explicación</summary><div class="reading-detail-content"><div id="structured-description"></div><div id="omi-sheet"></div></div></details></div></section>
+ <details id="adjust" class="adjust-panel"><summary><span>Ajustar el caso</span></summary><div id="inspector" class="inspector"></div></details>
+ <footer class="workspace-footer"><button class="text-button" data-action="about">Información y fuentes ${icon("chevron")}</button><span>Uso educativo · sin validación clínica</span></footer></main></div>
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
 
 const variantNavigation = new VariantNavigation($("#diagnosis-navigation"), $("#diagnosis-content"));
@@ -230,6 +230,7 @@ function renderInfo() {
   $("#case-subtitle").textContent = concealed
     ? "Identifica el patrón. Puedes cambiar la vista y utilizar los calibres."
     : customExploration ? "Interpreta la señal actual; el origen solo indica procedencia." : reading.subtitle;
+  $("#case-subtitle").hidden = !concealed && !customExploration && !c.artifacts.reversed;
   renderExplorationContext(!!concealed);
   $("#finding-title").textContent = concealed
     ? "Análisis sistemático"
@@ -417,7 +418,9 @@ function syncTraceTools() {
   $('[data-action="theme"]').setAttribute("aria-pressed", String(currentTheme() === "dark"));
   const caliperButton = $<HTMLButtonElement>('[data-action="caliper"]');
   caliperButton.disabled = monitorMode || !ready;
-  caliperButton.hidden = monitorMode;
+  caliperButton.hidden = monitorMode || (!practice && !measuring);
+  caliperButton.querySelector('span')!.textContent = measuring ? 'Terminar medición' : 'Medir';
+  caliperButton.setAttribute('aria-label', measuring ? 'Terminar medición' : 'Medir');
   caliperButton.classList.toggle("active", measuring);
   caliperButton.setAttribute("aria-pressed", String(measuring));
   $("#ecg").classList.toggle("measuring", measuring);
@@ -481,7 +484,7 @@ function showUnavailableSignal(message: string, unavailable = false) {
   const canvas = $<HTMLCanvasElement>("#ecg");
   if (!unavailable && c.view.mode === "paper") {
     c.view.palette = currentTheme() === "dark" ? "dark" : "paper";
-    renderPaperSkeleton(canvas, c, $("#canvas-wrap").clientWidth, undefined, paperAmplitudeMm, paperRowExtents);
+    renderPaperSkeleton(canvas, c, $("#canvas-wrap").clientWidth, undefined, paperAmplitudeMm, paperRowExtents, true);
   } else canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
   canvas.setAttribute("aria-label", "Señal no disponible");
   const loading = $("#signal-loading");
@@ -759,9 +762,21 @@ $("#case-search").addEventListener("keydown", (e) => {
 });
 
 function showMeasurements() {
-  if (session.signal && session.measurement) openDialog("Medidas", measurementsOverview(session.signal, session.measurement, c));
+  if (quiz && !quiz.answer) return;
+  if (session.signal && session.measurement) openDialog("Medidas", measurementsOverview(session.signal, session.measurement, c),
+    `<button type="button" class="btn measurement-start" data-action="start-caliper"${c.view.mode === 'monitor' ? ' disabled title="Disponible en papel y tira de ritmo"' : ''}>Medir en trazado</button>`);
   else
     toast("Las medidas estarán disponibles al generar correctamente la señal.");
+}
+function toggleCaliper(activate = !session.caliperOn) {
+  if (!session.signal || c.view.mode === 'monitor') return;
+  if (activate !== session.caliperOn) {
+    session.toggleCaliper(c.view.mode);
+    if (!session.caliperOn) caliper = null;
+    else if (layout) caliper = initialCaliper(layout, c.view, session.signal.fs);
+    draw();
+  }
+  $<HTMLCanvasElement>('#ecg').focus();
 }
 function showAbout() {
   const concealed = !!quiz && !quiz.answer, p = currentPreset();
@@ -772,11 +787,11 @@ function showAbout() {
     if (c.rhythm === "af") warnings.push(usesRealisticBase(c)
       ? "FA aprendida de PTB-XL: intervalos RR independientes (gamma, CV 0,10–0,35 según la semilla). No simula memoria del nodo AV ni cambios de organización de las ondas f; la FC programada es una media de largo plazo."
       : "FA representativa: intervalos RR independientes (gamma, CV 0,22). No simula memoria del nodo AV ni toda la variabilidad entre pacientes; la FC programada es una media de largo plazo.");
-    caseInfo = `<p>${esc(acquisitionDescription(c))}</p><div class="model-note"><p>${esc(provenance.summary)}</p><p>${esc(provenance.evidence)}</p>${provenance.limitations.map(limit => `<p>${esc(limit)}</p>`).join("")}</div>${warnings.map(w => `<p class="warning">${esc(w)}</p>`).join("")}`;
+    caseInfo = `<p>${esc(caseReading(c).subtitle)}</p><p>${esc(acquisitionDescription(c))}</p><div class="model-note"><p>${esc(provenance.summary)}</p><p>${esc(provenance.evidence)}</p>${provenance.limitations.map(limit => `<p>${esc(limit)}</p>`).join("")}</div>${warnings.map(w => `<p class="warning">${esc(w)}</p>`).join("")}`;
   }
   openDialog(
     "Información y fuentes",
-    `<div class="information-content">${aboutDialogHtml(caseInfo, !concealed && p ? omiReferencesHtml(p.id) : "")}</div>`,
+    `<div class="information-content">${aboutDialogHtml(caseInfo, !concealed && p ? omiReferencesHtml(p.id) : "")}<p class="control-note" data-product-version="${APP_VERSION}">ECG Lab · v${APP_VERSION}</p></div>`,
   );
 }
 let savedCaseSnapshot: ECGCase[] = [];
@@ -946,13 +961,14 @@ const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
     session.togglePause(c.view.mode);
     syncTraceTools();
   },
-  caliper: () => {
-    if (!session.signal || c.view.mode === "monitor") return;
-    session.toggleCaliper(c.view.mode);
-    if (!session.caliperOn) caliper = null;
-    else if (layout) caliper = initialCaliper(layout, c.view, session.signal.fs);
-    draw();
-    if (session.caliperOn) $<HTMLCanvasElement>("#ecg").focus();
+  caliper: () => toggleCaliper(),
+  'start-caliper': () => {
+    if (!session.signal || c.view.mode === 'monitor') return;
+    const dialog = $<HTMLDialogElement>('#dialog');
+    if (!dialog.open) return;
+    // Transfer focus only after native modal closure, then keep any existing marks.
+    dialog.addEventListener('close', () => toggleCaliper(true), {once: true});
+    closeDialog();
   },
   "clear-caliper": () => { caliper = null; draw(); },
   annotations: () => { annotations = !annotations; draw(); },
@@ -1140,7 +1156,7 @@ document.addEventListener("keydown", (e) => {
   if (!['m','p','r','v','g','c',' '].includes(key)) return;
   e.preventDefault();
   if (key===' ' && c.view.mode==='monitor') $<HTMLButtonElement>('[data-action="pause"]').click();
-  if (key==='c') $<HTMLButtonElement>('[data-action="caliper"]').click();
+  if (key==='c') toggleCaliper();
   const mode=({m:'monitor',p:'paper',r:'rhythm'} as Record<string,string>)[key];
   if(mode)$<HTMLButtonElement>(`[data-mode="${mode}"]`).click();
   if (key === 'v' || key === 'g') {

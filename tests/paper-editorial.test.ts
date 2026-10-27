@@ -46,11 +46,15 @@ describe("paper editorial bands preserve calibrated signal space", () => {
     const c = cloneCase(DEFAULT_CASE), s = signal(), compact = recorder(), exported = recorder();
     const a = renderPaper(compact.canvas, s, c, 1000, {ratio: 1, compactHeader: true});
     const b = renderPaper(exported.canvas, s, c, 1000, {ratio: 1});
-    expect(a).toEqual(b);
+    expect(a.widthMm).toBe(b.widthMm); expect(a.pxPerMm).toBe(b.pxPerMm);
+    expect(a.heightMm).toBe(b.heightMm - 8);
+    expect(a.segments.map(seg => ({...seg, y: seg.y + 8, baseline: seg.baseline + 8}))).toEqual(b.segments);
     for (const lead of Object.keys(s.leads)) expect(compact.texts.some(t => t.text === lead)).toBe(true);
     const text = compact.texts.map(t => t.text).join(" ");
     expect(text).toContain("25 mm/s"); expect(text).toContain("10 mm/mV");
     expect(text).not.toMatch(/Hz|señal sintética|columnas secuenciales/);
+    expect(text).not.toContain('ECG LAB');
+    expect(exported.texts.map(t => t.text).join(' ')).toContain('ECG LAB');
     expect(exported.texts.map(t => t.text).join(" ")).toMatch(/Hz.*señal sintética/);
   });
   it.each(["aggressive", "monitor", "off"] as const)("compact paper still identifies the nonstandard %s acquisition", filter => {

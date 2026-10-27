@@ -22,8 +22,8 @@ export function catalogView(
   const entries = own.filter(e => e.target.strategy !== "pending").length;
   const count = `${entries} ${entries === 1 ? "patrón" : "patrones"} · ${available} ${available === 1 ? "ejemplo" : "ejemplos"}`;
   const renderFamily = (family: typeof families[number]) =>
-    `<details class="case-group" data-family="${esc(family.id)}"${search || group || open.has(family.id) || family.sections.some(sec => !sec.crossListed && sec.entries.some(e => e.selected)) ? " open" : ""}><summary><span>${esc(family.label)}</span>${isIschemiaFamily(family.id) ? '' : `<span class="case-group-count">${family.entryCount}</span>`}</summary>${family.guide ? `<p class="case-group-guide">${esc(family.guide)}</p>` : ""}${family.sections.map(section =>
-      `${section.title ? `<h4 class="case-subgroup">${esc(section.title)}</h4>` : ""}${section.entries.map(entry => {
+    `<details class="case-group" data-family="${esc(family.id)}"${search || group || open.has(family.id) || family.sections.some(sec => !sec.crossListed && sec.entries.some(e => e.selected)) ? " open" : ""}><summary><span>${esc(family.label)}</span></summary>${family.guide ? `<p class="case-group-guide">${esc(family.guide)}</p>` : ""}${family.sections.map(section =>
+      `${section.title && !(section.entries.length === 1 && section.title === section.entries[0].diagnosis.title) ? `<h4 class="case-subgroup">${esc(section.title)}</h4>` : ""}${section.entries.map(entry => {
         const {diagnosis, target, selected, matches} = entry;
         const pending = target.strategy === "pending";
         const multiple = diagnosis.variants.length > 1;

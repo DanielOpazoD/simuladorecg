@@ -6,6 +6,7 @@ import {resolve,dirname} from 'node:path';
 import {chromium} from 'playwright';
 import {installWorkerTap,readTrace,workerReplies,waitForReply} from './support/worker-tap.mjs';
 import {chooseCatalogPreset} from './support/catalog-navigation.mjs';
+import {startManualMeasurement} from './support/manual-measurement.mjs';
 const url=process.env.ECG_TEST_URL||'http://127.0.0.1:4173/',out=resolve(process.argv[2]||'../ECG-QA/interactive-reading-browser');
 await mkdir(dirname(out),{recursive:true});await mkdir(out);
 const hash=x=>createHash('sha256').update(x).digest('hex');
@@ -80,7 +81,7 @@ try{
   const cb=await page.locator('#ecg').boundingBox();await page.evaluate(()=>scrollTo(0,0));await page.locator('#canvas-wrap').evaluate(e=>e.scrollLeft=0);
   const rect=await page.locator('#ecg').boundingBox(),x=rect.x+110,y=rect.y+190;
   await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+45,y+15,{steps:5});await page.mouse.up();assert.equal(await page.locator('#dialog').evaluate(d=>d.open),false);
-  await page.locator('[data-action=caliper]').click();assert.equal(await page.locator('#reading-overlay').isHidden(),true);await page.locator('#ecg').click({position:{x:150,y:190}});assert.equal(await page.locator('#dialog').evaluate(d=>d.open),false);await page.locator('[data-action=caliper]').click();
+  await startManualMeasurement(page);assert.equal(await page.locator('#reading-overlay').isHidden(),true);await page.locator('#ecg').click({position:{x:150,y:190}});assert.equal(await page.locator('#dialog').evaluate(d=>d.open),false);await page.locator('[data-action=caliper]').click();
   await page.locator('[data-action=quiz]').click();await page.locator('#signal-loading').waitFor({state:'hidden'});assert.equal(await page.locator('[data-finding]').count(),0);assert.equal(await page.locator('#reading-overlay').isHidden(),true);
   await page.getByRole('button',{name:'Salir de práctica'}).click();assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   await page.close();
