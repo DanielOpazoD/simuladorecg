@@ -33,14 +33,32 @@ try{
   assert.match(await page.title(),/ECG Lab/);assert.equal(await page.locator('vite-error-overlay').count(),0);
   if(view.zoom)await page.addStyleTag({content:'html{font-size:200%!important}'});
   await catalog();
-  assert.deepEqual(await page.locator('.ischemia-library .case-group > summary').allTextContents(),['Territorios coronarios','Patrones sutiles','Evolución y reperfusión','Imitadores']);
+  const index = page.locator('#catalog-families');
+  const families = await index.locator('button').evaluateAll(es=>es.map(e=>e.dataset.catalogFamily));
+  assert.equal(families.length,9);
+  const indexBefore = await index.boundingBox(), postsBefore = await workerReplies(page);
+  if(!view.zoom && view.height>=568)await fits('#catalog-families');
+  for(const family of families){
+   const button = page.locator(`[data-catalog-family="${family}"]`);
+   await button.focus();await page.keyboard.press('Enter');
+   assert.equal(await button.getAttribute('aria-pressed'),'true');
+   assert.equal(await button.evaluate(e=>e===document.activeElement),true);
+   assert.equal(await workerReplies(page),postsBefore,'Changing category must not generate a signal');
+   assert.equal(await index.locator('button[aria-pressed=true]').count(),1);
+   const visible = await page.locator('.case-group').evaluateAll(es=>es.filter(e=>e.getClientRects().length).map(e=>e.dataset.indexFamily));
+   assert(visible.length>0 && visible.every(id=>id===family));
+   if(!view.zoom && view.height>=568)assert.deepEqual(await index.boundingBox(),indexBefore);
+  }
+  await page.screenshot({path:resolve(out,`index-${view.width}-${view.height}-${view.dark?'dark':view.zoom?'zoom':'light'}.png`)});
+  await page.locator('[data-catalog-family="Isquemia y ST"]').click();
+  assert.deepEqual(await page.locator('.ischemia-library .family-result-title').allTextContents(),['Territorios','Patrones sutiles','Evolución y reperfusión','Imitadores']);
   assert.equal(await page.locator('.ischemia-library .case-group-count').count(),0);
   const route=[['OMI evidente','anterior'],['OMI evidente','posterior'],['OMI sutil','de_winter'],['OMI sutil','sgarbossa'],['NOMI','diffuse'],['NOMI','wellens_a'],['Imitadores','pericarditis'],['Imitadores','hyperk']];
   for(const [family,id] of route){
    await catalog();
    const group=page.locator(`.ischemia-library [data-family="${family}"]`);
-   if(!await group.evaluate(e=>e.open)){await group.locator('summary').focus();await page.keyboard.press('Enter');}
-   assert.equal(await group.evaluate(e=>e.open),true);
+   await page.locator('[data-catalog-family="Isquemia y ST"]').focus(); await page.keyboard.press('Enter');
+   assert.equal(await group.isVisible(),true);
    const n=await workerReplies(page);await group.locator(`[data-preset="${id}"]`).click();await waitForReply(page,n);await page.locator('#signal-loading').waitFor({state:'hidden'});
    assert(await page.locator(`[data-preset="${id}"][aria-current=true]`).count()>0);
    if(view.width===1440&&id==='anterior'){await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:resolve(out,'library-desktop.png')});}
@@ -57,6 +75,8 @@ try{
   }
   // Search still reaches the exact variant after navigation, and resets cleanly.
   await catalog();await page.locator('#case-search').fill('Wellens B');assert.equal(await page.locator('#case-list [data-preset="wellens_b"]').count(),1);
+  assert.equal(await index.locator('button').count(),9);
+  assert.equal(await index.locator('[aria-pressed=true]').count(),0);
   await page.locator('[data-action=clear-search]').click();assert.equal(await page.locator('.ischemia-library .case-group').count(),4);
   if(await page.locator('#catalog').evaluate(e=>e.classList.contains('open')))await page.locator('[data-action=close-catalog]').click();
   await page.locator('[data-action=about]').click();

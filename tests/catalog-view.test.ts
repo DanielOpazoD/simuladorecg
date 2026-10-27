@@ -10,23 +10,24 @@ describe("catalog presentation", () => {
     // 42 entries plus three imitators also shown under «Imitadores».
     expect(view.html.match(/data-diagnosis=/g)).toHaveLength(45);
     expect(view.html.match(/<small class="case-variants-count">También en /g)).toHaveLength(3);
-    expect(view.html).toContain('aria-labelledby="ischemia-library-title"');
-    expect(view.html).toContain("Territorios coronarios");
+    expect(view.html).toContain('aria-label="Isquemia y ST"');
+    expect(view.html).toContain("Territorios");
     expect(view.html).not.toContain("En las guías:");
     expect(view.html).not.toContain('case-group-count');
     expect(view.html).not.toContain('<h4 class="case-subgroup">Infarto antiguo</h4>');
     expect(view.html).toContain('<h4 class="case-subgroup">Inferior y derecho</h4>');
-    expect(view.html.indexOf('ischemia-library-title')).toBeLessThan(view.html.indexOf('data-family="Ritmos"'));
+    expect(view.html.indexOf('ischemia-library')).toBeLessThan(view.html.indexOf('data-family="Ritmos"'));
     expect(view.html).not.toMatch(/ disabled /);
     expect(view.html).not.toContain("Aún no disponibles");
-    // Accordion: one line per family; with nothing selected none is open.
-    expect(view.html.match(/<details class="case-group"/g)!.length).toBeGreaterThan(10);
-    expect(view.html).not.toMatch(/<details class="case-group"[^>]* open>/);
-    const active = catalogView(PRESETS, "", "", "anterior", new Set(["Marcapasos"]));
-    expect(active.html.match(/<details class="case-group"[^>]* open>/g)).toHaveLength(2);
-    expect(active.html).toMatch(/data-family="OMI evidente" open/);
-    expect(catalogView(PRESETS, "FA").html).not.toMatch(/<details class="case-group"[^>]*"(?! open)>/);
-    expect(view.clearFiltersVisible).toBe(false);
+    expect(view.navigation.match(/data-catalog-family=/g)).toHaveLength(9);
+    expect(view.navigation.match(/aria-pressed="true"/g)).toHaveLength(1);
+    expect(view.html).not.toContain('<details');
+    const active = catalogView(PRESETS, "", "", "anterior", "Marcapasos");
+    expect(active.active).toBe('Marcapasos');
+    expect(active.html).toMatch(/data-family="OMI evidente"[^>]* hidden/);
+    expect(active.html).toMatch(/data-family="Marcapasos"[^>]*(?<! hidden)>/);
+    expect(catalogView(PRESETS, "FA").html).not.toContain(' hidden');
+    expect(catalogView(PRESETS, "FA").navigation.match(/data-catalog-family=/g)).toHaveLength(9);    expect(view.clearFiltersVisible).toBe(false);
     expect(JSON.stringify(PRESETS)).toBe(before);
   });
 
