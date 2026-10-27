@@ -39,6 +39,9 @@ try{
    }
    if(id==='anterior')await page.screenshot({path:resolve(out,`workspace-${v.width}-${v.height}-${v.dark?'dark':v.zoom?'zoom':'light'}.png`)});
    await page.locator('.trace-tools [data-action=measurements]').click();await page.getByRole('dialog',{name:'Medidas',exact:true}).waitFor();
+   const header=await page.locator('#dialog .dialog-head').evaluate(e=>[...e.children].map(c=>{const r=c.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,overflow:c.scrollWidth-c.clientWidth};}));
+   assert(header.every(r=>r.overflow<=2),JSON.stringify(header));
+   for(let a=0;a<header.length;a++)for(let b=a+1;b<header.length;b++){const x=header[a],y=header[b];assert(x.right<=y.x+1||y.right<=x.x+1||x.bottom<=y.y+1||y.bottom<=x.y+1,'Measurement header controls overlap');}
    assert.deepEqual(await page.locator('.measurements-summary thead th').allTextContents(),['Medida','Modelo','Estimación']);
    assert.equal(await page.locator('.measurements-summary tbody tr').count(),5);assert.equal(await page.locator('#analyzer-info').evaluate(e=>e.open),false);
    if(id==='vf')assert.deepEqual(await page.locator('.measurements-summary td').evaluateAll(es=>es.map(e=>e.firstChild.textContent)),Array(10).fill('—'));

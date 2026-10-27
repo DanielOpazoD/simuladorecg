@@ -89,5 +89,9 @@ dialog:has(.measurements-overview) .dialog-head { display:grid; grid-template-co
  .topbar nav > .btn[data-action=catalog] svg { display:none; }
  .topbar nav > .btn:not(.icon-button) { padding-inline:6px; }
  .trace-tools > .btn,.trace-tools .paper-menu > summary { padding-inline:7px; }
- .measurements-summary th,.measurements-summary td { padding:6px 4px; }
+ dialog:has(.measurements-overview) #dialog-content { padding:10px 12px; }
+ dialog:has(.measurements-overview) .dialog-head { grid-template-columns:minmax(0,1fr) 44px; margin-bottom:6px; padding-block:0; gap:0 6px; }
+ .measurement-start { grid-column:1 / -1; grid-row:2; justify-self:start; }
+ .measurements-overview > .control-note { margin:6px 0 8px; }
+ .measurements-summary th,.measurements-summary td { padding:4px; }
 }
