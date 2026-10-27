@@ -39,6 +39,45 @@ describe("fichas OMI", () => {
     expect(omiSheetHtml("constructor")).toBe("");
     expect(omiSheetHtml("anterior", true)).toContain('class="omi-refs" open');
   });
+  it("separa el escenario docente de las inferencias clínicas de alto impacto", () => {
+    for (const s of Object.values(OMI_SHEETS)) {
+      expect(s.interpretation).toMatch(/^Escenario simulado/);
+    }
+    const diffuse = OMI_SHEETS.diffuse;
+    expect(diffuse.interpretation).toMatch(/no diagnostica.*tronco ni excluye oclusión/);
+    expect(diffuse.lesson).toMatch(/evaluación urgente.*isquemia persistente o inestabilidad/);
+    expect(OMI_SHEETS.subendo.interpretation).toMatch(/troponina elevada por sí sola tampoco establece infarto/);
+    expect(OMI_SHEETS.subendo.interpretation).not.toContain("si la troponina sube es un NOMI");
+    expect(OMI_SHEETS.inferior_lcx.lesson).toMatch(/síntomas isquémicos.*sospechar OMI posterior/);
+    expect(OMI_SHEETS.inferior_lcx.lesson).toContain("alteraciones secundarias");
+    expect(OMI_SHEETS.de_winter.interpretation).toMatch(/evaluación urgente.*no identifica por sí solo/);
+    expect(OMI_SHEETS.wellens_b.context).toContain("no establece cuánto tiempo");
+    expect(OMI_SHEETS.old_anterior.interpretation).toContain("ni excluye oclusión aguda superpuesta");
+  });
+  it("las derivaciones adicionales son una recomendación clínica, no un registro ni una confirmación del simulador", () => {
+    expect(OMI_SHEETS.rv_infarct.ecg).toContain("V4R no se registra en este simulador");
+    expect(OMI_SHEETS.rv_infarct.lesson).toContain("puede aportar evidencia adicional");
+    expect(OMI_SHEETS.posterior.ecg).toContain("V7–V9 no se registran en este simulador");
+    expect(OMI_SHEETS.inferior_lcx.notes[0].text).toContain("no registradas en este simulador");
+    const extraLeadCopy = [OMI_SHEETS.rv_infarct, OMI_SHEETS.posterior, OMI_SHEETS.inferior_lcx]
+      .flatMap(s => [s.ecg, s.lesson, ...s.notes.map(n => n.text)]).join(" ");
+    expect(extraLeadCopy).not.toMatch(/V4R lo confirma|se vería la elevación/);
+    expect(OMI_SHEETS.posterior.notes[2].text).toContain("negativas no excluyen oclusión");
+  });
+  it("conserva el umbral validado de Sgarbossa y vincula las cautelas a estudios primarios", () => {
+    expect(OMI_SHEETS.sgarbossa.ecg).toContain("al menos 1 mm y razón ST/S ≤ −0,25");
+    expect(OMI_SHEETS.sgarbossa.notes[1].text).toContain("criterios negativos no la excluyen");
+    for (const [id, ref] of [
+      ["diffuse", "avr2013"], ["subendo", "avr2013"],
+      ["posterior", "posterior2021"], ["inferior_lcx", "posterior2021"],
+      ["inferior", "avl2016"], ["pericarditis", "avl2016"],
+    ] as const) {
+      expect(OMI_SHEETS[id].refs).toContain(ref);
+      expect(REFERENCES[ref].level).toBe("estudio");
+    }
+    expect(REFERENCES.udmi2018.cite).toContain("Referencia histórica de los criterios implementados");
+    expect(OMI_SHEETS.inferior.notes[1].text).toContain("no excluye oclusión inferior");
+  });
 });
 
 describe("descripción estructurada", () => {

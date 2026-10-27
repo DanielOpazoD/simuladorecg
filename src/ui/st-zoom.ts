@@ -26,7 +26,7 @@ export function defaultZoomLead(s: Signal): Lead {
 }
 
 export function stZoomHtml(lead: Lead): string {
-  return `<div class="st-zoom"><div class="st-zoom-leads" role="group" aria-label="Derivación">${LEADS.map((l) => `<button type="button" class="btn${l === lead ? " active" : ""}" data-zoom-lead="${l}" aria-pressed="${l === lead}">${l}</button>`).join("")}</div>` +
+  return `<div class="st-zoom"><button type="button" class="text-button st-distribution-link" data-action="st-distribution">Ver distribución del ST en las 12 derivaciones</button><div class="st-zoom-leads" role="group" aria-label="Derivación">${LEADS.map((l) => `<button type="button" class="btn${l === lead ? " active" : ""}" data-zoom-lead="${l}" aria-pressed="${l === lead}">${l}</button>`).join("")}</div>` +
     `<p class="st-zoom-event"></p><canvas class="st-zoom-canvas" tabindex="0" role="img" aria-label="Latido ampliado de ${esc(lead)} con el punto J y el ST marcados" aria-describedby="st-zoom-scale st-zoom-values st-zoom-clip st-zoom-readout"></canvas>` +
     `<p class="st-zoom-clip" id="st-zoom-clip" hidden></p><dl class="st-zoom-values" id="st-zoom-values"></dl>` +
     `<p class="st-zoom-scale" id="st-zoom-scale">50 mm/s · 10 mm/mV: cada cuadro pequeño son 20 ms y 0,1 mV. Niveles respecto del segmento PR (franja gris). J indica el final del QRS del modelo.</p>` +
@@ -36,9 +36,9 @@ export function stZoomHtml(lead: Lead): string {
 
 interface Palette { bg: string; fine: string; bold: string; trace: string; text: string; sdst: string; idst: string }
 /** A view of the original samples: lead changes retain the same model event. */
-export function mountStZoom(root: HTMLElement, s: Signal, initialLead: Lead, palette: Palette) {
+export function mountStZoom(root: HTMLElement, s: Signal, initialLead: Lead, palette: Palette, requestedBeat?: number) {
   const canvas = root.querySelector<HTMLCanvasElement>(".st-zoom-canvas")!, out = root.querySelector<HTMLOutputElement>(".st-zoom-readout")!;
-  const initial = stZoomMark(s, initialLead);
+  const initial = stZoomMark(s, initialLead, requestedBeat);
   if (!initial) { out.textContent = "Esta derivación no tiene complejos organizados para ampliar."; canvas.hidden = true; return; }
   const beat = initial.beat, fs = s.fs, t0 = s.events.beats[beat].time - BEFORE, t1 = initial.jTime + AFTER;
   const widthMm = (t1 - t0) * SPEED, heightMm = 2 * RANGE_MV * GAIN;
