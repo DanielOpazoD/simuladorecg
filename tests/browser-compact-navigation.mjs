@@ -33,6 +33,8 @@ try{
   assert.match(await page.title(),/ECG Lab/);assert.equal(await page.locator('vite-error-overlay').count(),0);
   if(view.zoom)await page.addStyleTag({content:'html{font-size:200%!important}'});
   await catalog();
+  // Compare stable geometry after the optional webfont has loaded or fallen back.
+  await page.evaluate(() => document.fonts.ready);
   const catalogClose=page.locator('[data-action=close-catalog]');
   if(await catalogClose.isVisible()){
    const closeBox=await catalogClose.evaluate(e=>{const r=e.getBoundingClientRect();return {right:r.right,overflow:e.scrollWidth-e.clientWidth};});
