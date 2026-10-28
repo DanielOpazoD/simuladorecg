@@ -444,8 +444,9 @@ function syncTraceTools() {
   const caliperButton = $<HTMLButtonElement>('[data-action="caliper"]');
   caliperButton.disabled = monitorMode || !ready;
   caliperButton.hidden = false;
-  caliperButton.querySelector('span')!.textContent = measuring ? 'Terminar medición' : 'Medir';
-  caliperButton.setAttribute('aria-label', measuring ? 'Terminar medición' : 'Medir');
+  const caliperLabel = measuring ? 'Ocultar medición' : caliper ? 'Mostrar medición' : 'Medir';
+  caliperButton.querySelector('span')!.textContent = caliperLabel;
+  caliperButton.setAttribute('aria-label', caliperLabel);
   caliperButton.classList.toggle("active", measuring);
   caliperButton.setAttribute("aria-pressed", String(measuring));
   $("#ecg").classList.toggle("measuring", measuring);
@@ -823,8 +824,7 @@ function toggleCaliper(activate = !session.caliperOn) {
   if (!session.signal || c.view.mode === 'monitor') return;
   if (activate !== session.caliperOn) {
     session.toggleCaliper(c.view.mode);
-    if (!session.caliperOn) caliper = null;
-    else if (layout) caliper = initialCaliper(layout, c.view, session.signal.fs);
+    if (session.caliperOn && !caliper && layout) caliper = initialCaliper(layout, c.view, session.signal.fs);
     draw();
   }
   $<HTMLCanvasElement>('#ecg').focus({preventScroll:true});
@@ -1079,12 +1079,9 @@ document.addEventListener("click", async (e) => {
     if (c.view.mode !== "paper") { c.view.mode = "paper"; session.changeMode("paper"); renderScales(); }
     if (session.caliperOn) { session.toggleCaliper("paper"); caliper = null; }
     draw();
-    const first = syncReadingAids()?.[0];
-    if (first) {
-      const wrap = $("#canvas-wrap"); wrap.scrollLeft = Math.max(0, first.x * layout!.pxPerMm - 32);
-      const top = window.scrollY + $("#ecg").getBoundingClientRect().top + first.y * layout!.pxPerMm - 120;
-      window.scrollTo({top:Math.max(0,top),behavior:"instant"});
-    }
+    // Reveal the actual mark through both the zoomed paper and page scrollports.
+    // Scrolling only the page can leave the highlighted lead above the paper viewport.
+    $("#reading-overlay .reading-focus-box")?.scrollIntoView({block:"center",inline:"center",behavior:"instant"});
     return;
   }
   if (target.closest('[data-action="clear-finding"]')) { activeFinding = null; draw(); return; }
@@ -1275,7 +1272,7 @@ document.addEventListener("keydown", (e) => {
   }
 });
 new ResizeObserver(() => {
-  $("#canvas-wrap").style.setProperty("--trace-tools-height", `${$(".trace-toolbar").getBoundingClientRect().height}px`);
+  $(".trace-panel").style.setProperty("--trace-tools-height", `${$(".trace-toolbar").getBoundingClientRect().height}px`);
 }).observe($(".trace-toolbar"));
 new ResizeObserver(() => {
   window.clearTimeout(resizeTimer);
