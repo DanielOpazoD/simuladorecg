@@ -38,6 +38,7 @@ for (const diagnosis of diagnoses) {
   // Select the stable index family before its example.
   const group = page.locator(".case-group").filter({ has: page.locator(`[data-diagnosis="${diagnosis}"]`) }).first();
   const family = await group.getAttribute("data-index-family");
+  if(!await page.locator("#catalog-families").isVisible())await page.locator("[data-action=catalog-index]").click();
   await page.locator(`[data-catalog-family="${family}"]`).click();
   await page.locator(`.case-button[data-diagnosis="${diagnosis}"]`).first().click();
   await ready(diagnosis);

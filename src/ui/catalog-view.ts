@@ -29,7 +29,7 @@ export function catalogView(
   const count = `${entries} ${entries === 1 ? "patrón" : "patrones"} · ${available} ${available === 1 ? "ejemplo" : "ejemplos"}`;
   const renderFamily = (family: typeof families[number]) =>
     `<section class="case-group" data-family="${esc(family.id)}" data-index-family="${esc(indexGroup(family.id))}"${!search && !group && indexGroup(family.id) !== active ? ' hidden' : ''}><h3 class="family-result-title${!search && !isIschemiaFamily(family.id) ? ' sr-only' : ''}">${esc(family.id === 'OMI evidente' ? 'Territorios' : family.label)}</h3>${family.guide ? `<p class="case-group-guide">${esc(family.guide)}</p>` : ""}${family.sections.map(section =>
-      `${section.title && !(section.entries.length === 1 && section.title === section.entries[0].diagnosis.title) ? `<h4 class="case-subgroup">${esc(section.title)}</h4>` : ""}${section.entries.map(entry => {
+      `${section.title && !isIschemiaFamily(family.id) && !(section.entries.length === 1 && section.title === section.entries[0].diagnosis.title) ? `<h4 class="case-subgroup">${esc(section.title)}</h4>` : ""}${section.entries.map(entry => {
         const {diagnosis, target, selected, matches} = entry;
         const pending = target.strategy === "pending";
         const multiple = diagnosis.variants.length > 1;
