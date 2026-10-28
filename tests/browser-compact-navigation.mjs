@@ -35,6 +35,21 @@ try{
   await page.goto(url);await page.locator('#signal-loading').waitFor({state:'hidden'});
   assert.match(await page.title(),/ECG Lab/);assert.equal(await page.locator('vite-error-overlay').count(),0);
   if(view.zoom)await page.addStyleTag({content:'html{font-size:200%!important}'});
+  const skipCanvas=await page.locator('#ecg').evaluate(e=>e.toDataURL()),skipReplies=await workerReplies(page);
+  for(let attempt=0;attempt<2;attempt++){
+   assert.equal(await page.locator('#adjust').evaluate(e=>e.open),false);
+   await page.locator('a[href="#inspector"]').focus();await page.keyboard.press('Enter');
+   assert.equal(await page.locator('#adjust').evaluate(e=>e.open),true,'Parameter access must reveal the folded destination');
+   assert.equal(await page.locator('#inspector').evaluate(e=>e===document.activeElement),true);
+   await page.keyboard.press('Tab');
+   assert.equal(await page.locator('#inspector').evaluate(e=>e.contains(document.activeElement)&&document.activeElement.checkVisibility()),true,'Tab must reach a visible control');
+   await page.locator('#adjust > summary').click();
+   await page.locator('a[href="#case-title"]').focus();await page.keyboard.press('Enter');
+   assert.equal(await page.locator('#case-title').evaluate(e=>e===document.activeElement),true);
+   assert.equal(await page.locator('#adjust').evaluate(e=>e.open),false,'Returning to reading must leave unrelated disclosures folded');
+  }
+  assert.equal(await page.locator('#ecg').evaluate(e=>e.toDataURL()),skipCanvas);
+  assert.equal(await workerReplies(page),skipReplies,'Skip navigation must not generate a signal');
   await catalog();
   // Compare stable geometry after the optional webfont has loaded or fallen back.
   await page.evaluate(() => document.fonts.ready);
