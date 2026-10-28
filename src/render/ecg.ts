@@ -297,6 +297,8 @@ export function renderPaper(
     displayName?: string;
     /** The interactive workspace already supplies the technical context outside the paper. */
     compactHeader?: boolean;
+    /** Shared envelopes for comparing independent ECGs at identical row baselines. */
+    rowExtents?: Layout["rowExtents"];
     /** OMI lens: the same patient's previous ECG, drawn in grey behind the trace. */
     previous?: Signal;
     /** OMI lens: J point (end of the generated QRS) and ST from J to J+80 ms against
@@ -315,7 +317,7 @@ export function renderPaper(
       amplitude = Math.max(amplitude, Math.abs(s.leads[lead][i]) * gain);
   }
   const ratio = options.ratio ?? Math.min(2, window.devicePixelRatio || 1);
-  const extents = paperRowExtents(c, s, options.previous);
+  const extents = options.rowExtents ?? paperRowExtents(c, s, options.previous);
   const natural = workspacePaper(paperLayout(c, availableWidth, options.pxPerMm, amplitude, extents), options.compactHeader),
     layout =
       options.maxHeight && options.pxPerMm === undefined && c.view.fit

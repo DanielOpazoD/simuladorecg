@@ -57,8 +57,6 @@
 #canvas-wrap.paper-zoomed { max-height:max(220px,calc(100dvh - var(--trace-tools-height,52px) - 48px)); overscroll-behavior:contain; }
 #canvas-wrap.paper-pannable { cursor:grab; touch-action:pinch-zoom; -webkit-user-select:none; user-select:none; }
 #canvas-wrap.paper-dragging { cursor:grabbing; }
-.auto-pr { color:#236695; } .auto-qrs { color:#08746d; } .auto-qt { color:#725298; }
-.dark .auto-pr { color:#8bcaff; } .dark .auto-qrs { color:#79e3ca; } .dark .auto-qt { color:#d7b1ff; }
 .auto-unavailable { position:absolute; top:48px; left:24px; padding:8px; background:var(--surface); color:var(--muted); font-size:.8125rem; }
 .paper-menu .view-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:stretch; gap:2px; padding:0 0 10px; background:none; }
 .paper-menu .view-tabs button { text-align:center; justify-content:center; min-height:44px; min-width:0; padding:8px 4px; white-space:normal; font-size:var(--text-sm); }
@@ -97,6 +95,7 @@
 /* Dedicate the panel to the chosen examples; Casos returns to the family index. */
 .sidebar .sidebar-head { min-height:44px; padding-inline:8px; gap:6px; justify-content:flex-start; }
 .sidebar-head [data-action=catalog-index] { padding:8px; flex-shrink:0; }
+.sidebar-head .catalog-return::before { content:""; display:inline-block; width:6px; height:6px; margin-right:6px; border-left:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(45deg); vertical-align:1px; }
 .sidebar-head #catalog-family-title { flex:1; min-width:0; margin:0; font-size:.8125rem; line-height:1.2; color:var(--ink); }
 .sidebar-head .icon-button { margin-left:auto; flex-shrink:0; }
 .sidebar .search-box { order:5; margin:6px 10px 8px; }
@@ -116,7 +115,7 @@
 .catalog-families[hidden] { display:none; }
 .case-button, .ischemia-library .case-button { background:transparent; border-color:transparent; margin-block:0; box-shadow:none; }
 .case-button:hover, .ischemia-library .case-button:hover { background:var(--soft); border-color:transparent; }
-.case-button.selected { background:var(--soft); box-shadow:inset 3px 0 var(--accent); }
+.case-button.selected { background:var(--soft); box-shadow:inset 3px 0 var(--accent); font-weight:600; }
 .ischemia-library { background:transparent; border:0; border-radius:0; padding-inline:0; }
 .ischemia-library h3 { margin-inline:10px; }
 .ischemia-library .case-group { border-top:0; }

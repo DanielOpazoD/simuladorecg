@@ -1,8 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
 import { PRESETS, presetById } from "../src/presets/catalog";
-import { catalogView, VariantNavigation } from "../src/ui/catalog-view";
+import { catalogView, catalogFamilyLabel, catalogFamilyForPreset, VariantNavigation } from "../src/ui/catalog-view";
 
 describe("catalog presentation", () => {
+  it('reveals the selected case while preserving the route used for cross-listed examples',()=>{
+    expect(catalogFamilyForPreset(presetById('af_slow')!,'Marcapasos')).toBe('Ritmos');
+    expect(catalogFamilyForPreset(presetById('hyperk')!,'Isquemia y ST')).toBe('Isquemia y ST');
+    expect(catalogFamilyForPreset(presetById('hyperk')!,'Otros patrones')).toBe('Otros patrones');
+    expect(catalogFamilyForPreset(presetById('rv_chronic')!,'Isquemia y ST')).toBe('Sobrecarga');
+    const family=catalogFamilyForPreset(presetById('af_slow')!);
+    expect(catalogView(PRESETS,'','','af_slow',family).navigation).toContain(`>${catalogFamilyLabel(family)}</button>`);
+    expect(catalogFamilyLabel('Ritmos')).toBe('Sinusal y auricular');
+  });
   it("lists every available entry, leaves out the pending examples and opens only the active family", () => {
     const before = JSON.stringify(PRESETS);
     const view = catalogView(PRESETS);

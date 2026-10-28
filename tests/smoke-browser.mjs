@@ -9,7 +9,9 @@ const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));
 page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
 await page.goto(url);
-// The initial index is visible; examples appear only after choosing a family.
+// Start in the current family; return through the real control before browsing.
+await page.locator("#signal-loading").waitFor({state:"hidden"});
+await page.locator("[data-action=catalog-index]").click();
 await page.locator("#catalog-families button").first().waitFor();
 
 const inked = () => page.locator("canvas").first().evaluate((cv) => {

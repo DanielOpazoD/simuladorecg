@@ -1,11 +1,17 @@
 import { presetTitle } from "../presets/nomenclature";
-import type { Preset } from "../presets/catalog";
+import { PRESETS, type Preset } from "../presets/catalog";
 import { diagnosisFamilies, diagnosisForPreset } from "./diagnosis-navigation";
 import { esc, icon } from "./helpers";
-import { catalogGroup, familyLabel, isIschemiaFamily } from "./catalog-presentation";
+import { catalogFamilies, catalogGroup, familyLabel, isIschemiaFamily } from "./catalog-presentation";
 
 const indexGroup = (id: string) => isIschemiaFamily(id) ? 'Isquemia y ST' : id;
 const shortFamilies: Record<string, string> = {Ritmos:'Sinusal y auricular', 'Ritmos ventriculares':'Ventriculares', Sobrecarga:'Sobrecargas'};
+export const catalogFamilyLabel = (id:string) => shortFamilies[id] ?? familyLabel(id);
+/** Keep the route used for cross-listed cases; otherwise reveal the case's own family. */
+export function catalogFamilyForPreset(preset:Preset, preferred='') {
+  const routes=catalogFamilies(PRESETS).filter(f=>f.sections.some(s=>s.presets.some(p=>p.id===preset.id))).map(f=>indexGroup(f.id));
+  return routes.includes(preferred)?preferred:indexGroup(catalogGroup(preset));
+}
 const shortCases: Record<string, string> = {anterior:'DA · anterior', lateral:'Cx · lateral'};
 /** A stable family index above one result area. Searching spans every family. */
 export function catalogView(
@@ -21,7 +27,7 @@ export function catalogView(
   const keys = [...new Set(all.map(f => indexGroup(f.id)))].sort((a,b) => Number(b === 'Isquemia y ST') - Number(a === 'Isquemia y ST'));
   const selected = presets.find(p => p.id === selectedId);
   const active = keys.includes(activeFamily) ? activeFamily : selected ? indexGroup(catalogGroup(selected)) : keys[0];
-  const navigation = keys.map(id => `<button type="button" data-action="catalog-family" data-catalog-family="${esc(id)}" aria-pressed="${!search && id === active}" aria-controls="case-list">${esc(shortFamilies[id] ?? familyLabel(id))}</button>`).join('');
+  const navigation = keys.map(id => `<button type="button" data-action="catalog-family" data-catalog-family="${esc(id)}" aria-pressed="${!search && id === active}" aria-controls="case-list">${esc(catalogFamilyLabel(id))}</button>`).join('');
   // Cross-listed entries (imitators also shown in their own family) count once.
   const own = families.flatMap(f => f.sections.filter(s => !s.crossListed).flatMap(s => s.entries));
   const available = own.reduce((sum, e) => sum + e.matches.filter(p => p.strategy !== "pending").length, 0);

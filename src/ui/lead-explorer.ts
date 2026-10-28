@@ -6,6 +6,7 @@ import { findingTarget, leadWindow, sampleExtent, type SampleWindow } from "./re
 import { acceptedBeatIntervals } from './automatic-intervals';
 import { stMarks } from '../render/st-lens';
 import { LensCaliper } from './lens-caliper';
+import { intervalValue, intervalDescription, MEASUREMENT_STATE } from './measurement-presentation';
 
 export type LensMode = 'all' | 'pr' | 'qrs' | 'qt' | 'st' | 'none';
 export interface LensMark { key:'pr'|'qrs'|'qt'|'st'; start:number; end:number; value:string; detail:string }
@@ -13,7 +14,7 @@ export function lensMarks(s:Signal, lead:Lead, w:SampleWindow, polarity:number, 
   if(mode==='none')return [];
   if(mode==='st')return stMarks(s,lead,w.start,w.end).filter(x=>Number.isFinite(x.j0)).map(x=>({key:'st',start:x.jTime,end:x.endTime,value:`${(x.j0*polarity*10).toFixed(1)} mm`,detail:'J situado por el modelo; ST leído en las muestras respecto al PR.'}));
   if(!m)return [];
-  return m.beats.flatMap(b=>acceptedBeatIntervals(m,b,w.start,w.end).filter(x=>mode==='all'||x.key===mode).map(x=>({key:x.key,start:x.start,end:x.end,value:`${x.ms} ms${x.review?'*':''}`,detail:`${x.key.toUpperCase()}: límites estimados multiderivación. ${x.reason??''}`})));
+  return m.beats.flatMap(b=>acceptedBeatIntervals(m,b,w.start,w.end).filter(x=>mode==='all'||x.key===mode).map(x=>({key:x.key,start:x.start,end:x.end,value:intervalValue(x.ms,x.review),detail:intervalDescription(x.key,x.ms,x.review,x.reason)})));
 }
 
 /** Uniform ECG grid from final samples. All points are kept; no interpolation or smoothing. */
@@ -102,7 +103,7 @@ export function mountLeadExplorer(root: HTMLElement, s: Signal, c: ECGCase, seg:
     hint.hidden = !hint.textContent;
     const marks=w?lensMarks(s,lead,w,polarity,measurement,mode):[];
     root.dataset.markMode=mode;
-    root.querySelector('.lens-status')!.textContent=mode!=='none'&&!marks.length?'· No estimable':marks.some(m=>m.value.endsWith('*'))?'· * Revisar':'';
+    root.querySelector('.lens-status')!.textContent=mode!=='none'&&!marks.length?`· ${MEASUREMENT_STATE.unavailable}`:marks.some(m=>m.value.endsWith('*'))?`· * ${MEASUREMENT_STATE.review}`:'';
     root.querySelector(".lead-detail-scroll")!.innerHTML = w ? enlargedTrace(s, lead, w, polarity,marks) : "Muestras no disponibles en esta derivación.";
     fitLabels();manual.refresh();
   };

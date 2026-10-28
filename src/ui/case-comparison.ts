@@ -2,7 +2,8 @@ import { cloneCase, type ECGCase, type Signal } from "../engine/types";
 import { PRESETS, fromPreset, presetById } from "../presets/catalog";
 import { presetTitle } from "../presets/nomenclature";
 import { caseReading } from "../presets/case-context";
-import { filterLabel, paperLayout, renderPaper } from "../render/ecg";
+import { catalogFamilyLabel } from "./catalog-view";
+import { filterLabel, paperLayout, paperRowExtents, renderPaper } from "../render/ecg";
 import { esc } from "./helpers";
 import { SignalController } from "./signal-controller";
 import "./case-comparison.css";
@@ -12,10 +13,10 @@ const available = PRESETS.filter(p => p.strategy !== "pending");
 export function caseComparisonHtml(): string {
   const groups = [...new Set(available.map(p => p.group))];
   return `<section class="case-comparison" aria-label="Comparación de ejemplos ECG">
-    <div class="comparison-controls"><label for="comparison-reference">Comparar con<select id="comparison-reference">${groups.map(group => `<optgroup label="${esc(group)}">${available.filter(p => p.group === group).map(p => `<option value="${esc(p.id)}"${p.id === "sinus" ? " selected" : ""}>${esc(presetTitle(p))}</option>`).join("")}</optgroup>`).join("")}</select></label><p>Ejemplos independientes, con la misma escala.</p></div>
+    <div class="comparison-controls"><label for="comparison-reference">Comparar con<select id="comparison-reference">${groups.map(group => `<optgroup label="${esc(catalogFamilyLabel(group))}">${available.filter(p => p.group === group).map(p => `<option value="${esc(p.id)}"${p.id === "sinus" ? " selected" : ""}>${esc(presetTitle(p))}</option>`).join("")}</optgroup>`).join("")}</select></label><p>Ejemplos independientes, con la misma escala.</p></div>
     <div class="comparison-sheets">
-      <figure class="comparison-sheet"><figcaption>ECG actual <strong id="comparison-current-name"></strong></figcaption><div class="comparison-paper" tabindex="0" role="region" aria-label="ECG actual: desplazamiento horizontal"><canvas id="comparison-current" role="img"></canvas></div></figure>
-      <figure class="comparison-sheet" id="comparison-reference-sheet" aria-busy="true"><figcaption>Referencia <strong id="comparison-reference-name">Ritmo sinusal</strong></figcaption><p id="comparison-status" role="status" aria-live="polite">Preparando referencia…</p><div class="comparison-paper" tabindex="0" role="region" aria-label="ECG de referencia: desplazamiento horizontal"><canvas id="comparison-example" role="img" hidden></canvas></div></figure>
+      <figure class="comparison-sheet"><figcaption>ECG actual <strong id="comparison-current-name"></strong></figcaption><div class="comparison-paper" tabindex="0" role="region" aria-label="ECG actual: desplazamiento sincronizado"><canvas id="comparison-current" role="img"></canvas></div></figure>
+      <figure class="comparison-sheet" id="comparison-reference-sheet" aria-busy="true"><figcaption>Referencia <strong id="comparison-reference-name">Ritmo sinusal</strong></figcaption><p id="comparison-status" role="status" aria-live="polite">Preparando referencia…</p><div class="comparison-paper" tabindex="0" role="region" aria-label="ECG de referencia: desplazamiento sincronizado"><canvas id="comparison-example" role="img" hidden></canvas></div></figure>
     </div>
     <p id="comparison-acquisition" class="comparison-acquisition" hidden></p>
   </section>`;
@@ -34,7 +35,7 @@ export function comparisonCase(referenceId: string, current: ECGCase): ECGCase |
 
 /** An isolated worker produces the catalog reference. No result is published to
  * the application's case/session, and no signal arithmetic is offered here. */
-export function mountCaseComparison(host: HTMLElement, currentSignal: Signal, currentCase: ECGCase): () => void {
+export function mountCaseComparison(host: HTMLElement, currentSignal: Signal, currentCase: ECGCase, referenceId = 'sinus'): () => void {
   const root = host.matches(".case-comparison") ? host : host.querySelector<HTMLElement>(".case-comparison")!;
   const find = <T extends HTMLElement = HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
   const c = cloneCase(currentCase);
@@ -47,20 +48,28 @@ export function mountCaseComparison(host: HTMLElement, currentSignal: Signal, cu
   const status = find("#comparison-status");
   const abort = new AbortController();
   let disposed = false, pendingId = 0, reference: Signal | null = null;
-  let referenceCase = comparisonCase("sinus", c)!;
+  let referenceCase = comparisonCase(referenceId, c) ?? comparisonCase("sinus", c)!;
+  referenceSelect.value = referenceCase.presetId;
+  find('.comparison-controls p').textContent = `Ejemplos independientes · ${c.view.speed} mm/s · ${c.view.gain} mm/mV${c.view.chestGain!==c.view.gain?` · Precordiales ${c.view.chestGain} mm/mV`:''}`;
   const currentName = caseReading(c).title;
   find("#comparison-current-name").textContent = currentName;
   currentCanvas.setAttribute("aria-label", `ECG actual: ${currentName}`);
 
   function draw() {
     if (disposed) return;
+    const captions=[...root.querySelectorAll<HTMLElement>('figcaption')];
+    captions.forEach(caption=>caption.style.minHeight='');
+    const captionHeight=Math.max(...captions.map(caption=>caption.getBoundingClientRect().height));
+    captions.forEach(caption=>caption.style.minHeight=`${captionHeight}px`);
     // A single explicit px/mm prevents independently fitting two morphologies
     // (or different row heights) from making their amplitudes incomparable.
     const width = Math.min(...sheets.map(sheet => sheet.clientWidth || root.clientWidth || 760));
     const geometry = paperLayout(c, width);
     const pxPerMm = Math.max(2.4, Math.min(width / geometry.widthMm, c.view.pxPerMm));
-    renderPaper(currentCanvas, currentSignal, c, width, { pxPerMm, displayName: currentName, compactHeader: true });
-    if (reference) renderPaper(referenceCanvas, reference, referenceCase, width, { pxPerMm, displayName: presetTitle(presetById(referenceCase.presetId)!), compactHeader: true });
+    // Reserve the union of both envelopes; never stretch or normalize either signal.
+    const rowExtents=paperRowExtents(c,currentSignal,reference ?? undefined);
+    renderPaper(currentCanvas, currentSignal, c, width, { pxPerMm, rowExtents, displayName: currentName, compactHeader: true });
+    if (reference) renderPaper(referenceCanvas, reference, referenceCase, width, { pxPerMm, rowExtents, displayName: presetTitle(presetById(referenceCase.presetId)!), compactHeader: true });
   }
 
   const controller = new SignalController((signal, _measurement, id) => {
@@ -97,9 +106,17 @@ export function mountCaseComparison(host: HTMLElement, currentSignal: Signal, cu
     pendingId = controller.request(next, Math.max(10, currentSignal.duration));
   }
   referenceSelect.addEventListener("change", chooseReference, { signal: abort.signal });
+  const mirrored=new WeakMap<HTMLElement,{left:number;top:number}>();
   sheets.forEach((sheet, i) => sheet.addEventListener("scroll", () => {
+    // A mirrored scroll also emits an event. Do not let that delayed event
+    // overwrite a newer gesture on the other axis.
+    const expected=mirrored.get(sheet);mirrored.delete(sheet);
+    if(expected && Math.abs(sheet.scrollLeft-expected.left)<=1 && Math.abs(sheet.scrollTop-expected.top)<=1)return;
     const other = sheets[1 - i];
-    if (Math.abs(other.scrollLeft - sheet.scrollLeft) > 1) other.scrollLeft = sheet.scrollLeft;
+    if (Math.abs(other.scrollLeft-sheet.scrollLeft)>1 || Math.abs(other.scrollTop-sheet.scrollTop)>1) {
+      other.scrollLeft=sheet.scrollLeft;other.scrollTop=sheet.scrollTop;
+      mirrored.set(other,{left:other.scrollLeft,top:other.scrollTop});
+    }
   }, { passive: true, signal: abort.signal }));
   const observer = new ResizeObserver(draw);
   sheets.forEach(sheet => observer.observe(sheet));
