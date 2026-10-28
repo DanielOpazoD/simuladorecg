@@ -3,14 +3,18 @@ import { measurementSupportHtml } from './measurement-support';
 import type { Signal, Measurement, ECGCase, MetricKey } from "../engine/types";
 import { referenceForMeasurement } from "../engine/reference";
 import { esc } from "./helpers";
+import { availableMetricValue, metricCards } from './metric-cards';
+import { MEASUREMENT_STATE } from './measurement-presentation';
 const value = (v: number | null, u = "") =>
-  v === null ? "—" : `${Math.round(v)} ${u}`;
+  v === null || !Number.isFinite(v) ? "—" : `${Math.round(v)} ${u}`;
 export function measurementDialog(
   s: Signal,
   m: Measurement,
   c: ECGCase,
 ): string {
   const { reference } = referenceForMeasurement(s, m);
+  const cards=metricCards(c,m);
+  const qtcAvailable=cards.find(x=>x.label==='QTc')?.status!=='unavailable';
   const rows: [MetricKey, string, string][] = [
     ["hr", "FC ventricular", "lpm"],
     ["pr", "PR", "ms"],
@@ -18,11 +22,14 @@ export function measurementDialog(
     ["qt", "QT", "ms"],
     ["axis", "Eje QRS", "°"],
   ];
-  return `<p class="dialog-lead">Las cifras y las marcas se obtienen de las mismas muestras, entre ${m.window.start} y ${m.window.end} segundos. La referencia usa los mismos latidos que contribuyen a cada intervalo; la FC se contrasta entre los extremos detectados. La auditoría comprueba también cada límite y retira candidatos discordantes; nunca rellena una medida con el valor del modelo.</p>
+  return `<p class="dialog-lead">Resumen de las muestras entre ${m.window.start} y ${m.window.end} s. Las marcas del papel y la lupa corresponden a cada latido y pueden diferir de este resumen. La referencia usa los latidos que contribuyen a cada intervalo; una estimación retirada no se sustituye por el valor del modelo.</p>
  <div class="measurement-table-wrap"><table><thead><tr><th>Variable</th><th>Señal</th><th>Referencia*</th><th>Consistencia</th></tr></thead><tbody>${rows
    .map(([key, label, unit]) => {
      const ev = m.evidence[key];
-     return `<tr><td>${label}</td><td><strong>${value(m[key], unit)}</strong></td><td>${value(reference[key], unit)}</td><td><span class="evidence-badge ${ev.status}">${ev.status === "usable" ? "Reproducible" : ev.status === "review" ? "Revisar" : "No estimable"}</span><small>${ev.count}/${ev.total} ${key === "hr" ? "intervalos RR" : "latidos"}${ev.spread !== null && key !== "hr" ? ` · P90−P10 ${ev.spread.toFixed(1)} ${unit}` : ""}</small></td></tr>`;
+     // QT here is uncorrected; rhythm restrictions on QTc do not withdraw QT.
+     const contextUnavailable=key==='qt'?['vf','asystole'].includes(c.rhythm):cards.find(x=>x.key===key)?.status==='unavailable';
+     const measured=contextUnavailable?null:availableMetricValue(m,key),status=measured===null?'unavailable':ev.status;
+     return `<tr><td>${label}</td><td><strong>${value(measured, unit)}</strong></td><td>${value(reference[key], unit)}</td><td><span class="evidence-badge ${status}">${status === "usable" ? "Reproducible" : status === "review" ? MEASUREMENT_STATE.review : MEASUREMENT_STATE.unavailable}</span><small>${ev.count}/${ev.total} ${key === "hr" ? "intervalos RR" : "latidos"}${ev.spread !== null && key !== "hr" ? ` · P90−P10 ${ev.spread.toFixed(1)} ${unit}` : ""}</small></td></tr>`;
    })
    .join("")}</tbody></table></div>
  <p class="control-note">La señal mostrada y exportada conserva las muestras originales. Los impulsos breves se neutralizan solo en una copia para el análisis. *La referencia contiene tiempos de activación y soporte del generador; no es una anotación clínica. Su eje es el solicitado antes de superponer lesión/sobrecarga. «Reproducible» describe consistencia interna, no exactitud clínica ni una probabilidad de acierto.</p>
@@ -32,7 +39,7 @@ export function measurementDialog(
  <h3>Corrección del QT</h3><div class="qt-grid">${Object.entries(m.qtc)
    .map(
      ([key, v]) =>
-       `<div><span>${{ bazett: "Bazett", fridericia: "Fridericia", framingham: "Framingham", hodges: "Hodges" }[key]}</span><strong>${value(v, "ms")}</strong></div>`,
+       `<div><span>${{ bazett: "Bazett", fridericia: "Fridericia", framingham: "Framingham", hodges: "Hodges" }[key]}</span><strong>${value(qtcAvailable?v:null, "ms")}</strong></div>`,
    )
    .join("")}</div>
  <p class="control-note">QT principal: retorno sostenido de amplitud o de pendiente terminal, para excluir la recuperación lenta del filtro. La tangente del latido ampliado se muestra aparte y puede acabar antes. El QTc usa RR mediano del registro; el QT del generador incorpora memoria de RR, por lo que ambos pueden diferir tras pausas o ectopia. QTc configurado: ${c.qtc} ms.</p>

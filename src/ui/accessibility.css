@@ -7,6 +7,11 @@
 summary { min-height:44px; align-content:center; }
 #case-title, #inspector { scroll-margin-block:20px; }
 .catalog-backdrop { position:fixed; inset:0; background:var(--scrim); z-index:9; }
+/* Keep sticky ECG tools below the mobile drawer while the workspace is inert. */
+.workspace[inert] { isolation:isolate; }
+/* Progressive scroll containment; native modal focus handling stays intact. */
+dialog:modal { overscroll-behavior:contain; }
+dialog::backdrop { overflow:hidden; overscroll-behavior:contain; }
 .btn, .icon-button { min-height:44px; }
 .icon-button { min-width:44px; width:44px; }
 .view-tabs button, .control-tabs button, .case-button, .text-button { min-height:44px; }

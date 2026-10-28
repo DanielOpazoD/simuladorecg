@@ -39,6 +39,8 @@ describe("independent catalog comparison", () => {
     const html = caseComparisonHtml();
     expect(html).toContain('value="sinus" selected');
     expect(html).toContain("Ejemplos independientes");
+    expect(html).toContain('<optgroup label="Sinusal y auricular">');
+    expect(html).toContain('<optgroup label="Ramas y fascículos">');
     const ids = [...html.matchAll(/<option value="([^"]+)"/g)].map(match => match[1]);
     expect(new Set(ids)).toEqual(new Set(PRESETS.filter(p => p.strategy !== "pending").map(p => p.id)));
     expect(ids).toHaveLength(new Set(ids).size);

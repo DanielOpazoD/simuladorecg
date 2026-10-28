@@ -86,7 +86,7 @@ export const monitorRateNote = (c: ECGCase, m: Measurement): string =>
 
 /** Keep raw candidates in data, but do not present unavailable values as estimates. */
 export function availableMetricValue(m:Measurement,key:MetricKey):number|null {
-  return m.evidence[key].status==='unavailable'?null:m[key];
+  return m.evidence[key].status==='unavailable'||m[key]===null||!Number.isFinite(m[key])?null:m[key];
 }
 
 /**

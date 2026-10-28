@@ -158,7 +158,11 @@ export function installAccessibility() {
   document.addEventListener('keydown', e => {
     if (e.altKey || e.ctrlKey || e.metaKey || e.isComposing) return;
     if (catalogOpen) {
-      if (e.key === 'Escape') {e.preventDefault();e.stopPropagation();catalog.classList.remove('open');return;}
+      if (e.key === 'Escape') {
+        // The first Escape clears an active search; a second one closes the drawer.
+        if(e.target instanceof HTMLInputElement && e.target.id==='case-search' && e.target.value)return;
+        e.preventDefault();e.stopPropagation();catalog.classList.remove('open');return;
+      }
       if (e.key === 'Tab') {
         const nodes = focusable(catalog), first = nodes[0], end = nodes.at(-1);
         if (e.shiftKey && document.activeElement === first) {e.preventDefault();end?.focus();}

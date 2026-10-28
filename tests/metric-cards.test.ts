@@ -74,10 +74,44 @@ import { modelMetricCards } from "../src/ui/metric-cards";
 import { synthesize } from "../src/engine/signal";
 import { fromPreset, presetById } from "../src/presets/catalog";
 import { measurementsOverview } from '../src/ui/measurements-overview';
+import { measurementDialog } from '../src/ui/measurement-dialog';
+import { analyzeSamples } from '../src/engine/sample-analysis';
+
+describe('the detail never restores a withdrawn estimate',()=>{
+  const c=fromPreset(presetById('sinus')!),s=synthesize(c,10);
+  const row=(html:string,label:string)=>html.split('</tbody>')[0].match(new RegExp(`<tr><td>${label}</td>(.*?)</tr>`))![1];
+  it.each(['hr','pr','qrs','qt','axis'] as const)('keeps retained %s candidates out of the accepted table',key=>{
+    const m=measurement({[key]:'unavailable'}),before=structuredClone(m);
+    const html=measurementDialog(s,m,c);
+    expect(row(html,{hr:'FC ventricular',pr:'PR',qrs:'QRS',qt:'QT',axis:'Eje QRS'}[key])).toMatch(/^<td><strong>—<\/strong><\/td>/);
+    expect(row(html,{hr:'FC ventricular',pr:'PR',qrs:'QRS',qt:'QT',axis:'Eje QRS'}[key])).toContain('No estimable');
+    expect(m).toEqual(before);
+  });
+  it('keeps AV and QTc restrictions consistent with the summary',()=>{
+    expect(row(measurementDialog(s,measurement(),withCase({av:'complete'})),'PR')).toContain('<strong>—</strong>');
+    const html=measurementDialog(s,measurement(),withCase({rhythm:'af'}));
+    expect(html.split('<div class="qt-grid">')[1].split('</div>\n')[0]).not.toMatch(/<strong>\d/);
+    expect(row(html,'QT')).toContain('<strong>380 ms</strong>');
+  });
+  it.each([NaN,Infinity,null])('does not present a non-finite interval (%s) as accepted',qrs=>{
+    const m=measurement();m.qrs=qrs;
+    expect(row(measurementDialog(s,m,c),'QRS')).toContain('No estimable');
+  });
+  it('preserves adverse candidates separately and flags review without changing its number',()=>{
+    const m=analyzeSamples(s);m.evidence.qt.status='unavailable';m.evidence.qrs.status='review';
+    const before=structuredClone(m),html=measurementDialog(s,m,c);
+    expect(html).toContain('Salida cruda del detector, previa a la auditoría');
+    expect(html.split('Límites candidatos por latido')[1]).toContain(`${m.beats[0].offset.toFixed(3)} s`);
+    expect(row(html,'QRS')).toContain(`<strong>${Math.round(m.qrs!)} ms</strong>`);
+    expect(row(html,'QRS')).toContain('Revisar');
+    expect(html.split('<div class="qt-grid">')[1].split('</div>\n')[0]).not.toMatch(/<strong>\d/);
+    expect(m).toEqual(before);
+  });
+});
 
 describe('automatic measurement summary',()=>{
   const c=fromPreset(presetById('sinus')!),s=synthesize(c,10);
-  const qtRow=(m:Measurement)=>measurementsOverview(s,m,c).split('</table>')[0].match(/<tr><th scope="row">QT<\/th>(.*?)<\/tr>/)![1];
+  const qtRow=(m:Measurement)=>measurementsOverview(s,m,c).split('</table>')[0].match(/<tr data-metric="qt"><th scope="row">QT<\/th>(.*?)<\/tr>/)![1];
   it('shows raw QT separately from corrected QTc using the measured value',()=>{
     expect(qtRow(measurement())).toContain('<td>380<small>ms</small></td>');
     expect(measurementsOverview(s,measurement(),c)).toContain('QTc<small>Fridericia</small>');

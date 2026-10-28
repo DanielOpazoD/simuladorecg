@@ -4,6 +4,7 @@ import { aboutDialogHtml, keyboardHelpHtml } from "./ui/about-dialog";
 import { regionalActivationControls } from "./ui/regional-activation";
 import "./style.css";
 import "./ui/reading-interactions.css";
+import "./ui/measurement-presentation.css";
 import { findingTarget } from "./ui/reading-focus";
 import { readingOverlay } from "./ui/reading-overlay";
 import { renderAutomaticIntervals } from "./ui/automatic-intervals";
@@ -27,7 +28,7 @@ import { openDialog, closeDialog } from "./ui/dialog";
 import { exportDialogHtml } from "./ui/export-dialog";
 import { handleExportAction } from "./ui/export-actions";
 import { diagnosisForPreset } from "./ui/diagnosis-navigation";
-import { catalogView, VariantNavigation } from "./ui/catalog-view";
+import { catalogView, catalogFamilyLabel, catalogFamilyForPreset, VariantNavigation } from "./ui/catalog-view";
 import { WorkspaceNavigation } from "./ui/workspace-navigation";
 import { createExplorationOrigin, explorationContextHtml, explorationChanges, restoreExplorationOrigin, type ExplorationOrigin } from "./ui/exploration-origin";
 import {
@@ -171,7 +172,7 @@ function currentPreset() {
 }
 /** Browsing a family is independent of the currently displayed ECG. */
 let activeCatalogFamily = "";
-let catalogIndexOpen = true;
+let catalogIndexOpen = false;
 // The paper menu closes on a click outside it or on Escape.
 document.addEventListener("click", (e) => {
   const menu = document.querySelector<HTMLDetailsElement>(".paper-menu[open]");
@@ -186,8 +187,11 @@ function renderCatalog() {
   activeCatalogFamily = view.active;
   $("#catalog").classList.toggle("catalog-overview", catalogIndexOpen && !search);
   $("#catalog-families").hidden = !catalogIndexOpen || !!search;
-  $("#catalog-family-title").textContent = catalogIndexOpen || search ? "" : familyLabel(view.active);
-  $("[data-action=catalog-index]").setAttribute("aria-expanded", String(catalogIndexOpen && !search));
+  $("#catalog-family-title").textContent = catalogIndexOpen || search ? "" : catalogFamilyLabel(view.active);
+  const indexButton=$("[data-action=catalog-index]"),atIndex=catalogIndexOpen && !search;
+  indexButton.setAttribute("aria-expanded", String(atIndex));
+  indexButton.classList.toggle("catalog-return", !atIndex);
+  indexButton.setAttribute("aria-label",atIndex?`Casos de ${catalogFamilyLabel(view.active)}`:'Casos: volver a familias');
   $("#catalog-families").innerHTML = view.navigation;
   $("#catalog-count").textContent = view.count;
   $("[data-action=clear-search]").hidden = !view.clearFiltersVisible;
@@ -697,6 +701,10 @@ function beep() {
 function selectPreset(id: string) {
   const p = presetById(id);
   if (!p || p.strategy === "pending") return;
+  activeCatalogFamily = catalogFamilyForPreset(p,activeCatalogFamily);
+  catalogIndexOpen = false;
+  search = ""; group = "";
+  $<HTMLInputElement>("#case-search").value = "";
   const acquisition = c.acquisition;
   c = fromPreset(p, c.view);
   c.acquisition = acquisition;
@@ -796,7 +804,8 @@ document.addEventListener("change", (e) => {
   } else generate();
 });
 $("#case-search").addEventListener("keydown", (e) => {
-  if ((e as KeyboardEvent).key === "Escape") {
+  if ((e as KeyboardEvent).key === "Escape" && search) {
+    e.preventDefault(); e.stopPropagation();
     $<HTMLInputElement>("#case-search").value = "";
     search = "";
     renderCatalog();
@@ -904,6 +913,7 @@ function openStDistribution(lead?: Lead, beat?: number) {
   $("#dialog-content [data-action=close-dialog]").focus();
 }
 let comparisonOpening = false;
+let comparisonReferenceId = 'sinus';
 async function openComparison() {
   if (comparisonOpening || !session.signal || !session.canExport || (quiz && !quiz.answer)) return;
   const signal = session.signal, ecg = cloneCase(c);
@@ -914,10 +924,11 @@ async function openComparison() {
     openDialog("Comparar ECG", caseComparisonHtml());
     const dialog = $<HTMLDialogElement>("#dialog"), host = $(".case-comparison");
     dialog.classList.add("comparison-dialog");
-    const dispose = mountCaseComparison(host, signal, ecg);
+    const dispose = mountCaseComparison(host, signal, ecg, comparisonReferenceId);
     let finished = false;
     const cleanup = () => {
       if (finished) return; finished = true;
+      comparisonReferenceId=host.querySelector<HTMLSelectElement>('#comparison-reference')!.value;
       dispose(); observer.disconnect(); dialog.classList.remove("comparison-dialog");
       dialog.removeEventListener("close", cleanup);
     };
@@ -975,9 +986,11 @@ async function openTeachingWorkspace() {
 }
 const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
   "catalog-index": () => {
-    catalogIndexOpen = !catalogIndexOpen; search = ""; group = "";
+    catalogIndexOpen = !!search || !catalogIndexOpen; search = ""; group = "";
     $<HTMLInputElement>("#case-search").value = ""; renderCatalog();
-    $("[data-action=catalog-index]").focus({preventScroll:true});
+    const destination=catalogIndexOpen ? $('#catalog-families [aria-pressed="true"]') : $("[data-action=catalog-index]");
+    destination.focus({preventScroll:true});
+    if(catalogIndexOpen)destination.scrollIntoView({block:'nearest'});
   },
   "catalog-family": (target) => {
     catalogIndexOpen = false;
@@ -1088,6 +1101,7 @@ document.addEventListener("click", async (e) => {
   if (preset) {
     if (quiz && !quiz.answer) return;
     leavePractice();
+    activeCatalogFamily=preset.closest<HTMLElement>('[data-index-family]')?.dataset.indexFamily ?? activeCatalogFamily;
     selectPreset(preset.dataset.preset!);
     return;
   }

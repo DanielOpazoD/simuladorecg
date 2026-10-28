@@ -1,0 +1,12 @@
+/* Metric identity is the same on paper, in the lens and in the summary.
+   Color does not encode reliability; review/unavailable states keep their text. */
+:root { --interval-pr:#236695; --interval-qrs:#08746d; --interval-qt:#725298; }
+.dark { --interval-pr:#8bcaff; --interval-qrs:#79e3ca; --interval-qt:#d7b1ff; }
+.auto-pr,.lens-pr,.metrics .metric[data-metric="pr"] > span,.measurements-summary [data-metric="pr"] > th { color:var(--interval-pr); }
+.auto-qrs,.lens-qrs,.metrics .metric[data-metric="qrs"] > span,.measurements-summary [data-metric="qrs"] > th { color:var(--interval-qrs); }
+.auto-qt,.lens-qt,.metrics .metric[data-metric="qt"] > span,.measurements-summary [data-metric="qt"] > th { color:var(--interval-qt); }
+.lens-pr,.lens-qrs,.lens-qt { fill:currentColor; stroke:currentColor; }
+.auto-review { position:absolute; bottom:3px; right:12px; color:var(--muted); background:var(--paper,var(--surface)); font-size:14px; line-height:1.2; }
+@media(forced-colors:active) {
+ .auto-pr,.auto-qrs,.auto-qt,.lens-pr,.lens-qrs,.lens-qt,.metrics .metric[data-metric] > span,.measurements-summary [data-metric] > th { color:CanvasText; }
+}

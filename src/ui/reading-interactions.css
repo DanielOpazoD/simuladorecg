@@ -43,12 +43,6 @@ dialog.lead-dialog { width:min(740px,calc(100% - 24px)); max-height:92dvh; }
 .lead-lens-controls label { display:flex; align-items:center; gap:6px; }
 .lead-lens-controls select { min-height:44px; max-width:135px; padding:6px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--ink); font:inherit; }
 .lens-mark { fill:var(--accent); stroke:var(--accent); stroke-width:.35; }
-.lens-pr { fill:#1d4ed8; stroke:#1d4ed8; }
-.lens-qrs { fill:#00756f; stroke:#00756f; }
-.lens-qt { fill:#9333a8; stroke:#9333a8; }
-.dark .lens-pr { fill:#93baff; stroke:#93baff; }
-.dark .lens-qrs { fill:#68dfd0; stroke:#68dfd0; }
-.dark .lens-qt { fill:#eea4fa; stroke:#eea4fa; }
 .lens-mark text { stroke:none; font-family:system-ui,sans-serif; font-weight:650; }
 .lens-guide { stroke-dasharray:1 1; opacity:.5; stroke-width:.2; }
 @media(max-height:480px) {

@@ -16,6 +16,18 @@ try{
   for(const id of ['sinus','tachy','brady','lbbb','vf']){
    if(id!=='sinus'){await chooseCatalogPreset(page,id);await page.locator('#signal-loading').waitFor({state:'hidden'});}
    const trace=await readTrace(page),replies=await workerReplies(page),canvas=await page.locator('#ecg').evaluate(c=>c.toDataURL());
+   let intervalColors;
+   if(id==='sinus'){
+    await page.locator('[data-action="automatic"]').click();
+    intervalColors=await page.locator('#automatic-overlay [data-interval]').evaluateAll(es=>Object.fromEntries(es.map(e=>[e.dataset.interval,getComputedStyle(e).color])));
+    const summaryColors=await page.locator('#metrics [data-metric] > span').evaluateAll(es=>Object.fromEntries(es.map(e=>[e.parentElement.dataset.metric,getComputedStyle(e).color])));
+    for(const key of ['pr','qrs','qt'])assert.equal(summaryColors[key],intervalColors[key],'The metric identity must agree in summary and paper');
+    const review=await page.locator('#automatic-overlay text').evaluateAll(es=>es.some(e=>e.textContent.endsWith('*')));
+    assert.equal(await page.locator('.auto-review').count(),review?1:0);
+    const bounds=await page.locator('#ecg').boundingBox();
+    await page.locator('[data-action="automatic"]').click();
+    assert.deepEqual(await page.locator('#ecg').boundingBox(),bounds,'Hiding marks must not move the ECG');
+   }
    await page.locator('[data-reading-segment="7"]').click();
    const root=page.locator('#lead-explorer'),start=Number(await root.getAttribute('data-start')),end=Number(await root.getAttribute('data-end'));
    assert(start>=5&&end<=10);
@@ -49,6 +61,8 @@ try{
    if(id==='sinus'){
     assert.equal(await page.locator('.lens-mark').count(),6);
     const colors=await page.locator('.lens-mark').evaluateAll(es=>es.map(e=>getComputedStyle(e).fill));assert.equal(new Set(colors).size,3);
+    const lensColors=await page.locator('.lens-mark').evaluateAll(es=>Object.fromEntries(es.map(e=>[e.dataset.key,getComputedStyle(e).fill])));
+    assert.deepEqual(lensColors,intervalColors,'Paper and lens must use identical interval colors');
     const space=await root.evaluate(r=>{
      const svg=r.querySelector('svg').getBoundingClientRect(),paper=r.querySelector('.lead-detail-scroll').getBoundingClientRect();
      const labels=[...r.querySelectorAll('.lens-mark text')].map(e=>e.getBoundingClientRect());

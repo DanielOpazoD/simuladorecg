@@ -38,6 +38,15 @@ try{
   await catalog();
   // Compare stable geometry after the optional webfont has loaded or fallen back.
   await page.evaluate(() => document.fonts.ready);
+  if(view.width<=800){
+   const bounds=await page.locator('#catalog').boundingBox();
+   const clip={x:Math.ceil(bounds.x)+1,y:Math.ceil(bounds.y)+1,width:Math.floor(bounds.width)-2,height:Math.floor(bounds.height)-2};
+   const visible=await page.screenshot({clip});
+   // Independent paint oracle: hiding the background cannot change an opaque drawer.
+   const hiddenBackground=await page.addStyleTag({content:'.workspace{visibility:hidden!important}'});
+   const opaque=await page.screenshot({clip});await hiddenBackground.evaluate(e=>e.remove());
+   assert(visible.equals(opaque),'Background tools must not paint over the open mobile catalogue');
+  }
   const catalogClose=page.locator('[data-action=close-catalog]');
   if(await catalogClose.isVisible()){
    const closeBox=await catalogClose.evaluate(e=>{const r=e.getBoundingClientRect();return {right:r.right,overflow:e.scrollWidth-e.clientWidth};});
@@ -45,6 +54,15 @@ try{
    assert.equal(await catalogClose.getAttribute('aria-label'),'Cerrar');
   }
   const index = page.locator('#catalog-families');
+  assert.equal(await index.isVisible(),false,'Start with the current case, not another navigation decision');
+  assert.equal(await page.locator('#catalog-family-title').innerText(),'Sinusal y auricular');
+  assert.equal(await page.locator('#case-list [data-preset="sinus"][aria-current=true]').isVisible(),true);
+  assert.equal(await page.locator('[data-action=catalog-index]').getAttribute('aria-label'),'Casos: volver a familias');
+  const headerButtons=await page.locator('.sidebar-head button').count();
+  const originalCanvas=await page.locator('#ecg').evaluate(e=>e.toDataURL());
+  await page.screenshot({path:resolve(out,`navigation-${view.width}-${view.height}-${view.dark?'dark':view.zoom?'zoom':'light'}.png`)});
+  await page.locator('[data-action=catalog-index]').click();
+  assert.equal(await index.locator('[aria-pressed=true]').evaluate(e=>e===document.activeElement),true);
   const families = await index.locator('button').evaluateAll(es=>es.map(e=>e.dataset.catalogFamily));
   assert.equal(families.length,9);
   const indexBefore = await index.boundingBox(), postsBefore = await workerReplies(page);
@@ -64,6 +82,8 @@ try{
    if(!view.zoom && view.height>=568)await fits('#case-list');
   }
   await page.screenshot({path:resolve(out,`index-${view.width}-${view.height}-${view.dark?'dark':view.zoom?'zoom':'light'}.png`)});
+  assert.equal(await page.locator('#ecg').evaluate(e=>e.toDataURL()),originalCanvas,'Browsing families must leave the ECG untouched');
+  assert.equal(await page.locator('.sidebar-head button').count(),headerButtons,'Navigation must reuse the existing controls');
   if(!await index.isVisible())await page.locator('[data-action=catalog-index]').click();
   await page.locator('[data-catalog-family="Isquemia y ST"]').click();
   assert.deepEqual(await page.locator('.ischemia-library .family-result-title').allTextContents(),['Territorios','Patrones sutiles','Evolución y reperfusión','Imitadores']);
@@ -94,6 +114,33 @@ try{
   assert.equal(await index.locator('button').count(),9);
   assert.equal(await index.locator('[aria-pressed=true]').count(),0);
   await page.locator('[data-action=clear-search]').click();assert.equal(await page.locator('.ischemia-library .case-group').count(),4);
+  // Search is a route to an actual case, not a sticky filter hiding its siblings.
+  await page.locator('#case-search').fill('af_slow');
+  const beforeSelection=await workerReplies(page);
+  await page.locator('#case-list [data-preset="af_slow"]').click();await waitForReply(page,beforeSelection);
+  await catalog();
+  assert.equal(await page.locator('#case-search').inputValue(),'');
+  assert.equal(await page.locator('#catalog-family-title').innerText(),'Sinusal y auricular');
+  assert.equal(await page.locator('#case-list [data-preset="af_slow"][aria-current=true]').isVisible(),true);
+  assert.equal(await page.locator('#variant-tab-af_slow').getAttribute('aria-selected'),'true');
+  const afterSelection=await workerReplies(page);
+  await page.locator('#case-search').fill('Wellens B');await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#case-search').inputValue(),'');
+  assert.equal(await page.locator('#catalog').evaluate(e=>e.inert),false,'Clearing a search must not also close the mobile drawer');
+  assert.equal(await page.locator('#case-list [data-preset="af_slow"][aria-current=true]').isVisible(),true);
+  if(await page.locator('#catalog').evaluate(e=>e.classList.contains('open'))){
+   await page.keyboard.press('Escape');
+   await page.waitForFunction(()=>document.querySelector('#catalog').inert);
+   assert.equal(await page.locator('[data-action=catalog]').evaluate(e=>e===document.activeElement),true);
+   await catalog();
+  }
+  // Return from a search opened at the index must return to the index as well.
+  await page.locator('[data-action=catalog-index]').click();
+  await page.locator('#case-search').fill('Wellens B');
+  await page.locator('[data-action=catalog-index]').click();
+  assert.equal(await index.isVisible(),true);
+  assert.equal(await index.locator('[aria-pressed=true]').evaluate(e=>e===document.activeElement),true);
+  assert.equal(await workerReplies(page),afterSelection,'Returning and clearing search must not regenerate a case');
   if(await page.locator('#catalog').evaluate(e=>e.classList.contains('open')))await page.locator('[data-action=close-catalog]').click();
   await page.locator('[data-action=about]').click();
   if(!view.zoom)await fits('#dialog');

@@ -78,31 +78,48 @@ async function calibrationPixels(page,speed,gain) {
 }
 
 try {
- for(const width of [1440,390]) {
-  const page=await browser.newPage({viewport:{width,height:1000},reducedMotion:'reduce'});activePage=page;
+ for(const {width,height} of [{width:1440,height:900},{width:390,height:844},{width:320,height:568},{width:844,height:390}]) {
+  const page=await browser.newPage({viewport:{width,height},reducedMotion:'reduce'});activePage=page;
   page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());if(m.type()==='warning')warnings.push(m.text());});
-  await installAudit(page);await page.goto(url);assert.match(await page.title(),/ECG/i);
-  if(width===390){await page.locator('#signal-loading').waitFor({state:'hidden'});await page.locator('.paper-menu > summary').click();if(!await page.locator('.view-settings').evaluate(e=>e.open))await page.locator('.view-settings > summary').click();await page.locator('[data-key="acquisition"]').selectOption('ideal');await page.locator('#signal-loading').waitFor({state:'hidden'});await page.locator('.paper-menu > summary').click();}
+  await installAudit(page);
+  await page.addInitScript(width=>{localStorage.setItem('ecglab-theme','light');localStorage.setItem('ecglab-acquisition',width===390?'ideal':'realistic');},width);
+  await page.goto(url);assert.match(await page.title(),/ECG/i);
   await page.locator('#signal-loading').waitFor({state:'hidden'});await chooseCatalogPreset(page,'anterior');
-  assert.equal(await page.locator('[data-key="view.format"]').inputValue(),'6x2','Five seconds per lead remains the default after choosing a case');
   await page.waitForFunction(()=>document.querySelector('#signal-loading').hidden&&window.__comparisonAudit.workers.some(w=>w.last?.ecg.presetId==='anterior'));
   await page.evaluate(()=>{window.__comparisonAudit.mainId=window.__comparisonAudit.workers.findLast(w=>!w.terminated&&w.last?.ecg.presetId==='anterior').id;});
   const visibleControls=await page.locator('.trace-toolbar button, .trace-toolbar summary').evaluateAll(es=>es.filter(e=>e.checkVisibility()).length);
-  assert(visibleControls<=6,'Reading starts with at most6 visible trace controls');
-  assert.equal(await page.locator('#reading-details').evaluate(e=>e.open),false);
+  assert.equal(visibleControls,8,'Reuse the five reading actions and the three existing zoom controls');
+  assert.equal(await page.locator('.view-aids').evaluate(e=>e.open),false);
   const info=page.locator('[data-action=about]:visible');assert.equal(await info.count(),1);assert.match(await info.innerText(),/Información y fuentes/);
   assert.equal(await page.locator('[data-action=lens-previous], [data-action=lens-change]').count(),0);
   const speed=width===1440?50:25,gain=width===1440?5:10;
   if(width===1440){await page.locator('.paper-menu > summary').click();if(!await page.locator('.view-settings').evaluate(e=>e.open))await page.locator('.view-settings > summary').click();await page.locator('[data-key="view.speed"]').selectOption('50');await page.locator('[data-key="view.gain"]').selectOption('5');await page.locator('.paper-menu > summary').click();}
+  // Read -> inspect -> measure using the same controls as the learner.
+  const lead=page.locator('[data-reading-segment="7"]');await lead.click();
+  assert.equal(await page.locator('#lead-explorer').getAttribute('data-lead'),'V2');
+  await page.keyboard.press('Escape');assert.equal(await lead.evaluate(e=>e===document.activeElement),true);
+  await page.locator('[data-action=automatic]').click();
+  const automatic=await page.locator('#automatic-overlay').innerHTML();
+  await page.locator('[data-action=caliper]').click();
+  await page.locator('#caliper-segment').selectOption('0');
+  await page.locator('#caliper-endpoint').selectOption('1');await page.locator('#caliper-time').fill('200');await page.locator('#caliper-time').press('Tab');
+  await page.locator('#caliper-endpoint').selectOption('2');await page.locator('#caliper-time').fill('400');await page.locator('#caliper-time').press('Tab');
+  assert.equal(await page.locator('#measurement-values').getAttribute('data-ms'),'200');
+  const manual=await page.locator('#measurement-values').innerText();
+  await page.locator('[data-action=compare]').scrollIntoViewIfNeeded();
+  const readingPosition=await page.evaluate(()=>({x:scrollX,y:scrollY,left:document.querySelector('#canvas-wrap').scrollLeft,top:document.querySelector('#canvas-wrap').scrollTop}));
   const before=await mainSnapshot(page);
   assert(before.leads.every(([,length])=>length===32500),'Identity includes the complete65s at500Hz');
   await page.locator('[data-action=compare]').click();await page.locator('#comparison-reference-sheet[aria-busy=false]').waitFor();
   assert.equal(await page.locator('#comparison-reference').inputValue(),'sinus');
   assert.equal(await page.locator('#comparison-current-name').textContent(),await page.locator('#case-title').textContent());
   assert.match(await page.locator('.comparison-controls').innerText(),/Ejemplos independientes/);
+  const geometry=await page.locator('#dialog').evaluate(d=>({overflow:d.scrollHeight-d.clientHeight,panes:[...d.querySelectorAll('.comparison-paper')].map(e=>{const r=e.getBoundingClientRect();return {top:r.top,bottom:r.bottom,height:r.height};})}));
+  assert(geometry.overflow<=2&&geometry.panes.every(r=>r.top>=0&&r.bottom<=height&&r.height>=80),'Both ECGs and their controls must remain in the viewport: '+JSON.stringify(geometry));
   const calibration=await calibrationPixels(page,speed,gain);
   await writeFile(resolve(out,`calibration-${width}.json`),JSON.stringify(calibration,null,2));
   assert.equal(calibration[0].width,calibration[1].width);assert.equal(calibration[0].pxPerMm,calibration[1].pxPerMm);
+  assert.equal(calibration[0].pulse?.y,calibration[1].pulse?.y,'Corresponding rows share the same raster baseline');
   for(const c of calibration){assert(c.pulse,'Calibration pulse visible in raster');assert(Math.abs(c.pulse.height-c.expectedHeight)<=1.5,'1mV pulse height');assert(Math.abs(c.pulse.plateau-c.expectedPlateau)<=1.5,'200ms pulse plateau');}
   await page.screenshot({path:resolve(out,`comparison-${width}.png`)});
   // Negative control: removing the calibration margin must fail the pixel oracle.
@@ -121,11 +138,27 @@ try {
   assert.equal(reference.acquisition,width===390?'ideal':'realistic');
   await page.locator('.comparison-paper').first().evaluate(e=>e.scrollLeft=100);
   await page.waitForFunction(()=>{const e=[...document.querySelectorAll('.comparison-paper')];return Math.abs(e[0].scrollLeft-e[1].scrollLeft)<=1;});
+  const canScroll=await page.locator('.comparison-paper').first().evaluate(e=>e.scrollHeight>e.clientHeight);
+  await page.locator('.comparison-paper').first().evaluate(e=>e.scrollTop=150);
+  await page.waitForFunction(canScroll=>{const e=[...document.querySelectorAll('.comparison-paper')];return (!canScroll||e[0].scrollTop>0)&&Math.abs(e[0].scrollTop-e[1].scrollTop)<=1;},canScroll);
+  if(canScroll){
+   const pane=await page.locator('.comparison-paper').last().boundingBox();
+   const previousTop=await page.locator('.comparison-paper').last().evaluate(e=>e.scrollTop);
+   await page.mouse.move(pane.x+30,pane.y+30);await page.mouse.wheel(0,-80);
+   await page.waitForFunction(previousTop=>{const e=[...document.querySelectorAll('.comparison-paper')];return e[1].scrollTop<previousTop&&Math.abs(e[0].scrollTop-e[1].scrollTop)<=1;},previousTop);
+  }
+  // Gestures on the backdrop must not move the original reading position.
+  await page.mouse.move(2,height/2);await page.mouse.wheel(0,400);
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  assert.deepEqual(await page.evaluate(()=>({x:scrollX,y:scrollY,left:document.querySelector('#canvas-wrap').scrollLeft,top:document.querySelector('#canvas-wrap').scrollTop})),readingPosition);
   const overflow=await page.locator('.case-comparison').evaluate(root=>{const bounds=root.getBoundingClientRect();return [...root.querySelectorAll('select,label,p,figcaption')].filter(e=>e.checkVisibility()).filter(e=>{const b=e.getBoundingClientRect();return b.left<bounds.left-2||b.right>bounds.right+2;}).map(e=>e.outerHTML);});assert.deepEqual(overflow,[]);
   await page.locator('#dialog [data-action=close-dialog]').click();
   assert.equal(await page.locator('[data-action=compare]').evaluate(b=>b===document.activeElement),true);assert.deepEqual(await mainSnapshot(page),before);
+  assert.equal(await page.locator('#measurement-values').innerText(),manual);
+  assert.equal(await page.locator('#automatic-overlay').innerHTML(),automatic);
+  assert.deepEqual(await page.evaluate(()=>({x:scrollX,y:scrollY,left:document.querySelector('#canvas-wrap').scrollLeft,top:document.querySelector('#canvas-wrap').scrollTop})),readingPosition);
   await page.waitForFunction(()=>window.__comparisonAudit.workers.every(w=>w.id===window.__comparisonAudit.mainId||w.terminated));
-  await page.locator('[data-action=compare]').click();await page.locator('#comparison-reference-sheet[aria-busy=false]').waitFor();assert.equal(await page.locator('#comparison-reference').inputValue(),'sinus');
+  await page.locator('[data-action=compare]').click();await page.locator('#comparison-reference-sheet[aria-busy=false]').waitFor();assert.equal(await page.locator('#comparison-reference').inputValue(),'lateral');
   await page.locator('#dialog [data-action=close-dialog]').focus();await page.keyboard.press('Escape');assert.equal(await page.locator('#dialog').evaluate(d=>d.open),false);
   assert.equal(await page.locator('[data-action=compare]').evaluate(b=>b===document.activeElement),true);
   await page.locator('[data-action=compare]').click();await page.locator('#comparison-reference').waitFor();
