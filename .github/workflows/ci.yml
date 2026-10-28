@@ -74,6 +74,10 @@ jobs:
         run: node tests/browser-compact-navigation.mjs "$RUNNER_TEMP/ecg-reading/compact-navigation"
       - name: Papel compacto, medidas reunidas y selector de vista
         run: node tests/browser-paper-first.mjs "$RUNNER_TEMP/ecg-reading/paper-first"
+      - name: Lupa de dos latidos, intervalos y geometría adaptable
+        run: node tests/browser-lead-lens.mjs "$RUNNER_TEMP/ecg-reading/lead-lens"
+      - name: Calibres de la lupa con ratón, tacto y teclado
+        run: node tests/browser-lead-lens-manual.mjs "$RUNNER_TEMP/ecg-reading/lead-lens-manual"
       - name: Conservar pruebas de lectura interactiva, incluidos fallos
         if: always()
         uses: actions/upload-artifact@v4

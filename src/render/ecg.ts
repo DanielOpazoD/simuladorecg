@@ -20,6 +20,8 @@ export interface Segment {
   duration: number;
   lead: Lead;
   polarity: number;
+  /** Clear space above samples for the reading labels, in calibrated mm. */
+  labelBandMm?: number;
 }
 export interface Layout {
   widthMm: number;
@@ -95,8 +97,12 @@ export function paperLayout(
     widthMm = 22 + c.view.speed * 10 + (cols - 1),
     rowSizes = Array.from({length: rows + extra}, (_, i) => {
       const extent = rowExtents?.[i];
-      const height = extent ? Math.max(24, extent.above + extent.below + 12) : rowHeight;
-      return {height, offset: extent ? 9 + extent.above + (height - extent.above - extent.below - 12) / 2 : height * .5 + 3};
+      // Only the first three rows carry the large PR/QRS/QT brackets. Other
+      // rows still reserve 8 mm for lead, J/ST and wave labels. Low-voltage
+      // rows no longer receive extra minimum-height padding.
+      const band = extent && i >= 3 ? 8 : 9, clearance = band + 1;
+      const height = extent ? Math.max(band+11, extent.above + extent.below + clearance) : rowHeight;
+      return {height, band, offset: extent ? band + extent.above + (height - extent.above - extent.below - clearance) / 2 : height * .5 + 3};
     }),
     rowY = rowSizes.map((_, i) => 18 + rowSizes.slice(0, i).reduce((sum, r) => sum + r.height, 0)),
     heightMm = 18 + rowSizes.reduce((sum, r) => sum + r.height, 0) + 8;
@@ -117,6 +123,7 @@ export function paperLayout(
         y,
         width: c.view.speed * segDuration,
         height: rowSizes[row].height,
+        labelBandMm: rowSizes[row].band,
         baseline: y + rowSizes[row].offset,
         start: c.view.timing === "simultaneous" ? 0 : col * segDuration,
         duration: segDuration,
@@ -132,6 +139,7 @@ export function paperLayout(
       // The strip spans its 10 s of trace, not the blank margin after it.
       width: c.view.speed * 10,
       height: rowSizes[rows + row].height,
+      labelBandMm: rowSizes[rows + row].band,
       baseline: y + rowSizes[rows + row].offset,
       start: 0,
       duration: 10,
@@ -249,11 +257,11 @@ function pulse(
  * visible height, never below `minWidthPx` of paper width (readability floor). */
 export const heightFittedPxPerMm = (layout: Layout, maxHeightPx: number, minWidthPx = 760) =>
   Math.min(layout.pxPerMm, Math.max(minWidthPx / layout.widthMm, maxHeightPx / layout.heightMm));
-/** The workspace supplies the case title; remove only its 8 mm editorial band.
+/** The workspace supplies title and calibration; remove the 16 mm editorial band.
  * Row heights, sample windows and calibrated units stay unchanged. */
 function workspacePaper(layout: Layout, compact = false): Layout {
-  return compact ? {...layout, heightMm: layout.heightMm - 8,
-    segments: layout.segments.map(s => ({...s, y: s.y - 8, baseline: s.baseline - 8}))} : layout;
+  return compact ? {...layout, heightMm: layout.heightMm - 16,
+    segments: layout.segments.map(s => ({...s, y: s.y - 16, baseline: s.baseline - 16}))} : layout;
 }
 /** Reserve an empty paper sheet; the new signal may require taller rows. */
 export function renderPaperSkeleton(
@@ -323,7 +331,7 @@ export function renderPaper(
   // Editorial bands stay inside the existing non-signal margins. The same
   // millimetre typography is used on screen and in the 300 dpi export.
   ctx.fillStyle = palette.bg;
-  ctx.fillRect(0, 0, layout.widthMm, options.compactHeader ? 10 : 16);
+  ctx.fillRect(0, 0, layout.widthMm, options.compactHeader ? 2 : 16);
   ctx.fillRect(0, layout.heightMm - 8, layout.widthMm, 8);
   ctx.fillStyle = palette.text;
   ctx.font = "600 3.8px ui-monospace, monospace";
@@ -335,10 +343,10 @@ export function renderPaper(
     layout.widthMm - 10,
   );
   ctx.font = "500 3px ui-monospace, monospace";
-  ctx.fillText(
+  if (!options.compactHeader) ctx.fillText(
     `${c.view.speed} mm/s  ·  ${c.view.gain} mm/mV${c.view.chestGain !== c.view.gain ? " / precordiales " + c.view.chestGain + " mm/mV" : ""}`,
     5,
-    options.compactHeader ? 5 : 10.5,
+    layout.heightMm - 4.8,
     layout.widthMm - 10,
   );
   ctx.font = "2.7px ui-monospace, monospace";
@@ -348,7 +356,7 @@ export function renderPaper(
   if (acquisitionNote) ctx.fillText(
     acquisitionNote,
     5,
-    options.compactHeader ? 8.5 : 14.5,
+    options.compactHeader ? layout.heightMm - 4.8 : 14.5,
     layout.widthMm - 10,
   );
   ctx.strokeStyle = palette.trace;
@@ -406,19 +414,14 @@ export function renderPaper(
   }
   ctx.font = "2.7px ui-monospace,monospace";
   ctx.fillStyle = palette.text;
-  if (!options.compactHeader) ctx.fillText(
-    "Registro de 10 s · " +
+  const recordNote = options.compactHeader ? "" : "Registro de 10 s · " +
       (c.view.timing === "simultaneous"
         ? "segmentos simultáneos"
         : "columnas secuenciales") +
       " · " +
-      (c.view.cabrera ? "orden de Cabrera" : "orden estándar"),
-    5,
-    layout.heightMm - 4.8,
-    layout.widthMm - 10,
-  );
-  ctx.fillText(
-    "Uso educativo · sin validación clínica" + (options.traceNote ? ` · ${options.traceNote}` : ""),
+      (c.view.cabrera ? "orden de Cabrera" : "orden estándar");
+  if (recordNote || options.traceNote) ctx.fillText(
+    [recordNote,options.traceNote].filter(Boolean).join(" · "),
     5,
     layout.heightMm - 1.3,
     layout.widthMm - 10,
@@ -554,10 +557,11 @@ export function renderRhythm(
   ctx.fillStyle = p.text;
   ctx.font = "600 3px ui-monospace,monospace";
   ctx.fillText(
-    `TIRA DE RITMO · ${c.view.lead} · ${dur} s · ${c.view.speed} mm/s · ${gain} mm/mV`,
+    `TIRA DE RITMO · ${c.view.lead} · ${dur} s`,
     5,
     8,
   );
+  ctx.fillText(`${c.view.speed} mm/s · ${gain} mm/mV`,5,layout.heightMm-2);
   ctx.strokeStyle = p.trace;
   ctx.lineWidth = 0.25;
   for (let row = 0; row < rows; row++) {

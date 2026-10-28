@@ -6,6 +6,7 @@ import "./style.css";
 import "./ui/reading-interactions.css";
 import { findingTarget } from "./ui/reading-focus";
 import { readingOverlay } from "./ui/reading-overlay";
+import { renderAutomaticIntervals } from "./ui/automatic-intervals";
 import { mountLeadExplorer } from "./ui/lead-explorer";
 import { presetTitle } from "./presets/nomenclature";
 import { APP_VERSION } from "./ui/version";
@@ -55,6 +56,7 @@ import {
 } from "./presets/catalog";
 import {
   renderPaper,
+  paperLayout,
   renderPaperSkeleton,
   renderRhythm,
   palettes,
@@ -100,7 +102,7 @@ let c = fromPreset(presetById("sinus")!),
 // cases keep their selected format, and catalog changes retain the current view.
 c.view.format = "6x2";
 c.acquisition = readAcquisitionPreference() ?? c.acquisition;
-let stHighlight = false;
+let stHighlight = false, automaticOn = false, paperZoom = 1;
 // The contrafactual remains inside the advanced Aula, never presented as a prior recording.
 let previousSignal: Signal | null = null;
 let annotations = false,
@@ -127,21 +129,21 @@ applyTheme(readTheme());
 const root = $("#app");
 root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="ECG Lab, inicio">${icon("pulse")}<span>ECG<span class="brand-light">lab</span></span></a><nav aria-label="Herramientas"><button class="btn mobile-cases" data-action="catalog">${icon("menu")}<span>Casos</span></button>${btn("quiz", "Practicar", "quiz")}${btn("export", "Exportar", "download")}${btn("theme", "Tema", "sun", "icon-button")}</nav></header>
  <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><h2 class="sr-only">Biblioteca de patrones</h2><button class="text-button" data-action="catalog-index" aria-controls="catalog-families">Casos</button><span id="catalog-family-title"></span>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><nav id="catalog-families" class="catalog-families" aria-label="Familias de ECG"></nav><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Buscar ECG…" aria-label="Buscar caso"/></label></aside>
- <main class="workspace"><section class="case-heading"><div><div class="case-category sr-only" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><div id="exploration-context" class="exploration-context" hidden></div></div><div class="heading-tools"><section id="metrics" class="metrics" aria-label="Valores del modelo que generó el ECG"><div class="loading-metrics">Generando señal…</div></section><div class="case-state">${btn("reset", "Restablecer", "reset", "subtle")}</div></div></section>
- <section id="diagnosis-navigation" class="diagnosis-navigation" aria-label="Variantes del patrón" hidden></section>
- <div id="diagnosis-content">
- <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="trace-tools"><button class="btn" data-action="measurements">Medidas</button>${btn("caliper", "Medir", "ruler")}${btn("lens-st", "Punto J / ST", "ruler")}${btn("compare", "Comparar", "strip")}${btn("pause", "Congelar", "pause")}<details class="paper-menu"><summary class="btn" data-action="paper">${icon("settings")}<span>Vista</span>${icon("chevron")}</summary><div class="view-options"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><details class="view-settings"><summary>Escala y señal</summary><div class="scale-toolbar" id="scale-toolbar"></div></details><details class="view-aids"><summary>Ayudas de lectura</summary><div class="view-overlays" aria-label="Ayudas visuales">${btn("annotations", "Marcar ondas", "eye")}${btn("teaching-marks", "Mostrar mis marcas", "eye")}${btn("teaching", "Aula: anotar y explorar", "book")}</div></details></div></details></div></div>
- <div id="quiz-panel" hidden></div><div id="caliper-editor" class="caliper-editor" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small id="monitor-rate-note">No estimable</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
- <p id="st-lens-note" class="control-note" hidden>J del modelo · ST en mm a 10 mm/mV</p><p class="sr-only" id="trace-context" hidden></p><div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-context trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div><p class="trace-scroll-hint" id="trace-scroll-hint" hidden>Desliza para ver el trazado completo.</p>
- <div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><p id="trace-keyboard-help" class="sr-only">Con foco en el trazado: M, P y R cambian la vista; V y G, la escala; C activa los calibres y espacio congela el monitor. Con calibres, las flechas mueven el extremo seleccionado; Mayús mueve diez pasos. Pulsa ? para abrir la ayuda de atajos.</p></section>
+ <main class="workspace"><section class="case-heading"><div><div class="case-category sr-only" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><div id="exploration-context" class="exploration-context" hidden></div></div></section>
+ <div class="case-summary-row"><section id="diagnosis-navigation" class="diagnosis-navigation" aria-label="Variantes del patrón" hidden></section>
+ <div class="heading-tools"><section id="metrics" class="metrics" aria-label="Valores del modelo que generó el ECG"><div class="loading-metrics">Generando señal…</div></section><div class="case-state">${btn("reset", "Restablecer", "reset", "subtle")}</div></div></div><div id="diagnosis-content">
+ <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="trace-tools">${btn("automatic", "Medir automáticamente", "intervals")}${btn("caliper", "Medir", "ruler")}${btn("lens-st", "Punto J / ST", "jpoint")}${btn("compare", "Comparar", "strip")}${btn("pause", "Congelar", "pause")}<details class="paper-menu"><summary class="btn" data-action="paper" aria-label="Vista" title="Vista">${icon("settings")}<span>Vista</span>${icon("chevron")}</summary><div class="view-options"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><details class="view-settings"><summary>Escala y señal</summary><div class="scale-toolbar" id="scale-toolbar"></div></details><details class="view-aids"><summary>Ayudas de lectura</summary><div class="view-overlays" aria-label="Ayudas visuales">${btn("annotations", "Marcar ondas", "eye")}${btn("teaching-marks", "Mostrar mis marcas", "eye")}${btn("teaching", "Aula: anotar y explorar", "book")}</div></details></div></details><div class="paper-zoom-controls" role="group" aria-label="Zoom del ECG"><button type="button" class="btn" data-action="zoom-out" aria-label="Reducir zoom" title="Reducir zoom">−</button><button type="button" class="btn zoom-value" data-action="zoom-reset" title="Restablecer al 100 %">100 %</button><button type="button" class="btn" data-action="zoom-in" aria-label="Ampliar zoom" title="Ampliar zoom">+</button></div></div></div>
+ <div id="quiz-panel" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small id="monitor-rate-note">No estimable</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
+ <p class="sr-only" id="trace-context" hidden></p><div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-context trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div><p id="trace-calibration" class="trace-calibration"></p><p class="trace-scroll-hint" id="trace-scroll-hint" hidden>Desliza para ver el trazado completo.</p>
+ <div id="caliper-editor" class="caliper-editor" hidden></div><div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><p id="trace-keyboard-help" class="sr-only">Con foco en el trazado: M, P y R cambian la vista; V y G, la escala; C activa los calibres y espacio congela el monitor. Con calibres, las flechas mueven el extremo seleccionado; Mayús mueve diez pasos. Con zoom, arrastra el papel o usa las flechas para desplazarte; con calibres activos, el arrastre mide. Pulsa ? para abrir la ayuda de atajos.</p></section>
  </div>
  <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><h2 id="finding-title">Qué observar</h2><p id="case-subtitle" class="guide-lead">Activación auricular sinusal seguida de conducción AV 1:1.</p><ul id="findings"></ul><details id="reading-details"><summary>Explicación</summary><div class="reading-detail-content"><div id="structured-description"></div><div id="omi-sheet"></div></div></details></div></section>
  <details id="adjust" class="adjust-panel"><summary><span>Ajustar el caso</span></summary><div id="inspector" class="inspector"></div></details>
- <footer class="workspace-footer"><button class="text-button" data-action="about">Información y fuentes ${icon("chevron")}</button><span>Uso educativo · sin validación clínica</span></footer></main></div>
+ <footer class="workspace-footer"><button class="text-button" data-action="about">Información y fuentes ${icon("chevron")}</button></footer></main></div>
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
 
 const variantNavigation = new VariantNavigation($("#diagnosis-navigation"), $("#diagnosis-content"));
-$("#canvas-wrap").insertAdjacentHTML("beforeend", '<div id="reading-overlay" hidden></div>');
+$("#canvas-wrap").insertAdjacentHTML("beforeend", '<div id="reading-overlay" hidden></div><div id="automatic-overlay" hidden></div>');
 $("#canvas-wrap").insertAdjacentHTML("beforebegin", '<div id="finding-focus" hidden><div><strong></strong><p role="status" aria-live="polite"></p></div><button type="button" class="btn" data-action="clear-finding" aria-label="Quitar explicación">Cerrar</button></div>');
 const caliperEditor = new CaliperEditor($("#caliper-editor"), $<HTMLCanvasElement>("#ecg"), next => { caliper = next; draw(); });
 let toastTimer = 0;
@@ -390,6 +392,9 @@ function syncTraceTools() {
     monitorMode = c.view.mode === "monitor",
     paper = c.view.mode === "paper",
     measuring = ready && !monitorMode && session.caliperOn;
+  const calibration = $("#trace-calibration");
+  calibration.hidden = !paper;
+  calibration.textContent = `${c.view.speed} mm/s · ${c.view.gain} mm/mV${c.view.chestGain !== c.view.gain ? ` · Precordiales ${c.view.chestGain} mm/mV` : ""}`;
   const pause = $<HTMLButtonElement>('[data-action="pause"]');
   syncPauseControl(pause, session.paused, monitorMode && ready);
   // Tools that do not apply to this view or case are hidden, not greyed out.
@@ -401,7 +406,19 @@ function syncTraceTools() {
   waves.classList.toggle("active", ready && paper && annotations);
   waves.setAttribute("aria-pressed", String(ready && paper && annotations));
   const practice = !!quiz && !quiz.answer;
-  $<HTMLButtonElement>('.trace-tools [data-action="measurements"]').disabled = !ready || practice;
+  const auto = $<HTMLButtonElement>('[data-action="automatic"]');
+  auto.disabled = !ready || !paper || practice;
+  auto.setAttribute("aria-pressed", String(automaticOn && !auto.disabled));
+  auto.setAttribute("aria-label", automaticOn && !auto.disabled ? "Ocultar intervalos automáticos" : "Medir automáticamente");
+  auto.classList.toggle("active", automaticOn && !auto.disabled);
+  $<HTMLButtonElement>('[data-action="zoom-in"]').disabled = !ready || !paper || paperZoom >= 2.5;
+  $<HTMLButtonElement>('[data-action="zoom-out"]').disabled = !ready || !paper || paperZoom <= 1;
+  const resetZoom = $<HTMLButtonElement>('[data-action="zoom-reset"]');
+  resetZoom.disabled = !ready || !paper || paperZoom === 1;
+  resetZoom.textContent = `${Math.round((paper ? paperZoom : 1)*100)} %`;
+  resetZoom.setAttribute("aria-label", `Restablecer zoom al 100 %, actual ${Math.round(paperZoom*100)} %`);
+  $("#canvas-wrap").classList.toggle("paper-zoomed", paper && paperZoom > 1);
+  $("#canvas-wrap").classList.toggle("paper-pannable", ready && paper && paperZoom > 1 && !measuring);
   const teaching = $<HTMLButtonElement>('[data-action="teaching"]');
   teaching.disabled = !ready || practice;
   teaching.hidden = practice;
@@ -417,8 +434,8 @@ function syncTraceTools() {
   st.title = "J del modelo. ST: media de los primeros 10 ms respecto de la ventana pre-QRS (−40 a −20 ms); mm equivalentes a 10 mm/mV. No es una delimitación clínica independiente.";
   st.setAttribute("aria-pressed", String(ready && paper && !practice && stHighlight));
   st.classList.toggle("active", ready && paper && !practice && stHighlight);
-  $("#st-lens-note").hidden = !ready || !paper || practice || !stHighlight || st.disabled;
-  $("#st-lens-note").title = st.title;
+
+
   $('[data-action="theme"]').setAttribute("aria-pressed", String(currentTheme() === "dark"));
   const caliperButton = $<HTMLButtonElement>('[data-action="caliper"]');
   caliperButton.disabled = monitorMode || !ready;
@@ -477,6 +494,8 @@ function resetTracePresentation() {
   $("#reading-overlay").hidden = true;
   $("#finding-focus").hidden = true;
   $(".trace-panel").classList.remove("reading-focused");
+  $("#automatic-overlay").hidden = true;
+  $("#automatic-overlay").replaceChildren();
   layout = null;
   monitor = null;
   caliper = null;
@@ -535,6 +554,13 @@ const syncTraceOverflow = () => {
     context.textContent = `${leads} · ${c.view.speed} mm/s · ${c.view.gain} mm/mV${c.view.chestGain !== c.view.gain ? ` (precordiales ${c.view.chestGain})` : ""} · ${timing}${more ? c.view.mode === "paper" ? " · Desplaza para ver más derivaciones." : " · Desplaza para recorrer el trazado." : ""}`;
   }
 };
+function setPaperZoom(next: number) {
+  if (!session.canExport || c.view.mode !== "paper") return;
+  const wrap = $("#canvas-wrap"), left = wrap.scrollLeft, top = wrap.scrollTop;
+  const scale = Math.max(1, Math.min(2.5, Math.round(next*4)/4)), factor = scale/paperZoom;
+  paperZoom = scale; endPaperPan(); draw();
+  wrap.scrollLeft = left*factor; wrap.scrollTop = top*factor;
+}
 function draw() {
   c.view.palette = currentTheme() === "dark" ? "dark" : "paper";
   syncTraceTools();
@@ -547,9 +573,15 @@ function draw() {
   );
   if (c.view.mode === "paper") {
     monitor = null;
+    const natural = paperLayout(c, width);
+    // Enlarge the display, never acquisition, timing, gain or export settings.
+    // Keep the paper's original top-left anchor even when it was centered.
+    canvas.style.marginLeft = paperZoom > 1 ? `${Math.max(0,(width-natural.widthMm*natural.pxPerMm)/2)}px` : "";
+    canvas.style.marginRight = paperZoom > 1 ? "0" : "";
     const practice = !!quiz && !quiz.answer;
     layout = renderPaper(canvas, session.signal, c, width, {
       compactHeader: true,
+      pxPerMm: paperZoom > 1 ? natural.pxPerMm * paperZoom : undefined,
       annotations,
       measurement: session.measurement ?? undefined,
       selectedBeat: session.selectedBeat,
@@ -562,9 +594,11 @@ function draw() {
     paperAmplitudeMm = layout.amplitudeMm;
     paperRowExtents = layout.rowExtents;
   } else if (c.view.mode === "rhythm") {
+    canvas.style.marginLeft = canvas.style.marginRight = "";
     monitor = null;
     layout = renderRhythm(canvas, session.signal, c, width);
   } else {
+    canvas.style.marginLeft = canvas.style.marginRight = "";
     monitor = new Monitor(canvas, session.signal, c, width);
     layout = monitor.layout;
     monitor.frame(session.elapsed);
@@ -586,6 +620,9 @@ function draw() {
   }
   caliperEditor.update({active:session.caliperOn, layout, caliper, view:c.view, fs:session.signal.fs});
   syncReadingAids();
+  const autoLayer = $("#automatic-overlay");
+  renderAutomaticIntervals(autoLayer, session.measurement, layout, c, automaticOn && c.view.mode === "paper" && !(quiz && !quiz.answer));
+  autoLayer.style.left = `${canvas.offsetLeft}px`;
 }
 function syncReadingAids() {
   if (!layout || !session.signal) return;
@@ -611,7 +648,7 @@ function openLeadDetail(segment: number, time?: number, opener?: HTMLElement) {
   const returnTo = opener ?? $<HTMLCanvasElement>("#ecg"), dialog = $<HTMLDialogElement>("#dialog");
   openDialog(`Explorar ${seg.polarity < 0 ? "−" : ""}${seg.lead}`, '<div id="lead-explorer"></div>');
   dialog.classList.add("lead-dialog"); dialog.setAttribute("aria-label", "Explorar una derivación"); dialog.setAttribute("closedby", "any");
-  mountLeadExplorer($("#lead-explorer"), session.signal, c, seg, time);
+  const disposeExplorer = mountLeadExplorer($("#lead-explorer"), session.signal, c, seg, time, session.measurement);
   const fallbackDismiss = (e: MouseEvent) => {
     if (e.target !== dialog) return;
     const r = dialog.getBoundingClientRect();
@@ -619,6 +656,7 @@ function openLeadDetail(segment: number, time?: number, opener?: HTMLElement) {
   };
   if (!("closedBy" in HTMLDialogElement.prototype)) dialog.addEventListener("click", fallbackDismiss);
   dialog.addEventListener("close", () => {
+    disposeExplorer?.();
     dialog.classList.remove("lead-dialog"); dialog.removeAttribute("aria-label"); dialog.removeAttribute("closedby");
     dialog.removeEventListener("click", fallbackDismiss);
     if (returnTo.isConnected) returnTo.focus({preventScroll:true});
@@ -780,7 +818,7 @@ function toggleCaliper(activate = !session.caliperOn) {
     else if (layout) caliper = initialCaliper(layout, c.view, session.signal.fs);
     draw();
   }
-  $<HTMLCanvasElement>('#ecg').focus();
+  $<HTMLCanvasElement>('#ecg').focus({preventScroll:true});
 }
 function showAbout() {
   const concealed = !!quiz && !quiz.answer, p = currentPreset();
@@ -978,6 +1016,9 @@ const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
     syncTraceTools();
   },
   caliper: () => toggleCaliper(),
+  "zoom-in": () => setPaperZoom(paperZoom+.25),
+  "zoom-out": () => setPaperZoom(paperZoom-.25),
+  "zoom-reset": () => setPaperZoom(1),
   'start-caliper': () => {
     if (!session.signal || c.view.mode === 'monitor') return;
     const dialog = $<HTMLDialogElement>('#dialog');
@@ -987,8 +1028,9 @@ const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
     closeDialog();
   },
   "clear-caliper": () => { caliper = null; draw(); },
-  annotations: () => { annotations = !annotations; draw(); },
-  "lens-st": () => { if (!quiz || quiz.answer) { stHighlight = !stHighlight; draw(); } },
+  automatic: () => { if (!session.canExport || c.view.mode !== "paper" || (quiz && !quiz.answer)) return; automaticOn = !automaticOn; if (automaticOn) { stHighlight = false; annotations = false; } draw(); },
+  annotations: () => { annotations = !annotations; if (annotations) automaticOn = false; draw(); },
+  "lens-st": () => { if (!quiz || quiz.answer) { stHighlight = !stHighlight; if (stHighlight) automaticOn = false; draw(); } },
   sound: async () => {
     audioOn = !audioOn;
     if (audioOn) {
@@ -1108,6 +1150,36 @@ $<HTMLInputElement>("#file-input").addEventListener("change", async (e) => {
 });
 const canvas = $<HTMLCanvasElement>("#ecg");
 let leadTap: { x: number; y: number; segment: number; time: number; left: number; top: number; stamp: number } | null = null;
+const paperViewport = $("#canvas-wrap");
+let paperPan: {id:number;x:number;y:number;left:number;top:number;moved:boolean} | null = null;
+function endPaperPan() {
+  const id=paperPan?.id; paperPan=null; paperViewport.classList.remove("paper-dragging");
+  if(id!==undefined && paperViewport.hasPointerCapture(id))paperViewport.releasePointerCapture(id);
+}
+paperViewport.addEventListener("pointerdown", e => {
+  if(!paperViewport.classList.contains("paper-pannable") || !e.isPrimary || e.button!==0 || (e.target as Element).closest('button'))return;
+  paperPan={id:e.pointerId,x:e.clientX,y:e.clientY,left:paperViewport.scrollLeft,top:paperViewport.scrollTop,moved:false};
+},true);
+paperViewport.addEventListener("pointermove", e => {
+  if(!paperPan || paperPan.id!==e.pointerId)return;
+  if(!paperViewport.classList.contains("paper-pannable")){endPaperPan();return;}
+  const dx=e.clientX-paperPan.x,dy=e.clientY-paperPan.y;
+  if(!paperPan.moved && Math.hypot(dx,dy)<6)return;
+  paperPan.moved=true; leadTap=null;
+  paperViewport.setPointerCapture(e.pointerId);paperViewport.classList.add("paper-dragging");
+  paperViewport.scrollLeft=paperPan.left-dx;paperViewport.scrollTop=paperPan.top-dy;
+  e.preventDefault();e.stopPropagation();
+},true);
+paperViewport.addEventListener("pointerup", e => {
+  if(paperPan?.moved){e.preventDefault();e.stopPropagation();leadTap=null;}
+  endPaperPan();
+},true);
+paperViewport.addEventListener("pointercancel",()=>{leadTap=null;endPaperPan();});
+paperViewport.addEventListener("lostpointercapture",e=>{
+  // Touch starts with implicit capture on the canvas. Its loss bubbles here
+  // when the viewport takes over; only losing our own capture ends a pan.
+  if(e.target===paperViewport && e.pointerId===paperPan?.id)endPaperPan();
+});
 function pointer(e: PointerEvent) {
   return layout ? sheetPoint(canvas.getBoundingClientRect(), e.clientX, e.clientY, layout) : null;
 }
@@ -1154,6 +1226,11 @@ document.addEventListener("keydown", (e) => {
   // keep their keyboard behavior; do not intercept screen-reader modifiers.
   if (e.target !== canvas || e.ctrlKey || e.altKey || e.metaKey || e.isComposing || $<HTMLDialogElement>("#dialog").open) return;
   const key=e.key.toLowerCase();
+  if(!session.caliperOn && c.view.mode === "paper" && paperZoom>1 && e.key.startsWith("Arrow")) {
+    e.preventDefault();const step=e.shiftKey?160:40;
+    paperViewport.scrollBy({left:e.key==='ArrowRight'?step:e.key==='ArrowLeft'?-step:0,top:e.key==='ArrowDown'?step:e.key==='ArrowUp'?-step:0,behavior:'instant'});
+    return;
+  }
   if (key === "?") {
     e.preventDefault();
     openDialog("Atajos de teclado", keyboardHelpHtml());
@@ -1184,6 +1261,9 @@ document.addEventListener("keydown", (e) => {
     draw();
   }
 });
+new ResizeObserver(() => {
+  $("#canvas-wrap").style.setProperty("--trace-tools-height", `${$(".trace-toolbar").getBoundingClientRect().height}px`);
+}).observe($(".trace-toolbar"));
 new ResizeObserver(() => {
   window.clearTimeout(resizeTimer);
   resizeTimer = window.setTimeout(draw, 90);

@@ -50,10 +50,17 @@ export function leadWindow(s: Signal, seg: Segment, time = seg.start + seg.durat
   const end = Math.min(seg.start + seg.duration, (s.leads[seg.lead].length - 1) / s.fs);
   const eligible = s.events.beats.map((b, i) => ({ b, i })).filter(({ b }) =>
     Number.isFinite(b.time) && Number.isFinite(b.qrs) && b.qrs! > 0 && b.time - .2 >= seg.start && b.time + Math.max(.6, b.qt ?? .4) < end);
-  eligible.sort((a, b) => Math.abs(a.b.time - time) - Math.abs(b.b.time - time));
-  const chosen = eligible[0];
-  const start = chosen ? chosen.b.time - .2 : Math.max(seg.start, Math.min(time - 1, end - 2));
-  const stop = chosen ? chosen.b.time + Math.max(.6, (chosen.b.qt ?? .4) + .12) : Math.min(end, start + 2);
+  // Adjacent source beats choose the viewing window, never the measured limits.
+  // Keep it inside the clicked time column and do not invent a second beat.
+  const pairs=eligible.slice(0,-1).map((first,i)=>({first,last:eligible[i+1]}))
+    .filter(p=>p.last.i===p.first.i+1)
+    .sort((a,b)=>Math.min(Math.abs(a.first.b.time-time),Math.abs(a.last.b.time-time))-Math.min(Math.abs(b.first.b.time-time),Math.abs(b.last.b.time-time)));
+  const pair=pairs[0];
+  const chosen = pair?.first ?? [...eligible].sort((a,b)=>Math.abs(a.b.time-time)-Math.abs(b.b.time-time))[0];
+  const last=pair?.last??chosen;
+  const previous=chosen?s.events.beats[chosen.i-1]:undefined,next=last?s.events.beats[last.i+1]:undefined;
+  const start = chosen ? Math.max(chosen.b.time-.2,previous?previous.time+.01:seg.start) : Math.max(seg.start, Math.min(time - 1, end - 2));
+  const stop = last ? Math.min(last.b.time+Math.max(.6,(last.b.qt??.4)+.12),next?next.time-.01:end) : Math.min(end, start + 2);
   const result = sampleExtent(s, seg.lead, start, Math.min(end, stop));
   return result ? { ...result, beat: chosen?.i ?? null } : null;
 }

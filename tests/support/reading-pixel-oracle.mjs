@@ -5,8 +5,12 @@ export async function inspectEnlargedPixels({base64,samples,fs,start,end,polarit
   const canvas=document.createElement('canvas');canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
   const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0);const {width:w,height:h}=canvas,a=ctx.getImageData(0,0,w,h).data;
   const groups=xs=>{const out=[];for(const x of xs){const g=out.at(-1);if(g&&x===g.at(-1)+1)g.push(x);else out.push([x]);}return out;};
-  const projection=Array.from({length:w},(_,x)=>{let n=0;for(let y=0;y<h;y++){const k=(y*w+x)*4;if(a[k]>150&&a[k]-a[k+1]>22&&a[k+2]-a[k+1]>2)n++;}return n;});
-  const lines=groups(projection.flatMap((n,x)=>n>h*.3?[x]:[])).map(g=>g.reduce((s,x)=>s+x,0)/g.length);
+  // Integrate chroma across adjacent columns: subpixel grid lines split their ink
+  // between pixels at some zoom levels. A hard per-pixel threshold misses them.
+  const projection=Array.from({length:w},(_,x)=>{let n=0;for(let y=0;y<h;y++){const k=(y*w+x)*4;if(a[k]>150&&a[k+2]>a[k+1])n+=Math.max(0,a[k]-a[k+1]);}return n;});
+  const smoothed=projection.map((n,x)=>n+(projection[x-1]??0)+(projection[x+1]??0));
+  const peak=Math.max(...smoothed);
+  const lines=groups(smoothed.flatMap((n,x)=>n>peak*.55?[x]:[])).map(g=>g.reduce((s,x)=>s+x*projection[x],0)/g.reduce((s,x)=>s+projection[x],0));
   const distances=lines.slice(1).map((x,i)=>x-lines[i]).sort((a,b)=>a-b),px=distances[Math.floor(distances.length/2)]/5;
   if(lines.length<4||!Number.isFinite(px))throw Error('Independent grid detection failed');
   const values=samples.slice(Math.round(start*fs),Math.round(end*fs)+1),top=Math.ceil(Math.max(...values.map(x=>x*polarity))*10)/10+.2;

@@ -15,7 +15,7 @@ it.each(['lbbb','sgarbossa','vvi','ddd'])('%s disclosure distinguishes approxima
  expect(SECONDARY_ST_RATIO_LIMIT).toContain('ST y T secundarios aproximados');
  expect(SECONDARY_ST_RATIO_LIMIT).toContain('no están calibradas clínicamente');
 });
-it.each(['3x4','3x4+1','3x4+3','6x2','12x1'] as ECGCase['view']['format'][])('paper %s carries the clinical limit without moving trace geometry or revealing quiz name',format=>{
+it.each(['3x4','3x4+1','3x4+3','6x2','12x1'] as ECGCase['view']['format'][])('paper %s keeps calibration below the trace and conceals the quiz name without a repeated disclaimer',format=>{
  const c=cloneCase(DEFAULT_CASE);c.view.format=format;c.name='SECRET DIAGNOSIS';
  const s={fs:500,duration:10,leads:makeArrays(5000)} as Signal;
  const texts:{text:string,x:number,y:number}[]=[];
@@ -23,10 +23,11 @@ it.each(['3x4','3x4+1','3x4+3','6x2','12x1'] as ECGCase['view']['format'][])('pa
  const canvas={style:{},getContext:()=>ctx} as unknown as HTMLCanvasElement;
  const layout=renderPaper(canvas,s,c,1000,{ratio:1,hideName:true});
  const footer=texts.find(t=>t.text.startsWith('Registro de 10 s'))!;
- const limitation=texts.find(t=>t.text.includes('sin validación clínica'))!;
- expect(limitation).toBeDefined();
- expect(limitation.y).toBeGreaterThan(footer.y);
- expect(limitation.y).toBeLessThan(layout.heightMm);
+ const calibration=texts.find(t=>t.text.includes('mm/s')&&t.text.includes('mm/mV'))!;
+ expect(calibration).toBeDefined();
+ expect(calibration.y).toBeLessThan(footer.y);
+ expect(footer.y).toBeLessThan(layout.heightMm);
+ expect(texts.some(t=>t.text.includes('sin validación clínica'))).toBe(false);
  expect(texts.some(t=>t.text.includes('SECRET DIAGNOSIS'))).toBe(false);
- expect(layout.segments.every(segment=>segment.y+segment.height< footer.y)).toBe(true);
+ expect(layout.segments.every(segment=>segment.y+segment.height<calibration.y)).toBe(true);
 });

@@ -13,20 +13,53 @@
 .heading-tools .metrics .loading-metrics { padding:0; max-width:6rem; font-size:var(--text-xs); }
 .heading-tools .case-state { padding:0; }
 .case-heading { flex-wrap:wrap; }
-.case-heading .heading-tools { width:100%; max-width:none; justify-content:flex-start; }
+.heading-tools { width:100%; max-width:none; justify-content:flex-start; margin-bottom:6px; }
 .heading-tools .metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,3.4rem),1fr)); width:min(560px,100%); }
 .heading-tools .metrics .metric { grid-column:auto; flex-direction:column; align-items:flex-start; justify-content:center; gap:2px; padding:4px 2px; min-width:0; min-height:44px; white-space:normal; border:0; }
 .heading-tools .metrics .metric > span { font-size:.75rem; white-space:nowrap; }
 .heading-tools .metrics .metric strong { display:block; font-size:.875rem; line-height:1.3; white-space:normal; overflow-wrap:anywhere; }
 .heading-tools .metrics .metric strong small { font-size:.625rem; font-weight:400; margin-left:2px; }
 .diagnosis-navigation { margin-bottom:6px; }
-.trace-panel { border:0; border-radius:0; background:var(--paper); }
-.trace-toolbar { position:relative; padding:0 0 4px; border:0; background:var(--surface); gap:0; }
+.case-summary-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 24px; margin-bottom:4px; }
+.case-summary-row .diagnosis-navigation { flex:1 1 auto; margin:0; min-width:0; }
+.case-summary-row .heading-tools { flex:0 1 350px; width:auto; margin:0 0 0 auto; }
+.case-summary-row .metrics { width:100%; }
+.case-summary-row .metric { align-items:flex-end; }
+@media(max-width:1050px) {
+ .case-summary-row .diagnosis-navigation { flex-basis:100%; }
+ .case-summary-row .heading-tools { flex-basis:100%; margin-left:0; }
+ .case-summary-row .metric { align-items:flex-start; }
+}
+.trace-panel { border:0; border-radius:0; background:var(--paper); overflow:visible; }
+.trace-toolbar { position:sticky; top:0; z-index:20; padding:4px 0; border:0; background:var(--surface); gap:0; }
+.trace-calibration { margin:0; padding:8px 4px; color:var(--muted); font: .75rem ui-monospace,monospace; background:var(--surface); }
+.trace-calibration[hidden] { display:none; }
 .trace-tools .paper-menu { position:static; }
 .trace-tools { width:100%; gap:4px; justify-content:flex-start; }
 .trace-tools > .btn, .trace-tools .paper-menu > summary { min-height:44px; padding:8px 10px; font-size:var(--text-sm); border:0; border-radius:6px; }
 .trace-tools > .btn svg, .trace-tools .paper-menu > summary > svg:first-child { display:none; }
 .trace-tools > .btn span { display:inline; }
+.trace-tools > .btn, .trace-tools .paper-menu > summary { position:relative; width:44px; height:44px; padding:10px; flex:0 0 44px; }
+.trace-tools > .btn svg, .trace-tools .paper-menu > summary > svg:first-child { display:block; width:22px; height:22px; }
+.trace-tools > .btn span, .trace-tools .paper-menu > summary > span, .trace-tools .paper-menu > summary > svg:last-child:not(:first-child) { display:none; }
+.trace-tools > .btn:hover::after,.trace-tools > .btn:focus-visible::after { content:attr(aria-label); position:absolute; z-index:30; top:100%; left:0; width:max-content; max-width:180px; padding:5px 8px; border:1px solid var(--line); border-radius:5px; background:var(--surface); color:var(--ink); font-size:.75rem; pointer-events:none; }
+#automatic-overlay { position:absolute; top:0; pointer-events:none; }
+#automatic-overlay[hidden] { display:none; }
+#automatic-overlay svg { width:100%; height:100%; overflow:visible; }
+#automatic-overlay path { fill:none; stroke:currentColor; stroke-width:.5; }
+#automatic-overlay .auto-guide { stroke-width:.16; stroke-dasharray:.6 .8; opacity:.45; }
+#automatic-overlay text { pointer-events:auto; fill:currentColor; font:700 4px ui-monospace,monospace; paint-order:stroke; stroke:var(--paper); stroke-width:1; stroke-linejoin:round; }
+#canvas-wrap { overflow-anchor:none; overscroll-behavior-x:contain; scroll-axis-lock:none; }
+.paper-zoom-controls { display:inline-flex; flex:0 0 auto; align-items:center; gap:0; }
+.paper-zoom-controls .btn { width:44px; min-height:44px; padding:0; border:0; border-radius:6px; font-size:1.25rem; }
+.paper-zoom-controls .zoom-value { width:44px; font-size:.75rem; font-variant-numeric:tabular-nums; }
+#canvas-wrap { scrollbar-gutter:stable; }
+#canvas-wrap.paper-zoomed { max-height:max(220px,calc(100dvh - var(--trace-tools-height,52px) - 48px)); overscroll-behavior:contain; }
+#canvas-wrap.paper-pannable { cursor:grab; touch-action:pinch-zoom; -webkit-user-select:none; user-select:none; }
+#canvas-wrap.paper-dragging { cursor:grabbing; }
+.auto-pr { color:#236695; } .auto-qrs { color:#08746d; } .auto-qt { color:#725298; }
+.dark .auto-pr { color:#8bcaff; } .dark .auto-qrs { color:#79e3ca; } .dark .auto-qt { color:#d7b1ff; }
+.auto-unavailable { position:absolute; top:48px; left:24px; padding:8px; background:var(--surface); color:var(--muted); font-size:.8125rem; }
 .paper-menu .view-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:stretch; gap:2px; padding:0 0 10px; background:none; }
 .paper-menu .view-tabs button { text-align:center; justify-content:center; min-height:44px; min-width:0; padding:8px 4px; white-space:normal; font-size:var(--text-sm); }
 .paper-menu .view-tabs svg { display:none; }
@@ -118,10 +151,10 @@ dialog:has(.measurements-overview) .dialog-head { display:grid; grid-template-co
  .workspace { padding:8px 12px 20px; }
  .case-heading { gap:8px; }
  .case-heading h1 { font-size:1.1875rem; }
- .heading-tools { flex-wrap:wrap; justify-content:flex-end; max-width:35%; gap:0; }
+ .heading-tools { flex-wrap:wrap; justify-content:flex-start; gap:0; }
  .heading-tools .case-state .btn span { display:inline; }
  .trace-tools { justify-content:flex-start; gap:2px; }
- .trace-tools > .btn,.trace-tools .paper-menu > summary { padding-inline:8px; }
+ .trace-tools > .btn,.trace-tools .paper-menu > summary { padding-inline:6px; }
  .paper-menu .view-options { left:0; max-width:calc(100vw - 24px); }
  .topbar nav > .btn[data-action=export] { width:auto; padding-inline:8px; }
  .topbar nav > .btn[data-action=export] span { position:static; width:auto; height:auto; overflow:visible; clip:auto; }

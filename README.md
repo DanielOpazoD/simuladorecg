@@ -4,6 +4,9 @@ Simulador educativo de ECG de 12 derivaciones. Vite + TypeScript + Canvas, sin b
 
 ## Ciclo actual: fidelidad de la señal
 
+La dirección visual y funcional se recoge en el [manifiesto de diseño](docs/manifiesto-diseno.md):
+ECG protagonista, navegación sencilla, herramientas contextuales y medidas fieles.
+
 El desarrollo está centrado en que los trazados sean indistinguibles de ECG reales.
 El analizador automático queda congelado en PR #155 y sus workflows de referencia
 solo se ejecutan a mano; la CI obligatoria es `.github/workflows/ci.yml`.
