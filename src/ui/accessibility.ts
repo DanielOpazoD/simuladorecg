@@ -52,7 +52,13 @@ export function installAccessibility() {
   skips.addEventListener('click', e => {
     const anchor = (e.target as Element).closest<HTMLAnchorElement>('a');
     const target = anchor && document.querySelector<HTMLElement>(anchor.hash);
-    if (target) {e.preventDefault(); target.focus(); target.scrollIntoView({block:'start'});}
+    if (target) {
+      e.preventDefault();
+      for (let disclosure = target.closest('details'); disclosure; disclosure = disclosure.parentElement?.closest('details') ?? null)
+        disclosure.open = true;
+      target.scrollIntoView({block:'start'});
+      target.focus({preventScroll:true});
+    }
   });
 
   // If an existing renderer replaces the focused node, restore its equivalent.
