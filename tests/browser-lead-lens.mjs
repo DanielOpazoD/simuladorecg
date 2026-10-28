@@ -80,6 +80,17 @@ try{
     if(viewport.height>=568)assert(space.width>=space.available*.95,'Use the available width when height permits');
    }
    await page.screenshot({path:resolve(out,`${viewport.width}-${viewport.height}-${id}${viewport.dark?'-dark':''}.png`)});
+   if(id==='sinus'){
+    for(const preference of ['none','qrs','st']){
+     await page.getByLabel('Marcas de la lupa').selectOption(preference);
+     const marks=await page.locator('.lens-mark').evaluateAll(es=>es.map(e=>({key:e.dataset.key,start:e.dataset.start,end:e.dataset.end,value:e.querySelector('text').textContent})));
+     await page.keyboard.press('Escape');await page.locator('[data-reading-segment="7"]').click();
+     assert.equal(await page.getByLabel('Marcas de la lupa').inputValue(),preference,'Reopening must preserve the reading preference');
+     assert.deepEqual(await page.locator('.lens-mark').evaluateAll(es=>es.map(e=>({key:e.dataset.key,start:e.dataset.start,end:e.dataset.end,value:e.querySelector('text').textContent}))),marks);
+     assert.equal(await page.locator('.lens-manual-mark').count(),0,'No manual endpoints carried into a new lens');
+    }
+    await page.getByLabel('Marcas de la lupa').selectOption('all');
+   }
    await page.keyboard.press('Escape');
    assert.equal(await page.locator('#ecg').evaluate(c=>c.toDataURL()),canvas);
    assert.equal(await workerReplies(page),replies);
