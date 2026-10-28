@@ -2,6 +2,9 @@
 
 ## Antes de enviar cambios
 
+Para cambios de interfaz, lee el [manifiesto de diseño](docs/manifiesto-diseno.md):
+define la jerarquía de lectura, qué simplificar y los contratos visuales que preservar.
+
 Lee [README](README.md), [alcance actual](docs/alcance-actual.md) y
 [LICENSE](LICENSE). La licencia de reutilización del código aún no está elegida;
 abrir un PR no concede ni cambia derechos. Coordina con el mantenedor cualquier

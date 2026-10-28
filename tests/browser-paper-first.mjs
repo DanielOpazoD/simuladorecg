@@ -26,6 +26,62 @@ try{
    await page.evaluate(()=>scrollTo(0,0));
    const trace=await readTrace(page),signature=hash(trace),n=await workerReplies(page),layout=JSON.parse(await page.locator('#reading-overlay').getAttribute('data-geometry'));
    assert.equal(await page.locator('#metrics .metric').count(),5);assert.deepEqual(await page.locator('#metrics .metric > span').allTextContents(),['FC','PR','QRS','QTc','Eje QRS']);
+   if(id==='sinus'){
+    const title=await page.locator('#case-title').boundingBox(),variants=await page.locator('#diagnosis-navigation').boundingBox(),summary=await page.locator('#metrics').boundingBox();
+    assert(title.y+title.height<=variants.y,'Variants follow the case title');
+    if(v.width>=1200&&!v.zoom)assert(variants.x+variants.width<=summary.x && Math.abs(variants.y+variants.height/2-summary.y-summary.height/2)<3,'Variants left and metrics right on the same row');
+    else assert(variants.y+variants.height<=summary.y,'On smaller screens measures follow variants');
+   }
+   assert.equal(await page.getByRole('button',{name:'Medir automáticamente',exact:true}).isVisible(),true);
+   const auto=page.locator('[data-action=automatic]'),paperPosition=await page.locator('#ecg').boundingBox();
+   const originalPixels=await page.locator('#ecg').evaluate(e=>e.toDataURL());
+   const autoPngBefore=id==='sinus'&&v.width===1440?await exportHash():null;
+   await auto.click();assert.equal(await page.locator('#dialog').evaluate(e=>e.open),false);
+   assert.equal(await auto.getAttribute('aria-pressed'),'true');
+   const intervals=await page.locator('#automatic-overlay [data-interval]').evaluateAll(es=>es.map(e=>({key:e.dataset.interval,start:Number(e.dataset.start),end:Number(e.dataset.end),ms:Number(e.dataset.ms)})));
+   if(id==='sinus')assert.deepEqual([...new Set(intervals.map(x=>x.key))],['pr','qrs','qt']);
+   if(id==='sinus'&&!v.zoom){
+    const labels=await page.locator('#automatic-overlay g[data-segment="0"] .auto-value, #automatic-overlay g[data-segment="1"] .auto-value, #automatic-overlay g[data-segment="2"] .auto-value').evaluateAll(es=>es.map(e=>{const b=e.getBoundingClientRect();return {left:b.left,right:b.right,fontPx:parseFloat(getComputedStyle(e).fontSize)*e.getScreenCTM().a};}));
+    assert.equal(labels.length,3);assert(labels.every(b=>b.left>=0&&b.right<=v.width),'Interval values must be readable without horizontal scrolling');
+    assert(labels.every(b=>b.fontPx>=14),'Values must be at least 14 screen pixels');
+
+   }
+   if(id==='vf')assert.equal(intervals.length,0);
+   for(const i of intervals)assert.equal(i.ms,Math.round((i.end-i.start)*1000));
+   if(!v.zoom)assert.deepEqual(await page.locator('#ecg').boundingBox(),paperPosition,'Automatic intervals must not move the ECG');
+   assert.equal(await page.locator('#ecg').evaluate(e=>e.toDataURL()),originalPixels,'Overlay must not alter the calibrated canvas');
+   if(autoPngBefore)assert.equal(await exportHash(),autoPngBefore,'Automatic reading aid must not alter the print export');
+   if(id==='sinus')await page.screenshot({path:resolve(out,`auto-${v.width}-${v.height}-${v.dark?'dark':v.zoom?'zoom':'light'}.png`)});
+   if(!v.zoom){
+    const zoom=page.locator('[data-action=zoom-in]');for(let step=0;step<3;step++)await zoom.click();
+    const enlarged=await page.locator('#ecg').boundingBox(),overlay=await page.locator('#automatic-overlay').boundingBox();
+    assert(Math.abs(enlarged.x-paperPosition.x)<1&&Math.abs(enlarged.y-paperPosition.y)<1,'Zoom must retain the paper anchor');
+    assert(Math.abs(enlarged.width/paperPosition.width-1.75)<.001);
+    assert(Math.abs(overlay.x-enlarged.x)<1&&Math.abs(overlay.y-enlarged.y)<1&&Math.abs(overlay.width-enlarged.width)<1,'Zoomed marks and paper must align');
+    assert.deepEqual(await page.locator('#automatic-overlay [data-interval]').evaluateAll(es=>es.map(e=>({key:e.dataset.interval,start:Number(e.dataset.start),end:Number(e.dataset.end),ms:Number(e.dataset.ms)}))),intervals);
+    if(autoPngBefore)assert.equal(await exportHash(),autoPngBefore,'Display zoom must not alter export');
+    if(id==='sinus')await page.screenshot({path:resolve(out,`zoom-${v.width}-${v.height}-${v.dark?'dark':'light'}.png`)});
+    await page.locator('[data-action=zoom-reset]').click();assert.deepEqual(await page.locator('#ecg').boundingBox(),paperPosition);
+    assert.equal(await page.locator('#ecg').evaluate(e=>e.toDataURL()),originalPixels,'Reset zoom must restore the original paper');
+   }
+   await auto.click();assert.equal(await page.locator('#automatic-overlay').isHidden(),true);
+   assert.equal(hash(await readTrace(page)),signature);assert.equal(await workerReplies(page),n);
+   if(id==='sinus'&&v.width===1440){
+    const st=page.locator('[data-action=lens-st]');
+    await st.click();await auto.click();
+    assert.equal(await st.getAttribute('aria-pressed'),'false');assert.equal(await auto.getAttribute('aria-pressed'),'true');
+    await st.click();assert.equal(await auto.getAttribute('aria-pressed'),'false');assert.equal(await page.locator('#automatic-overlay').isHidden(),true);
+    await st.click();assert.equal(await page.locator('#ecg').evaluate(e=>e.toDataURL()),originalPixels);
+   }
+   if(!v.zoom){
+    for(const action of ['caliper','compare']){
+     await page.locator(`[data-action=${action}]`).click();
+     if(action==='compare')await page.locator('#dialog[open]').waitFor();
+     assert.deepEqual(await page.locator('#ecg').boundingBox(),paperPosition,`${action} must not move the ECG`);
+     if(action==='compare')await closeDialog();else await page.locator(`[data-action=${action}]`).click();
+    }
+    await page.locator('.paper-menu > summary').click();assert.deepEqual(await page.locator('#ecg').boundingBox(),paperPosition,'View menu must not move the ECG');await page.keyboard.press('Escape');
+   }
    assert.equal(await page.getByRole('tab',{name:'Monitor',exact:true}).isVisible(),false);
    assert.equal(await page.locator('.trace-tools [data-action=caliper]').isVisible(),true);
    assert.equal(await page.locator('.case-group-count').count(),0);
@@ -40,27 +96,29 @@ try{
    if(id!=='vf'){
     const pixels=await page.locator('#ecg').evaluate(e=>e.toDataURL());
     const pngBefore=id==='anterior'&&v.width===1440?await exportHash():null;
-    await jButton.click();assert.equal(await jButton.getAttribute('aria-pressed'),'true');assert.equal(await page.locator('#st-lens-note').isVisible(),true);
+    await jButton.click();assert.equal(await jButton.getAttribute('aria-pressed'),'true');assert.equal(await page.locator('#st-lens-note').count(),0);
+    if(!v.zoom)assert.deepEqual(await page.locator('#ecg').boundingBox(),paperPosition,'J/ST must not move the ECG');
     assert.notEqual(await page.locator('#ecg').evaluate(e=>e.toDataURL()),pixels);
     if(pngBefore)assert.equal(await exportHash(),pngBefore,'J/ST reading aid must not alter the print export');
     if(id==='anterior')await page.screenshot({path:resolve(out,`j-st-${v.width}-${v.height}-${v.dark?'dark':v.zoom?'zoom':'light'}.png`)});
-    await jButton.click();assert.equal(await page.locator('#st-lens-note').isHidden(),true);
+    await jButton.click();
     assert.equal(await page.locator('#ecg').evaluate(e=>e.toDataURL()),pixels);
     assert.equal(hash(await readTrace(page)),signature);assert.equal(await workerReplies(page),n);
    }
    for(const seg of layout.segments){
     const gain=seg.lead.startsWith('V')?trace.case.view.chestGain:trace.case.view.gain;
     const values=trace.leads[seg.lead].slice(Math.round(seg.start*trace.fs),Math.round((seg.start+seg.duration)*trace.fs));
-    for(const sample of values){const y=seg.baseline-sample*gain*seg.polarity;assert(y>=seg.y+9-1e-6&&y<=seg.y+seg.height-3+1e-6,`${id}: sample outside row`);}
+    for(const sample of values){const y=seg.baseline-sample*gain*seg.polarity;assert(y>=seg.y+(seg.labelBandMm??9)-1e-6&&y<=seg.y+seg.height-1+1e-6,`${id}: sample outside row`);}
    }
    if(id==='anterior')await page.screenshot({path:resolve(out,`workspace-${v.width}-${v.height}-${v.dark?'dark':v.zoom?'zoom':'light'}.png`)});
-   await page.locator('.trace-tools [data-action=measurements]').click();await page.getByRole('dialog',{name:'Medidas',exact:true}).waitFor();
+   await page.locator('#metrics .metric').first().click();await page.getByRole('dialog',{name:'Medidas',exact:true}).waitFor();
    const header=await page.locator('#dialog .dialog-head').evaluate(e=>[...e.children].map(c=>{const r=c.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,overflow:c.scrollWidth-c.clientWidth};}));
    assert(header.every(r=>r.overflow<=2),JSON.stringify(header));
    for(let a=0;a<header.length;a++)for(let b=a+1;b<header.length;b++){const x=header[a],y=header[b];assert(x.right<=y.x+1||y.right<=x.x+1||x.bottom<=y.y+1||y.bottom<=x.y+1,'Measurement header controls overlap');}
    assert.deepEqual(await page.locator('.measurements-summary thead th').allTextContents(),['Medida','Modelo','Estimación']);
-   assert.equal(await page.locator('.measurements-summary tbody tr').count(),5);assert.equal(await page.locator('#analyzer-info').evaluate(e=>e.open),false);
-   if(id==='vf')assert.deepEqual(await page.locator('.measurements-summary td').evaluateAll(es=>es.map(e=>e.firstChild.textContent)),Array(10).fill('—'));
+   assert.equal(await page.locator('.measurements-summary tbody tr').count(),6);assert.equal(await page.locator('#analyzer-info').evaluate(e=>e.open),false);
+   assert.equal(await page.locator('.measurements-summary tbody tr').nth(3).locator('th').innerText(),'QT');
+   if(id==='vf')assert.deepEqual(await page.locator('.measurements-summary td').evaluateAll(es=>es.map(e=>e.firstChild.textContent)),Array(12).fill('—'));
    if(!v.zoom)await fitsDialog();
    if(id==='anterior')await page.screenshot({path:resolve(out,`measures-${v.width}-${v.height}-${v.dark?'dark':v.zoom?'zoom':'light'}.png`)});
    await page.locator('#analyzer-info > summary').click();assert(await page.locator('#analyzer-info .evidence-badge').count()>0);
@@ -90,7 +148,7 @@ try{
   await view('paper');assert.equal(await page.locator('[data-action=caliper]').isVisible(),true);
   await page.locator('[data-action=about]').click();assert.deepEqual(await page.locator('.information-content > details > summary').allTextContents(),['Cómo se genera este ECG','Referencias y atribución','Atajos de teclado']);
   await page.getByText('Cómo se genera este ECG',{exact:true}).click();assert.match(await page.locator('#dialog').innerText(),/sin ruido de adquisición añadido/);assert.equal(await page.locator('#analyzer-info').count(),0);await closeDialog();
-  await page.locator('[data-action=quiz]').click();await page.locator('#signal-loading').waitFor({state:'hidden'});assert.match(await page.locator('#metrics').innerText(),/\?/);assert.equal(await page.locator('.trace-tools [data-action=measurements]').isDisabled(),true);
+  await page.locator('[data-action=quiz]').click();await page.locator('#signal-loading').waitFor({state:'hidden'});assert.match(await page.locator('#metrics').innerText(),/\?/);assert.equal(await page.locator('[data-action=automatic]').isDisabled(),true);
   assert.equal(await page.locator('[data-action=lens-st]').isHidden(),true);
   await startManualMeasurement(page);assert.equal(await page.locator('#caliper-editor').isVisible(),true);
   await page.locator('#ecg').press('c');assert.equal(await page.locator('#caliper-editor').isHidden(),true);

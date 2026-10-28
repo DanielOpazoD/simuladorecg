@@ -72,11 +72,11 @@ describe("paper editorial bands preserve calibrated signal space", () => {
     const a = renderPaper(compact.canvas, s, c, 1000, {ratio: 1, compactHeader: true});
     const b = renderPaper(exported.canvas, s, c, 1000, {ratio: 1});
     expect(a.widthMm).toBe(b.widthMm); expect(a.pxPerMm).toBe(b.pxPerMm);
-    expect(a.heightMm).toBe(b.heightMm - 8);
-    expect(a.segments.map(seg => ({...seg, y: seg.y + 8, baseline: seg.baseline + 8}))).toEqual(b.segments);
+    expect(a.heightMm).toBe(b.heightMm - 16);
+    expect(a.segments.map(seg => ({...seg, y: seg.y + 16, baseline: seg.baseline + 16}))).toEqual(b.segments);
     for (const lead of Object.keys(s.leads)) expect(compact.texts.some(t => t.text === lead)).toBe(true);
     const text = compact.texts.map(t => t.text).join(" ");
-    expect(text).toContain("25 mm/s"); expect(text).toContain("10 mm/mV");
+    expect(text).not.toContain("25 mm/s"); // Workspace caption lives below the canvas.
     expect(text).not.toMatch(/Hz|señal sintética|columnas secuenciales/);
     expect(text).not.toContain('ECG LAB');
     expect(exported.texts.map(t => t.text).join(' ')).toContain('ECG LAB');
@@ -84,8 +84,8 @@ describe("paper editorial bands preserve calibrated signal space", () => {
   });
   it.each(["aggressive", "monitor", "off"] as const)("compact paper still identifies the nonstandard %s acquisition", filter => {
     const c = cloneCase(DEFAULT_CASE); c.filter = filter;
-    const r = recorder(); renderPaper(r.canvas, signal(), c, 1000, {ratio: 1, compactHeader: true});
-    expect(r.texts.filter(t => t.y < 18).map(t => t.text).join(" ")).toContain({aggressive: "Filtro de demostración: modifica el ST", monitor: "Filtro de monitor", off: "Sin filtro diagnóstico"}[filter]);
+    const r = recorder(); const layout=renderPaper(r.canvas, signal(), c, 1000, {ratio: 1, compactHeader: true});
+    expect(r.texts.filter(t => t.y > layout.heightMm-8).map(t => t.text).join(" ")).toContain({aggressive: "Filtro de demostración: modifica el ST", monitor: "Filtro de monitor", off: "Sin filtro diagnóstico"}[filter]);
   });
   it("exports the chosen clean acquisition explicitly, without adding another workspace caption", () => {
     const c = cloneCase(DEFAULT_CASE); c.acquisition = "ideal";
@@ -112,13 +112,13 @@ describe("paper editorial bands preserve calibrated signal space", () => {
       const shown = s.leads[seg.lead].slice(Math.round(seg.start*s.fs), Math.round((seg.start+seg.duration)*s.fs));
       for (const sample of shown) {
         const y = seg.baseline - sample * gain * seg.polarity;
-        expect(y).toBeGreaterThanOrEqual(seg.y + 9);
-        expect(y).toBeLessThanOrEqual(seg.y + seg.height - 3);
+        expect(y).toBeGreaterThanOrEqual(seg.y + (seg.labelBandMm ?? 9));
+        expect(y).toBeLessThanOrEqual(seg.y + seg.height - 1);
       }
     }
     expect(s.leads.II).toEqual(before);
     const header = r.texts.filter(t => t.y < 18), footer = r.texts.filter(t => t.y > layout.heightMm - 8);
-    expect(header).toHaveLength(3); expect(footer).toHaveLength(2);
+    expect(header).toHaveLength(2); expect(footer).toHaveLength(2);
     for (const t of [...header, ...footer]) {
       expect(t.x).toBeGreaterThanOrEqual(0);
       expect(t.maxWidth).toBeGreaterThan(0);
@@ -126,11 +126,11 @@ describe("paper editorial bands preserve calibrated signal space", () => {
       expect(t.y - fontSize(t.font)).toBeGreaterThanOrEqual(t.y < 18 ? 0 : layout.heightMm - 8);
       expect(t.y).toBeLessThan(t.y < 18 ? 18 : layout.heightMm);
     }
-    expect(header.map(t => t.text).join(" ")).toContain("20 mm/mV / precordiales 5 mm/mV");
+    expect(footer.map(t => t.text).join(" ")).toContain("20 mm/mV / precordiales 5 mm/mV");
     expect(header.map(t => t.text).join(" ")).toContain("0,5–40 Hz · notch 50 Hz");
     expect(header.map(t => t.text).join(" ")).toContain("señal sintética");
     expect(footer.map(t => t.text).join(" ")).toContain("orden de Cabrera");
-    expect(footer.map(t => t.text).join(" ")).toContain("sin validación clínica");
+    expect(r.texts.map(t => t.text).join(" ")).not.toContain("sin validación clínica");
     expect(r.texts.some(t => t.text === "−aVR")).toBe(true);
     // Only the non-signal header/footer are cleared; no white panel can obscure a trace row.
     for (const [, y, , height] of r.fills.slice(1))
@@ -154,7 +154,7 @@ describe("paper editorial bands preserve calibrated signal space", () => {
     const r = recorder(), name = "Descripción extensa ".repeat(20), note = "Referencia del trazado ".repeat(20);
     const layout = renderPaper(r.canvas, signal(), c, 390, {ratio: 1, displayName: name, traceNote: note});
     const title = r.texts.find(t => t.text.startsWith("ECG LAB"))!;
-    const disclosure = r.texts.find(t => t.text.startsWith("Uso educativo"))!;
+    const disclosure = r.texts.find(t => t.text.includes(note))!;
     expect(title.text).toContain(name.toUpperCase()); expect(disclosure.text).toContain(note);
     expect(title.maxWidth).toBeLessThan(layout.widthMm - title.x);
     expect(disclosure.maxWidth).toBeLessThan(layout.widthMm - disclosure.x);

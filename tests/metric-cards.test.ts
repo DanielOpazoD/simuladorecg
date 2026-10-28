@@ -73,6 +73,22 @@ describe('No apparent valid number without supporting evidence', () => {
 import { modelMetricCards } from "../src/ui/metric-cards";
 import { synthesize } from "../src/engine/signal";
 import { fromPreset, presetById } from "../src/presets/catalog";
+import { measurementsOverview } from '../src/ui/measurements-overview';
+
+describe('automatic measurement summary',()=>{
+  const c=fromPreset(presetById('sinus')!),s=synthesize(c,10);
+  const qtRow=(m:Measurement)=>measurementsOverview(s,m,c).split('</table>')[0].match(/<tr><th scope="row">QT<\/th>(.*?)<\/tr>/)![1];
+  it('shows raw QT separately from corrected QTc using the measured value',()=>{
+    expect(qtRow(measurement())).toContain('<td>380<small>ms</small></td>');
+    expect(measurementsOverview(s,measurement(),c)).toContain('QTc<small>Fridericia</small>');
+  });
+  it('withdraws retained QT candidates without evidence',()=>{
+    expect(qtRow(measurement({qt:'unavailable'}))).toContain('<td aria-label="No estimable">—</td>');
+  });
+  it('retains review status instead of presenting a flagged QT as reliable',()=>{
+    expect(qtRow(measurement({qt:'review'}))).toContain('380<small>ms</small><small class="measurement-note">Revisar</small>');
+  });
+});
 
 describe("modelMetricCards: el simulador muestra lo que generó", () => {
   const cards = (id: string) => {

@@ -6,6 +6,7 @@ export interface ModelIntervals {
   prRange: readonly [number, number] | null;
   progressivePr: boolean;
   qrs: number | null;
+  qt: number | null;
   qtc: number | null;
 }
 
@@ -30,6 +31,7 @@ export function modelIntervals(c: Pick<ECGCase, "rhythm" | "av">, s: Pick<Signal
     prRange,
     progressivePr: prRange !== null && c.rhythm === "sinus" && c.av === "mobitz1",
     qrs,
+    qt: none ? null : qt,
     qtc: !none && c.rhythm !== "torsades" && qt !== null && rr !== null && rr > 0 ? qt / Math.cbrt(rr) : null,
   };
 }
