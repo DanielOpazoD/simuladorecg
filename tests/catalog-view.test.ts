@@ -15,7 +15,7 @@ describe("catalog presentation", () => {
     expect(view.html).not.toContain("En las guías:");
     expect(view.html).not.toContain('case-group-count');
     expect(view.html).not.toContain('<h4 class="case-subgroup">Infarto antiguo</h4>');
-    expect(view.html).toContain('<h4 class="case-subgroup">Inferior y derecho</h4>');
+    expect(view.html).not.toContain('<h4 class="case-subgroup">Inferior y derecho</h4>');
     expect(view.html.indexOf('ischemia-library')).toBeLessThan(view.html.indexOf('data-family="Ritmos"'));
     expect(view.html).not.toMatch(/ disabled /);
     expect(view.html).not.toContain("Aún no disponibles");

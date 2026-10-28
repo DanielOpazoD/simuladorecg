@@ -96,7 +96,7 @@ export function installAccessibility() {
     workspace.inert = open; topbar.inert = open; skips.inert = open; backdrop.hidden = !open;
     if (open) {
       catalog.setAttribute('role','dialog');catalog.setAttribute('aria-modal','true');catalog.setAttribute('aria-labelledby','catalog-title');
-      if (!catalogOpen) catalog.querySelector<HTMLInputElement>('#case-search')!.focus();
+      if (!catalogOpen) catalog.querySelector<HTMLButtonElement>('[data-action=catalog-index]')!.focus();
     } else {
       catalog.removeAttribute('role');catalog.removeAttribute('aria-modal');catalog.removeAttribute('aria-labelledby');
       if (catalogOpen) {

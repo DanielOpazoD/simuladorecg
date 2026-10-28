@@ -46,7 +46,7 @@ import { createPractice, answerPractice, type PracticeState } from "./ui/practic
 import { practicePanelHtml } from "./ui/practice-panel";
 import { changeCase, isCaseControlKey, controlValue, keepsPractice, withInterfaceView } from "./ui/case-state";
 import { representativeBeat } from "./ui/beat-selection";
-import { measurementsOverview, rateHtml } from "./ui/measurements-overview";
+import { measurementsOverview, basicMetricsHtml } from "./ui/measurements-overview";
 import { auditMeasurement } from "./engine/analysis/model-audit";
 import {
   PRESETS,
@@ -126,13 +126,13 @@ try {
 applyTheme(readTheme());
 const root = $("#app");
 root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="ECG Lab, inicio">${icon("pulse")}<span>ECG<span class="brand-light">lab</span></span></a><nav aria-label="Herramientas"><button class="btn mobile-cases" data-action="catalog">${icon("menu")}<span>Casos</span></button>${btn("quiz", "Practicar", "quiz")}${btn("export", "Exportar", "download")}${btn("theme", "Tema", "sun", "icon-button")}</nav></header>
- <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><h2 class="sr-only">Biblioteca de patrones</h2>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Buscar ECG…" aria-label="Buscar caso"/></label><nav id="catalog-families" class="catalog-families" aria-label="Familias de ECG"></nav><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div></aside>
+ <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><h2 class="sr-only">Biblioteca de patrones</h2><button class="text-button" data-action="catalog-index" aria-controls="catalog-families">Casos</button><span id="catalog-family-title"></span>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><nav id="catalog-families" class="catalog-families" aria-label="Familias de ECG"></nav><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Buscar ECG…" aria-label="Buscar caso"/></label></aside>
  <main class="workspace"><section class="case-heading"><div><div class="case-category sr-only" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><div id="exploration-context" class="exploration-context" hidden></div></div><div class="heading-tools"><section id="metrics" class="metrics" aria-label="Valores del modelo que generó el ECG"><div class="loading-metrics">Generando señal…</div></section><div class="case-state">${btn("reset", "Restablecer", "reset", "subtle")}</div></div></section>
  <section id="diagnosis-navigation" class="diagnosis-navigation" aria-label="Variantes del patrón" hidden></section>
  <div id="diagnosis-content">
- <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="trace-tools"><button class="btn" data-action="measurements">Medidas</button>${btn("caliper", "Medir", "ruler")}${btn("compare", "Comparar", "strip")}${btn("pause", "Congelar", "pause")}<details class="paper-menu"><summary class="btn" data-action="paper">${icon("settings")}<span>Vista</span>${icon("chevron")}</summary><div class="view-options"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><details class="view-settings"><summary>Escala y señal</summary><div class="scale-toolbar" id="scale-toolbar"></div></details><details class="view-aids"><summary>Ayudas de lectura</summary><div class="view-overlays" aria-label="Ayudas visuales">${btn("annotations", "Marcar ondas", "eye")}${btn("lens-st", "Resaltar ST", "ruler")}${btn("teaching-marks", "Mostrar mis marcas", "eye")}${btn("teaching", "Aula: anotar y explorar", "book")}</div></details></div></details></div></div>
+ <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="trace-tools"><button class="btn" data-action="measurements">Medidas</button>${btn("caliper", "Medir", "ruler")}${btn("lens-st", "Punto J / ST", "ruler")}${btn("compare", "Comparar", "strip")}${btn("pause", "Congelar", "pause")}<details class="paper-menu"><summary class="btn" data-action="paper">${icon("settings")}<span>Vista</span>${icon("chevron")}</summary><div class="view-options"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><details class="view-settings"><summary>Escala y señal</summary><div class="scale-toolbar" id="scale-toolbar"></div></details><details class="view-aids"><summary>Ayudas de lectura</summary><div class="view-overlays" aria-label="Ayudas visuales">${btn("annotations", "Marcar ondas", "eye")}${btn("teaching-marks", "Mostrar mis marcas", "eye")}${btn("teaching", "Aula: anotar y explorar", "book")}</div></details></div></details></div></div>
  <div id="quiz-panel" hidden></div><div id="caliper-editor" class="caliper-editor" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small id="monitor-rate-note">No estimable</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
- <p class="sr-only" id="trace-context" hidden></p><div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-context trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div><p class="trace-scroll-hint" id="trace-scroll-hint" hidden>Desliza para ver el trazado completo.</p>
+ <p id="st-lens-note" class="control-note" hidden>J del modelo · ST en mm a 10 mm/mV</p><p class="sr-only" id="trace-context" hidden></p><div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-context trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div><p class="trace-scroll-hint" id="trace-scroll-hint" hidden>Desliza para ver el trazado completo.</p>
  <div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><p id="trace-keyboard-help" class="sr-only">Con foco en el trazado: M, P y R cambian la vista; V y G, la escala; C activa los calibres y espacio congela el monitor. Con calibres, las flechas mueven el extremo seleccionado; Mayús mueve diez pasos. Pulsa ? para abrir la ayuda de atajos.</p></section>
  </div>
  <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><h2 id="finding-title">Qué observar</h2><p id="case-subtitle" class="guide-lead">Activación auricular sinusal seguida de conducción AV 1:1.</p><ul id="findings"></ul><details id="reading-details"><summary>Explicación</summary><div class="reading-detail-content"><div id="structured-description"></div><div id="omi-sheet"></div></div></details></div></section>
@@ -169,6 +169,7 @@ function currentPreset() {
 }
 /** Browsing a family is independent of the currently displayed ECG. */
 let activeCatalogFamily = "";
+let catalogIndexOpen = true;
 // The paper menu closes on a click outside it or on Escape.
 document.addEventListener("click", (e) => {
   const menu = document.querySelector<HTMLDetailsElement>(".paper-menu[open]");
@@ -181,6 +182,10 @@ document.addEventListener("keydown", (e) => {
 function renderCatalog() {
   const view = catalogView(PRESETS, search, group, currentPreset()?.id, activeCatalogFamily);
   activeCatalogFamily = view.active;
+  $("#catalog").classList.toggle("catalog-overview", catalogIndexOpen && !search);
+  $("#catalog-families").hidden = !catalogIndexOpen || !!search;
+  $("#catalog-family-title").textContent = catalogIndexOpen || search ? "" : familyLabel(view.active);
+  $("[data-action=catalog-index]").setAttribute("aria-expanded", String(catalogIndexOpen && !search));
   $("#catalog-families").innerHTML = view.navigation;
   $("#catalog-count").textContent = view.count;
   $("[data-action=clear-search]").hidden = !view.clearFiltersVisible;
@@ -259,7 +264,7 @@ function renderMetrics() {
   // sample analyzer remains an independent estimate inside «Medidas».
   const concealed = !!quiz && !quiz.answer, model = modelMetricCards(c, session.signal);
   const cards = concealed ? concealMetricCards(model) : model, rate = cards[0];
-  $("#metrics").innerHTML = rateHtml(rate);
+  $("#metrics").innerHTML = basicMetricsHtml(cards);
   $("#metrics").toggleAttribute("data-concealed", concealed);
   $("#monitor-rate").textContent = rate.value === "—" ? "—" : rate.value.replace(/<small>.*<\/small>/, "");
   $("#monitor-rate-note").textContent = concealed ? "oculto en práctica" : rate.value === "—" ? "No estimable" : "lpm · modelo";
@@ -407,14 +412,17 @@ function syncTraceTools() {
   marks.hidden = !ready || practice || !paper || !session.signal || !teachingNotes.get(teachingKey(session.signal))?.length;
   marks.setAttribute("aria-pressed", String(teachingMarksVisible));
   const st = $<HTMLButtonElement>('[data-action="lens-st"]');
-  st.disabled = !paper || !ready || practice;
-  st.hidden = !paper || practice;
+  st.disabled = !paper || !ready || practice || !session.signal?.events.beats.some(b => b.qrs !== undefined);
+  st.hidden = practice;
+  st.title = "J del modelo. ST: media de los primeros 10 ms respecto de la ventana pre-QRS (−40 a −20 ms); mm equivalentes a 10 mm/mV. No es una delimitación clínica independiente.";
   st.setAttribute("aria-pressed", String(ready && paper && !practice && stHighlight));
   st.classList.toggle("active", ready && paper && !practice && stHighlight);
+  $("#st-lens-note").hidden = !ready || !paper || practice || !stHighlight || st.disabled;
+  $("#st-lens-note").title = st.title;
   $('[data-action="theme"]').setAttribute("aria-pressed", String(currentTheme() === "dark"));
   const caliperButton = $<HTMLButtonElement>('[data-action="caliper"]');
   caliperButton.disabled = monitorMode || !ready;
-  caliperButton.hidden = monitorMode || (!practice && !measuring);
+  caliperButton.hidden = false;
   caliperButton.querySelector('span')!.textContent = measuring ? 'Terminar medición' : 'Medir';
   caliperButton.setAttribute('aria-label', measuring ? 'Terminar medición' : 'Medir');
   caliperButton.classList.toggle("active", measuring);
@@ -928,11 +936,17 @@ async function openTeachingWorkspace() {
   $("#dialog-content [data-action=close-dialog]").focus();
 }
 const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
+  "catalog-index": () => {
+    catalogIndexOpen = !catalogIndexOpen; search = ""; group = "";
+    $<HTMLInputElement>("#case-search").value = ""; renderCatalog();
+    $("[data-action=catalog-index]").focus({preventScroll:true});
+  },
   "catalog-family": (target) => {
+    catalogIndexOpen = false;
     activeCatalogFamily = target.dataset.catalogFamily!; search = ""; group = "";
     $<HTMLInputElement>("#case-search").value = ""; renderCatalog();
     $("#case-list").scrollTop = 0;
-    Array.from(document.querySelectorAll<HTMLButtonElement>("[data-catalog-family]")).find(b => b.dataset.catalogFamily === activeCatalogFamily)?.focus({preventScroll:true});
+    $("[data-action=catalog-index]").focus({preventScroll:true});
   },
   compare: () => openComparison(),
   teaching: () => openTeachingWorkspace(),

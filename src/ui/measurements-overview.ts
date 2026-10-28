@@ -7,6 +7,11 @@ export function rateHtml(card: MetricCard) {
   return `<button class="metric main-metric" data-action="measurements" aria-label="${esc(`Frecuencia ventricular: ${card.value.replace(/<[^>]+>/g, ' ')}. ${card.note}. Abrir medidas.`)}"><span>FC</span><strong>${card.value}</strong></button>`;
 }
 
+/** Small, always-visible values; full provenance stays available on each control. */
+export function basicMetricsHtml(cards: MetricCard[]) {
+  return cards.map(card => `<button class="metric" data-action="measurements" title="${esc(card.reason)}" aria-label="${esc(`${card.label}: ${card.value.replace(/<[^>]+>/g, ' ')}. ${card.note}. Abrir medidas.`)}"><span>${card.key === 'hr' ? 'FC' : card.label}</span><strong>${card.value}</strong></button>`).join('');
+}
+
 export function measurementsOverview(s: Signal, m: Measurement, c: ECGCase) {
   const model = modelMetricCards(c, s), estimates = metricCards(c, m);
   return `<div class="measurements-overview"><p class="control-note">Modelo: valores generados. Estimación: cálculo automático sobre las muestras.</p>

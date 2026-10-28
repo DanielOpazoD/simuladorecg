@@ -23,6 +23,31 @@ const fontSize = (font: string) => Number(font.match(/([\d.]+)px/)![1]);
 const formats: ECGCase["view"]["format"][] = ["3x4", "3x4+1", "3x4+3", "6x2", "12x1"];
 
 describe("paper editorial bands preserve calibrated signal space", () => {
+  it('reads small ST values from the shown samples, with calibrated units and Cabrera polarity', () => {
+    const s = signal();
+    s.events.beats = [.5,3,5.5,8].map(time => ({time,qrs:.1,kind:'normal'})) as Signal['events']['beats'];
+    for (const samples of Object.values(s.leads)) {
+      samples.fill(.1);
+      for (const beat of s.events.beats) for(let i=Math.round((beat.time+.1)*s.fs);i<=Math.round((beat.time+.18)*s.fs);i++)samples[i]=.12;
+    }
+    for(const gain of [5,10,20]){
+      const c=cloneCase(DEFAULT_CASE);c.view.format='3x4';c.view.gain=gain;c.view.chestGain=gain;c.view.cabrera=true;
+      const marked=recorder(),plain=recorder();
+      const layout=renderPaper(marked.canvas,s,c,1000,{ratio:1,stLens:true});
+      renderPaper(plain.canvas,s,c,1000,{ratio:1});
+      expect(marked.texts.filter(t=>t.text==='J · ST +0,2 mm')).toHaveLength(11);
+      expect(marked.texts.filter(t=>t.text==='J · ST -0,2 mm')).toHaveLength(1);
+      expect(plain.texts.some(t=>t.text.includes('J · ST'))).toBe(false);
+      marked.texts.filter(t=>t.text.includes('J · ST')).forEach((label,i)=>{
+        expect(label.y).toBeLessThan(layout.segments[i].y+9);
+        expect(label.x+label.maxWidth!).toBeLessThanOrEqual(layout.segments[i].x+layout.segments[i].width);
+      });
+    }
+    // Negative control: baseline-only samples must not retain the previous offset.
+    for(const samples of Object.values(s.leads))samples.fill(.1);
+    const zero=recorder(), c=cloneCase(DEFAULT_CASE);c.view.format='3x4';renderPaper(zero.canvas,s,c,1000,{ratio:1,stLens:true});
+    expect(zero.texts.filter(t=>t.text==='J · ST +0,0 mm')).toHaveLength(12);
+  });
   it.each(formats)("%s preserves time windows and caliper scale across narrow gaps", format => {
     const c = cloneCase(DEFAULT_CASE); c.view.format = format;
     for (const timing of ["sequential", "simultaneous"] as const) {

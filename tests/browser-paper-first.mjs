@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {mkdir,writeFile} from 'node:fs/promises';
+import {mkdir,writeFile,readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {createHash} from 'node:crypto';
 import {chromium} from 'playwright';
@@ -12,6 +12,7 @@ const hash=x=>createHash('sha256').update(JSON.stringify(x)).digest('hex');
 async function closeDialog(){await page.evaluate(()=>{window.__paperDialogClosed=false;document.querySelector('#dialog').addEventListener('close',()=>{window.__paperDialogClosed=true;},{once:true});});await page.keyboard.press('Escape');await page.waitForFunction(()=>window.__paperDialogClosed);}
 async function view(mode){if(!await page.locator('.paper-menu').evaluate(e=>e.open))await page.locator('.paper-menu > summary').click();await page.locator(`[data-mode=${mode}]`).click();assert.equal(await page.locator(`[data-mode=${mode}]`).getAttribute('aria-selected'),'true');await page.keyboard.press('Escape');}
 async function fitsDialog(){const b=await page.locator('#dialog').evaluate(e=>({scroll:e.scrollHeight-e.clientHeight,x:e.getBoundingClientRect().x,right:e.getBoundingClientRect().right,y:e.getBoundingClientRect().y,bottom:e.getBoundingClientRect().bottom,w:innerWidth,h:innerHeight}));assert(b.scroll<=2&&b.x>=-2&&b.right<=b.w+2&&b.y>=-2&&b.bottom<=b.h+2,JSON.stringify(b));}
+async function exportHash(){await page.locator('[data-action=export]').click();const pending=page.waitForEvent('download');await page.locator('[data-action=png]').click();const download=await pending;const bytes=await readFile(await download.path());await closeDialog();return createHash('sha256').update(bytes).digest('hex');}
 try{
  for(const v of [{width:1440,height:900},{width:390,height:844},{width:320,height:568},{width:844,height:390},{width:390,height:844,dark:true},{width:320,height:568,zoom:true}]){
   page=await browser.newPage({viewport:v,reducedMotion:'reduce'});await installWorkerTap(page);
@@ -24,14 +25,29 @@ try{
    if(id!=='sinus'){const n=await workerReplies(page);await chooseCatalogPreset(page,id);await waitForReply(page,n);}
    await page.evaluate(()=>scrollTo(0,0));
    const trace=await readTrace(page),signature=hash(trace),n=await workerReplies(page),layout=JSON.parse(await page.locator('#reading-overlay').getAttribute('data-geometry'));
-   assert.equal(await page.locator('#metrics .metric').count(),1);assert.doesNotMatch(await page.locator('#metrics').innerText(),/PR|QRS|QTc|Eje/);
+   assert.equal(await page.locator('#metrics .metric').count(),5);assert.deepEqual(await page.locator('#metrics .metric > span').allTextContents(),['FC','PR','QRS','QTc','Eje QRS']);
    assert.equal(await page.getByRole('tab',{name:'Monitor',exact:true}).isVisible(),false);
-   assert.equal(await page.locator('.trace-tools [data-action=caliper]').isHidden(),true);
+   assert.equal(await page.locator('.trace-tools [data-action=caliper]').isVisible(),true);
    assert.equal(await page.locator('.case-group-count').count(),0);
    assert.equal(await page.locator('#case-subtitle').isHidden(),true);
    assert.equal(await page.locator('#reading-details > summary').innerText(),'Explicación');
    assert.equal(await page.locator('.workspace-footer [data-product-version]').count(),0);
-   const paperTop=(await page.locator('#ecg').boundingBox()).y;if(!v.zoom)assert(paperTop<260,`Paper starts too low: ${paperTop}`);
+   const paperTop=(await page.locator('#ecg').boundingBox()).y;if(!v.zoom)assert(paperTop<340,`Paper starts too low: ${paperTop}`);
+   const metrics=await page.locator('#metrics .metric').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return {y:r.y,right:r.right,overflow:e.scrollWidth-e.clientWidth};}));
+   if(!v.zoom){assert(metrics.every(m=>m.y===metrics[0].y&&m.overflow<=2&&m.right<=v.width),JSON.stringify(metrics));}
+   const jButton=page.locator('[data-action=lens-st]');assert.equal(await jButton.isVisible(),true);
+   assert.equal(await jButton.isDisabled(),id==='vf');
+   if(id!=='vf'){
+    const pixels=await page.locator('#ecg').evaluate(e=>e.toDataURL());
+    const pngBefore=id==='anterior'&&v.width===1440?await exportHash():null;
+    await jButton.click();assert.equal(await jButton.getAttribute('aria-pressed'),'true');assert.equal(await page.locator('#st-lens-note').isVisible(),true);
+    assert.notEqual(await page.locator('#ecg').evaluate(e=>e.toDataURL()),pixels);
+    if(pngBefore)assert.equal(await exportHash(),pngBefore,'J/ST reading aid must not alter the print export');
+    if(id==='anterior')await page.screenshot({path:resolve(out,`j-st-${v.width}-${v.height}-${v.dark?'dark':v.zoom?'zoom':'light'}.png`)});
+    await jButton.click();assert.equal(await page.locator('#st-lens-note').isHidden(),true);
+    assert.equal(await page.locator('#ecg').evaluate(e=>e.toDataURL()),pixels);
+    assert.equal(hash(await readTrace(page)),signature);assert.equal(await workerReplies(page),n);
+   }
    for(const seg of layout.segments){
     const gain=seg.lead.startsWith('V')?trace.case.view.chestGain:trace.case.view.gain;
     const values=trace.leads[seg.lead].slice(Math.round(seg.start*trace.fs),Math.round((seg.start+seg.duration)*trace.fs));
@@ -69,12 +85,13 @@ try{
   if(v.width===320&&!v.zoom)await page.screenshot({path:resolve(out,'view-menu-320.png')});
   await page.locator('.view-settings > summary').click();assert.equal(await page.locator('[data-key="view.speed"]').isVisible(),true);await page.locator('.view-settings > summary').click();
   await page.locator('.view-aids > summary').click();assert.equal(await page.locator('[data-action=teaching]').isVisible(),true);await page.locator('.view-aids > summary').click();await page.keyboard.press('Escape');
-  await view('monitor');assert.equal(await page.locator('[data-action=pause]').isVisible(),true);assert.equal(await page.locator('[data-action=caliper]').isHidden(),true);
+  await view('monitor');assert.equal(await page.locator('[data-action=caliper]').isDisabled(),true);assert.equal(await page.locator('[data-action=pause]').isVisible(),true);assert.equal(await page.locator('[data-action=caliper]').isVisible(),true);
   await view('rhythm');assert.match(await page.locator('#ecg').getAttribute('aria-label'),/ECG sintético/);
-  await view('paper');assert.equal(await page.locator('[data-action=caliper]').isHidden(),true);
+  await view('paper');assert.equal(await page.locator('[data-action=caliper]').isVisible(),true);
   await page.locator('[data-action=about]').click();assert.deepEqual(await page.locator('.information-content > details > summary').allTextContents(),['Cómo se genera este ECG','Referencias y atribución','Atajos de teclado']);
   await page.getByText('Cómo se genera este ECG',{exact:true}).click();assert.match(await page.locator('#dialog').innerText(),/sin ruido de adquisición añadido/);assert.equal(await page.locator('#analyzer-info').count(),0);await closeDialog();
   await page.locator('[data-action=quiz]').click();await page.locator('#signal-loading').waitFor({state:'hidden'});assert.match(await page.locator('#metrics').innerText(),/\?/);assert.equal(await page.locator('.trace-tools [data-action=measurements]').isDisabled(),true);
+  assert.equal(await page.locator('[data-action=lens-st]').isHidden(),true);
   await startManualMeasurement(page);assert.equal(await page.locator('#caliper-editor').isVisible(),true);
   await page.locator('#ecg').press('c');assert.equal(await page.locator('#caliper-editor').isHidden(),true);
   assert.equal(await page.locator('#dialog').evaluate(d=>d.open),false);

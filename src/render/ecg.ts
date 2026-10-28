@@ -443,25 +443,20 @@ function drawStLens(ctx: CanvasRenderingContext2D, s: Signal, seg: Segment, c: E
   ctx.save();
   marks.forEach((m, k) => {
     const i0 = Math.round(m.jTime * s.fs), i1 = Math.round(m.endTime * s.fs);
-    if (m.kind) {
-      ctx.fillStyle = m.kind === "SDST" ? palette.sdstFill : palette.idstFill;
+    const kind = seg.polarity < 0 && m.kind ? m.kind === 'SDST' ? 'IDST' : 'SDST' : m.kind;
+    if (kind) {
+      ctx.fillStyle = kind === "SDST" ? palette.sdstFill : palette.idstFill;
       ctx.beginPath();
       ctx.moveTo(X(m.jTime), Y(m.prLevel));
       for (let i = i0; i <= i1; i++) ctx.lineTo(X(i / s.fs), Y(a[i]));
       ctx.lineTo(X(m.endTime), Y(m.prLevel));
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = m.kind === "SDST" ? palette.sdst : palette.idst;
+      ctx.strokeStyle = kind === "SDST" ? palette.sdst : palette.idst;
       ctx.lineWidth = 0.55;
       ctx.beginPath();
       for (let i = i0; i <= i1; i++) (i === i0 ? ctx.moveTo : ctx.lineTo).call(ctx, X(i / s.fs), Y(a[i]));
       ctx.stroke();
-      if (k === 0) {
-        ctx.fillStyle = ctx.strokeStyle;
-        ctx.font = "600 2.3px ui-monospace,monospace";
-        const mm = m.j0 * 10; // at J; standard calibration (1 mm = 0.1 mV), whatever the display gain
-        ctx.fillText(`${m.kind} ${mm > 0 ? "+" : ""}${mm.toFixed(1).replace(".", ",")} mm`, X(m.endTime) + 0.8, Y(a[i1]) + (m.kind === "SDST" ? -1 : 2.6));
-      }
     }
     ctx.strokeStyle = palette.text;
     ctx.lineWidth = 0.25;
@@ -471,8 +466,12 @@ function drawStLens(ctx: CanvasRenderingContext2D, s: Signal, seg: Segment, c: E
     ctx.stroke();
     if (k === 0) {
       ctx.fillStyle = palette.text;
-      ctx.font = "600 2.2px ui-monospace,monospace";
-      ctx.fillText("J", X(m.jTime) - 0.7, Y(a[i0]) - 2.1);
+      ctx.font = "500 2.7px ui-monospace,monospace";
+      // Report every first visible beat, including values below the shading threshold.
+      // Equivalent millimetres remain referenced to 10 mm/mV at any display gain.
+      const mm = m.j0 * seg.polarity * 10;
+      // Use the reserved label band so the value cannot cover the waveform.
+      ctx.fillText(`J · ST ${mm >= 0 ? "+" : ""}${mm.toFixed(1).replace(".", ",")} mm`, seg.x + 14, seg.y + 5, seg.width - 15);
     }
   });
   ctx.restore();
