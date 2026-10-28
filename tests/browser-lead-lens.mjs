@@ -13,7 +13,7 @@ try{
   await page.addInitScript(dark=>{localStorage.setItem('ecglab-theme',dark?'dark':'light');localStorage.setItem('ecglab-acquisition','ideal');},!!viewport.dark);
   await page.goto(process.env.ECG_TEST_URL??'http://127.0.0.1:4173/');await page.locator('#signal-loading').waitFor({state:'hidden'});
   assert.match(await page.title(),/ECG/);assert.equal(await page.locator('vite-error-overlay').count(),0);
-  for(const id of ['sinus','tachy','brady','lbbb','vf']){
+  for(const id of ['sinus','tachy','brady','lbbb','anterior','vf']){
    if(id!=='sinus'){await chooseCatalogPreset(page,id);await page.locator('#signal-loading').waitFor({state:'hidden'});}
    const trace=await readTrace(page),replies=await workerReplies(page),canvas=await page.locator('#ecg').evaluate(c=>c.toDataURL());
    let intervalColors;
@@ -58,6 +58,13 @@ try{
     for(let i=0;i<geometry.labels.length;i++)for(let j=i+1;j<geometry.labels.length;j++){const a=geometry.labels[i],b=geometry.labels[j];assert(a.right+3<=b.left||b.right+3<=a.left||a.bottom+3<=b.top||b.bottom+3<=a.top,JSON.stringify({id,mode,viewport,a,b}));}
    }
    await page.getByLabel('Marcas de la lupa').selectOption('all');
+   const reserved=await page.locator('.lead-detail-trace').evaluate(svg=>(svg.viewBox.baseVal.height-Number(svg.dataset.traceHeight))*svg.getBoundingClientRect().width/svg.viewBox.baseVal.width);
+   const availableKeys=await page.locator('.lens-mark').evaluateAll(es=>[...new Set(es.map(e=>e.dataset.key))]);
+   if(id==='anterior'){
+    assert.deepEqual(availableKeys,['qrs'],'This case provides a single accepted interval lane');
+    assert(reserved<=36.1,`One available interval must not reserve three lanes: ${reserved}px`);
+   }
+   if(id==='vf')assert(reserved<.1,'No empty annotation band without estimable marks');
    if(id==='sinus'){
     assert.equal(await page.locator('.lens-mark').count(),6);
     const colors=await page.locator('.lens-mark').evaluateAll(es=>es.map(e=>getComputedStyle(e).fill));assert.equal(new Set(colors).size,3);
@@ -76,7 +83,7 @@ try{
    await page.keyboard.press('Escape');
    assert.equal(await page.locator('#ecg').evaluate(c=>c.toDataURL()),canvas);
    assert.equal(await workerReplies(page),replies);
-   results.push({viewport,id,start,end});
+   results.push({viewport,id,start,end,reserved,availableKeys});
   }
   await page.close();
  }

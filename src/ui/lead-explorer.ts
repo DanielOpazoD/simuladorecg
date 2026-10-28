@@ -40,6 +40,7 @@ export function mountLeadExplorer(root: HTMLElement, s: Signal, c: ECGCase, seg:
   const initial = leadWindow(s, seg, time);
   if (!initial) { root.textContent = "No hay muestras completas y finitas en este fragmento."; return; }
   let lead = seg.lead, mode:LensMode='all';
+  let annotationLanes:LensMark['key'][]=[], annotationRows=0;
   root.className = "lead-explorer";
   const title = root.closest("dialog")!.querySelector(".dialog-head h2")!;
   title.innerHTML = `<label class="lead-detail-select">Derivación <select aria-label="Derivación ampliada">${LEADS.map(l=>`<option value="${l}"${l === lead ? " selected" : ""}>${c.view.cabrera && l === 'aVR' ? '−' : ''}${l}</option>`).join("")}</select></label>`;
@@ -51,7 +52,11 @@ export function mountLeadExplorer(root: HTMLElement, s: Signal, c: ECGCase, seg:
     root.classList.toggle('has-manual',value!==null);
   });
   root.querySelector('.lens-measure')!.addEventListener('click',e=>{
-    manual.setActive(!manual.active);(e.currentTarget as HTMLElement).setAttribute('aria-pressed',String(manual.active));
+    manual.setActive(!manual.active);
+    const button=e.currentTarget as HTMLElement;
+    button.setAttribute('aria-pressed',String(manual.active));
+    button.setAttribute('aria-label',manual.active?'Ocultar medición manual':'Medir en la lupa');
+    button.title=manual.active?'Ocultar medición manual':'Medir arrastrando';
   });
   root.querySelector('.lens-clear')!.addEventListener('click',()=>manual.clear());
   const fitLabels=()=>{
@@ -65,13 +70,13 @@ export function mountLeadExplorer(root: HTMLElement, s: Signal, c: ECGCase, seg:
     const width=svg.viewBox.baseVal.width,traceHeight=Number(svg.dataset.traceHeight);
     // The annotation lanes are screen-sized, not 30 mm of enlarged ECG paper.
     // Uniform scale still governs both waveform axes and the physical grid.
-    const budget=Math.max(140,window.innerHeight*.92-chrome-4),footer=96;
+    const budget=Math.max(140,window.innerHeight*.92-chrome-4),footer=annotationRows?annotationRows*30+6:0;
     const scale=Math.min((root.clientWidth-2)/width,(budget-footer)/traceHeight);
     const unit=1/scale;
     svg.setAttribute('viewBox',`0 0 ${width} ${traceHeight+footer*unit}`);
     svg.style.width=`${width*scale}px`;
     svg.querySelectorAll<SVGGElement>('.lens-mark').forEach(group=>{
-      const key=group.dataset.key,lane=key==='qrs'?1:key==='qt'?2:0;
+      const lane=Math.max(0,annotationLanes.indexOf(group.dataset.key as LensMark['key']));
       const x1=4+(Number(group.dataset.start)-initial.start)*50,x2=4+(Number(group.dataset.end)-initial.start)*50,y=traceHeight+(4+lane*30)*unit;
       group.querySelector('.lens-bracket')!.setAttribute('d',`M${x1} ${y-3*unit}v${6*unit}M${x1} ${y}H${x2}M${x2} ${y-3*unit}v${6*unit}`);
       group.querySelector('text')!.setAttribute('y',String(y+19*unit));
@@ -101,7 +106,13 @@ export function mountLeadExplorer(root: HTMLElement, s: Signal, c: ECGCase, seg:
     const hint = root.querySelector<HTMLElement>(".lead-observation")!;
     hint.textContent = c.artifacts.reversed ? "Electrodos de brazos invertidos." : polarity < 0 ? "Polaridad invertida: −aVR." : finding ? finding + "." : "";
     hint.hidden = !hint.textContent;
-    const marks=w?lensMarks(s,lead,w,polarity,measurement,mode):[];
+    // Reserve only usable lanes, independently of the selected display mode.
+    // J/ST reuses the first lane; hiding marks never changes the waveform scale.
+    const intervals=w?lensMarks(s,lead,w,polarity,measurement,'all'):[];
+    const st=w?lensMarks(s,lead,w,polarity,measurement,'st'):[];
+    annotationLanes=(['pr','qrs','qt'] as const).filter(key=>intervals.some(mark=>mark.key===key));
+    annotationRows=Math.max(annotationLanes.length,st.length?1:0);
+    const marks=mode==='st'?st:mode==='none'?[]:intervals.filter(mark=>mode==='all'||mark.key===mode);
     root.dataset.markMode=mode;
     root.querySelector('.lens-status')!.textContent=mode!=='none'&&!marks.length?`· ${MEASUREMENT_STATE.unavailable}`:marks.some(m=>m.value.endsWith('*'))?`· * ${MEASUREMENT_STATE.review}`:'';
     root.querySelector(".lead-detail-scroll")!.innerHTML = w ? enlargedTrace(s, lead, w, polarity,marks) : "Muestras no disponibles en esta derivación.";
