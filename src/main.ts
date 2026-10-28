@@ -24,7 +24,7 @@ import { signalFingerprint, teachingCaseIdentity, type TeachingNote } from "./ui
 import { drawTeachingNotes, projectTeachingNote } from "./ui/teaching-export";
 import { visiblePaperLeads } from "./render/paper-viewport";
 import type { Lead } from "./engine/types";
-import { openDialog, closeDialog } from "./ui/dialog";
+import { openDialog, closeDialog, requestDialog } from "./ui/dialog";
 import { exportDialogHtml } from "./ui/export-dialog";
 import { handleExportAction } from "./ui/export-actions";
 import { diagnosisForPreset } from "./ui/diagnosis-navigation";
@@ -85,7 +85,6 @@ const session = new TraceSession();
 const teachingNotes = new Map<string, TeachingNote[]>(), teachingSnapshots: TeachingSnapshot[] = [];
 const teachingSignalKeys = new WeakMap<Signal, string>();
 let teachingMarksVisible = true;
-let teachingOpening = false;
 let activeFinding: string | null = null;
 let leadMarkMode:LensMode='all';
 function teachingKey(signal: Signal) {
@@ -913,16 +912,17 @@ function openStDistribution(lead?: Lead, beat?: number) {
   mountStDistribution($("#dialog-content .st-distribution"), session.signal, c.artifacts.reversed, openStZoom, { lead, beat });
   $("#dialog-content [data-action=close-dialog]").focus();
 }
-let comparisonOpening = false;
 let comparisonReferenceId = 'sinus';
 async function openComparison() {
-  if (comparisonOpening || !session.signal || !session.canExport || (quiz && !quiz.answer)) return;
+  if (!session.signal || !session.canExport || (quiz && !quiz.answer)) return;
   const signal = session.signal, ecg = cloneCase(c);
-  comparisonOpening = true;
+  const isCurrent = requestDialog();
+  let opened = false;
   try {
     const { caseComparisonHtml, mountCaseComparison } = await import("./ui/case-comparison");
-    if (signal !== session.signal || !session.canExport || (quiz && !quiz.answer)) return;
+    if (!isCurrent() || signal !== session.signal || !session.canExport || (quiz && !quiz.answer)) return;
     openDialog("Comparar ECG", caseComparisonHtml());
+    opened = true;
     const dialog = $<HTMLDialogElement>("#dialog"), host = $(".case-comparison");
     dialog.classList.add("comparison-dialog");
     const dispose = mountCaseComparison(host, signal, ecg, comparisonReferenceId);
@@ -936,19 +936,17 @@ async function openComparison() {
     const observer = new MutationObserver(() => { if (!host.isConnected) cleanup(); });
     observer.observe($("#dialog-content"), { childList: true });
     dialog.addEventListener("close", cleanup);
-  } catch { toast("No se pudo abrir la comparación. Inténtalo de nuevo."); }
-  finally { comparisonOpening = false; }
+  } catch { if (opened || isCurrent()) toast("No se pudo abrir la comparación. Inténtalo de nuevo."); }
 }
 async function openTeachingWorkspace() {
-  if (teachingOpening || !session.signal || !session.canExport || (quiz && !quiz.answer)) return;
+  if (!session.signal || !session.canExport || (quiz && !quiz.answer)) return;
   const signal = session.signal, ecg = cloneCase(c), key = teachingKey(signal);
-  teachingOpening = true;
+  const isCurrent = requestDialog();
   let mountTeachingWorkspace: typeof import("./ui/teaching-workspace").mountTeachingWorkspace;
   try { ({ mountTeachingWorkspace } = await import("./ui/teaching-workspace")); }
-  catch { toast("No se pudo cargar el Aula ECG. Inténtalo de nuevo."); return; }
-  finally { teachingOpening = false; }
+  catch { if (isCurrent()) toast("No se pudo cargar el Aula ECG. Inténtalo de nuevo."); return; }
   // A new case or practice question may have arrived while the optional module loaded.
-  if (signal !== session.signal || !session.canExport || (quiz && !quiz.answer)) return;
+  if (!isCurrent() || signal !== session.signal || !session.canExport || (quiz && !quiz.answer)) return;
   const menu = $<HTMLDetailsElement>(".paper-menu");
   menu.open = false;
   menu.querySelector<HTMLElement>("summary")!.focus({ preventScroll: true });

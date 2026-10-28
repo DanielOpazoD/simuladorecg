@@ -64,6 +64,8 @@ jobs:
         run: node tests/browser-st-distribution.mjs "$RUNNER_TEMP/ecg-st-distribution"
       - name: Interfaz simplificada y comparación entre ejemplos
         run: node tests/browser-case-comparison.mjs "$RUNNER_TEMP/ecg-case-comparison"
+      - name: Respetar la última ventana solicitada con carga lenta
+        run: node tests/browser-dialog-intent.mjs "$RUNNER_TEMP/ecg-reading/dialog-intent"
       - name: Adquisición limpia seleccionada, persistencia y exportación
         run: node tests/browser-clean-acquisition.mjs "$RUNNER_TEMP/ecg-clean-acquisition"
       - name: Lectura interactiva, muestras intactas y exportación
