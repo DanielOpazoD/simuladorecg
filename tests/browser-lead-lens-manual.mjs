@@ -34,6 +34,17 @@ for(const viewport of [{width:1440,height:900},{width:390,height:844},{width:320
  await plot.press('b');await plot.press('ArrowLeft');assert(Math.abs(await value()-202)<.001);
  await plot.press('Shift+ArrowLeft');assert(Math.abs(await value()-222)<.001);
  await plot.press('a');await plot.press('ArrowRight');assert(Math.abs(await value()-224)<.001);
+ // Browser shortcuts are not measurement gestures. Hiding is reversible;
+ // clearing or changing the lead is the deliberate way to discard a result.
+ await plot.press('Control+ArrowRight');assert(Math.abs(await value()-224)<.001);
+ await plot.press('Control+Delete');assert(Math.abs(await value()-224)<.001);
+ const manualMark=await page.locator('.lens-manual-mark').innerHTML(),measuredBounds=await svg.boundingBox();
+ await page.locator('.lens-measure').click();assert.equal(await page.locator('.lens-manual-mark').count(),0);
+ assert.equal(await root.getAttribute('data-manual-ms'),null);
+ assert.deepEqual(await svg.boundingBox(),measuredBounds);
+ await page.locator('.lens-measure').click();assert(Math.abs(await value()-224)<.001);
+ assert.equal(await page.locator('.lens-manual-mark').innerHTML(),manualMark);
+ assert.deepEqual(await svg.boundingBox(),measuredBounds);
  await page.getByLabel('Marcas de la lupa').selectOption('none');assert(Math.abs(await value()-224)<.001);assert.equal(await page.locator('.lens-manual-mark').count(),1);
  await page.getByLabel('Marcas de la lupa').selectOption('all');assert(Math.abs(await value()-224)<.001);
  // Native touch sequence and cancellation, not synthetic DOM pointer events.
@@ -52,7 +63,8 @@ for(const viewport of [{width:1440,height:900},{width:390,height:844},{width:320
  assert.equal(await page.locator('.lead-sample-path').getAttribute('d'),path);
  const bounds=await page.locator('#dialog').evaluate(e=>({overflow:e.scrollHeight-e.clientHeight,bottom:e.getBoundingClientRect().bottom}));assert(bounds.overflow<=1);assert(bounds.bottom<=viewport.height+1);
  await page.getByLabel('Derivación ampliada',{exact:true}).selectOption('aVL');assert.equal(await root.getAttribute('data-manual-ms'),null);
- await page.getByRole('button',{name:'Medir en la lupa',exact:true}).click();assert.equal(await page.locator('.lens-manual-mark').count(),0);
+ await page.getByRole('button',{name:'Ocultar medición manual',exact:true}).click();assert.equal(await page.locator('.lens-manual-mark').count(),0);
+ await page.getByRole('button',{name:'Medir en la lupa',exact:true}).click();assert.equal(await root.getAttribute('data-manual-ms'),null,'A new lead cannot resurrect the previous measurement');
  await page.keyboard.press('Escape');assert.equal(await workerReplies(page),replies);assert.equal(await page.locator('#ecg').evaluate(e=>e.toDataURL()),canvas);
  results.push(viewport);await page.close();
 }

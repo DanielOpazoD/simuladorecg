@@ -29,7 +29,9 @@ export class LensCaliper {
     return {svg,rect,layout};
   }
   setActive(value:boolean){
-    this.cancel();this.active=value;if(!value)this.cal=null;
+    // Hiding a tool must not discard the learner's measurement. clear() and
+    // changing the lead remain the explicit reset paths for this open lens.
+    this.cancel();this.active=value;
     this.plot.classList.toggle('lens-measuring',value);this.plot.tabIndex=value?0:-1;
     this.plot.setAttribute('role','group');
     this.plot.setAttribute('aria-label','Medición manual. Arrastra entre dos puntos. A o B seleccionan el extremo; flechas lo ajustan, Mayús acelera y Suprimir limpia.');
@@ -58,7 +60,7 @@ export class LensCaliper {
   private up=(e:PointerEvent)=>{if(e.pointerId!==this.drag?.id)return;this.move(e);this.release();};
   private cancel=()=>{if(!this.drag)return;this.cal=this.drag.before;this.release();this.refresh();};
   private key=(e:KeyboardEvent)=>{
-    if(!this.active)return;
+    if(!this.active||e.ctrlKey||e.altKey||e.metaKey||e.isComposing)return;
     if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();this.clear();return;}
     if(e.key.toLowerCase()==='a'||e.key.toLowerCase()==='b'){this.end=e.key.toLowerCase()==='a'?1:2;this.refresh();return;}
     if(!e.key.startsWith('Arrow'))return;
