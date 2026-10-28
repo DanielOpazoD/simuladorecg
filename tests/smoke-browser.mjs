@@ -9,8 +9,8 @@ const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));
 page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
 await page.goto(url);
-// The first family may be folded; readiness does not depend on catalog order.
-await page.locator(".case-button:visible").first().waitFor();
+// The initial index is visible; examples appear only after choosing a family.
+await page.locator("#catalog-families button").first().waitFor();
 
 const inked = () => page.locator("canvas").first().evaluate((cv) => {
   const { data } = cv.getContext("2d").getImageData(0, 0, cv.width, cv.height);
