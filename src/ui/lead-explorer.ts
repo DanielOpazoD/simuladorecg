@@ -36,10 +36,10 @@ export function enlargedTrace(s: Signal, lead: Lead, w: SampleWindow, polarity: 
   return `<svg data-baseline="${4+top*gain}" data-trace-height="${traceHeight}" class="lead-detail-trace" viewBox="0 0 ${width} ${height}" style="width:100%" role="img" aria-label="ECG ampliado de ${esc(polarity < 0 ? "−" + lead : lead)}. ${esc((marks??[]).map(m=>m.key.toUpperCase()+' '+m.value).join('; '))}"><defs><pattern id="lead-small-grid" width="1" height="1" patternUnits="userSpaceOnUse"><path d="M1 0H0V1" class="lead-grid-fine"/></pattern><pattern id="lead-big-grid" width="5" height="5" patternUnits="userSpaceOnUse"><rect width="5" height="5" fill="url(#lead-small-grid)"/><path d="M5 0H0V5" class="lead-grid-bold"/></pattern></defs><rect width="100%" height="100%" class="lead-paper"/><rect width="100%" height="100%" fill="url(#lead-big-grid)"/><path class="lead-sample-path" d="${path.join(" ")}"/>${annotations}</svg>`;
 }
 
-export function mountLeadExplorer(root: HTMLElement, s: Signal, c: ECGCase, seg: Segment, time?: number, measurement:Measurement|null=null) {
+export function mountLeadExplorer(root: HTMLElement, s: Signal, c: ECGCase, seg: Segment, time?: number, measurement:Measurement|null=null, preference:{mode?:LensMode;onChange?:(mode:LensMode)=>void}={}) {
   const initial = leadWindow(s, seg, time);
   if (!initial) { root.textContent = "No hay muestras completas y finitas en este fragmento."; return; }
-  let lead = seg.lead, mode:LensMode='all';
+  let lead = seg.lead, mode:LensMode=preference.mode??'all';
   let annotationLanes:LensMark['key'][]=[], annotationRows=0;
   root.className = "lead-explorer";
   const title = root.closest("dialog")!.querySelector(".dialog-head h2")!;
@@ -119,7 +119,8 @@ export function mountLeadExplorer(root: HTMLElement, s: Signal, c: ECGCase, seg:
     fitLabels();manual.refresh();
   };
   title.querySelector("select")!.addEventListener("change", e => { manual.clear(); lead = (e.target as HTMLSelectElement).value as Lead; update(); });
-  root.querySelector('select')!.addEventListener('change',e=>{mode=(e.target as HTMLSelectElement).value as LensMode;update();});
+  root.querySelector('select')!.value=mode;
+  root.querySelector('select')!.addEventListener('change',e=>{mode=(e.target as HTMLSelectElement).value as LensMode;preference.onChange?.(mode);update();});
   update();
   const observer=new ResizeObserver(fitLabels);observer.observe(root);
   window.addEventListener('resize',fitLabels);

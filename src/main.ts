@@ -8,7 +8,7 @@ import "./ui/measurement-presentation.css";
 import { findingTarget } from "./ui/reading-focus";
 import { readingOverlay } from "./ui/reading-overlay";
 import { renderAutomaticIntervals } from "./ui/automatic-intervals";
-import { mountLeadExplorer } from "./ui/lead-explorer";
+import { mountLeadExplorer, type LensMode } from "./ui/lead-explorer";
 import { presetTitle } from "./presets/nomenclature";
 import { APP_VERSION } from "./ui/version";
 import { catalogGroup, familyLabel } from "./ui/catalog-presentation";
@@ -87,6 +87,7 @@ const teachingSignalKeys = new WeakMap<Signal, string>();
 let teachingMarksVisible = true;
 let teachingOpening = false;
 let activeFinding: string | null = null;
+let leadMarkMode:LensMode='all';
 function teachingKey(signal: Signal) {
   let key = teachingSignalKeys.get(signal);
   if (!key) { key = signalFingerprint(signal); teachingSignalKeys.set(signal, key); }
@@ -652,7 +653,7 @@ function openLeadDetail(segment: number, time?: number, opener?: HTMLElement) {
   const returnTo = opener ?? $<HTMLCanvasElement>("#ecg"), dialog = $<HTMLDialogElement>("#dialog");
   openDialog(`Explorar ${seg.polarity < 0 ? "−" : ""}${seg.lead}`, '<div id="lead-explorer"></div>');
   dialog.classList.add("lead-dialog"); dialog.setAttribute("aria-label", "Explorar una derivación"); dialog.setAttribute("closedby", "any");
-  const disposeExplorer = mountLeadExplorer($("#lead-explorer"), session.signal, c, seg, time, session.measurement);
+  const disposeExplorer = mountLeadExplorer($("#lead-explorer"), session.signal, c, seg, time, session.measurement, {mode:leadMarkMode,onChange:mode=>{leadMarkMode=mode;}});
   const fallbackDismiss = (e: MouseEvent) => {
     if (e.target !== dialog) return;
     const r = dialog.getBoundingClientRect();
