@@ -88,8 +88,8 @@ try {
   await page.waitForFunction(()=>document.querySelector('#signal-loading').hidden&&window.__comparisonAudit.workers.some(w=>w.last?.ecg.presetId==='anterior'));
   await page.evaluate(()=>{window.__comparisonAudit.mainId=window.__comparisonAudit.workers.findLast(w=>!w.terminated&&w.last?.ecg.presetId==='anterior').id;});
   const visibleControls=await page.locator('.trace-toolbar button, .trace-toolbar summary').evaluateAll(es=>es.filter(e=>e.checkVisibility()).length);
-  assert(visibleControls<=6,'Reading starts with at most6 visible trace controls');
-  assert.equal(await page.locator('#reading-details').evaluate(e=>e.open),false);
+  assert.equal(visibleControls,8,'Reuse the five reading actions and the three existing zoom controls');
+  assert.equal(await page.locator('.view-aids').evaluate(e=>e.open),false);
   const info=page.locator('[data-action=about]:visible');assert.equal(await info.count(),1);assert.match(await info.innerText(),/Información y fuentes/);
   assert.equal(await page.locator('[data-action=lens-previous], [data-action=lens-change]').count(),0);
   const speed=width===1440?50:25,gain=width===1440?5:10;
