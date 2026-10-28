@@ -15,7 +15,10 @@ async function closeDialog(){
 }
 async function catalog(){
   await page.waitForFunction(()=>!document.querySelector('#catalog').inert || document.querySelector('[data-action=catalog]').getClientRects().length);
-  if(await page.locator('#catalog').evaluate(e=>e.inert))await page.locator('[data-action=catalog]').click();
+  if(await page.locator('#catalog').evaluate(e=>e.inert)){
+    await page.locator('[data-action=catalog]').click();
+    await page.waitForFunction(()=>document.activeElement===document.querySelector('[data-action=catalog-index]'));
+  }
 }
 async function fits(selector){
   const dimensions=await page.locator(selector).evaluate(e=>{
