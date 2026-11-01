@@ -50,10 +50,13 @@ async function mainSnapshot(page) {
 // Connected dark pixels in the calibration margin identify the1mV pulse.
 // Its height and top plateau are measured independently of drawing operations.
 async function calibrationPixels(page,speed,gain) {
- return page.locator('.comparison-paper canvas').evaluateAll((canvases,{speed,gain})=>canvases.map(canvas=>{
+ const format=await page.locator('[data-key="view.format"]').inputValue();
+ const columns=format.startsWith('3x4')?4:format==='6x2'?2:1;
+ return page.locator('.comparison-paper canvas').evaluateAll((canvases,{speed,gain,columns})=>canvases.map(canvas=>{
   const cssWidth=parseFloat(canvas.style.width),ratio=canvas.width/cssWidth;
-  // Initial6x2 paper:10s times speed plus22mm outer margins and one1mm lead gap.
-  const pxPerMm=canvas.width/(speed*10+23),width=Math.min(canvas.width,Math.floor(15*pxPerMm));
+  // Ten seconds across the sheet, 22 mm margins and a 1 mm gap per column.
+  // Read the chosen format: desktop now starts with four columns, mobile with two.
+  const pxPerMm=canvas.width/(speed*10+22+columns-1),width=Math.min(canvas.width,Math.floor(15*pxPerMm));
   const y0=Math.floor(18*pxPerMm),height=Math.min(Math.ceil(60*pxPerMm),canvas.height-y0);
   const rgba=canvas.getContext('2d').getImageData(0,y0,width,height).data,seen=new Uint8Array(width*height),components=[];
   const dark=i=>rgba[i*4+3]>128&&rgba[i*4]<185&&rgba[i*4+1]<190&&rgba[i*4+2]<195;
@@ -74,7 +77,7 @@ async function calibrationPixels(page,speed,gain) {
   }
   components.sort((a,b)=>a.y-b.y);
   return {width:canvas.width,cssWidth,ratio,pxPerMm,pulse:components[0]||null,expectedHeight:gain*pxPerMm,expectedPlateau:.2*speed*pxPerMm};
- }),{speed,gain});
+ }),{speed,gain,columns});
 }
 
 try {
@@ -90,7 +93,10 @@ try {
   const visibleControls=await page.locator('.trace-toolbar button, .trace-toolbar summary').evaluateAll(es=>es.filter(e=>e.checkVisibility()).length);
   assert.equal(visibleControls,8,'Reuse the five reading actions and the three existing zoom controls');
   assert.equal(await page.locator('.view-aids').evaluate(e=>e.open),false);
-  const info=page.locator('[data-action=about]:visible');assert.equal(await info.count(),1);assert.match(await info.innerText(),/Información y fuentes/);
+  const info=page.getByRole('button',{name:'Información y fuentes',exact:true});
+  assert.equal(await info.count(),1);assert(await info.isVisible());assert.equal((await info.innerText()).trim(),'');
+  await info.click();await page.getByRole('dialog').waitFor();await page.keyboard.press('Escape');
+  assert(await info.evaluate(e=>document.activeElement===e),'Closing information must restore focus to its icon');
   assert.equal(await page.locator('[data-action=lens-previous], [data-action=lens-change]').count(),0);
   const speed=width===1440?50:25,gain=width===1440?5:10;
   if(width===1440){await page.locator('.paper-menu > summary').click();if(!await page.locator('.view-settings').evaluate(e=>e.open))await page.locator('.view-settings > summary').click();await page.locator('[data-key="view.speed"]').selectOption('50');await page.locator('[data-key="view.gain"]').selectOption('5');await page.locator('.paper-menu > summary').click();}
@@ -164,7 +170,14 @@ try {
   await page.locator('[data-action=compare]').click();await page.locator('#comparison-reference').waitFor();
   const closedPending=await page.evaluate(()=>{const s=document.querySelector('#comparison-reference');s.value='vf';s.dispatchEvent(new Event('change',{bubbles:true}));const busy=document.querySelector('#comparison-reference-sheet').getAttribute('aria-busy')==='true';document.querySelector('#dialog [data-action=close-dialog]').click();return busy;});assert.equal(closedPending,true);
   await page.waitForFunction(()=>window.__comparisonAudit.workers.every(w=>w.id===window.__comparisonAudit.mainId||w.terminated));assert.deepEqual(await mainSnapshot(page),before);
-  await page.getByRole('button',{name:'Practicar',exact:true}).click();await page.locator('#signal-loading').waitFor({state:'hidden'});assert.equal(await page.locator('[data-action=compare]').isHidden(),true);
+  // Force the exercise to reuse the current anterior case (curriculum index 11).
+  // Otherwise stale reading tools are exposed only on a random 1-in-14 draw.
+  await page.evaluate(()=>{const native=crypto.getRandomValues.bind(crypto);crypto.getRandomValues=values=>{crypto.getRandomValues=native;values.set([11,0]);return values;};});
+  await page.getByRole('button',{name:'Practicar',exact:true}).click();await page.locator('#signal-loading').waitFor({state:'hidden'});
+  assert.equal(await page.evaluate(()=>window.__comparisonAudit.workers.find(w=>w.id===window.__comparisonAudit.mainId).last.ecg.presetId),'anterior');
+  assert.equal(await page.locator('[data-action=compare]').isHidden(),true);
+  assert.equal(await page.locator('[data-action=automatic]').isHidden(),true);
+  assert.equal(await page.locator('#measurement-values').getAttribute('data-ms'),null);
   const workers=await page.evaluate(()=>window.__comparisonAudit.workers.length);
   await page.evaluate(()=>{const button=document.createElement('button');button.dataset.action='compare';document.body.append(button);button.click();button.remove();});
   assert.equal(await page.locator('#dialog').evaluate(d=>d.open),false);assert.equal(await page.evaluate(()=>window.__comparisonAudit.workers.length),workers);

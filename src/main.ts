@@ -741,7 +741,9 @@ function selectPreset(id: string) {
   // Compare the complete case, not just its ID: imported/edited cases can share it.
   const same = (Object.keys({...c, ...next}) as (keyof ECGCase)[])
     .every(key => JSON.stringify(c[key]) === JSON.stringify(next[key]));
-  if (same && session.canExport) {
+  // Starting another exercise must reset/conceal reading tools even when the
+  // random question happens to select the currently displayed clinical case.
+  if (same && session.canExport && !quiz) {
     renderCatalog(); $("#catalog").classList.remove("open"); return;
   }
   c = next;

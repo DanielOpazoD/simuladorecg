@@ -23,6 +23,10 @@ Los dos primeros recorridos existentes permanecen en CI; se añaden también `br
 
 ## Resultados adversos y límites
 
+La primera ejecución de CI falló porque la prueba de comparación todavía exigía el rótulo visible de Información y fuentes. Se actualizó para comprobar el nombre accesible del icono, apertura y devolución del foco. El oráculo de calibración de comparación consulta ahora el formato elegido en vez de asumir siempre dos columnas.
+
+Al repetir el recorrido se detectó un fallo real: iniciar práctica con el mismo caso ya visible evitaba reiniciar las ayudas por la optimización de reselección. La optimización se limita ahora a lectura fuera de práctica. La prueba fuerza una pregunta anterior sobre el caso anterior existente y exige ocultar comparación e intervalos y retirar la medición manual. El resultado adverso local se conserva en `../ECG-QA/pr-visual-20261031/comparison-icon/`; la ejecución fallida de CI también mantiene sus artefactos.
+
 La comparación de imagen inicial exigía cero cambios en una máscara binaria de tinta al aclarar el fondo. Detectó 21 píxeles entre 460.638: el suavizado de bordes cruzó el umbral con diferencias de uno a tres niveles RGB. El resultado original se conserva. La comprobación complementaria limita esas diferencias a tres niveles por canal y menos del 0,01 % de los píxeles; las pruebas independientes contra muestras mantuvieron sus criterios. La imagen oscura quedó idéntica.
 
 Otra expectativa histórica exigía que 3×4+1 siempre tuviera mayor escala que 6×2 a 1024 px. Con la cabecera compacta ambos formatos casi llenan el ancho; sus anchuras físicas difieren (275 y 273 mm). Se reprodujo el resultado con los estilos anteriores. El test usa ahora el límite físico 273/275 con tolerancia de redondeo de 0,001; conserva la ganancia mínima del 10 % en pantallas mayores y las comprobaciones de calibración y controles negativos.
