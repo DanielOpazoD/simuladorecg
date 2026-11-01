@@ -69,7 +69,7 @@ import {
 import { icon, btn, esc, keepInView, select } from "./ui/helpers";
 import { GAINS, SPEEDS, gainOptions, nextInCycle, speedOptions } from "./ui/view-scales";
 import { syncPauseControl } from "./ui/pause-control";
-import { controls, filterSelect, leadOptions, amplitudeControlState, tAxisControlState } from "./ui/controls";
+import { controls, controlLimitsHtml, leadOptions, amplitudeControlState, tAxisControlState } from "./ui/controls";
 import { caseContext, caseReading, normalizeImportedCase } from "./presets/case-context";
 import { modelProvenance } from "./presets/model-provenance";
 import { usesRealisticBase } from "./engine/realistic/scope";
@@ -99,11 +99,12 @@ let c = fromPreset(presetById("sinus")!),
   paperAmplitudeMm: number | undefined,
   paperRowExtents: Layout["rowExtents"],
   monitor: Monitor | null = null;
-// A wide desktop starts with the existing landscape sheet: all 12 leads at a
-// larger uniform scale, plus 10 continuous seconds of II. Choose once; resizing,
-// imported cases and subsequent catalog changes must not override a chosen view.
-c.view.format = window.matchMedia("(min-width:801px) and (min-height:600px)").matches ? "3x4+1" : "6x2";
-c.acquisition = readAcquisitionPreference() ?? c.acquisition;
+// Every fresh session starts on the compact sheet: 12 leads plus 10 continuous
+// seconds of II. Choose once; resizing, imported cases and subsequent catalog
+// changes must not override a chosen view. A fresh session also starts clean;
+// an explicit saved preference and imported/shared cases keep their own signal.
+c.view.format = "3x4+1";
+c.acquisition = readAcquisitionPreference() ?? "ideal";
 let stHighlight = false, automaticOn = false, paperZoom = 1;
 let pendingPaperAnchor: PaperAnchor | null = null;
 // The contrafactual remains inside the advanced Aula, never presented as a prior recording.
@@ -135,12 +136,12 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  <main class="workspace"><section class="case-heading"><div><div class="case-category sr-only" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><div id="exploration-context" class="exploration-context" hidden></div></div></section>
  <div class="case-summary-row"><section id="diagnosis-navigation" class="diagnosis-navigation" aria-label="Variantes del patrón" hidden></section>
  <div class="heading-tools"><section id="metrics" class="metrics" aria-label="Valores del modelo que generó el ECG"><div class="loading-metrics">Generando señal…</div></section><div class="case-state">${btn("reset", "Restablecer", "reset", "subtle")}</div></div></div><div id="diagnosis-content">
- <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="trace-tools">${btn("automatic", "Medir automáticamente", "intervals")}${btn("caliper", "Medir", "ruler")}${btn("lens-st", "Punto J / ST", "jpoint")}${btn("compare", "Comparar", "strip")}${btn("pause", "Congelar", "pause")}<details class="paper-menu"><summary class="btn" data-action="paper" aria-label="Vista" title="Vista">${icon("settings")}<span>Vista</span>${icon("chevron")}</summary><div class="view-options"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><details class="view-settings"><summary>Escala y señal</summary><div class="scale-toolbar" id="scale-toolbar"></div></details><details class="view-aids"><summary>Ayudas de lectura</summary><div class="view-overlays" aria-label="Ayudas visuales">${btn("annotations", "Marcar ondas", "eye")}${btn("teaching-marks", "Mostrar mis marcas", "eye")}${btn("teaching", "Aula: anotar y explorar", "book")}</div></details></div></details><div class="paper-zoom-controls" role="group" aria-label="Zoom del ECG"><button type="button" class="btn" data-action="zoom-out" aria-label="Reducir zoom" title="Reducir zoom">−</button><button type="button" class="btn zoom-value" data-action="zoom-reset" title="Restablecer al 100 %">100 %</button><button type="button" class="btn" data-action="zoom-in" aria-label="Ampliar zoom" title="Ampliar zoom">+</button></div></div></div>
+ <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="trace-tools">${btn("automatic", "Medir automáticamente", "intervals")}${btn("caliper", "Medir", "ruler")}${btn("lens-st", "Punto J / ST", "jpoint")}${btn("compare", "Comparar", "strip")}${btn("pause", "Congelar", "pause")}<details class="paper-menu"><summary class="btn" data-action="paper" aria-label="Vista" title="Vista">${icon("settings")}<span>Vista</span>${icon("chevron")}</summary><div class="view-options"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button></div><div class="scale-toolbar" id="scale-toolbar"></div><div class="view-overlays" aria-label="Ayudas visuales">${btn("teaching-marks", "Mostrar mis marcas", "eye")}${btn("teaching", "Aula: anotar y explorar", "book")}</div></div></details><div class="paper-zoom-controls" role="group" aria-label="Zoom del ECG"><button type="button" class="btn" data-action="zoom-out" aria-label="Reducir zoom" title="Reducir zoom">−</button><button type="button" class="btn zoom-value" data-action="zoom-reset" title="Restablecer al 100 %">100 %</button><button type="button" class="btn" data-action="zoom-in" aria-label="Ampliar zoom" title="Ampliar zoom">+</button></div></div></div>
  <div id="quiz-panel" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small id="monitor-rate-note">No estimable</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
  <p class="sr-only" id="trace-context" hidden></p><div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-context trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div><p id="trace-calibration" class="trace-calibration"></p>
- <div id="caliper-editor" class="caliper-editor" hidden></div><div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><p id="trace-keyboard-help" class="sr-only">Con foco en el trazado: M, P y R cambian la vista; V y G, la escala; C activa los calibres y espacio congela el monitor. Con calibres, las flechas mueven el extremo seleccionado; Mayús mueve diez pasos. Con zoom, arrastra el papel o usa las flechas para desplazarte; con calibres activos, el arrastre mide. Pulsa ? para abrir la ayuda de atajos.</p></section>
+ <div id="caliper-editor" class="caliper-editor" hidden></div><div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><p id="trace-keyboard-help" class="sr-only">Con foco en el trazado: M y P cambian la vista; V y G, la escala; C activa los calibres y espacio congela el monitor. Con calibres, las flechas mueven el extremo seleccionado; Mayús mueve diez pasos. Con zoom, arrastra el papel o usa las flechas para desplazarte; con calibres activos, el arrastre mide. Pulsa ? para abrir la ayuda de atajos.</p></section>
  </div>
- <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><h2 id="finding-title">Qué observar</h2><p id="case-subtitle" class="guide-lead">Activación auricular sinusal seguida de conducción AV 1:1.</p><ul id="findings"></ul><details id="reading-details"><summary>Explicación</summary><div class="reading-detail-content"><div id="structured-description"></div><div id="omi-sheet"></div></div></details></div></section>
+ <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><h2 id="finding-title">Qué observar</h2><p id="case-subtitle" class="guide-lead">Activación auricular sinusal seguida de conducción AV 1:1.</p><ul id="findings"></ul><section id="reading-details" aria-labelledby="reading-details-title"><h3 id="reading-details-title">Explicación</h3><div class="reading-detail-content"><div id="structured-description"></div><div id="omi-sheet"></div></div></section></div></section>
  <details id="adjust" class="adjust-panel"><summary><span>Ajustar el caso</span></summary><div id="inspector" class="inspector"></div></details>
  <footer class="workspace-footer"><button class="text-button information-button" data-action="about" aria-label="Información y fuentes" title="Información y fuentes">${icon("info")}</button></footer></main></div>
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
@@ -306,7 +307,7 @@ function renderControls() {
 /** Controls with no effect in the current rhythm or pattern are not shown (their
  * value is kept for other rhythms); so are their notes. */
 function hideInactiveControls() {
-  for (const field of $("#inspector").querySelectorAll<HTMLElement>(".range-field, .field")) {
+  for (const field of $("#inspector").querySelectorAll<HTMLElement>(".range-field, .field, .toggle")) {
     const input = field.querySelector<HTMLInputElement | HTMLSelectElement>("[data-key]");
     if (input) field.hidden = input.disabled;
   }
@@ -320,12 +321,16 @@ function hideInactiveControls() {
   const tAxis = document.querySelector<HTMLInputElement>('[data-key="tAxis"]');
   const tNote = document.querySelector<HTMLElement>("#t-axis-note");
   if (tAxis && tNote) tNote.hidden = tAxis.disabled;
+  // The wrapper of the T-axis slider and its note must not leave a hole in the grid.
+  const tWrap = document.querySelector<HTMLElement>(".t-axis-control");
+  if (tAxis && tWrap) tWrap.hidden = tAxis.disabled;
 }
 function syncAmplitudeControls() {
   const state = amplitudeControlState(c);
   $<HTMLInputElement>('[data-key="st"]').disabled = state.stDisabled;
   $<HTMLInputElement>('[data-key="tAmp"]').disabled = state.tDisabled;
-  $("#amplitude-note").textContent = state.note;
+  for (const [key, disabled] of Object.entries(state.patterns))
+    $<HTMLInputElement>(`[data-key="${key}"]`).disabled = disabled;
   const direction = tAxisControlState(c);
   $<HTMLInputElement>('[data-key="tAxis"]').disabled = direction.disabled;
   $("#t-axis-note").textContent = direction.reason;
@@ -348,6 +353,15 @@ function renderScales() {
     monitorMode = c.view.mode === "monitor",
     toolbar = $("#scale-toolbar"),
     focused = toolbar.contains(document.activeElement) ? (document.activeElement as HTMLElement).dataset.key : undefined;
+  // Three offered formats. A legacy imported format stays visible as a disabled
+  // selected option instead of being silently coerced to another sheet.
+  const formats: [string, string][] = [
+    ["3x4+1", "Compacto · 3 × 4 + ritmo II"],
+    ["6x2", "5 s por derivación · 6 × 2"],
+    ["12x1", "10 s por derivación · 12 × 1"],
+  ];
+  const legacyFormat = paper && !formats.some(([value]) => value === c.view.format);
+  if (legacyFormat) formats.push([c.view.format, "Configuración importada"]);
   toolbar.innerHTML = `${select(
     "view.speed",
     "Velocidad",
@@ -363,13 +377,7 @@ function renderScales() {
       ? select(
           "view.format",
           "Formato",
-          [
-            ["3x4", "3 × 4"],
-            ["3x4+1", "Compacto · 3 × 4 + ritmo II"],
-            ["3x4+3", "3 × 4 + 3 tiras"],
-            ["6x2", "5 s por derivación · 6 × 2"],
-            ["12x1", "10 s por derivación · 12 × 1"],
-          ],
+          formats,
           c.view.format,
         )
       : leadOptions(c)
@@ -385,7 +393,8 @@ function renderScales() {
           c.view.duration,
         )
       : ""
-  }<div class="scale-toggles"><label class="toggle"><input type="checkbox" data-key="view.grid" ${c.view.grid ? "checked" : ""}/>Grilla</label></div>${select("acquisition", "Señal", [["ideal", "Limpia"], ["realistic", "Con ruido de fondo"]], c.acquisition ?? "realistic")}${filterSelect(c)}`;
+  }<div class="scale-toggles"><label class="toggle"><input type="checkbox" data-key="view.grid" ${c.view.grid ? "checked" : ""}/>Grilla</label></div>${select("acquisition", "Señal", [["ideal", "Limpia"], ["realistic", "Con ruido de fondo"]], c.acquisition ?? "realistic")}`;
+  if (legacyFormat) toolbar.querySelector<HTMLOptionElement>(`select[data-key="view.format"] option[value="${c.view.format}"]`)?.setAttribute("disabled", "");
   document
     .querySelectorAll("[data-mode]")
     .forEach((el) =>
@@ -412,11 +421,6 @@ function syncTraceTools() {
   // Tools that do not apply to this view or case are hidden, not greyed out.
   pause.hidden = !monitorMode;
   $("#monitor-state").textContent = !ready ? "SIN SEÑAL" : session.paused ? "CONGELADO" : "REPRODUCCIÓN";
-  const waves = $<HTMLButtonElement>('[data-action="annotations"]');
-  waves.disabled = !paper || !ready;
-  waves.hidden = !paper;
-  waves.classList.toggle("active", ready && paper && annotations);
-  waves.setAttribute("aria-pressed", String(ready && paper && annotations));
   const practice = !!quiz && !quiz.answer;
   const auto = $<HTMLButtonElement>('[data-action="automatic"]');
   auto.disabled = !ready || !paper || practice;
@@ -870,6 +874,12 @@ function toggleCaliper(activate = !session.caliperOn) {
     // Near the end of a short screen, collapsing fields can push the sticky
     // tools above the viewport. Retain only the space needed to reach them.
     panel.style.minHeight = session.caliperOn ? "" : `${Math.max(0,pageY + $(".trace-toolbar").offsetHeight - panelTop)}px`;
+    // A compact reading guide may leave too little document below the paper.
+    // Reserve only the missing tail so native scroll clamping cannot move it.
+    if (!session.caliperOn) {
+      const missingTail = pageY + window.innerHeight - document.documentElement.scrollHeight;
+      if (missingTail > 0) panel.style.minHeight = `${panel.getBoundingClientRect().height + missingTail}px`;
+    }
     window.scrollTo({left:pageX, top:pageY, behavior:"instant"});
   }
   $<HTMLCanvasElement>('#ecg').focus({preventScroll:true});
@@ -883,7 +893,7 @@ function showAbout() {
     if (c.rhythm === "af") warnings.push(usesRealisticBase(c)
       ? "FA aprendida de PTB-XL: intervalos RR independientes (gamma, CV 0,10–0,35 según la semilla). No simula memoria del nodo AV ni cambios de organización de las ondas f; la FC programada es una media de largo plazo."
       : "FA representativa: intervalos RR independientes (gamma, CV 0,22). No simula memoria del nodo AV ni toda la variabilidad entre pacientes; la FC programada es una media de largo plazo.");
-    caseInfo = `<p>${esc(caseReading(c).subtitle)}</p><p>${esc(acquisitionDescription(c))}</p><div class="model-note"><p>${esc(provenance.summary)}</p><p>${esc(provenance.evidence)}</p>${provenance.limitations.map(limit => `<p>${esc(limit)}</p>`).join("")}</div>${warnings.map(w => `<p class="warning">${esc(w)}</p>`).join("")}`;
+    caseInfo = `<p>${esc(caseReading(c).subtitle)}</p><p>${esc(acquisitionDescription(c))}</p><div class="model-note"><p>${esc(provenance.summary)}</p><p>${esc(provenance.evidence)}</p>${provenance.limitations.map(limit => `<p>${esc(limit)}</p>`).join("")}</div>${warnings.map(w => `<p class="warning">${esc(w)}</p>`).join("")}${controlLimitsHtml(c)}`;
   }
   openDialog(
     "Información y fuentes",
@@ -1057,14 +1067,14 @@ const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
     const kind = target.closest<HTMLElement>("[data-info]")!.dataset.info as DescriptionInfo;
     openDialog(descriptionInfoTitle(kind), descriptionInfoHtml(kind, description.measures, description.axis, description.axisContext));
   },
+  "st-reference": () => {
+    const line = description?.lines.find((l) => l.key.replace(/\s+/g, "") === "Ref.ST");
+    if (line) openDialog("Referencia del ST", `<p>${esc(line.text)}</p>`);
+  },
   "st-zoom": () => openStZoom(),
   "st-distribution": target => {
     const zoom = target.closest<HTMLElement>(".st-zoom");
     openStDistribution(zoom?.dataset.selectedLead as Lead | undefined, zoom?.dataset.zoomBeat === undefined ? undefined : Number(zoom.dataset.zoomBeat));
-  },
-  "present-30": () => {
-    if (!description) return;
-    openDialog("Presentación en 30 s", `<p class="dialog-lead">${esc(description.summary)}</p><p class="control-note">Orden: técnica, ritmo y frecuencia, intervalos, eje, ST, onda T y ondas Q, y conclusión.</p>`);
   },
   "restore-origin": () => { if (explorationOrigin) restoreOrigin(explorationOrigin); },
   pause: () => {
@@ -1086,7 +1096,6 @@ const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
   },
   "clear-caliper": () => { caliper = null; draw(); },
   automatic: () => { if (!session.canExport || c.view.mode !== "paper" || (quiz && !quiz.answer)) return; automaticOn = !automaticOn; if (automaticOn) { stHighlight = false; annotations = false; } draw(); },
-  annotations: () => { annotations = !annotations; if (annotations) automaticOn = false; draw(); },
   "lens-st": () => { if (!quiz || quiz.answer) { stHighlight = !stHighlight; if (stHighlight) automaticOn = false; draw(); } },
   sound: async () => {
     audioOn = !audioOn;
@@ -1175,8 +1184,6 @@ document.addEventListener("click", async (e) => {
   }
   const action = target.closest<HTMLElement>("[data-action]")?.dataset.action;
   if (!action) return;
-  // The 30-second button sits inside the description's <summary>: do not toggle it.
-  if (action === "present-30") e.preventDefault();
   if (action === "parameters" && !(quiz && !quiz.answer)) $<HTMLDetailsElement>("#adjust").open = true;
   if (workspaceNavigation.handle(action, !!quiz && !quiz.answer)) return;
   if (Object.hasOwn(ACTIONS, action)) await ACTIONS[action](target);
@@ -1303,11 +1310,11 @@ document.addEventListener("keydown", (e) => {
       r.top+(end?caliper.y1:caliper.y2)/layout.heightMm*r.height);
     return;
   }
-  if (!['m','p','r','v','g','c',' '].includes(key)) return;
+  if (!['m','p','v','g','c',' '].includes(key)) return;
   e.preventDefault();
   if (key===' ' && c.view.mode==='monitor') $<HTMLButtonElement>('[data-action="pause"]').click();
   if (key==='c') toggleCaliper();
-  const mode=({m:'monitor',p:'paper',r:'rhythm'} as Record<string,string>)[key];
+  const mode=({m:'monitor',p:'paper'} as Record<string,string>)[key];
   if(mode)$<HTMLButtonElement>(`[data-mode="${mode}"]`).click();
   if (key === 'v' || key === 'g') {
     if (key === 'v') c.view.speed = nextInCycle(SPEEDS, c.view.speed);

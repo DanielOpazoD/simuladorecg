@@ -36,9 +36,20 @@ dialog:is(.lead-dialog,.comparison-dialog,:has(.measurements-overview)) .dialog-
 dialog:is(.lead-dialog,.comparison-dialog,:has(.measurements-overview)) select {
  min-height:44px;
  border-radius:var(--control-radius);
+ border-color:transparent;
+ background-color:var(--soft);
+ font-weight:500;
+}
+dialog:is(.lead-dialog,.comparison-dialog,:has(.measurements-overview)) select:hover {
+ border-color:var(--line);
+}
+dialog:is(.lead-dialog,.comparison-dialog,:has(.measurements-overview)) select:focus-visible {
+ outline:2px solid var(--accent);
+ outline-offset:2px;
 }
 .lead-dialog .lens-measure,dialog:has(.measurements-overview) .measurement-start {
- border:1px solid var(--line);
+ border:1px solid transparent;
+ background:var(--soft);
  padding-inline:12px;
 }
 .lead-dialog .dialog-head {
@@ -67,6 +78,10 @@ dialog:is(.lead-dialog,.comparison-dialog,:has(.measurements-overview)) select {
  border-color:transparent;
  box-shadow:inset 0 0 0 1px var(--control-ring);
 }
+/* Each numeric column has a stable value/unit anchor; provenance stays adjacent. */
+.measurement-value { display:inline-grid; grid-template-columns:minmax(3ch,auto) auto; column-gap:3px; align-items:baseline; white-space:nowrap; text-align:right; }
+.measurement-value > small { min-width:2.5ch; text-align:left; color:var(--muted); font-weight:400; }
+.measurements-summary tbody tr:last-child > * { border-bottom:0; }
 @media(min-width:650px) {
  .lead-dialog .dialog-head { grid-template-columns:minmax(0,1fr) minmax(0,auto) 44px; }
  .lead-dialog .lead-lens-controls { grid-column:2; grid-row:1; justify-content:flex-end; }
@@ -82,5 +97,7 @@ dialog:is(.lead-dialog,.comparison-dialog,:has(.measurements-overview)) select {
  .measurements-summary th > small::before,.measurements-summary td > .measurement-note::before { content:' · '; }
 }
 @media(forced-colors:active) {
+ dialog:is(.lead-dialog,.comparison-dialog,:has(.measurements-overview)) select { border-color:ButtonText; }
+ .lead-dialog .lens-measure,dialog:has(.measurements-overview) .measurement-start { border-color:ButtonText; }
  .lead-dialog .lens-measure[aria-pressed=true]:not(:focus-visible) { outline:1px solid Highlight; outline-offset:-1px; }
 }

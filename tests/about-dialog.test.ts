@@ -10,8 +10,10 @@ describe("about dialog content", () => {
 
   it("documents only trace-scoped keys and the actual scale cycles", () => {
     const html = keyboardHelpHtml();
-    for (const key of ["M", "P", "R", "V", "G", "C", "Espacio", "Flechas", "Mayús + flechas", "?"])
+    for (const key of ["M", "P", "V", "G", "C", "Espacio", "Flechas", "Mayús + flechas", "?"])
       expect(html).toContain(`<kbd>${key}</kbd>`);
+    expect(html).not.toContain("<kbd>R</kbd>");
+    expect(html).not.toContain("Tira de ritmo");
     expect(html).toContain("12,5 / 25 / 50 mm/s");
     expect(html).toContain("2,5 / 5 / 10 / 20 mm/mV");
     expect(html).toContain("No se activan al escribir en campos ni dentro de un diálogo.");

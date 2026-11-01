@@ -5,7 +5,7 @@ import {applyAcquisitionScope} from '../src/engine/acquisition-measurement';
 import {DEFAULT_CASE,cloneCase,normalizeCase} from '../src/engine/types';
 import {vviSettings,isVviNoncapture} from '../src/engine/vvi-demand';
 import {rhythmControlState} from '../src/ui/rhythm-controls';
-import {amplitudeControlState,controls} from '../src/ui/controls';
+import {amplitudeControlState,controls,controlLimitsHtml} from '../src/ui/controls';
 const loss=()=>({...cloneCase(DEFAULT_CASE),rhythm:'paced' as const,pacing:'VVI' as const,pacingBehavior:'demand-no-capture' as const,intrinsicRate:0,hr:60});
 it.each([20,40,60,90,120,180,250])('retains stimuli but no confirmed ventricular activity at %s bpm',hr=>{
  for(const filter of ['off','diagnostic','monitor','aggressive'] as const){
@@ -22,7 +22,7 @@ it('preserves explicit behavior in case serialization',()=>expect(isVviNoncaptur
 it('labels stimulus rate and disables nonexistent ventricular-wave controls',()=>{
  const c=loss();expect(rhythmControlState(c)).toMatchObject({noOrganizedBeats:true,baseRateDisabled:false,baseRateLabel:'Frecuencia de estímulos VVI'});
  expect(amplitudeControlState(c)).toMatchObject({tDisabled:true,stDisabled:true});
- const html=controls(c);expect(html).toContain('sin activación ventricular');
+ const html=controls(c);expect(controlLimitsHtml(c)).toContain('sin activación ventricular');
  expect(html.match(/<input[^>]*data-key="qrs"[^>]*>/)?.[0]).toContain('disabled');
  expect(html.match(/<input[^>]*data-key="hr"[^>]*>/)?.[0]).not.toContain('disabled');
 });

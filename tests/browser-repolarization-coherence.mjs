@@ -70,9 +70,11 @@ try{
   const beat=zero.events.beats.find(b=>b.time>2),index=Math.round((beat.time+beat.qrs+.060)*zero.fs);
   assert.ok(zero.leads.V2[index]>.005,'Discordant secondary ST remains represented with T amplitude zero');
   await openControlPanel(page,'st');
-  // The model's limits are a folded disclosure inside the tab; open it as a reader does.
-  await page.locator('[data-control-panel="st"] .control-limits > summary').click();
+  // The model's limits now share the existing information dialog.
+  await page.locator('[data-action=about]').click();
+  await page.getByText('Cómo se genera este ECG',{exact:true}).click();
   assert.match(await page.locator('#secondary-repolarization-note').innerText(),/El ST secundario sigue esa misma fuente QRS/);
+  await page.keyboard.press('Escape');await page.locator('#dialog').waitFor({state:'hidden'});
   await importCase({...base,electrolyte:'hypokalemia'});
   await page.locator('.trace-panel').scrollIntoViewIfNeeded();
   await page.screenshot({path:resolve(out,`coherence-view-${width}.png`)});

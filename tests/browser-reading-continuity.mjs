@@ -15,7 +15,7 @@ async function measure(p){
  assert.equal(await value(p),'322');
 }
 async function viewMenu(p){if(!await p.locator('.paper-menu').evaluate(e=>e.open))await p.locator('.paper-menu > summary').click();}
-async function settings(p){await viewMenu(p);if(!await p.locator('.view-settings').evaluate(e=>e.open))await p.locator('.view-settings > summary').click();}
+async function settings(p){await viewMenu(p);}
 try{
  for(const viewport of [{width:1440,height:900},{width:390,height:844},{width:844,height:390}]){
   const p=active=await browser.newPage({viewport,reducedMotion:'reduce'});await installWorkerTap(p);p.on('pageerror',e=>errors.push(e.message));

@@ -20,6 +20,13 @@ const field = (key) => page.locator(`[data-key="${key}"]`);
 const panel = (name) => page.getByRole("tab", { name, exact: true }).click();
 // Parameter tabs live in the folded «Ajustar el caso»: Ritmo, Intervalos, ST y ondas, Señal.
 const adjust = (name) => openControlPanel(page, name);
+async function amplitudeNote() {
+  await page.locator('[data-action=about]').click();
+  await page.getByText('Cómo se genera este ECG',{exact:true}).click();
+  const text=await page.locator('#dialog #amplitude-note').innerText();
+  await page.keyboard.press('Escape');await page.locator('#dialog').waitFor({state:'hidden'});
+  return text;
+}
 // Cases are chosen through the library by example id (searching opens its family).
 async function selectCase(id) {
   await chooseCatalogPreset(page, id);
@@ -166,7 +173,7 @@ try {
   await ready();
   assert.equal(await field("st").isEnabled(), false);
   assert.match(
-    await page.locator("#amplitude-note").innerText(),
+    await amplitudeNote(),
     /ST resuelto/,
   );
 
@@ -176,7 +183,7 @@ try {
   await ready();
   assert.equal(await field("st").isEnabled(), false);
   assert.match(
-    await page.locator("#amplitude-note").innerText(),
+    await amplitudeNote(),
     /Reactiva Amplitud de T/,
   );
   await rangeEnd("tAmp", "max");
@@ -187,7 +194,7 @@ try {
   await selectCase("rbbb");
   await adjust("st");
   assert.equal(await field("tAmp").isDisabled(), true);
-  assert.match(await page.locator("#amplitude-note").innerText(), /ST–T secundaria del paciente/);
+  assert.match(await amplitudeNote(), /ST–T secundaria del paciente/);
   // Where T amplitude applies (normal rhythm), it must reach the paper.
   await selectCase("sinus");
   await adjust("st");

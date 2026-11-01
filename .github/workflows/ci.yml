@@ -82,6 +82,8 @@ jobs:
         run: node tests/browser-compact-navigation.mjs "$RUNNER_TEMP/ecg-reading/compact-navigation"
       - name: Papel compacto, medidas reunidas y selector de vista
         run: node tests/browser-paper-first.mjs "$RUNNER_TEMP/ecg-reading/paper-first"
+      - name: Vista simplificada, formato compacto y explicación siempre visible
+        run: node tests/browser-view-simplification.mjs "$RUNNER_TEMP/ecg-reading/view-simplification"
       - name: Lupa de dos latidos, intervalos y geometría adaptable
         run: node tests/browser-lead-lens.mjs "$RUNNER_TEMP/ecg-reading/lead-lens"
       - name: Calibres de la lupa con ratón, tacto y teclado

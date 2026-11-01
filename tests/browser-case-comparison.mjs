@@ -92,14 +92,14 @@ try {
   await page.evaluate(()=>{window.__comparisonAudit.mainId=window.__comparisonAudit.workers.findLast(w=>!w.terminated&&w.last?.ecg.presetId==='anterior').id;});
   const visibleControls=await page.locator('.trace-toolbar button, .trace-toolbar summary').evaluateAll(es=>es.filter(e=>e.checkVisibility()).length);
   assert.equal(visibleControls,8,'Reuse the five reading actions and the three existing zoom controls');
-  assert.equal(await page.locator('.view-aids').evaluate(e=>e.open),false);
+  assert.equal(await page.locator('.view-options details').count(),0,'Flat «Vista»: no nested disclosures');
   const info=page.getByRole('button',{name:'Información y fuentes',exact:true});
   assert.equal(await info.count(),1);assert(await info.isVisible());assert.equal((await info.innerText()).trim(),'');
   await info.click();await page.getByRole('dialog').waitFor();await page.keyboard.press('Escape');
   assert(await info.evaluate(e=>document.activeElement===e),'Closing information must restore focus to its icon');
   assert.equal(await page.locator('[data-action=lens-previous], [data-action=lens-change]').count(),0);
   const speed=width===1440?50:25,gain=width===1440?5:10;
-  if(width===1440){await page.locator('.paper-menu > summary').click();if(!await page.locator('.view-settings').evaluate(e=>e.open))await page.locator('.view-settings > summary').click();await page.locator('[data-key="view.speed"]').selectOption('50');await page.locator('[data-key="view.gain"]').selectOption('5');await page.locator('.paper-menu > summary').click();}
+  if(width===1440){await page.locator('.paper-menu > summary').click();await page.locator('[data-key="view.speed"]').selectOption('50');await page.locator('[data-key="view.gain"]').selectOption('5');await page.locator('.paper-menu > summary').click();}
   // Read -> inspect -> measure using the same controls as the learner.
   const lead=page.locator('[data-reading-segment="7"]');await lead.click();
   assert.equal(await page.locator('#lead-explorer').getAttribute('data-lead'),'V2');

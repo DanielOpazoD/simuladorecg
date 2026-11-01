@@ -385,10 +385,10 @@ describe("F3.2: alcance del infarto antiguo y textos de la interfaz", () => {
     for (const id of ["old_inferior", "old_anterior"]) expect(fromPreset(presetById(id)!).st).toBeGreaterThan(0);
   });
   it("los controles describen el infarto antiguo aprendido y la base regional real", async () => {
-    const { controls } = await import("../src/ui/controls");
+    const { controlLimitsHtml } = await import("../src/ui/controls");
     const { regionalActivationControls } = await import("../src/ui/regional-activation");
-    expect(controls(fromPreset(presetById("old_inferior")!))).toMatch(/Infarto antiguo aprendido de pacientes reales/);
-    expect(controls({ ...fromPreset(presetById("lateral")!), phase: "chronic" })).toMatch(/no genera ondas Q/);
+    expect(controlLimitsHtml(fromPreset(presetById("old_inferior")!))).toMatch(/Infarto antiguo aprendido de pacientes reales/);
+    expect(controlLimitsHtml({ ...fromPreset(presetById("lateral")!), phase: "chronic" })).toMatch(/no genera ondas Q/);
     expect(regionalActivationControls(fromPreset(presetById("rbbb")!))).toMatch(/Latido aprendido \(PTB-XL\)/);
     expect(regionalActivationControls(fromPreset(presetById("bifascicular")!))).toMatch(/Plantilla histórica/);
   });

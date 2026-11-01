@@ -6,7 +6,7 @@ import { acquiredModelAxis } from "./acquired-model-axis";
 /**
  * Structured description of the trace shown (A3): the ABCDE reading of ECGsmith's
  * systematic method, with ST, T and Q read on the samples (against PR, median of the
- * dominant beats) and a 30-second presentation. It describes; it does not diagnose
+ * dominant beats) and a one-paragraph summary. It describes; it does not diagnose
  * (the case sheet interprets).
  */
 const RHYTHM: Record<ECGCase["rhythm"], string> = {
@@ -121,11 +121,11 @@ export function stFindings(m: LeadMeasure[]): StFindings {
 function stLine(f: StFindings): string {
   const parts: string[] = [];
   if (f.elevation.length) { const p = largest(f.elevation, (r) => r.j0); parts.push(`Elevación del ST en ${leadList(f.elevation.map((r) => r.lead))}, máxima en ${p.lead} (${absMm(p.j0)})`); }
-  if (f.mild.length) parts.push(`elevación leve del ST en ${leadList(f.mild.map((r) => r.lead))}, bajo el criterio de referencia de esta descripción`);
+  if (f.mild.length) parts.push(`elevación leve del ST en ${leadList(f.mild.map((r) => r.lead))}, por debajo del umbral de referencia`);
   if (f.depression.length) { const p = largest(f.depression, (r) => r.j0); parts.push(`descenso del ST ${f.rising ? "con pendiente ascendente" : "horizontal o descendente"} en ${leadList(f.depression.map((r) => r.lead))}, máximo en ${p.lead} (${absMm(p.j0)})`); }
   if (f.avr.j0 >= ST_LENS.thresholdMv) parts.push(`elevación del ST en aVR (${absMm(f.avr.j0)})`);
   else if (f.avr.j0 <= -ST_LENS.thresholdMv) parts.push(`descenso del ST en aVR (${absMm(f.avr.j0)})`);
-  if (!parts.length) return "No se destacan cambios del ST con las reglas de esta descripción.";
+  if (!parts.length) return "ST sin desniveles destacados.";
   const text = parts.join("; ");
   return `${text[0].toUpperCase()}${text.slice(1)}.`;
 }
@@ -156,7 +156,7 @@ function tLine(f: TFindings): string {
   if (f.biphasic.length) parts.push(`ondas T bifásicas en ${leadList(f.biphasic.map((r) => r.lead))}`);
   if (f.flat.length) parts.push(`ondas T aplanadas en ${leadList(f.flat.map((r) => r.lead))}`);
   if (f.prominent.length) parts.push(`ondas T prominentes en ${leadList(f.prominent.map((r) => r.lead))}`);
-  if (!parts.length) return "No se destacan alteraciones de la onda T con estas reglas descriptivas.";
+  if (!parts.length) return "Onda T sin alteraciones destacadas.";
   const text = parts.join("; ");
   return `${text[0].toUpperCase()}${text.slice(1)}.`;
 }
@@ -223,8 +223,8 @@ export function structuredDescription(c: ECGCase, s: Signal, impression?: string
     if (wide && (st.elevation.length || st.mild.length || st.depression.length || tf.inverted.length || tf.biphasic.length || tf.flat.length || tf.prominent.length)) lines.push({ key: "ST/QRS", text: "QRS ancho: valora la relación ST–T/QRS. La anchura por sí sola no permite atribuir estas alteraciones a causas primarias o secundarias." });
     else if (st.elevation.length && st.depression.length) lines.push({ key: "Rec.", text: "Cambios recíprocos del ST." });
   }
-  // A spoken presentation: technique, rhythm and rate, intervals, axis, ST-T and Q,
-  // and the conclusion when the case has a name.
+  // One-paragraph summary (reusable text for exports and tests): technique, rhythm and
+  // rate, intervals, axis, ST-T and Q, and the conclusion when the case has a name.
   const lower = (x: string) => x[0].toLowerCase() + x.slice(1);
   const spokenPr = prRange ? `PR ${progressivePr ? "progresivo" : "variable"} de ${prRange[0]} a ${prRange[1]} ms` : pr !== null ? `PR de ${n0(pr)} ms` : "";
   const spokenIntervals = [spokenPr, qrs !== null ? `QRS de ${n0(qrs)} ms` : "", qtc !== null ? `QTc de ${n0(qtc)} ms` : ""].filter(Boolean);

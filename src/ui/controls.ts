@@ -5,7 +5,7 @@ import { regionalActivationControls } from "./regional-activation";
 import { isNatural, LEADS, type ECGCase, type NaturalControl } from "../engine/types";
 import { lesionControlEffect, tVector } from "../engine/morphology";
 import { range, select, toggle } from "./helpers";
-import { learnedSecondaryRepolarization, noConductedBeats, realisticModelFor } from "../engine/realistic/scope";
+import { learnedSecondaryRepolarization, noConductedBeats, realisticModelFor, usesRealisticBase } from "../engine/realistic/scope";
 import { learnedIschemiaArtery } from "../engine/realistic/ischemia";
 
 /** On the learned base, P and T follow the patient until their slider is moved. */
@@ -32,6 +32,25 @@ const learnedSecondary = (c: ECGCase) => {
   const model = realisticModelFor(c);
   return model !== null && learnedSecondaryRepolarization(model);
 };
+/** Applicability of the pattern selectors and the septal toggle, keyed by their
+ * data-key: what the engine reads, not clinical plausibility. Hidden controls keep
+ * their value for the rhythms and patterns where they act. */
+export function patternControlState(c: ECGCase) {
+  const rhythm = rhythmControlState(c), effect = lesionControlEffect(c), none = rhythm.noOrganizedBeats;
+  return {
+    ischemia: none,
+    // Phase is only read once a lesion pattern is selected (lesion effect, T
+    // modifiers and the learned old-infarction population all check ischemia first).
+    phase: none || c.ischemia === "none",
+    // ST morphology shapes the primary ST component: absent with no pattern, in
+    // the chronic phase, in Wellens (T only) and in the learned STAFF III lesion.
+    stShape: none || learnedLesion(c) || effect === "none" || effect === "t",
+    overload: none,
+    // The septal kernel exists only in the historical normal-conduction kernels of
+    // conducted beats; the learned base and ventricular sources never read it.
+    septalQ: rhythm.conductionDisabled || c.conduction !== "normal" || usesRealisticBase(c),
+  };
+}
 /** Applicability of the existing amplitude controls, separate from clinical severity. */
 export function amplitudeControlState(c: ECGCase) {
   const organized = c.rhythm !== "vf" && c.rhythm !== "asystole" && !isVviNoncapture(c),
@@ -54,7 +73,7 @@ export function amplitudeControlState(c: ECGCase) {
         : effect === "t"
           ? "Intensidad: escala la modificación de T de Wellens; 0 conserva la T basal y 2 es el patrón de referencia. No expresa grado de estenosis."
           : "Intensidad: escala el componente primario ST–T; 0 lo retira y 2 es el patrón de referencia. No expresa extensión de necrosis ni gravedad clínica.";
-  return { tDisabled: !organized || learnedSecondary(c), stDisabled: !organized || effect === "none" || mutedT, note };
+  return { tDisabled: !organized || learnedSecondary(c), stDisabled: !organized || effect === "none" || mutedT, note, patterns: patternControlState(c) };
 }
 /** Applicability of this model's primary-T direction control, not clinical impossibility. */
 export function tAxisControlState(c: ECGCase) {
@@ -77,7 +96,7 @@ export function tAxisControlState(c: ECGCase) {
 }
 
 export function controls(c: ECGCase) {
-  const amplitude = amplitudeControlState(c), rhythm = rhythmControlState(c), tAxis = tAxisControlState(c);
+  const amplitude = amplitudeControlState(c), rhythm = rhythmControlState(c), tAxis = tAxisControlState(c), patterns = amplitude.patterns;
   const inactiveConduction: string[] = [];
   const contextualSelect = (...args: Parameters<typeof select>) => {
     const html = select(...args);
@@ -96,7 +115,7 @@ export function controls(c: ECGCase) {
  ${range("hr", rhythm.baseRateLabel, 20, 250, 1, c.hr, "lpm", rhythm.baseRateDisabled)}
  ${range("pr", naturalLabel(c, "pr", "Intervalo PR"), 80, 400, 5, c.pr, "ms", rhythm.prDisabled)}${range("qrs", naturalLabel(c, "qrs", "Duración QRS"), regionalActivationState(c).active ? regionalActivationState(c).minimumQrsMs : 60, 240, 5, c.qrs, "ms", rhythm.noOrganizedBeats)}${range("qtc", naturalLabel(c, "qtc", "QTc · Fridericia"), 260, 650, 5, c.qtc, "ms", rhythm.noOrganizedBeats)}${range("axis", naturalLabel(c, "axis", "Eje QRS solicitado"), -180, 180, 5, c.axis, "°", rhythm.qrsAxisDisabled)}${range("variability", "Variabilidad sinusal RR", 0, 0.3, 0.01, c.variability, "", rhythm.variabilityDisabled)}
  ${range("atrialRate", "FC auricular independiente", 40, 350, 5, c.atrialRate, "lpm", rhythm.atrialRateDisabled)}
- </div><details class="control-limits"><summary>Límites del modelo</summary><p class="control-note">Los controles que no actúan en el ritmo seleccionado se ocultan; conservan su valor para otros ritmos. FC auricular independiente: flutter, BAV completo y TV. El QT se adapta a la historia de RR con memoria exponencial de ≈40 s; no responde de golpe a un RR aislado.</p></details></div>
+ </div></div>
  <div class="control-panel" data-control-panel="conduction"><div class="field-grid">
  ${contextualSelect(
    "rhythm",
@@ -199,7 +218,7 @@ export function controls(c: ECGCase) {
  ${contextualSelect("pacingBehavior", "Comportamiento VVI", [["fixed","Captura fija histórica"],["demand","Demanda · sensado ideal"],["demand-no-capture","Sin captura ni escape · experimental"]], c.pacingBehavior ?? "fixed", c.rhythm !== "paced" || c.pacing !== "VVI")}
  ${contextualRange("intrinsicRate", "Actividad ventricular intrínseca", 0, 150, 1, c.intrinsicRate ?? 0, "lpm · 0 ausente", !isVviDemand(c))}
  ${contextualRange("coupling", "Acoplamiento de ectopia", 0.3, 0.85, 0.01, c.coupling, "× RR", rhythm.couplingDisabled)}
- </div>${inactiveConduction.length ? `<div class="inactive-controls" data-control-details="conduction" hidden><div class="field-grid">${inactiveConduction.join("")}</div></div>` : ""}<section id="regional-activation-controls" aria-label="Activación regional experimental"${regionalActivationState(c).available || regionalActivationState(c).requested ? "" : " hidden"}>${regionalActivationControls(c)}</section><details class="control-limits"><summary>Límites del modelo</summary><p class="control-note">Las secuencias variables del flutter son ejemplos con retraso AV constante; no simulan Wenckebach multinivel ni respuesta a fármacos. Las combinaciones no implementadas se desactivan. FA + BAV completo es posible clínicamente, pero queda fuera del modelo actual. ${isVviDemand(c) ? vviScopeDescription(c) : "La estimulación fija representa captura periódica. El modo de demanda optativo solo está disponible en VVI."}</p></details></div>
+ </div>${inactiveConduction.length ? `<div class="inactive-controls" data-control-details="conduction" hidden><div class="field-grid">${inactiveConduction.join("")}</div></div>` : ""}<section id="regional-activation-controls" aria-label="Activación regional experimental"${regionalActivationState(c).available || regionalActivationState(c).requested ? "" : " hidden"}>${regionalActivationControls(c)}</section></div>
  <div class="control-panel" data-control-panel="st" hidden><div class="field-grid">
  ${select(
    "ischemia",
@@ -221,6 +240,7 @@ export function controls(c: ECGCase) {
      ["sgarbossa", "BRI con lesión concordante"],
    ],
    c.ischemia,
+   patterns.ischemia,
  )}
  ${select(
    "phase",
@@ -232,6 +252,7 @@ export function controls(c: ECGCase) {
      ["chronic", "Crónica · ST resuelto / infarto antiguo"],
    ],
    c.phase,
+   patterns.phase,
  )}
  ${select(
    "stShape",
@@ -242,7 +263,7 @@ export function controls(c: ECGCase) {
      ["convex", "Convexa"],
    ],
    c.stShape,
-   learnedLesion(c),
+   patterns.stShape,
  )}
  ${select(
    "overload",
@@ -254,14 +275,20 @@ export function controls(c: ECGCase) {
      ["lv", "Ventrículo izquierdo"],
    ],
    c.overload,
+   patterns.overload,
  )}
  ${range("st", "Intensidad de lesión", 0, 8, 0.25, c.st, "escala del patrón", amplitude.stDisabled)}${range("transition", "Rotación precordial", -1, 1, 0.1, c.transition, "", rhythm.noOrganizedBeats)}
  ${range("pAxis", learnedNatural(c, "p") ? "Eje de P (natural del paciente)" : "Eje de P", -180, 180, 5, c.pAxis, "°", rhythm.pAxisDisabled)}<div class="t-axis-control">${range("tAxis", learnedNatural(c, "t") ? "Eje de T (natural del paciente)" : "Eje de T", -180, 180, 5, c.tAxis, "°", tAxis.disabled, "t-axis-note")}<p class="control-note" id="t-axis-note">${tAxis.reason}</p></div>${range("pAmp", naturalLabel(c, "pAmp", "Amplitud de P"), 0, 0.5, 0.01, c.pAmp, "mV ref.", rhythm.pAmplitudeDisabled)}${range("qrsAmp", naturalLabel(c, "qrsAmp", "Amplitud QRS"), 0.1, 3, 0.1, c.qrsAmp, "×", rhythm.noOrganizedBeats)}${range("tAmp", naturalLabel(c, "tAmp", "Amplitud de T"), 0, 1, 0.01, c.tAmp, "mV ref.", amplitude.tDisabled)}
- ${toggle("septalQ", "Componente septal", c.septalQ)}</div><p class="control-note" id="amplitude-note">${amplitude.note}</p><details class="control-limits"><summary>Límites del modelo</summary><p class="control-note">Amplitud de P ajusta las ondas P programadas, no las ondas de FA/flutter. En ritmo de la unión la dirección retrógrada es fija. Los controles atenuados conservan su valor.</p><p class="control-note">Amplitud de T escala toda la T, incluidas las correcciones locales; 0 la anula. No modifica QRS, el ST primario/secundario ni U. Los voltajes de referencia no son amplitudes de una derivación concreta.</p><p class="control-note" id="secondary-repolarization-note">T secundaria: la dirección sigue la activación QRS, no el control Eje de T; la sobrecarga actúa a través del QRS. ${c.rhythm === "torsades" ? "En torsades el modelo no añade un segmento ST separable." : "El ST secundario sigue esa misma fuente QRS, independientemente de Amplitud de T."} ST/T son aproximados y no validan criterios ST/QRS. El ST de lesión primaria es un componente distinto.</p></details></div>
+ ${toggle("septalQ", "Componente septal", c.septalQ, patterns.septalQ)}</div></div>
  <div class="control-panel" data-control-panel="signal" hidden><div class="field-grid">
  ${range("artifacts.baseline", "Deriva de línea base", 0, 1, 0.05, c.artifacts.baseline, "")}${range("artifacts.muscle", "Actividad muscular", 0, 1, 0.05, c.artifacts.muscle, "")}${range("artifacts.mains", "Interferencia de red", 0, 1, 0.05, c.artifacts.mains, "")}${range("artifacts.loose", "Electrodo V2 inestable", 0, 1, 0.05, c.artifacts.loose, "")}
  ${toggle("artifacts.reversed", "Inversión brazo derecho / izquierdo", c.artifacts.reversed)}
  </div></div>`;
+}
+/** The model's limits behind each control tab, shown in the information dialog
+ * instead of under every tab. */
+export function controlLimitsHtml(c: ECGCase) {
+  return `<section class="control-limits" aria-label="Límites del modelo"><h3>Límites del modelo</h3><h4>Intervalos</h4><p class="control-note">Los controles que no actúan en el ritmo seleccionado se ocultan; conservan su valor para otros ritmos. FC auricular independiente: flutter, BAV completo y TV. El QT se adapta a la historia de RR con memoria exponencial de ≈40 s; no responde de golpe a un RR aislado.</p><h4>Ritmo</h4><p class="control-note">Las secuencias variables del flutter son ejemplos con retraso AV constante; no simulan Wenckebach multinivel ni respuesta a fármacos. Las combinaciones no implementadas se desactivan. FA + BAV completo es posible clínicamente, pero queda fuera del modelo actual. ${isVviDemand(c) ? vviScopeDescription(c) : "La estimulación fija representa captura periódica. El modo de demanda optativo solo está disponible en VVI."}</p><h4>ST y ondas</h4><p class="control-note" id="amplitude-note">${amplitudeControlState(c).note}</p><p class="control-note">Amplitud de P ajusta las ondas P programadas, no las ondas de FA/flutter. En ritmo de la unión la dirección retrógrada es fija. Los controles sin efecto en este ritmo o patrón se ocultan y conservan su valor.</p><p class="control-note">Amplitud de T escala toda la T, incluidas las correcciones locales; 0 la anula. No modifica QRS, el ST primario/secundario ni U. Los voltajes de referencia no son amplitudes de una derivación concreta.</p><p class="control-note" id="secondary-repolarization-note">T secundaria: la dirección sigue la activación QRS, no el control Eje de T; la sobrecarga actúa a través del QRS. ${c.rhythm === "torsades" ? "En torsades el modelo no añade un segmento ST separable." : "El ST secundario sigue esa misma fuente QRS, independientemente de Amplitud de T."} ST/T son aproximados y no validan criterios ST/QRS. El ST de lesión primaria es un componente distinto.</p></section>`;
 }
 /** Acquisition filter: a setting of the recording equipment, so it lives with the
  * paper settings next to the trace, not with the patient's physiology. */

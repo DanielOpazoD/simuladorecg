@@ -36,7 +36,8 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  assert.ok(await page.locator('#ecg').evaluate(c=>c.width>0&&c.height>0));checks.push('page identity / nonblank / no overlay');
  await page.screenshot({path:path.join(out,'desktop.png')});
  // P7 uses real controls on the compiled product; sample invariance is tested in Node.
- for (const format of ['3x4','3x4+1','3x4+3','6x2','12x1']) {
+ // Only the three offered formats exist in the UI; the unit tests keep the historical ones.
+ for (const format of ['3x4+1','6x2','12x1']) {
   await openPaper(page);await page.locator('[data-key="view.format"]').selectOption(format);
   assert.ok(await page.locator('#ecg').evaluate(c=>c.width>0&&c.height>0));
  }
@@ -159,12 +160,13 @@ assert.match(await page.title(),/ECG/i);assert.equal(new URL(page.url()).origin,
  await page.locator('#quiz-panel').screenshot({path:path.join(out,'p8-feedback.png')});
  await openPaper(page);await page.locator('[data-key="view.gain"]').selectOption('5');
  assert.equal(await page.locator('#quiz-panel').isVisible(),true);
- await page.locator('[data-key="filter"]').selectOption('monitor');await ready();
+ // The filter selector left «Vista»; the acquisition switch is the remaining signal setting there.
+ const acquisition=page.locator('[data-key="acquisition"]');await acquisition.selectOption(await acquisition.inputValue()==='ideal'?'realistic':'ideal');await ready();
  assert.equal(await page.locator('#quiz-panel').isVisible(),true);
  await openControlPanel(page,'base');
  await page.locator('[data-key="hr"]').evaluate(el=>{el.value=Number(el.value)===80?'90':'80';el.dispatchEvent(new Event('input',{bubbles:true}));});
  assert.equal(await page.locator('#quiz-panel').isVisible(),false);await ready();
- checks.push('P8: real question, separate reference/estimates, view and filter retained and physiology exits practice');
+ checks.push('P8: real question, separate reference/estimates, view retained and physiology exits practice');
  // P8b: a view change keeps the patient's natural P/T axes on the sliders.
  await select('sinus');await openControlPanel(page,'signal');
  const naturalAxes=()=>page.locator('input[data-key="pAxis"], input[data-key="tAxis"]').evaluateAll(els=>els.map(el=>el.value));
