@@ -95,7 +95,11 @@ export function tAxisControlState(c: ECGCase) {
   return {disabled: false, reason: "Ajusta la T primaria; la T secundaria sigue el QRS."};
 }
 
-export function controls(c: ECGCase) {
+/** `includeAcquisition`: ordinary reading keeps the acquisition select in Artefactos;
+ * during practice (answered or concealed) the same select is rendered by the Vista
+ * toolbar instead, because Adjust stays hidden while the answer is concealed. Exactly
+ * one [data-key="acquisition"] exists either way. */
+export function controls(c: ECGCase, includeAcquisition = true) {
   const amplitude = amplitudeControlState(c), rhythm = rhythmControlState(c), tAxis = tAxisControlState(c), patterns = amplitude.patterns;
   const inactiveConduction: string[] = [];
   const contextualSelect = (...args: Parameters<typeof select>) => {
@@ -281,7 +285,7 @@ export function controls(c: ECGCase) {
  ${range("pAxis", learnedNatural(c, "p") ? "Eje de P (natural del paciente)" : "Eje de P", -180, 180, 5, c.pAxis, "°", rhythm.pAxisDisabled)}<div class="t-axis-control">${range("tAxis", learnedNatural(c, "t") ? "Eje de T (natural del paciente)" : "Eje de T", -180, 180, 5, c.tAxis, "°", tAxis.disabled, "t-axis-note")}<p class="control-note" id="t-axis-note">${tAxis.reason}</p></div>${range("pAmp", naturalLabel(c, "pAmp", "Amplitud de P"), 0, 0.5, 0.01, c.pAmp, "mV ref.", rhythm.pAmplitudeDisabled)}${range("qrsAmp", naturalLabel(c, "qrsAmp", "Amplitud QRS"), 0.1, 3, 0.1, c.qrsAmp, "×", rhythm.noOrganizedBeats)}${range("tAmp", naturalLabel(c, "tAmp", "Amplitud de T"), 0, 1, 0.01, c.tAmp, "mV ref.", amplitude.tDisabled)}
  ${toggle("septalQ", "Componente septal", c.septalQ, patterns.septalQ)}</div></div>
  <div class="control-panel" data-control-panel="signal" hidden><div class="field-grid">
- ${range("artifacts.baseline", "Deriva de línea base", 0, 1, 0.05, c.artifacts.baseline, "")}${range("artifacts.muscle", "Actividad muscular", 0, 1, 0.05, c.artifacts.muscle, "")}${range("artifacts.mains", "Interferencia de red", 0, 1, 0.05, c.artifacts.mains, "")}${range("artifacts.loose", "Electrodo V2 inestable", 0, 1, 0.05, c.artifacts.loose, "")}
+ ${includeAcquisition ? select("acquisition", "Señal", [["ideal", "Limpia"], ["realistic", "Con ruido de fondo"]], c.acquisition ?? "realistic") : ""}${range("artifacts.baseline", "Deriva de línea base", 0, 1, 0.05, c.artifacts.baseline, "")}${range("artifacts.muscle", "Actividad muscular", 0, 1, 0.05, c.artifacts.muscle, "")}${range("artifacts.mains", "Interferencia de red", 0, 1, 0.05, c.artifacts.mains, "")}${range("artifacts.loose", "Electrodo V2 inestable", 0, 1, 0.05, c.artifacts.loose, "")}
  ${toggle("artifacts.reversed", "Inversión brazo derecho / izquierdo", c.artifacts.reversed)}
  </div></div>`;
 }

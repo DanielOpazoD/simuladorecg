@@ -5,6 +5,7 @@ import {resolve} from 'node:path';
 import {chromium} from 'playwright';
 import {installWorkerTap,workerReplies} from './support/worker-tap.mjs';
 import {chooseCatalogPreset} from './support/catalog-navigation.mjs';
+import {openControlPanel} from './support/adjust-panel.mjs';
 const out=resolve(process.argv[2]??'../ECG-QA/reading-continuity');await mkdir(out,{recursive:true});
 const browser=await chromium.launch(),results=[],errors=[];let failure,active;
 const value=p=>p.locator('#measurement-values').getAttribute('data-ms');
@@ -57,8 +58,9 @@ try{
    await p.locator('.paper-menu > summary').click();await measure(p);await settings(p);
    await p.locator('[data-key="view.speed"]').selectOption('50');assert.equal(await value(p),null,'New scale must discard pixel-based caliper');
    await p.locator('[data-key="view.speed"]').selectOption('25');
+   await openControlPanel(p,'signal');
    await p.locator('[data-key=acquisition]').selectOption('ideal');await p.locator('#signal-loading').waitFor({state:'hidden'});
-   await p.locator('.paper-menu > summary').click();await measure(p);
+   await p.locator('#adjust > summary').click();await measure(p);
    await chooseCatalogPreset(p,id==='sinus'?'lbbb':'sinus');await p.locator('#signal-loading').waitFor({state:'hidden'});assert.equal(await value(p),null);
    results.push({viewport,id,pending,after,afterRapid,readingRetainsMeasurement:true,newSamplesAndScaleInvalidate:true});
   }

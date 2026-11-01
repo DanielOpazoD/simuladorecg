@@ -15,7 +15,7 @@ export async function openControlPanel(page, name) {
   await page.locator(`[data-control-panel="${name}"]`).waitFor({ state: 'visible' });
 }
 
-/** «Vista» is a single flat menu: modes, format, scale, acquisition and reading aids are
+/** «Vista» is a single flat menu: modes, format, scale and grid are
  * visible as soon as it opens, with no nested disclosures. A click elsewhere closes it, so
  * reopen before use. The `section` argument is kept for existing callers and ignored. */
 export async function openPaper(page, section = 'settings') {

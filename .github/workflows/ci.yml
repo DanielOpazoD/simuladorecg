@@ -84,6 +84,8 @@ jobs:
         run: node tests/browser-paper-first.mjs "$RUNNER_TEMP/ecg-reading/paper-first"
       - name: Vista simplificada, formato compacto y explicación siempre visible
         run: node tests/browser-view-simplification.mjs "$RUNNER_TEMP/ecg-reading/view-simplification"
+      - name: Lectura esencial, fuentes conservadas y controles secundarios
+        run: node tests/browser-essential-reading.mjs "$RUNNER_TEMP/ecg-reading/essential-reading"
       - name: Lupa de dos latidos, intervalos y geometría adaptable
         run: node tests/browser-lead-lens.mjs "$RUNNER_TEMP/ecg-reading/lead-lens"
       - name: Calibres de la lupa con ratón, tacto y teclado

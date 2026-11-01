@@ -136,13 +136,13 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  <main class="workspace"><section class="case-heading"><div><div class="case-category sr-only" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><div id="exploration-context" class="exploration-context" hidden></div></div></section>
  <div class="case-summary-row"><section id="diagnosis-navigation" class="diagnosis-navigation" aria-label="Variantes del patrón" hidden></section>
  <div class="heading-tools"><section id="metrics" class="metrics" aria-label="Valores del modelo que generó el ECG"><div class="loading-metrics">Generando señal…</div></section><div class="case-state">${btn("reset", "Restablecer", "reset", "subtle")}</div></div></div><div id="diagnosis-content">
- <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="trace-tools">${btn("automatic", "Medir automáticamente", "intervals")}${btn("caliper", "Medir", "ruler")}${btn("lens-st", "Punto J / ST", "jpoint")}${btn("compare", "Comparar", "strip")}${btn("pause", "Congelar", "pause")}<details class="paper-menu"><summary class="btn" data-action="paper" aria-label="Vista" title="Vista">${icon("settings")}<span>Vista</span>${icon("chevron")}</summary><div class="view-options"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button></div><div class="scale-toolbar" id="scale-toolbar"></div><div class="view-overlays" aria-label="Ayudas visuales">${btn("teaching-marks", "Mostrar mis marcas", "eye")}${btn("teaching", "Aula: anotar y explorar", "book")}</div></div></details><div class="paper-zoom-controls" role="group" aria-label="Zoom del ECG"><button type="button" class="btn" data-action="zoom-out" aria-label="Reducir zoom" title="Reducir zoom">−</button><button type="button" class="btn zoom-value" data-action="zoom-reset" title="Restablecer al 100 %">100 %</button><button type="button" class="btn" data-action="zoom-in" aria-label="Ampliar zoom" title="Ampliar zoom">+</button></div></div></div>
+ <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="trace-tools">${btn("automatic", "Medir automáticamente", "intervals")}${btn("caliper", "Medir", "ruler")}${btn("lens-st", "Punto J / ST", "jpoint")}${btn("compare", "Comparar", "strip")}${btn("pause", "Congelar", "pause")}<details class="paper-menu"><summary class="btn" data-action="paper" aria-label="Vista" title="Vista">${icon("settings")}<span>Vista</span>${icon("chevron")}</summary><div class="view-options"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button></div><div class="scale-toolbar" id="scale-toolbar"></div></div></details><div class="paper-zoom-controls" role="group" aria-label="Zoom del ECG"><button type="button" class="btn" data-action="zoom-out" aria-label="Reducir zoom" title="Reducir zoom">−</button><button type="button" class="btn zoom-value" data-action="zoom-reset" title="Restablecer al 100 %">100 %</button><button type="button" class="btn" data-action="zoom-in" aria-label="Ampliar zoom" title="Ampliar zoom">+</button></div></div></div>
  <div id="quiz-panel" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small id="monitor-rate-note">No estimable</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
  <p class="sr-only" id="trace-context" hidden></p><div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-context trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div><p id="trace-calibration" class="trace-calibration"></p>
  <div id="caliper-editor" class="caliper-editor" hidden></div><div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><p id="trace-keyboard-help" class="sr-only">Con foco en el trazado: M y P cambian la vista; V y G, la escala; C activa los calibres y espacio congela el monitor. Con calibres, las flechas mueven el extremo seleccionado; Mayús mueve diez pasos. Con zoom, arrastra el papel o usa las flechas para desplazarte; con calibres activos, el arrastre mide. Pulsa ? para abrir la ayuda de atajos.</p></section>
  </div>
  <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><h2 id="finding-title">Qué observar</h2><p id="case-subtitle" class="guide-lead">Activación auricular sinusal seguida de conducción AV 1:1.</p><ul id="findings"></ul><section id="reading-details" aria-labelledby="reading-details-title"><h3 id="reading-details-title">Explicación</h3><div class="reading-detail-content"><div id="structured-description"></div><div id="omi-sheet"></div></div></section></div></section>
- <details id="adjust" class="adjust-panel"><summary><span>Ajustar el caso</span></summary><div id="inspector" class="inspector"></div></details>
+ <div class="adjust-row"><details id="adjust" class="adjust-panel"><summary><span>Ajustar el caso</span></summary><div id="inspector" class="inspector"></div></details><div class="secondary-actions" role="group" aria-label="Aula y marcas">${btn("teaching-marks", "Mostrar mis marcas", "eye")}${btn("teaching", "Aula: anotar y explorar", "book")}</div></div>
  <footer class="workspace-footer"><button class="text-button information-button" data-action="about" aria-label="Información y fuentes" title="Información y fuentes">${icon("info")}</button></footer></main></div>
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
 
@@ -265,7 +265,7 @@ function renderInfo() {
   // OMI families (A3): case sheet with expert notes and support; and, for any case,
   // the structured description read from the trace shown.
   // With reversed arm electrodes the trace no longer shows the sheet's picture.
-  $("#omi-sheet").innerHTML = !concealed && p && !customExploration && !c.artifacts.reversed ? omiSheetHtml(p.id, false, false) : "";
+  $("#omi-sheet").innerHTML = !concealed && p && !customExploration && !c.artifacts.reversed ? omiSheetHtml(p.id, false, false, true) : "";
   renderDescription();
   $<HTMLButtonElement>('[data-action="reset"]').hidden = !!concealed || (!!explorationOrigin && !customExploration);
   $<HTMLButtonElement>('[data-action="export"]').disabled = !!concealed;
@@ -291,7 +291,9 @@ function renderControls() {
     ? (document.activeElement as HTMLElement).dataset.key : undefined;
   const openGroups = Array.from(inspector.querySelectorAll<HTMLDetailsElement>("details[data-control-details][open]"))
     .map(el => el.dataset.controlDetails);
-  inspector.innerHTML = controls(c);
+  // During practice the acquisition select is offered by the Vista toolbar
+  // (renderScales) instead of Artefactos, which is hidden while concealed.
+  inspector.innerHTML = controls(c, !quiz);
   for (const group of inspector.querySelectorAll<HTMLDetailsElement>("details[data-control-details]")) {
     group.open = openGroups.includes(group.dataset.controlDetails);
   }
@@ -362,7 +364,20 @@ function renderScales() {
   ];
   const legacyFormat = paper && !formats.some(([value]) => value === c.view.format);
   if (legacyFormat) formats.push([c.view.format, "Configuración importada"]);
-  toolbar.innerHTML = `${select(
+  // Reading order of the sheet: mode, then the sheet itself (format or lead),
+  // then its scale, then the grid. Signal acquisition lives with Artefactos, except
+  // during practice: Adjust is hidden while the answer is concealed, so the same
+  // select (identical options/value/data-key) is offered here and omitted there.
+  toolbar.innerHTML = `${
+    paper
+      ? select(
+          "view.format",
+          "Formato",
+          formats,
+          c.view.format,
+        )
+      : leadOptions(c)
+  }${select(
     "view.speed",
     "Velocidad",
     speedOptions,
@@ -373,15 +388,6 @@ function renderScales() {
     gainOptions,
     c.view.gain,
   )}${
-    paper
-      ? select(
-          "view.format",
-          "Formato",
-          formats,
-          c.view.format,
-        )
-      : leadOptions(c)
-  }${
     c.view.mode === "rhythm"
       ? select(
           "view.duration",
@@ -393,7 +399,7 @@ function renderScales() {
           c.view.duration,
         )
       : ""
-  }<div class="scale-toggles"><label class="toggle"><input type="checkbox" data-key="view.grid" ${c.view.grid ? "checked" : ""}/>Grilla</label></div>${select("acquisition", "Señal", [["ideal", "Limpia"], ["realistic", "Con ruido de fondo"]], c.acquisition ?? "realistic")}`;
+  }${quiz ? select("acquisition", "Señal", [["ideal", "Limpia"], ["realistic", "Con ruido de fondo"]], c.acquisition ?? "realistic") : ""}<div class="scale-toggles"><label class="toggle"><input type="checkbox" data-key="view.grid" ${c.view.grid ? "checked" : ""}/>Grilla</label></div>`;
   if (legacyFormat) toolbar.querySelector<HTMLOptionElement>(`select[data-key="view.format"] option[value="${c.view.format}"]`)?.setAttribute("disabled", "");
   document
     .querySelectorAll("[data-mode]")
@@ -763,7 +769,7 @@ function selectPreset(id: string) {
 }
 function setValue(key: string, value: unknown) {
   if (!isCaseControlKey(key)) return;
-  if (quiz && !keepsPractice(key)) { quiz = null; renderQuiz(); renderInfo(); }
+  if (quiz && !keepsPractice(key)) { leavePractice(); renderInfo(); }
   if (key.startsWith("view.") && key !== "view.grid" && key !== "view.palette") {
     caliper = null; pendingPaperAnchor = null;
   }
@@ -886,6 +892,7 @@ function toggleCaliper(activate = !session.caliperOn) {
 }
 function showAbout() {
   const concealed = !!quiz && !quiz.answer, p = currentPreset();
+  const customExploration=!!explorationOrigin&&explorationChanges(explorationOrigin,c).length>0&&!concealed;
   let caseInfo = "";
   if (!concealed) {
     const provenance = modelProvenance(c, p);
@@ -897,7 +904,7 @@ function showAbout() {
   }
   openDialog(
     "Información y fuentes",
-    `<div class="information-content">${aboutDialogHtml(caseInfo, !concealed && p ? omiReferencesHtml(p.id) : "")}<p class="control-note" data-product-version="${APP_VERSION}">ECG Lab · v${APP_VERSION}</p></div>`,
+    `<div class="information-content">${aboutDialogHtml(caseInfo, (!concealed && p && !customExploration && !c.artifacts.reversed ? omiSheetHtml(p.id, false, false) : "") + (!concealed && p ? omiReferencesHtml(p.id) : ""))}<p class="control-note" data-product-version="${APP_VERSION}">ECG Lab · v${APP_VERSION}</p></div>`,
   );
 }
 let savedCaseSnapshot: ECGCase[] = [];
@@ -927,8 +934,21 @@ function startQuiz() {
   $("#quiz-panel").scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 function leavePractice() {
+  const wasActive = quiz !== null;
   quiz = null;
   renderQuiz();
+  if (!wasActive) return;
+  // Practice offered the acquisition select in Vista. Callers that rebuild the
+  // inspector (openCase, selectPreset) will place it back in Artefactos; the ones
+  // that do not (end-quiz, a parameter change that ends practice, the unchanged-
+  // preset early return) must not leave it stale in the toolbar or missing from
+  // Artefactos. Moving the existing element keeps the live control (and any
+  // in-progress slider interaction) without a rebuild and without a second copy.
+  const field = $("#scale-toolbar").querySelector<HTMLElement>('[data-key="acquisition"]')?.closest<HTMLElement>(".field");
+  if (!field) return;
+  const grid = $("#inspector").querySelector<HTMLElement>('[data-control-panel="signal"] .field-grid');
+  if (grid && !grid.querySelector('[data-key="acquisition"]')) grid.prepend(field);
+  else field.remove();
 }
 /** A whole case from outside the catalog (saved, imported file or shared link). */
 function openCase(next: ECGCase) {
@@ -1069,7 +1089,10 @@ const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
   },
   "st-reference": () => {
     const line = description?.lines.find((l) => l.key.replace(/\s+/g, "") === "Ref.ST");
-    if (line) openDialog("Referencia del ST", `<p>${esc(line.text)}</p>`);
+    // The ST tools hang off the reference note; each opens its own dialog in place and
+    // keeps the existing guards in openStZoom / openStDistribution.
+    if (line) openDialog("Referencia del ST",
+      `<p>${esc(line.text)}</p><div class="st-reference-actions"><button type="button" class="btn" data-action="st-zoom">Ampliar ST</button><button type="button" class="btn" data-action="st-distribution">Explorar distribución ST</button></div>`);
   },
   "st-zoom": () => openStZoom(),
   "st-distribution": target => {

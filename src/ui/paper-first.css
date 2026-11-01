@@ -112,9 +112,8 @@
 .paper-menu .view-tabs button { text-align:center; justify-content:center; min-height:44px; min-width:0; padding:8px 4px; border-radius:var(--control-radius); white-space:normal; font-size:var(--text-sm); }
 .paper-menu .view-tabs svg { display:none; }
 .paper-menu .view-tabs button[aria-selected=true] { background:var(--control-selected); color:var(--accent); box-shadow:inset 0 0 0 1px var(--control-ring); }
-/* Flat menu: modes, then scale fields, then the annotation actions. */
+/* Flat menu: modes, then the sheet (format or lead), then its scale and grid. */
 .paper-menu .view-options { left:0; right:auto; max-height:calc(100dvh - 24px); overflow-y:auto; }
-.view-options .view-overlays { margin-top:10px; padding-top:10px; }
 /* Short viewports: a centered panel never pushes the page or moves the sheet. */
 @media(max-height:700px) {
  .trace-tools .paper-menu .view-options { position:fixed; top:50%; left:50%; right:auto; transform:translate(-50%,-50%); width:min(360px,calc(100vw - 24px)); max-width:none; }
@@ -124,10 +123,7 @@
  .trace-tools .paper-menu .view-options { width:min(640px,calc(100vw - 24px)); padding:10px 14px; }
  .trace-tools .paper-menu .view-tabs { padding-bottom:6px; }
  .trace-tools .paper-menu .scale-toolbar { grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px 12px; }
- .trace-tools .paper-menu .field:has(select[data-key="view.format"]) { grid-column:auto; }
- .view-options .view-overlays { flex-direction:row; flex-wrap:wrap; margin-top:6px; padding-top:6px; }
- .view-options .view-overlays .btn { flex:1 1 auto; }
- .view-options .view-overlays [data-action=teaching] { margin-top:0; padding-top:8px; border-top:0; }
+ .trace-tools .paper-menu .field:has(select[data-key="view.format"]),.trace-tools .paper-menu .field:has(select[data-key="view.lead"]) { grid-column:auto; }
 }
 .reading-guide { margin-top:8px; padding:12px 0; border:0; border-radius:0; }
 .reading-guide h2 { font-size:1.125rem; letter-spacing:-.25px; line-height:1.35; }
@@ -136,7 +132,19 @@
 .reading-guide #findings > li:not(:has(.finding-button)) { padding:10px 12px; min-height:44px; }
 .reading-guide #reading-details { margin-top:4px; border-top:0; }
 .reading-guide #reading-details > h3 { margin:8px 0 4px; padding:0 12px; }
-.adjust-panel { margin-top:8px; border:0; border-top:1px solid var(--line); border-radius:0; }
+/* Secondary access: the classroom actions share the row with "Ajustar el caso".
+   They stay at the top when the panel opens; the summary keeps its own hit area. */
+.adjust-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; column-gap:12px; margin-top:8px; }
+.adjust-row > .adjust-panel { grid-column:1 / -1; grid-row:1; margin-top:0; }
+.adjust-row > .adjust-panel > summary { width:max-content; max-width:100%; }
+.adjust-row > .secondary-actions { grid-column:2; grid-row:1; justify-self:end; padding-top:3px; }
+.adjust-row > .secondary-actions .btn { border:0; border-radius:var(--control-radius); }
+@media(max-width:640px) {
+ .adjust-row { grid-template-columns:minmax(0,1fr); }
+ .adjust-row > .secondary-actions { grid-column:1; grid-row:1; justify-self:start; padding-top:0; }
+ .adjust-row > .adjust-panel { grid-row:2; }
+}
+.adjust-panel { border:0; border-top:1px solid var(--line); border-radius:0; }
 .adjust-panel > summary { padding-inline:0; }
 .adjust-panel .inspector { padding:10px 0 16px; border:0; border-radius:0; }
 /* Compact adjust panel: hidden controls collapse, visible ones share a tight grid. */

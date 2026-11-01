@@ -10,6 +10,7 @@ import { leadList, leadMeasures, structuredDescription } from "../src/ui/structu
 import { stMarks } from "../src/render/st-lens";
 import { omiReferencesHtml, omiSheetHtml, structuredDescriptionHtml } from "../src/ui/omi-sheet";
 import { descriptionInfoHtml } from "../src/ui/description-info";
+import { esc } from "../src/ui/helpers";
 
 const preset = (id: string) => ({ ...fromPreset(presetById(id)!), variability: 0 });
 
@@ -184,7 +185,7 @@ describe("descripción estructurada", () => {
     expect(descriptionInfoHtml("st", d.measures)).toContain("1,5 mm en mujeres");
     expect(descriptionInfoHtml("t", d.measures)).toContain("10.1161/CIRCULATIONAHA.108.191096");
   });
-  it("permite una sola lectura desplegable conservando datos y herramientas ST", () => {
+  it("mantiene la lectura visible y deja las herramientas ST en su nota contextual", () => {
     const d = read("old_inferior"), html = structuredDescriptionHtml(d, false, true);
     expect(html).not.toContain("<details");
     expect(html).not.toContain('data-action="description-info"');
@@ -192,11 +193,49 @@ describe("descripción estructurada", () => {
     expect(html).toContain('aria-label="Referencia del ST"');
     expect(html).not.toContain('<dt>Ref. ST</dt>');
     for (const action of ["st-zoom", "st-distribution"])
-      expect(html).toContain(`data-action="${action}"`);
+      expect(html).not.toContain(`data-action="${action}"`);
     expect(html).not.toContain("Presentación en 30");
-    expect([...html.matchAll(/<dt>/g)]).toHaveLength(d.lines.length - 1);
+    expect([...html.matchAll(/<dt>/g)]).toHaveLength(d.lines.length - 2);
+    expect(html).toContain('<dt>Ritmo</dt>');
+    expect(html).toContain('<dt>Intervalos</dt>');
+    expect(html).toContain('<dt>Eje</dt>');
     const folded = structuredDescriptionHtml(d, false);
     expect(folded).toContain("<summary>Descripción estructurada</summary>");
     expect(folded).not.toMatch(/<summary>[^]*?<button[^]*?<\/summary>/);
+  });
+  it.each(['sinus','af','flutter','vf','asystole','lbbb','wpw','wenckebach','anterior'])('conserva datos y estados no valorables al simplificar %s', id => {
+    const d = read(id), before = JSON.stringify(d), html = structuredDescriptionHtml(d, true, true);
+    const retained = d.lines.filter(l => !['A','Ref.ST'].includes(l.key.replace(/\s+/g,'')));
+    for (const row of retained) expect(html).toContain(esc(row.text));
+    expect([...html.matchAll(/<dt>/g)]).toHaveLength(retained.length);
+    expect(JSON.stringify(d)).toBe(before);
+    expect(html).not.toContain('<dt>A</dt>');
+    const legacy = structuredDescriptionHtml(d);
+    expect(legacy).toContain(`<dt>A</dt><dd>${esc(d.lines[0].text)}`);
+  });
+  it('conserva la lectura de brazos invertidos sin atribuirla al caso original', () => {
+    const c = preset('anterior'); c.artifacts = {...c.artifacts,reversed:true};
+    const d = structuredDescription(c,synthesize(c,10));
+    const html = structuredDescriptionHtml(d,true,true);
+    expect(html).toContain('brazos invertidos');
+    for (const l of d.lines.filter(l=>!['A','Ref.ST'].includes(l.key.replace(/\s+/g,'')))) expect(html).toContain(esc(l.text));
+  });
+});
+
+describe('ficha compacta y fuente íntegra', () => {
+  it.each(Object.keys(OMI_SHEETS))('preserva contexto y cautela de %s y conserva todos los detalles en la fuente', id => {
+    const s = OMI_SHEETS[id], before = JSON.stringify(s);
+    const compact = omiSheetHtml(id,false,false,true), full = omiSheetHtml(id,false,false);
+    for (const value of [s.context,s.interpretation,s.lesson,...s.notes.filter(n=>n.kind==='Trampa').map(n=>n.text)]) expect(compact).toContain(esc(value));
+    expect(compact).not.toContain('<h3>');
+    expect(compact).not.toContain('<dt>ECG</dt>');
+    expect(compact).not.toContain('class="omi-note ');
+    expect(compact).not.toContain('<details');
+    for (const value of [s.context,s.ecg,s.interpretation,s.lesson,...s.notes.map(n=>n.text)]) expect(full).toContain(esc(value));
+    expect(JSON.stringify(s)).toBe(before);
+    expect(full).toBe(omiSheetHtml(id,false,false,false));
+  });
+  it('no inventa fichas ni acepta claves heredadas',()=>{
+    for (const id of ['sinus','constructor','__proto__']) expect(omiSheetHtml(id,false,false,true)).toBe('');
   });
 });

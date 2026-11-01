@@ -142,6 +142,8 @@ try{
   await page.locator('.paper-menu > summary').click();
   // Flat «Vista»: every control is visible on open, no nested disclosures to find first.
   assert.equal(await page.locator('.view-options details').count(),0);
+  assert.equal(await page.locator('.view-options [data-action=teaching],.view-options [data-key=acquisition]').count(),0);
+  assert.equal(await page.locator('.secondary-actions [data-action=teaching]').count(),1);
   assert.equal(await page.locator('[data-key="view.speed"]').isVisible(),true);assert.equal(await page.locator('[data-action=teaching]').isVisible(),true);
   if(!v.zoom){const menu=await page.locator('.view-options').evaluate(e=>{const r=e.getBoundingClientRect();return {x:r.x,right:r.right,bottom:r.bottom,h:innerHeight,w:innerWidth,scroll:e.scrollHeight-e.clientHeight};});assert(menu.x>=-2&&menu.right<=menu.w+2&&menu.bottom<=menu.h+2&&menu.scroll<=2,JSON.stringify(menu));}
   if(v.width===320&&!v.zoom)await page.screenshot({path:resolve(out,'view-menu-320.png')});

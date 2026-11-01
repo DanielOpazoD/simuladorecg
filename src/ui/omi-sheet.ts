@@ -4,13 +4,26 @@ import { esc, icon } from "./helpers";
 
 /** Case sheet of an OMI-family pattern: context, ECG, interpretation and lesson,
  * expert notes and the support behind it, each reference with its level. */
-export function omiSheetHtml(presetId: string, refsOpen = false, includeReferences = true): string {
+export function omiSheetHtml(presetId: string, refsOpen = false, includeReferences = true, compact = false): string {
   if (!Object.hasOwn(OMI_SHEETS, presetId)) return "";
   const s = OMI_SHEETS[presetId];
+  const references = includeReferences ? `<details class="omi-refs"${refsOpen ? " open" : ""}><summary>Respaldo · ${s.refs.length + 1} fuentes</summary>${omiReferencesHtml(presetId)}</details>` : "";
+  if (compact) {
+    // Compact reading (opt-in): the same context, interpretation, lesson and Trampa text,
+    // grouped as prose under short labels. The ECG description, Perla and Consejo stay in the
+    // full sheet, which the information dialog keeps available. Text is not rewritten.
+    const paragraphs = (texts: readonly string[]) => texts.map((t) => `<p>${esc(t)}</p>`).join("");
+    const groups = [
+      ["escenario", "Escenario", [s.context, s.interpretation]],
+      ["clave", "Clave de lectura", [s.lesson]],
+      ["cuidado", "Cuidado", s.notes.filter((n) => n.kind === "Trampa").map((n) => n.text)],
+    ] as const;
+    return `<section class="omi-sheet omi-sheet--compact" aria-label="Ficha del caso"><dl class="omi-sheet-rows">${groups.filter(([, , t]) => t.length).map(([id, k, t]) => `<div class="omi-sheet-${id}"><dt>${k}</dt><dd>${paragraphs(t)}</dd></div>`).join("")}</dl>${references}</section>`;
+  }
   const rows = [["Contexto", s.context], ["ECG", s.ecg], ["Interpretación", s.interpretation], ["Lección", s.lesson]] as const;
   return `<section class="omi-sheet" aria-label="Ficha del caso"><h3>Ficha del caso</h3><dl class="omi-sheet-rows">${rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>` +
     `<div class="omi-notes">${s.notes.map((n) => `<div class="omi-note omi-note-${n.kind.toLowerCase()}"><span>${n.kind}</span><p>${esc(n.text)}</p></div>`).join("")}</div>` +
-    (includeReferences ? `<details class="omi-refs"${refsOpen ? " open" : ""}><summary>Respaldo · ${s.refs.length + 1} fuentes</summary>${omiReferencesHtml(presetId)}</details>` : "") + `</section>`;
+    references + `</section>`;
 }
 
 /** Shared list lets the reading sheet and the information dialog use one source. */
@@ -29,8 +42,15 @@ export function structuredDescriptionHtml(d: StructuredDescription, open = true,
     (l.info === "st" && hasStReference ? `<button type="button" class="st-reference" data-action="st-reference" aria-label="Referencia del ST"><sup>1</sup></button>` : "") +
     (l.info
     ? (flat ? "" : `<button type="button" class="info-ref" data-action="description-info" data-info="${l.info}" aria-label="Criterios y referencias: ${esc(l.key)}"><sup>?</sup></button>`) +
-      (l.info === "st" ? `<button type="button" class="info-ref" data-action="st-zoom" aria-label="Ampliar el ST y medir a mano">${icon("search")}</button><button type="button" class="text-button st-distribution-link" data-action="st-distribution">Explorar distribución ST ${icon("grid")}</button>` : "") : "");
-  const body = `<dl>${d.lines.filter((l) => !isStReference(l)).map((l) => `<div><dt>${esc(l.key)}</dt><dd>${esc(l.text)}${info(l)}</dd></div>`).join("")}</dl>`;
+      (l.info === "st" && !flat ? `<button type="button" class="info-ref" data-action="st-zoom" aria-label="Ampliar el ST y medir a mano">${icon("search")}</button><button type="button" class="text-button st-distribution-link" data-action="st-distribution">Explorar distribución ST ${icon("grid")}</button>` : "") : "");
+  // Flat reading: plain words instead of step letters, the pattern row (A) is omitted and the
+  // ST actions live in the footer of the ST reference dialog. Row text stays untouched; the
+  // nonflat output is unchanged.
+  const flatLabels: Record<string, string> = { "B·C": "Ritmo", "D": "Intervalos", "E": "Eje", "ST/QRS": "ST y QRS", "Rec.": "Recíprocos" };
+  const compactKey = (l: StructuredDescription["lines"][number]) => l.key.replace(/\s+/g, "");
+  const label = (l: StructuredDescription["lines"][number]) => (flat && Object.hasOwn(flatLabels, compactKey(l)) ? flatLabels[compactKey(l)] : l.key);
+  const rows = d.lines.filter((l) => !isStReference(l) && !(flat && compactKey(l) === "A"));
+  const body = `<dl>${rows.map((l) => `<div><dt>${esc(label(l))}</dt><dd>${esc(l.text)}${info(l)}</dd></div>`).join("")}</dl>`;
   return flat
     ? `<section class="structured-description"><h3>Lectura paso a paso</h3>${body}</section>`
     : `<details class="structured-description"${open ? " open" : ""}><summary>Descripción estructurada</summary>${body}</details>`;
