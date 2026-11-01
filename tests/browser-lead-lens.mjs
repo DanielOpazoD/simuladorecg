@@ -28,10 +28,17 @@ try{
     await page.locator('[data-action="automatic"]').click();
     assert.deepEqual(await page.locator('#ecg').boundingBox(),bounds,'Hiding marks must not move the ECG');
    }
-   await page.locator('[data-reading-segment="7"]').click();
+   const opener=page.locator('[data-reading-segment="7"]');
+   const [,columnStart,columnEnd]=(await opener.getAttribute('aria-label')).match(/tramo ([\d.]+) a ([\d.]+) segundos/);
+   const shortColumn=Number(columnEnd)-Number(columnStart)<3;
+   await opener.click();
    const root=page.locator('#lead-explorer'),start=Number(await root.getAttribute('data-start')),end=Number(await root.getAttribute('data-end'));
-   assert(start>=5&&end<=10);
-   if(id!=='vf')assert.equal(await root.getAttribute('data-beat-count'),'2');
+   assert(start>=Number(columnStart)&&end<=Number(columnEnd),'The lens must stay within the clicked column');
+   if(id!=='vf'){
+    const expected=id==='brady'&&shortColumn?1:2;
+    assert.equal(Number(await root.getAttribute('data-beat-count')),expected);
+    assert.equal(trace.events.beats.filter(b=>b.time>=start&&b.time<=end).length,expected,'Displayed beat count must agree with final signal events');
+   }
    else assert.equal(await root.getAttribute('data-beat-count'),'0');
    const path=await page.locator('.lead-sample-path').getAttribute('d'),viewBox=await page.locator('.lead-detail-trace').getAttribute('viewBox');
    for(const mode of ['all','pr','qrs','qt','st','none']){
@@ -94,6 +101,15 @@ try{
    await page.keyboard.press('Escape');
    assert.equal(await page.locator('#ecg').evaluate(c=>c.toDataURL()),canvas);
    assert.equal(await workerReplies(page),replies);
+   if(id==='brady'&&shortColumn){
+    // A longer visible column still has to provide the two-beat detail.
+    const setFormat=async format=>{await page.locator('.paper-menu > summary').click();if(!await page.locator('[data-key="view.format"]').isVisible())await page.getByText('Escala y señal',{exact:true}).click();await page.locator('[data-key="view.format"]').selectOption(format);await page.locator('.paper-menu > summary').click();};
+    const originalFormat=await page.locator('[data-key="view.format"]').inputValue();
+    await setFormat('6x2');await page.locator('[data-reading-segment="7"]').click();
+    assert.equal(await page.locator('#lead-explorer').getAttribute('data-beat-count'),'2');
+    await page.keyboard.press('Escape');await setFormat(originalFormat);
+    assert.equal(await workerReplies(page),replies,'Changing the viewing column must not synthesize another signal');
+   }
    results.push({viewport,id,start,end,reserved,availableKeys});
   }
   await page.close();
