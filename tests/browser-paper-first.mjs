@@ -125,12 +125,12 @@ try{
    await closeDialog();assert.equal(hash(await readTrace(page)),signature);assert.equal(await workerReplies(page),n);
    if(id==='anterior'){
     await startManualMeasurement(page);assert.equal(await page.locator('#ecg').evaluate(e=>e===document.activeElement),true);
-    assert.equal(await page.getByRole('button',{name:'Terminar medición',exact:true}).isVisible(),true);
+    assert.equal(await page.getByRole('button',{name:'Ocultar medición',exact:true}).isVisible(),true);
     await page.locator('#caliper-segment').selectOption('0');
     await page.locator('#caliper-endpoint').selectOption('1');await page.locator('#caliper-time').fill('200');await page.locator('#caliper-time').press('Tab');
     await page.locator('#caliper-endpoint').selectOption('2');await page.locator('#caliper-time').fill('400');await page.locator('#caliper-time').press('Tab');
     assert(Math.abs(Number(await page.locator('#measurement-values').getAttribute('data-ms'))-200)<.01);
-    await page.getByRole('button',{name:'Terminar medición',exact:true}).click();assert.equal(await page.locator('#caliper-editor').isHidden(),true);
+    await page.getByRole('button',{name:'Ocultar medición',exact:true}).click();assert.equal(await page.locator('#caliper-editor').isHidden(),true);
     assert.equal(await page.locator('#ecg').evaluate(e=>e===document.activeElement),true);
     assert.equal(hash(await readTrace(page)),signature);assert.equal(await workerReplies(page),n);
    }
