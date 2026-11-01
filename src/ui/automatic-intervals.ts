@@ -20,8 +20,11 @@ export function automaticIntervals(m: Measurement, layout: Layout, c: ECGCase) {
   layout.segments.slice(0,12).forEach((s,i)=>{const rows=columns.get(s.x)??[];rows.push(i);columns.set(s.x,rows);});
   return [...columns.values()].flatMap(rows=>{
     const seg=layout.segments[rows[0]];
+    // In short columns, prefer a beat whose accepted intervals fit completely.
+    // This changes only the displayed representative beat, never its boundaries.
+    const visibleIntervals=(b:Measurement['beats'][number])=>acceptedBeatIntervals(m,b,seg.start,seg.start+seg.duration).length;
     const beat=m.beats.filter(b=>b.onset>=seg.start && b.offset<=seg.start+seg.duration)
-      .sort((a,b)=>Math.abs(a.qrs-m.qrs!)-Math.abs(b.qrs-m.qrs!) || Math.abs(a.onset-seg.start-seg.duration/2)-Math.abs(b.onset-seg.start-seg.duration/2))[0];
+      .sort((a,b)=>visibleIntervals(b)-visibleIntervals(a) || Math.abs(a.qrs-m.qrs!)-Math.abs(b.qrs-m.qrs!) || Math.abs(a.onset-seg.start-seg.duration/2)-Math.abs(b.onset-seg.start-seg.duration/2))[0];
     if(!beat)return [];
     // Each label and bracket uses its own existing signal-free header band.
     // Nothing is inserted into flow and no samples are covered by a label.
@@ -31,7 +34,21 @@ export function automaticIntervals(m: Measurement, layout: Layout, c: ECGCase) {
       if(!interval)return [];
       const {start,end}=interval;
       const x1=target.x+(start-target.start)*c.view.speed,x2=target.x+(end-target.start)*c.view.speed;
-      const fontMm=Math.max(4,14/(layout.pxPerMm??4)), labelWidth=fontMm*7.4;
+      // Leave a subpixel margin for SVG/CSS rounding at fitted display scales.
+      const fontMm=Math.max(4,14.1/(layout.pxPerMm??4)), labelWidth=fontMm*7.4;
+      const ms=Math.round((end-start)*1000), review=m.evidence[key].status==='review';
+      if(fontMm<=6){
+        // One aligned band for each row. Values sit immediately above their
+        // bracket, centered on its actual endpoints. Clamp only at a column
+        // edge, leaving the lead name and neighbouring column unobstructed.
+        const textWidth=`${key.toUpperCase()} ${intervalValue(ms,review)}`.length*fontMm*.62+1;
+        const leadWidth=Math.max(3.5,10/(layout.pxPerMm??4))*.62*(target.lead.length+(target.polarity<0?1:0))+3;
+        const labelX=Math.max(target.x+leadWidth+textWidth/2,Math.min((x1+x2)/2,target.x+target.width-textWidth/2-1));
+        return [{key,segment,lead:target.lead,start,end,ms,review,reason:m.evidence[key].reason,
+          x1,x2,y:target.y+7.5,labelY:target.y+5,labelX,labelAnchor:'middle',fontMm}];
+      }
+      // Extremely small overview scales keep the existing single-line label:
+      // stacking a 14 px value here would invade the signal's reserved space.
       const labelAnchor=x1-target.x>labelWidth+8?'end':'start';
       const above=labelAnchor==='start'&&x2+labelWidth+3>target.x+target.width;
       const labelX=labelAnchor==='end'?x1-2:above?target.x+7:x2+2;

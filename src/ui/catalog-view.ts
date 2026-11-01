@@ -13,6 +13,17 @@ export function catalogFamilyForPreset(preset:Preset, preferred='') {
   return routes.includes(preferred)?preferred:indexGroup(catalogGroup(preset));
 }
 const shortCases: Record<string, string> = {anterior:'DA · anterior', lateral:'Cx · lateral'};
+// Two reading levels in the territorial index. Full clinical names remain in
+// the accessible label, tooltip and search; these are labels, not new criteria.
+const ischemiaLabels: Record<string, readonly [string, string]> = {
+  anterior: ['Anterior', 'DA'],
+  inferior: ['Inferior · CD', 'III > II'],
+  inferior_lcx: ['Inferior · Cx', 'II ≥ III'],
+  lateral: ['Lateral', 'Cx'],
+  posterior: ['Posterior', 'V1–V3'],
+  sgarbossa: ['BRI con lesión', 'Concordante'],
+  subendo: ['Isquemia', 'Subendocárdica'],
+};
 /** A stable family index above one result area. Searching spans every family. */
 export function catalogView(
   presets: readonly Preset[],
@@ -39,10 +50,14 @@ export function catalogView(
         const {diagnosis, target, selected, matches} = entry;
         const pending = target.strategy === "pending";
         const multiple = diagnosis.variants.length > 1;
+        const label = isIschemiaFamily(family.id) ? ischemiaLabels[target.id] : undefined;
+        const caption = label
+          ? `<span class="case-name">${esc(label[0])}</span><small class="case-caption">${esc(label[1])}</small>`
+          : `<span class="case-name">${esc(shortCases[target.id] ?? diagnosis.title)}</span>`;
         const detail = pending ? "Pendiente" : section.crossListed ? `También en ${familyLabel(catalogGroup(target))}` : search && matches.length === 1 && multiple
           ? `Coincide: ${diagnosis.variants.find(v => v.id === target.id)!.label}`
           : multiple ? `${diagnosis.variants.length} variantes` : "";
-        return `<button type="button" class="case-button ${selected ? "selected" : ""}" data-diagnosis="${esc(diagnosis.id)}" data-preset="${esc(target.id)}" title="${esc(presetTitle(target))}" aria-label="${shortCases[target.id] ? esc(shortCases[target.id]) + " · " : ""}${esc(diagnosis.title)}${detail ? ` · ${esc(detail)}` : ""}" ${pending ? "disabled" : ""} ${selected ? 'aria-current="true"' : ""}><span>${esc(shortCases[target.id] ?? diagnosis.title)}${detail ? `<small class="case-variants-count">${esc(detail)}</small>` : ""}</span>${selected ? icon("check") : multiple ? icon("chevron") : ""}</button>`;
+        return `<button type="button" class="case-button ${selected ? "selected" : ""}" data-diagnosis="${esc(diagnosis.id)}" data-preset="${esc(target.id)}" title="${esc(presetTitle(target))}" aria-label="${shortCases[target.id] ? esc(shortCases[target.id]) + " · " : ""}${esc(diagnosis.title)}${detail ? ` · ${esc(detail)}` : ""}" ${pending ? "disabled" : ""} ${selected ? 'aria-current="true"' : ""}><span>${caption}${detail ? `<small class="case-variants-count">${esc(detail)}</small>` : ""}</span>${selected ? icon("check") : multiple ? icon("chevron") : ""}</button>`;
       }).join("")}`
     ).join("")}</section>`;
   const ischemia = families.filter(f => isIschemiaFamily(f.id));

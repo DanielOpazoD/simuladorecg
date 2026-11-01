@@ -5,16 +5,16 @@ dialog.comparison-dialog {
 dialog.comparison-dialog #dialog-content { max-height:calc(100dvh - 26px); min-height:0; padding:16px; display:flex; flex-direction:column; }
 dialog.comparison-dialog .dialog-head { flex-shrink:0; margin-bottom:8px; }
 .case-comparison { flex:1; min-height:0; min-width:0; display:flex; flex-direction:column; }
-.comparison-controls { display:flex; flex-wrap:wrap; align-items:end; gap:6px 16px; margin-bottom:10px; flex-shrink:0; }
-.comparison-controls label { display:grid; gap:4px; min-width:0; width:min(100%,460px); font-size:13px; font-weight:600; }
+.comparison-controls { display:flex; flex-wrap:wrap; align-items:center; gap:6px 16px; flex-shrink:0; }
+.comparison-controls label { display:flex; align-items:center; flex-wrap:wrap; gap:4px 10px; min-width:0; width:min(100%,460px); font-size:13px; font-weight:500; color:var(--muted); }
+.comparison-controls label select { flex:1 1 200px; width:auto; }
 .comparison-controls select { width:100%; min-width:0; min-height:42px; padding:8px 10px; border:1px solid var(--line); border-radius:6px; color:var(--ink); background:var(--surface); font-size:14px; }
-.comparison-controls p,.comparison-acquisition { margin:0; color:var(--muted); font-size:13px; line-height:1.4; }
-.comparison-acquisition { flex-shrink:0; margin-top:6px; }
+.comparison-scale,.comparison-acquisition { margin:6px 0 0; color:var(--muted); font-size:13px; line-height:1.4; flex-shrink:0; }
 .comparison-sheets { flex:1; display:grid; grid-template-rows:repeat(2,minmax(0,1fr)); gap:12px; min-height:0; min-width:0; }
 .comparison-sheet { min-width:0; min-height:0; margin:0; display:flex; flex-direction:column; }
-.comparison-sheet figcaption { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px; color:var(--muted); font-size:12px; margin-bottom:6px; flex-shrink:0; }
+.comparison-sheet figcaption { display:flex; flex-wrap:wrap; align-items:center; gap:2px 8px; color:var(--muted); font-size:13px; margin-bottom:6px; flex-shrink:0; }
 .comparison-sheet figcaption strong { color:var(--ink); font-size:14px; font-weight:600; overflow-wrap:anywhere; }
-.comparison-paper { flex:1; min-height:0; max-width:100%; overflow:auto; border:1px solid var(--line); border-radius:4px; overscroll-behavior:contain; }
+.comparison-paper { flex:1; min-height:0; max-width:100%; overflow:auto; border:1px solid var(--line); border-radius:8px; overscroll-behavior:contain; }
 .comparison-paper:has(canvas[hidden]) { display:none; }
 .comparison-paper canvas { display:block; max-width:none; }
 #comparison-status { padding:12px; font-size:14px; color:var(--muted); }

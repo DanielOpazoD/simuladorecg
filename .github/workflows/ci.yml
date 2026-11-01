@@ -68,6 +68,10 @@ jobs:
         run: node tests/browser-dialog-intent.mjs "$RUNNER_TEMP/ecg-reading/dialog-intent"
       - name: Elegir, leer, medir, comparar y volver con zoom
         run: node tests/browser-reading-return.mjs "$RUNNER_TEMP/ecg-reading/reading-return"
+      - name: Conservar medidas y referencia de lectura al recalcular
+        run: node tests/browser-reading-continuity.mjs "$RUNNER_TEMP/ecg-reading/reading-continuity"
+      - name: Papel completo en escritorio y calibración independiente
+        run: node tests/browser-desktop-overview.mjs "$RUNNER_TEMP/ecg-reading/desktop-overview"
       - name: Adquisición limpia seleccionada, persistencia y exportación
         run: node tests/browser-clean-acquisition.mjs "$RUNNER_TEMP/ecg-clean-acquisition"
       - name: Lectura interactiva, muestras intactas y exportación

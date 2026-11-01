@@ -113,7 +113,7 @@ try {
   await page.locator('[data-action=compare]').click();await page.locator('#comparison-reference-sheet[aria-busy=false]').waitFor();
   assert.equal(await page.locator('#comparison-reference').inputValue(),'sinus');
   assert.equal(await page.locator('#comparison-current-name').textContent(),await page.locator('#case-title').textContent());
-  assert.match(await page.locator('.comparison-controls').innerText(),/Ejemplos independientes/);
+  assert.match(await page.locator('.comparison-scale').innerText(),/Ejemplos independientes/);
   const geometry=await page.locator('#dialog').evaluate(d=>({overflow:d.scrollHeight-d.clientHeight,panes:[...d.querySelectorAll('.comparison-paper')].map(e=>{const r=e.getBoundingClientRect();return {top:r.top,bottom:r.bottom,height:r.height};})}));
   assert(geometry.overflow<=2&&geometry.panes.every(r=>r.top>=0&&r.bottom<=height&&r.height>=80),'Both ECGs and their controls must remain in the viewport: '+JSON.stringify(geometry));
   const calibration=await calibrationPixels(page,speed,gain);
@@ -129,10 +129,10 @@ try {
   await writeFile(resolve(out,`negative-calibration-${width}.json`),JSON.stringify(erasedCalibration,null,2));
   assert.equal(erasedCalibration[1].pulse,null,'Missing raster calibration must be rejected');
   await page.locator('#comparison-reference').selectOption('lbbb');await page.locator('#comparison-reference-sheet[aria-busy=false]').waitFor();
-  assert.match(await page.locator('#comparison-reference-name').textContent(),/izquierd/i);
+  assert.match(await page.locator('#comparison-reference option:checked').textContent(),/izquierd/i);
   await page.evaluate(()=>{const select=document.querySelector('#comparison-reference');for(const id of ['af','inferior','lateral']){select.value=id;select.dispatchEvent(new Event('change',{bubbles:true}));}});
   await page.locator('#comparison-reference-sheet[aria-busy=false]').waitFor();
-  assert.equal(await page.locator('#comparison-reference').inputValue(),'lateral');assert.match(await page.locator('#comparison-reference-name').textContent(),/lateral/i);
+  assert.equal(await page.locator('#comparison-reference').inputValue(),'lateral');assert.match(await page.locator('#comparison-reference option:checked').textContent(),/lateral/i);
   const reference=await page.evaluate(()=>window.__comparisonAudit.workers.findLast(w=>!w.terminated&&w.id!==window.__comparisonAudit.mainId).last.ecg);
   assert.equal(reference.presetId,'lateral');assert.equal(reference.view.speed,speed);assert.equal(reference.view.gain,gain);
   assert.equal(reference.acquisition,width===390?'ideal':'realistic');

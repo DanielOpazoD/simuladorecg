@@ -22,7 +22,7 @@ import { mountStDistribution, stDistributionHtml } from "./ui/st-distribution";
 import type { TeachingSnapshot } from "./ui/teaching-workspace";
 import { signalFingerprint, teachingCaseIdentity, type TeachingNote } from "./ui/teaching-notes";
 import { drawTeachingNotes, projectTeachingNote } from "./ui/teaching-export";
-import { visiblePaperLeads } from "./render/paper-viewport";
+import { visiblePaperLeads, capturePaperAnchor, restorePaperAnchor, type PaperAnchor } from "./render/paper-viewport";
 import type { Lead } from "./engine/types";
 import { openDialog, closeDialog, requestDialog } from "./ui/dialog";
 import { exportDialogHtml } from "./ui/export-dialog";
@@ -99,11 +99,13 @@ let c = fromPreset(presetById("sinus")!),
   paperAmplitudeMm: number | undefined,
   paperRowExtents: Layout["rowExtents"],
   monitor: Monitor | null = null;
-// Five seconds per lead makes the initial reading less fragmented. Imported
-// cases keep their selected format, and catalog changes retain the current view.
-c.view.format = "6x2";
+// A wide desktop starts with the existing landscape sheet: all 12 leads at a
+// larger uniform scale, plus 10 continuous seconds of II. Choose once; resizing,
+// imported cases and subsequent catalog changes must not override a chosen view.
+c.view.format = window.matchMedia("(min-width:801px) and (min-height:600px)").matches ? "3x4+1" : "6x2";
 c.acquisition = readAcquisitionPreference() ?? c.acquisition;
 let stHighlight = false, automaticOn = false, paperZoom = 1;
+let pendingPaperAnchor: PaperAnchor | null = null;
 // The contrafactual remains inside the advanced Aula, never presented as a prior recording.
 let previousSignal: Signal | null = null;
 let annotations = false,
@@ -135,17 +137,23 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  <div class="heading-tools"><section id="metrics" class="metrics" aria-label="Valores del modelo que generó el ECG"><div class="loading-metrics">Generando señal…</div></section><div class="case-state">${btn("reset", "Restablecer", "reset", "subtle")}</div></div></div><div id="diagnosis-content">
  <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="trace-tools">${btn("automatic", "Medir automáticamente", "intervals")}${btn("caliper", "Medir", "ruler")}${btn("lens-st", "Punto J / ST", "jpoint")}${btn("compare", "Comparar", "strip")}${btn("pause", "Congelar", "pause")}<details class="paper-menu"><summary class="btn" data-action="paper" aria-label="Vista" title="Vista">${icon("settings")}<span>Vista</span>${icon("chevron")}</summary><div class="view-options"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button><button role="tab" data-mode="rhythm" aria-selected="false">${icon("strip")}Tira de ritmo</button></div><details class="view-settings"><summary>Escala y señal</summary><div class="scale-toolbar" id="scale-toolbar"></div></details><details class="view-aids"><summary>Ayudas de lectura</summary><div class="view-overlays" aria-label="Ayudas visuales">${btn("annotations", "Marcar ondas", "eye")}${btn("teaching-marks", "Mostrar mis marcas", "eye")}${btn("teaching", "Aula: anotar y explorar", "book")}</div></details></div></details><div class="paper-zoom-controls" role="group" aria-label="Zoom del ECG"><button type="button" class="btn" data-action="zoom-out" aria-label="Reducir zoom" title="Reducir zoom">−</button><button type="button" class="btn zoom-value" data-action="zoom-reset" title="Restablecer al 100 %">100 %</button><button type="button" class="btn" data-action="zoom-in" aria-label="Ampliar zoom" title="Ampliar zoom">+</button></div></div></div>
  <div id="quiz-panel" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small id="monitor-rate-note">No estimable</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
- <p class="sr-only" id="trace-context" hidden></p><div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-context trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div><p id="trace-calibration" class="trace-calibration"></p><p class="trace-scroll-hint" id="trace-scroll-hint" hidden>Desliza para ver el trazado completo.</p>
+ <p class="sr-only" id="trace-context" hidden></p><div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-context trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div><p id="trace-calibration" class="trace-calibration"></p>
  <div id="caliper-editor" class="caliper-editor" hidden></div><div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><p id="trace-keyboard-help" class="sr-only">Con foco en el trazado: M, P y R cambian la vista; V y G, la escala; C activa los calibres y espacio congela el monitor. Con calibres, las flechas mueven el extremo seleccionado; Mayús mueve diez pasos. Con zoom, arrastra el papel o usa las flechas para desplazarte; con calibres activos, el arrastre mide. Pulsa ? para abrir la ayuda de atajos.</p></section>
  </div>
  <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><h2 id="finding-title">Qué observar</h2><p id="case-subtitle" class="guide-lead">Activación auricular sinusal seguida de conducción AV 1:1.</p><ul id="findings"></ul><details id="reading-details"><summary>Explicación</summary><div class="reading-detail-content"><div id="structured-description"></div><div id="omi-sheet"></div></div></details></div></section>
  <details id="adjust" class="adjust-panel"><summary><span>Ajustar el caso</span></summary><div id="inspector" class="inspector"></div></details>
- <footer class="workspace-footer"><button class="text-button" data-action="about">Información y fuentes ${icon("chevron")}</button></footer></main></div>
+ <footer class="workspace-footer"><button class="text-button information-button" data-action="about" aria-label="Información y fuentes" title="Información y fuentes">${icon("info")}</button></footer></main></div>
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
 
 const variantNavigation = new VariantNavigation($("#diagnosis-navigation"), $("#diagnosis-content"));
+// Stable, short desktop labels; accessible action names still describe on/off state.
+for (const [action,label] of Object.entries({automatic:"Intervalos",caliper:"Medir","lens-st":"J/ST",compare:"Comparar"})) {
+  $(`.trace-tools > [data-action="${action}"]`).insertAdjacentHTML("beforeend", `<span class="tool-label" aria-hidden="true">${label}</span>`);
+}
 $("#canvas-wrap").insertAdjacentHTML("beforeend", '<div id="reading-overlay" hidden></div><div id="automatic-overlay" hidden></div>');
-$("#canvas-wrap").insertAdjacentHTML("beforebegin", '<div id="finding-focus" hidden><div><strong></strong><p role="status" aria-live="polite"></p></div><button type="button" class="btn" data-action="clear-finding" aria-label="Quitar explicación">Cerrar</button></div>');
+$("#canvas-wrap").insertAdjacentHTML("beforebegin", '<div class="finding-focus-slot"><div id="finding-focus" hidden><div><strong></strong><p role="status" aria-live="polite"></p></div><button type="button" class="btn" data-action="clear-finding" aria-label="Quitar explicación">Cerrar</button></div></div>');
+// Read the result next to the paper, before the optional precision fields.
+$("#caliper-editor").before($("#measurement-readout"));
 const caliperEditor = new CaliperEditor($("#caliper-editor"), $<HTMLCanvasElement>("#ecg"), next => { caliper = next; draw(); });
 let toastTimer = 0;
 function clearToast() {
@@ -460,6 +468,7 @@ function publishSignal(next: Signal, measured: Measurement, requestId: number, c
     if (!candidate && !session.isCurrentRequest(requestId)) return;
     const audited = auditMeasurement(next, measured);
     if (candidate) {
+      pendingPaperAnchor = null;
       c = cloneCase(candidate); annotations = false;
       session.expectRequest(requestId);
       clearToast(); renderCatalog(); renderControls();
@@ -474,6 +483,12 @@ function publishSignal(next: Signal, measured: Measurement, requestId: number, c
     renderInfo();
     renderScales();
     draw();
+    if (pendingPaperAnchor && layout) {
+      const position = restorePaperAnchor(layout, pendingPaperAnchor);
+      if (position) $("#canvas-wrap").scrollTo({...position, left:position.left + $("#ecg").offsetLeft, behavior:"instant"});
+      syncTraceOverflow();
+    }
+    pendingPaperAnchor = null;
 }
 const controller = new SignalController(
   (next, measured, requestId, previous) => {
@@ -482,6 +497,7 @@ const controller = new SignalController(
   },
   (message, requestId) => {
     if (!session.fail(requestId)) return;
+    pendingPaperAnchor = null;
     // The persistent live region below carries the error. A duplicate long
     // toast can cover that explanation on mobile and announce it twice.
     clearToast();
@@ -493,6 +509,7 @@ const controller = new SignalController(
 );
 /** Render caches and pointer coordinates are presentation, not session validity. */
 function resetTracePresentation() {
+  $(".trace-panel").style.minHeight = "";
   activeFinding = null;
   $("#reading-overlay").replaceChildren();
   delete $("#reading-overlay").dataset.geometry;
@@ -512,7 +529,8 @@ function showUnavailableSignal(message: string, unavailable = false) {
   const canvas = $<HTMLCanvasElement>("#ecg");
   if (!unavailable && c.view.mode === "paper") {
     c.view.palette = currentTheme() === "dark" ? "dark" : "paper";
-    renderPaperSkeleton(canvas, c, $("#canvas-wrap").clientWidth, undefined, paperAmplitudeMm, paperRowExtents, true);
+    const width = $("#canvas-wrap").clientWidth;
+    renderPaperSkeleton(canvas, c, width, undefined, paperAmplitudeMm, paperRowExtents, true, paperZoom > 1 ? paperLayout(c, width).pxPerMm * paperZoom : undefined, desktopPaperViewport());
   } else canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
   canvas.setAttribute("aria-label", "Señal no disponible");
   const loading = $("#signal-loading");
@@ -527,11 +545,14 @@ function showUnavailableSignal(message: string, unavailable = false) {
   $("#monitor-rate").textContent = "—";
   $("#monitor-rate-note").textContent = "No estimable";
   $("#measurement-readout").hidden = true;
-  $("#trace-scroll-hint").hidden = true;
   syncTraceTools();
 }
 function invalidateSignal() {
   clearToast();
+  if (layout && c.view.mode === "paper") {
+    const wrap = $("#canvas-wrap");
+    pendingPaperAnchor = capturePaperAnchor(layout, wrap.scrollLeft - $("#ecg").offsetLeft, wrap.scrollTop, wrap.clientWidth, wrap.clientHeight);
+  }
   session.invalidate();
   renderDescription();
   renderQuiz();
@@ -551,7 +572,6 @@ const syncTraceOverflow = () => {
   const more = wrap.scrollWidth > wrap.clientWidth + 2;
   wrap.toggleAttribute("data-more-right", wrap.scrollLeft + wrap.clientWidth < wrap.scrollWidth - 2);
   const context = $("#trace-context");
-  $("#trace-scroll-hint").hidden = !layout || c.view.mode === "monitor" || !more;
   context.hidden = !layout || c.view.mode === "monitor";
   if (layout && c.view.mode !== "monitor") {
     const leads = visiblePaperLeads(layout, wrap.scrollLeft, wrap.clientWidth).join(", ");
@@ -566,6 +586,14 @@ function setPaperZoom(next: number) {
   paperZoom = scale; endPaperPan(); draw();
   wrap.scrollLeft = left*factor; wrap.scrollTop = top*factor;
 }
+function desktopPaperViewport() {
+  // Use document coordinates: scrolling or opening a reading overlay must never
+  // resize the sheet. Small/mobile windows retain the readable native scrollport.
+  if (window.innerWidth <= 800 || window.innerHeight < 600) return undefined;
+  const top = $("#canvas-wrap").getBoundingClientRect().top + window.scrollY;
+  const calibration = $("#trace-calibration").getBoundingClientRect().height || 32;
+  return {height: Math.max(240, window.innerHeight - top - calibration - 20), zoom: paperZoom};
+}
 function draw() {
   c.view.palette = currentTheme() === "dark" ? "dark" : "paper";
   syncTraceTools();
@@ -579,6 +607,7 @@ function draw() {
   if (c.view.mode === "paper") {
     monitor = null;
     const natural = paperLayout(c, width);
+    const viewport = desktopPaperViewport();
     // Enlarge the display, never acquisition, timing, gain or export settings.
     // Keep the paper's original top-left anchor even when it was centered.
     canvas.style.marginLeft = paperZoom > 1 ? `${Math.max(0,(width-natural.widthMm*natural.pxPerMm)/2)}px` : "";
@@ -586,16 +615,16 @@ function draw() {
     const practice = !!quiz && !quiz.answer;
     layout = renderPaper(canvas, session.signal, c, width, {
       compactHeader: true,
-      pxPerMm: paperZoom > 1 ? natural.pxPerMm * paperZoom : undefined,
+      pxPerMm: !viewport && paperZoom > 1 ? natural.pxPerMm * paperZoom : undefined,
+      viewport,
       annotations,
       measurement: session.measurement ?? undefined,
       selectedBeat: session.selectedBeat,
       hideName: practice,
       displayName: caseReading(c).title,
       stLens: stHighlight && !practice,
-      // Fit the available width uniformly. Long sheets continue down the page,
-      // rather than shrinking labels and the calibrated trace to viewport height.
     });
+    if (viewport) canvas.style.marginLeft = `${Math.max(0, (width - layout.widthMm * layout.pxPerMm / paperZoom) / 2)}px`;
     paperAmplitudeMm = layout.amplitudeMm;
     paperRowExtents = layout.rowExtents;
   } else if (c.view.mode === "rhythm") {
@@ -707,8 +736,15 @@ function selectPreset(id: string) {
   search = ""; group = "";
   $<HTMLInputElement>("#case-search").value = "";
   const acquisition = c.acquisition;
-  c = fromPreset(p, c.view);
-  c.acquisition = acquisition;
+  const next = fromPreset(p, c.view);
+  next.acquisition = acquisition;
+  // Compare the complete case, not just its ID: imported/edited cases can share it.
+  const same = (Object.keys({...c, ...next}) as (keyof ECGCase)[])
+    .every(key => JSON.stringify(c[key]) === JSON.stringify(next[key]));
+  if (same && session.canExport) {
+    renderCatalog(); $("#catalog").classList.remove("open"); return;
+  }
+  c = next;
   explorationOrigin=createExplorationOrigin(p,c);
   caliper = null;
   session.resetTools();
@@ -722,7 +758,9 @@ function selectPreset(id: string) {
 function setValue(key: string, value: unknown) {
   if (!isCaseControlKey(key)) return;
   if (quiz && !keepsPractice(key)) { quiz = null; renderQuiz(); renderInfo(); }
-  if (key.startsWith("view.")) caliper = null;
+  if (key.startsWith("view.") && key !== "view.grid" && key !== "view.palette") {
+    caliper = null; pendingPaperAnchor = null;
+  }
   c = changeCase(c, key, value);
   if (session.measurement && (key === "view.timing" || key === "view.format"))
     session.selectBeat(representativeBeat(session.measurement, visibleSegmentEnd()));
@@ -800,7 +838,6 @@ document.addEventListener("change", (e) => {
   if (key.startsWith("view.")) {
     // Same trace: the sliders keep showing the patient's natural P/T axes.
     if (session.signal) syncNaturalAxes(session.signal);
-    caliper = null;
     draw();
   } else generate();
 });
@@ -823,9 +860,15 @@ function showMeasurements() {
 function toggleCaliper(activate = !session.caliperOn) {
   if (!session.signal || c.view.mode === 'monitor') return;
   if (activate !== session.caliperOn) {
+    const pageX = window.scrollX, pageY = window.scrollY, panel = $(".trace-panel");
+    const panelTop = panel.getBoundingClientRect().top + pageY;
     session.toggleCaliper(c.view.mode);
     if (session.caliperOn && !caliper && layout) caliper = initialCaliper(layout, c.view, session.signal.fs);
     draw();
+    // Near the end of a short screen, collapsing fields can push the sticky
+    // tools above the viewport. Retain only the space needed to reach them.
+    panel.style.minHeight = session.caliperOn ? "" : `${Math.max(0,pageY + $(".trace-toolbar").offsetHeight - panelTop)}px`;
+    window.scrollTo({left:pageX, top:pageY, behavior:"instant"});
   }
   $<HTMLCanvasElement>('#ecg').focus({preventScroll:true});
 }
@@ -1076,8 +1119,8 @@ document.addEventListener("click", async (e) => {
   if (findingButton && session.canExport && !(quiz && !quiz.answer)) {
     const label = findingButton.dataset.finding!;
     activeFinding = activeFinding === label ? null : label;
-    if (c.view.mode !== "paper") { c.view.mode = "paper"; session.changeMode("paper"); renderScales(); }
-    if (session.caliperOn) { session.toggleCaliper("paper"); caliper = null; }
+    if (c.view.mode !== "paper") { c.view.mode = "paper"; caliper = null; pendingPaperAnchor = null; session.changeMode("paper"); renderScales(); }
+    if (session.caliperOn) session.toggleCaliper("paper");
     draw();
     // Reveal the actual mark through both the zoomed paper and page scrollports.
     // Scrolling only the page can leave the highlighted lead above the paper viewport.
@@ -1106,8 +1149,10 @@ document.addEventListener("click", async (e) => {
     return;
   }
   if (mode) {
+    if (c.view.mode === mode.dataset.mode) return;
     c.view.mode = mode.dataset.mode as ECGCase["view"]["mode"];
     caliper = null;
+    pendingPaperAnchor = null;
     session.changeMode(c.view.mode);
     renderScales();
     draw();

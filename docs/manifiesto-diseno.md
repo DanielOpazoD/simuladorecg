@@ -2,6 +2,8 @@
 
 **Bello, útil, sencillo y elegante. El ECG es el protagonista.**
 
+La prioridad actual es pulir la experiencia de escritorio y la integridad del producto. Cada posición, color, tamaño y explicación debe justificar su presencia por la lectura o por una acción comprensible. La percepción de calidad nace de la coherencia y el cuidado, no de ampliar el catálogo de funciones.
+
 Esta es la guía de diseño visual y funcional del programa. Recoge las decisiones de Daniel durante las iteraciones de lectura, simplificación, medidas y lupa. Sirve para decidir qué construir, qué reorganizar y qué quitar. Es una dirección de producto y un criterio de revisión; no afirma que todas las pantallas ya la cumplan.
 
 ## 1. La experiencia que queremos
@@ -28,6 +30,14 @@ La navegación lateral debe priorizar los ejemplos de la familia elegida. Se adm
 ## 3. El papel primero
 
 El trazado debe comenzar cerca de la parte superior del área de trabajo y aprovechar el ancho disponible. Evitamos cabeceras altas, tarjetas dentro de tarjetas y bandas informativas que empujan el ECG hacia abajo.
+
+La cabecera de escritorio se compacta quitando espacios entre título, variantes y acciones, sin reducir tipografía, medidas visibles ni áreas de interacción. En el catálogo, la selección se reconoce por un fondo suavemente teñido y el peso del nombre; el contorno se reserva para foco de teclado y modos de alto contraste.
+
+El fondo de selección abraza el nombre con márgenes equilibrados, mientras toda la celda conserva su área pulsable. Título, primera variante y primera herramienta comparten una referencia de alineación en escritorio. La cuadrícula fina acompaña al trazado con discreción; sus divisiones principales y la calibración conservan su legibilidad.
+
+En la vista inicial de escritorio, la hoja completa cabe en el ancho y alto disponibles. Se ajusta con una única escala para ambos ejes, sin recortar derivaciones ni alterar muestras, intervalos o calibración. El zoom deliberado permite ampliarla y recorrerla; volver a 100 % recupera la hoja completa. En móvil y ventanas de poca altura se conserva una escala legible. No añadimos avisos visibles de desplazamiento para compensar un encuadre deficiente.
+
+Para aprovechar una pantalla ancha, el escritorio comienza en el formato existente de 3 × 4 con tira de II: 2,5 segundos por derivación y 10 segundos continuos en la tira. Esta disposición permite ampliar las ondas proporcionalmente en lugar de estirarlas o dejar grandes márgenes laterales. El formato de 5 segundos por derivación sigue en «Vista». La elección inicial no se impone otra vez al redimensionar, cambiar de caso o abrir un registro con su propio formato.
 
 Reducimos el espacio entre derivaciones donde realmente sobra. La envolvente de las muestras, los picos grandes, el pulso de calibración y las anotaciones determinan el espacio mínimo. Nunca comprimimos verticalmente una onda para que quepa más contenido.
 
@@ -59,9 +69,15 @@ Los controles deben tener nombres y efectos previsibles. Reutilizamos herramient
 
 Los iconos pueden ahorrar espacio en acciones conocidas. Deben conservar un nombre accesible, una ayuda breve y un estado activo reconocible. Una palabra corta sigue siendo mejor que un símbolo ambiguo. No convertir el minimalismo en una interfaz que haya que adivinar.
 
+Cuando el ancho de escritorio lo permite, las herramientas de lectura llevan un nombre breve junto al icono. La etiqueta visible conserva su longitud al activar u ocultar la herramienta; el nombre accesible describe el estado. El zoom ocupa el extremo derecho de esa misma fila, y Vista abre junto a su control. En espacios compactos se mantienen los iconos y sus ayudas. Esta claridad no debe añadir otra fila ni desplazar el papel en el escritorio habitual.
+
 ## 6. Marcas que enseñan sin tapar
 
 Las marcas se anclan a las muestras y a la ventana realmente mostradas. El número debe quedar junto al intervalo que representa. El zoom, el desplazamiento y el cambio de tamaño mantienen esa alineación y no cambian el valor medido.
+
+En el papel, los valores se centran sobre sus intervalos y comparten altura en cada fila, dentro de la banda libre de señal. Solo se desplazan horizontalmente para evitar el nombre de la derivación o el límite de una columna. En escalas extremadamente pequeñas se conserva una disposición lateral para no apilar texto sobre las ondas.
+
+La cabecera distingue navegación y herramientas sin repetir cajas: variantes con un subrayado de selección, acciones activas con un fondo tenue y compacto. La superficie visible puede ser menor que el área interactiva, que conserva su tamaño. Cambiar de estado no debe mover ni redimensionar el ECG.
 
 En la lupa, PR, QRS y QT pueden verse juntos. Tienen colores diferentes, nombre y valor: azul para PR, verde para QRS y violeta para QT. El color ayuda, pero no es la única forma de distinguirlos. Las filas se mantienen compactas, cerca de las ondas y sin cruces entre etiquetas.
 
@@ -75,7 +91,15 @@ Si falta un intervalo estimable, no se inventa. Si en la ventana solo cabe un la
 
 La lupa y los diálogos de lectura deben caber en una pantalla habitual. Si necesitan scroll, primero revisamos contenido, márgenes, duplicaciones y jerarquía. El cierre y la acción principal permanecen accesibles.
 
+Lupa, Medidas y Comparar comparten una cabecera breve, controles de 44 px y el mismo contorno neutro de selección. La compacidad se obtiene reuniendo controles y reduciendo márgenes, sin encoger ondas ni valores. En las tablas, la procedencia y los estados de revisión permanecen junto a la medida; en pantallas estrechas pueden ocupar otra línea. El pie de la lupa reserva espacio para medir sin mover el trazado.
+
 Activar medidas, J/ST o una explicación no debe insertar una nueva banda que empuje el papel. Se reserva espacio o se usa una capa superpuesta. Ocultar una marca conserva la posición y el tamaño del trazado.
+
+Los hallazgos de «Qué observar» se reconocen como controles discretos, con el mismo contorno redondeado que las otras herramientas. La selección comparte el acento de la marca sobre el ECG; el foco de teclado se distingue de ella. La explicación contextual puede flotar sin ocupar otra fila. Llevar la lectura hasta el hallazgo mediante desplazamiento no debe cambiar la posición de la hoja dentro del documento ni su escala.
+
+Ocultar una medición no es borrarla. Mostrar un hallazgo, cambiar la cuadrícula o volver a pulsar el caso o la vista actuales conserva el trabajo. Al recalcular, el papel mantiene el zoom y la referencia de lectura durante la espera; una respuesta anterior no puede recuperar un estado caducado. Si cambian las muestras o la geometría usada por el calibre, se retira la medición anterior para no atribuirla al nuevo trazado.
+
+El resultado manual se lee antes de sus campos de ajuste: derivación, tiempo y voltaje, con su equivalencia en milímetros. No repite las coordenadas de los extremos que ya muestran los campos ni infiere una frecuencia a partir de cualquier intervalo.
 
 En pantallas bajas se compactan cabeceras y controles antes de sacrificar el ECG. En ampliaciones de texto, pantallas extremas o necesidades de accesibilidad, aceptamos desplazamiento accesible antes que recortar contenido, ocultar el cierre o reducir la letra. «Sin scroll» es una meta de composición, no una prohibición que justifique una mala experiencia.
 
@@ -84,6 +108,14 @@ En pantallas bajas se compactan cabeceras y controles antes de sacrificar el ECG
 Promovemos una superficie principal, pocos bordes, alineaciones claras y espacios con intención. La tipografía secundaria debe poder leerse con comodidad. Las medidas usan cifras estables y unidades próximas.
 
 Reservamos el color para selección, estado y explicación. La isquemia puede tener una organización visual más expresiva para orientar la exploración, manteniendo la misma gramática de navegación y sin convertir el panel en una colección de alertas.
+
+El catálogo tiene la identidad de un índice clínico cuidado: superficie neutra ligeramente cálida, títulos de grupo discretos y nombres alineados. El nombre del caso tiene prioridad; la sigla o el detalle que permite distinguirlo aparece en un segundo nivel. La selección usa un fondo suavemente teñido, esquinas suaves y el nombre ligeramente destacado, sin línea de contorno ni franja lateral. En isquemia el acento es burdeos; las demás familias conservan el verde del programa. El foco de teclado tiene un contorno exterior marcado y distinto de la selección. Evitamos tarjetas individuales, iconos de adorno y color en todos los títulos. Los nombres abreviados mantienen el significado y conservan la denominación completa en la búsqueda y el nombre accesible.
+
+La compacidad se evalúa al mismo ancho antes y después: una mejora tipográfica no debe expulsar ejemplos de la pantalla habitual. Mantenemos filas pulsables de al menos 44 px y aceptamos que crezcan cuando el usuario amplía el texto. En móvil, el catálogo conserva una superficie opaca y un cierre visible.
+
+Panel, barra de acciones y ventanas comparten tipografía, tonos y una selección serena; no necesitan repetir el mismo recuadro en cada nivel. Los títulos de grupo y los nombres del catálogo se alinean; el margen no debe obligar a partir palabras que antes cabían. La barra conserva su altura al cambiar de estado. El porcentaje de zoom sigue siendo legible al 100 %, aunque restablecerlo no tenga efecto en ese estado.
+
+Al ampliar el texto, el catálogo puede pasar de dos columnas a una y el indicador de zoom crecer con sus cifras. La densidad no justifica fragmentar palabras ni superponer el porcentaje con los botones.
 
 La animación solo se justifica si muestra una relación temporal o ayuda a seguir una acción. Evitamos movimiento decorativo, transiciones que hagan perder la referencia y cambios de posición durante la medición. Respetamos movimiento reducido, contraste y navegación con teclado.
 

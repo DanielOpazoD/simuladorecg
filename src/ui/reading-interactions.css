@@ -6,10 +6,18 @@
 .reading-focus-svg { position:absolute; inset:0; width:100%; height:100%; }
 .reading-dim { fill:var(--surface); opacity:.35; }
 .reading-focus-box { fill:none; stroke:var(--accent); stroke-width:.55; }
-.finding-button { display:inline; border:0; border-bottom:1px dotted var(--accent); padding:6px 0; font:inherit; line-height:1.5; color:var(--ink); background:none; cursor:pointer; text-align:left; }
-.finding-button:hover,.finding-button[aria-pressed=true] { color:var(--accent); border-bottom-style:solid; }
+.finding-button { display:block; max-width:100%; min-height:44px; border:0; border-radius:var(--control-radius); padding:10px 12px; font:inherit; line-height:1.5; color:var(--ink); background:none; box-shadow:inset 0 0 0 1px var(--line); cursor:pointer; text-align:left; }
+.finding-button:hover { background:var(--soft); }
+.finding-button[aria-pressed=true] { color:var(--accent); background:var(--control-selected); box-shadow:inset 0 0 0 1px var(--accent); }
 .finding-button:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
-#finding-focus { position:sticky; top:var(--trace-tools-height,52px); z-index:3; display:flex; align-items:center; gap:12px; padding:10px 16px; background:var(--surface); border-bottom:1px solid var(--line); font-size:var(--text-sm); }
+@media(forced-colors:active) {
+ .finding-button[aria-pressed=true]:not(:focus-visible) { outline:1px solid Highlight; outline-offset:-1px; }
+}
+/* This sticky anchor takes no document space: showing an explanation must not
+ * shift the paper or its sample-aligned overlays. The visible note keeps its
+ * real bounds for scrolling the highlighted sample into view. */
+.finding-focus-slot { position:sticky; top:var(--trace-tools-height,52px); z-index:3; height:0; }
+#finding-focus { position:relative; display:flex; align-items:center; width:fit-content; max-width:100%; gap:12px; padding:4px 12px; background:var(--surface); border:1px solid var(--line); border-radius:var(--control-radius); box-shadow:0 3px 12px #0001; font-size:var(--text-sm); }
 #finding-focus > div { flex:1; min-width:0; }
 #finding-focus p { margin:3px 0 0; color:var(--muted); font-size:var(--text-xs); }
 #finding-focus button { flex:none; }
@@ -53,10 +61,6 @@ dialog.lead-dialog { width:min(740px,calc(100% - 24px)); max-height:92dvh; }
 }
 @media(forced-colors:active) {
  .lens-mark { fill:CanvasText; stroke:CanvasText; }
-}
-@media(max-height:480px) and (min-width:650px) {
- .lead-dialog #dialog-content { position:relative; }
- .lead-dialog .lead-lens-controls { position:absolute; z-index:5; top:12px; right:60px; }
 }
 .lead-paper { fill:#fffdfd; }
 .lead-grid-fine { fill:none; stroke:#f4e3e6; stroke-width:.12; }

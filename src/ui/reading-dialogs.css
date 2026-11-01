@@ -1,0 +1,86 @@
+/* One quiet frame for the three reading tools. Their content keeps its own
+ * width and scale; compactness comes from the surrounding chrome. */
+dialog:is(.lead-dialog,.comparison-dialog,:has(.measurements-overview)) {
+ --reading-dialog-gap:8px;
+ border-color:var(--line);
+ overscroll-behavior:contain;
+}
+dialog:is(.lead-dialog,.comparison-dialog,:has(.measurements-overview))::backdrop {
+ overflow:hidden;
+ overscroll-behavior:contain;
+}
+dialog:is(.lead-dialog,.comparison-dialog,:has(.measurements-overview)) .dialog-head {
+ gap:var(--reading-dialog-gap);
+ margin-bottom:8px;
+ padding-block:0;
+}
+dialog:is(.lead-dialog,.comparison-dialog,:has(.measurements-overview)) .dialog-head h2 {
+ min-width:0;
+ margin:0;
+ font-size:1.125rem;
+ font-weight:600;
+ line-height:1.35;
+ letter-spacing:-.25px;
+}
+dialog:is(.lead-dialog,.comparison-dialog,:has(.measurements-overview)) .dialog-head .btn {
+ min-height:44px;
+ border-radius:var(--control-radius);
+}
+dialog:is(.lead-dialog,.comparison-dialog,:has(.measurements-overview)) .dialog-head .icon-button {
+ width:44px;
+ min-width:44px;
+ padding:10px;
+ align-self:start;
+ color:var(--muted);
+}
+dialog:is(.lead-dialog,.comparison-dialog,:has(.measurements-overview)) select {
+ min-height:44px;
+ border-radius:var(--control-radius);
+}
+.lead-dialog .lens-measure,dialog:has(.measurements-overview) .measurement-start {
+ border:1px solid var(--line);
+ padding-inline:12px;
+}
+.lead-dialog .dialog-head {
+ display:grid;
+ grid-template-columns:minmax(0,1fr) 44px;
+}
+.lead-dialog .dialog-head > .icon-button { grid-column:2; grid-row:1; }
+.lead-dialog .lead-lens-controls {
+ grid-column:1 / -1;
+ grid-row:2;
+ min-width:0;
+ margin:0;
+ flex-wrap:wrap;
+}
+.lead-dialog .lead-detail-select {
+ flex-wrap:wrap;
+ gap:8px;
+ font-size:inherit;
+}
+.lead-detail-select select { font-size:1rem; font-weight:500; }
+.lead-lens-controls label { min-width:0; flex-wrap:wrap; }
+.lead-dialog .lead-lens-controls select { max-width:none; }
+.lead-dialog .lens-measure[aria-pressed=true] {
+ background:var(--control-selected);
+ color:var(--accent);
+ border-color:transparent;
+ box-shadow:inset 0 0 0 1px var(--control-ring);
+}
+@media(min-width:650px) {
+ .lead-dialog .dialog-head { grid-template-columns:minmax(0,1fr) minmax(0,auto) 44px; }
+ .lead-dialog .lead-lens-controls { grid-column:2; grid-row:1; justify-content:flex-end; }
+ .lead-dialog .dialog-head > .icon-button { grid-column:3; }
+ .lead-detail-footer { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:16px; margin-top:6px; }
+ .lead-detail-footer .lead-detail-scale,.lead-detail-footer .lead-detail-observe { margin:0; }
+ .lead-detail-footer .lead-detail-observe { min-height:44px; font-size:var(--text-sm); }
+ .lead-detail-footer .lens-clear { min-height:44px; }
+ .measurements-summary th > small,.measurements-summary td > .measurement-note {
+  display:inline;
+  margin:0;
+ }
+ .measurements-summary th > small::before,.measurements-summary td > .measurement-note::before { content:' · '; }
+}
+@media(forced-colors:active) {
+ .lead-dialog .lens-measure[aria-pressed=true]:not(:focus-visible) { outline:1px solid Highlight; outline-offset:-1px; }
+}

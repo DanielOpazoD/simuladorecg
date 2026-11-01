@@ -44,7 +44,7 @@ export class CaliperEditor {
     const m=caliperMeasurement(cal,l,s.view);
     if(s.caliper){result.dataset.ms=String(m.ms);result.dataset.mv=String(m.mv);}else{delete result.dataset.ms;delete result.dataset.mv;}
     result.textContent=s.caliper
-      ? `${seg.polarity<0?'−':''}${seg.lead} · Δt ${m.ms.toFixed(0)} ms · ΔV ${m.mv.toFixed(2)} mV (${m.mm.toFixed(1)} mm). Extremo ${this.end===1?'A':'B'}: ${p.timeMs.toFixed(0)} ms, ${p.voltageMv.toFixed(2)} mV mostrados. 60.000/Δt: ${m.ms>0?(60000/m.ms).toFixed(0):'—'} lpm; solo si se mide RR.`
-      : "Elige un tramo y ajusta los extremos con estos campos o arrastrando en el ECG. Flechas en el trazado: una muestra o 0,01 mV; Mayús multiplica por diez.";
+      ? `${seg.polarity<0?'−':''}${seg.lead} · Δt ${m.ms.toFixed(0)} ms · ΔV ${m.mv.toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2})} mV (${m.mm.toLocaleString('es',{minimumFractionDigits:1,maximumFractionDigits:1})} mm)`
+      : "Arrastra para medir o ajusta los extremos.";
   }
 }
