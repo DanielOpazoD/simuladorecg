@@ -17,9 +17,8 @@ const results=[],errors=[],warnings=[];
 const oracle=(s,lead,beat)=>{const a=s.leads[lead],b=s.events.beats[beat],j=b.time+b.qrs;const mean=(from,to)=>{const v=a.slice(Math.round(from*s.fs),Math.round(to*s.fs)+1);return v.reduce((x,y)=>x+y,0)/v.length;};return mean(j,j+.01)-mean(b.time-.04,b.time-.02);};
 const browser=await chromium.launch({headless:true});let failure,activePage,activeFamily,activeVariant;
 async function openTeaching(page){
- if(!await page.locator('.paper-menu').evaluate(d=>d.open))await page.locator('.paper-menu > summary').click();
- const insideViewport=await page.locator('.view-options').evaluate(e=>{const b=e.getBoundingClientRect();return b.left>=0&&b.right<=innerWidth;});
- assert(insideViewport,'The secondary menu must remain within the viewport when its trigger wraps');
+ const insideViewport=await page.locator('.secondary-actions').evaluate(e=>{const b=e.getBoundingClientRect();return b.left>=0&&b.right<=innerWidth;});
+ assert(insideViewport,'The secondary actions must remain within the viewport');
  await page.locator('[data-action=teaching]').click();
 }
 async function selectTeachingCase(page,id){

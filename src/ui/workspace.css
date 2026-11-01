@@ -239,6 +239,17 @@ h1 { font-size:32px; line-height:1.2; letter-spacing:-1px; font-weight:600; text
 .omi-sheet-rows { display:grid; gap:8px; margin:0; }
 .omi-sheet-rows div { display:grid; gap:2px; }
 .structured-description dl div { display:grid; grid-template-columns:40px minmax(0,1fr); gap:8px; }
+/* Flat reading (section) uses word labels: one reserved column (wide enough for Recíprocos /
+   Intervalos, also at 200% text) keeps every description aligned at the same x; a longer label
+   would widen its row instead of clipping. The nonflat 40px column is unchanged. */
+section.structured-description dl div { grid-template-columns:minmax(7em,max-content) minmax(0,1fr); }
+section.structured-description dt { text-transform:none; letter-spacing:0; }
+/* Narrow reading column (≤360px, or 200% text on phones): stack label over text so the
+   description keeps a full line width; font size and paper geometry are unchanged. */
+@media (max-width:360px) {
+  section.structured-description dl div { grid-template-columns:minmax(0,1fr); gap:2px; }
+  section.structured-description dt { padding-top:0; }
+}
 .omi-sheet-rows dt, .structured-description dt { font-size:var(--text-2xs); font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; padding-top:2px; }
 .omi-sheet-rows dd, .structured-description dd { margin:0; font-size:var(--text-sm); line-height:1.5; color:var(--ink); }
 .omi-notes { display:grid; gap:8px; }
@@ -255,6 +266,14 @@ h1 { font-size:32px; line-height:1.2; letter-spacing:-1px; font-weight:600; text
 .structured-description { margin-top:16px; }
 .structured-description dl { display:grid; gap:6px; margin:10px 0 0; }
 .description-note { margin:6px 0 0; font-size:var(--text-2xs); color:var(--muted); }
+/* Compact case sheet (opt-in): prose groups under short labels, hairline separators only. */
+.omi-sheet--compact { gap:10px; }
+.omi-sheet--compact .omi-sheet-rows { gap:10px; }
+.omi-sheet--compact .omi-sheet-rows div + div { border-top:1px solid var(--line); padding-top:8px; }
+.omi-sheet--compact dt { text-transform:none; letter-spacing:0; }
+.omi-sheet--compact dd p { margin:0; }
+.omi-sheet--compact dd p + p { margin-top:4px; }
+.omi-sheet--compact .omi-sheet-cuidado dt { color:var(--note-trap); }
 
 /* Simplified layout (UI · 2): the library is an accordion that fits one screen, the
    reading guide sits under the ECG and the case controls fold away. */
@@ -361,9 +380,10 @@ dialog { max-height:92dvh; }
 .paper-menu[open] > summary { background:var(--soft); color:var(--accent); }
 .paper-menu .view-options { position:absolute; right:0; top:calc(100% + 6px); z-index:20; width:320px; max-width:calc(100vw - 48px); padding:14px; background:var(--surface); border:1px solid var(--line); border-radius:10px; box-shadow:0 8px 24px #19323c22; }
 .paper-menu .scale-toolbar { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 12px; padding:0; margin:0; background:none; border:0; }
-.paper-menu .field:has(select[data-key="view.format"]) { grid-column:1 / -1; }
-.view-overlays { display:flex; flex-direction:column; align-items:stretch; gap:4px; margin-top:12px; padding-top:10px; border-top:1px solid var(--line); }
-.view-overlays .btn { justify-content:flex-start; white-space:normal; text-align:left; }
+.paper-menu .field:has(select[data-key="view.format"]),.paper-menu .field:has(select[data-key="view.lead"]) { grid-column:1 / -1; }
+/* Classroom actions next to the adjust panel, outside the paper menu. */
+.secondary-actions { display:flex; flex-wrap:wrap; align-items:flex-start; gap:4px; }
+.secondary-actions .btn { min-height:44px; white-space:normal; text-align:left; }
 .paper-menu .scale-toolbar .scale-toggles { align-self:end; }
 /* Clinical description: a superscript opens the criteria behind each line. */
 .info-ref { border:0; background:none; padding:0 2px; margin-left:2px; color:var(--accent); cursor:pointer; font-weight:700; min-height:0; font-size:var(--text-xs); line-height:1; }
@@ -373,6 +393,10 @@ dialog { max-height:92dvh; }
 .st-reference sup { line-height:1; transform:translateY(-.4em); }
 .st-reference:hover { text-decoration:underline; }
 .st-reference:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; border-radius:4px; }
+/* ST tools in the footer of the ST reference dialog (after the note, header stays title+close):
+   wrap on narrow screens, full hit targets. */
+.st-reference-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.st-reference-actions .btn { min-height:44px; white-space:normal; text-align:left; }
 .info-items { display:grid; gap:10px; margin:14px 0; }
 .info-items dt { font-weight:600; font-size:var(--text-sm); color:var(--ink); }
 .info-items dd { margin:2px 0 0; font-size:var(--text-sm); line-height:1.55; color:var(--muted); }
@@ -463,6 +487,7 @@ dialog { max-height:92dvh; }
 .information-section > summary { min-height:48px; padding:14px 0; font-weight:600; cursor:pointer; }
 .information-section > p, .information-section > div, .information-section > ul, .information-section > ol { margin-bottom:16px; }
 .information-section a { overflow-wrap:anywhere; }
+.information-section > .omi-sheet { margin:0 0 16px; }
 .workspace-footer { align-items:center; }
 .workspace-footer > .text-button { flex-shrink:0; }
 @media (max-width:800px) {

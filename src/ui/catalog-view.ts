@@ -12,7 +12,9 @@ export function catalogFamilyForPreset(preset:Preset, preferred='') {
   const routes=catalogFamilies(PRESETS).filter(f=>f.sections.some(s=>s.presets.some(p=>p.id===preset.id))).map(f=>indexGroup(f.id));
   return routes.includes(preferred)?preferred:indexGroup(catalogGroup(preset));
 }
-const shortCases: Record<string, string> = {anterior:'DA · anterior', lateral:'Cx · lateral'};
+// Short index labels; the full clinical name stays in the title, the accessible
+// name and the search text. Both right-ventricle cases keep distinct wording.
+const shortCases: Record<string, string> = {anterior:'DA · anterior', lateral:'Cx · lateral', rv_infarct:'Lesión de VD', rv_acute:'Sobrecarga de VD'};
 // Two reading levels in the territorial index. Full clinical names remain in
 // the accessible label, tooltip and search; these are labels, not new criteria.
 const ischemiaLabels: Record<string, readonly [string, string]> = {

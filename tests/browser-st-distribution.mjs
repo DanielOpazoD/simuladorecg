@@ -37,7 +37,8 @@ try {
    if (family !== 'sinus') { await chooseCatalogPreset(page, family); await page.locator('#signal-loading').waitFor({ state:'hidden' }); }
    const trace = await readTrace(page), before = fingerprint(trace), count = await workerReplies(page);
    const paperBefore = hash(await page.locator('#ecg').evaluate(c => c.toDataURL()));
-   await page.locator('#structured-description [data-action=st-distribution]').click();
+   await page.locator('#structured-description [data-action=st-reference]').click();
+   await page.locator('#dialog [data-action=st-distribution]').click();
    const map = page.locator('.st-distribution'); await map.waitFor();
    const beat = Number(await map.getAttribute('data-beat'));
    assert.ok(Number.isInteger(beat) && trace.events.beats[beat].time < 10);
@@ -84,7 +85,8 @@ try {
   if (variant.width === 1440) {
    const base = (await readTrace(page)).case;
    await settledTrace(page, () => page.locator('#file-input').setInputFiles({name:'reversed.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({...base,artifacts:{...base.artifacts,reversed:true}}))}));
-   await page.locator('#structured-description [data-action=st-distribution]').click();
+   await page.locator('#structured-description [data-action=st-reference]').click();
+   await page.locator('#dialog [data-action=st-distribution]').click();
    assert.match(await page.locator('.st-distribution-warning').innerText(), /invertidos/);
    assert.equal(await page.locator('[data-st-region]').count(), 0);
    assert.equal(await page.locator('.st-distribution-diagrams').isHidden(), true);

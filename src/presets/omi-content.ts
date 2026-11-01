@@ -79,7 +79,7 @@ export const OMI_SHEETS: Readonly<Record<string, OmiSheet>> = {
     notes: [
       { kind: "Perla", text: "V7–V9, no registradas en este simulador, pueden aportar evidencia de lesión posterior. Un resultado negativo no excluye oclusión." },
       { kind: "Trampa", text: "Etiquetar el caso como SCASEST por el descenso en V1–V3 y retrasar la reperfusión." },
-      { kind: "Consejo", text: "En «Vista → Resaltar ST», observa la relación entre la depresión de V1–V3 y la elevación de V5–V6." },
+      { kind: "Consejo", text: "Con «J/ST», observa la relación entre la depresión de V1–V3 y la elevación de V5–V6." },
     ],
     refs: ["omi2021", "omiFindings2021", "difoccult", "ricci2025", "acc2025", "staff3", "posterior2021"],
     chapter: { slug: "09-omi-inferior-posterior", title: "OMI inferior, posterior y de VD" },
@@ -235,7 +235,7 @@ export const OMI_SHEETS: Readonly<Record<string, OmiSheet>> = {
     notes: [
       { kind: "Perla", text: "El descenso del PR, más visible en II, es una pista de pericarditis." },
       { kind: "Trampa", text: "El descenso en aVL junto a elevación inferior favorece oclusión frente a pericarditis; su ausencia no descarta oclusión y no es una regla sin excepciones." },
-      { kind: "Consejo", text: "En «Vista → Resaltar ST», observa la elevación extensa y el descenso en aVR de este ejemplo." },
+      { kind: "Consejo", text: "Con «J/ST», observa la elevación extensa y el descenso en aVR de este ejemplo." },
     ],
     refs: ["ricci2025", "tenSteps2021", "avl2016"],
     chapter: { slug: "11-stemi-mimics", title: "STEMI mimics" },

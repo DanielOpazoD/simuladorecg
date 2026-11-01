@@ -5,6 +5,7 @@ import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import {resolve,dirname} from 'node:path';
 import {installWorkerTap,workerReplies,waitForReply} from './support/worker-tap.mjs';
 import {chooseCatalogPreset} from './support/catalog-navigation.mjs';
+import {openControlPanel} from './support/adjust-panel.mjs';
 const url=process.env.ECG_TEST_URL||'http://127.0.0.1:4173/';
 const out=resolve(process.argv[2]||'../ECG-QA/clean-acquisition-browser');
 await mkdir(dirname(out),{recursive:true});await mkdir(out);
@@ -21,10 +22,13 @@ async function snapshot(page) {
  });
 }
 async function chooseAcquisition(page,mode) {
- if(!await page.locator('.paper-menu').evaluate(d=>d.open))await page.locator('.paper-menu > summary').click();
- const bounds=await page.locator('.view-options').boundingBox();assert(bounds.x>=0&&bounds.x+bounds.width<=page.viewportSize().width);
+ assert.equal(await page.locator('[data-key="acquisition"]').count(),1,'One acquisition control, including practice');
+ const inPractice=await page.locator('.view-options [data-key="acquisition"]').count()>0;
+ if(inPractice){if(!await page.locator('.paper-menu').evaluate(d=>d.open))await page.locator('.paper-menu > summary').click();}
+ else await openControlPanel(page,'signal');
+ const bounds=await page.locator('[data-key="acquisition"]').boundingBox();assert(bounds.x>=0&&bounds.x+bounds.width<=page.viewportSize().width);
  const count=await workerReplies(page);await page.locator('[data-key="acquisition"]').selectOption(mode);await waitForReply(page,count);
- await page.locator('.paper-menu > summary').click();
+ await page.locator(inPractice?'.paper-menu > summary':'#adjust > summary').click();
 }
 async function importCase(page,ecg) {
  const count=await workerReplies(page);
@@ -76,6 +80,9 @@ try {
   await page.locator('[data-action=quiz]').click();await page.locator('#signal-loading').waitFor({state:'hidden'});
   const quizText=await page.locator('#quiz-panel').innerText();await chooseAcquisition(page,'ideal');assert.equal(await page.locator('#quiz-panel').innerText(),quizText);
   assert.equal(await page.locator('[data-action=compare]').isHidden(),true);await page.getByRole('button',{name:'Salir de práctica'}).click();
+  assert.equal(await page.locator('[data-key="acquisition"]').count(),1);
+  assert.equal(await page.locator('.view-options [data-key="acquisition"]').count(),0);
+  assert.equal(await page.locator('#inspector [data-key="acquisition"]').inputValue(),'ideal');
   await page.locator('[data-action=about]').click();await page.getByText('Cómo se genera este ECG',{exact:true}).click();assert.match(await page.locator('#dialog').innerText(),/sin ruido de adquisición añadido/);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   await page.close();

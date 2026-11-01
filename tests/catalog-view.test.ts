@@ -3,6 +3,14 @@ import { PRESETS, presetById } from "../src/presets/catalog";
 import { catalogView, catalogFamilyLabel, catalogFamilyForPreset, VariantNavigation } from "../src/ui/catalog-view";
 
 describe("catalog presentation", () => {
+  it('distingue lesión y sobrecarga de VD conservando la búsqueda por nombre completo',()=>{
+    const html=catalogView(PRESETS,'ventrículo derecho').html;
+    for(const [id,label]of [['rv_infarct','Lesión de VD'],['rv_acute','Sobrecarga de VD']]){
+      expect(html).toContain(`data-preset="${id}"`);
+      expect(html).toContain(`class="case-name">${label}</span>`);
+      expect(html).toMatch(new RegExp(`data-preset="${id}"[^>]*aria-label="${label} · `));
+    }
+  });
   it('reveals the selected case while preserving the route used for cross-listed examples',()=>{
     expect(catalogFamilyForPreset(presetById('af_slow')!,'Marcapasos')).toBe('Ritmos');
     expect(catalogFamilyForPreset(presetById('hyperk')!,'Isquemia y ST')).toBe('Isquemia y ST');

@@ -61,6 +61,8 @@ Cada frase debe responder a una pregunta del usuario o ayudarle a actuar. Si sol
 
 No repetimos avisos genéricos de uso educativo o falta de validación por toda la interfaz y la exportación. La procedencia y las limitaciones siguen siendo consultables en su lugar correspondiente. La limpieza visual no convierte una estimación en una certeza ni permite atribuir al modelo una validación que no tiene.
 
+La explicación visible usa nombres como «Ritmo», «Intervalos» y «Eje», conserva los valores y los estados no valorables y evita repetir la calibración. Las herramientas de exploración ST se consultan al pie de su nota de referencia. Las fichas de isquemia separan el escenario de la descripción obtenida del trazado: muestran contexto, clave de lectura y cautela específica, mientras su contenido íntegro se conserva junto a las fuentes. Una exploración modificada o con brazos invertidos no debe presentar la ficha original como interpretación del registro actual; tampoco debe revelarla un ejercicio sin responder.
+
 ## 5. Una acción, un propósito
 
 Los controles deben tener nombres y efectos previsibles. Reutilizamos herramientas, cálculos y patrones de interacción antes de crear alternativas paralelas.
@@ -69,7 +71,9 @@ Los controles deben tener nombres y efectos previsibles. Reutilizamos herramient
 - **Medir automáticamente** debe señalar los intervalos sobre el trazado, con sus valores. Una tabla separada por sí sola no satisface esa acción.
 - **Medir manualmente** usa los mismos calibres y unidades en el papel y en la lupa.
 - **Zoom** sirve para ampliar y recorrer el ECG completo. La **lupa** reutiliza la exploración de una derivación para estudiar dos latidos del fragmento elegido.
-- **Vista** es un menú plano con dos modos, papel y monitor, los tres formatos, la escala, la adquisición y las ayudas de lectura, sin desplegables anidados. No contiene filtros de señal, «Marcar ondas» ni una tira de ritmo independiente: la tira de II ya forma parte del formato inicial.
+- **Vista** es un menú plano con dos modos, papel y monitor, los tres formatos, la escala y la cuadrícula, sin desplegables anidados. La adquisición limpia o con ruido se consulta en «Ajustar el caso → Artefactos»; Aula y las marcas personales quedan junto a los ajustes. Vista no contiene filtros de señal, «Marcar ondas» ni una tira de ritmo independiente: la tira de II ya forma parte del formato inicial.
+
+Durante la práctica, «Señal» permanece en Vista porque los parámetros del caso están ocultos. Al salir vuelve a Artefactos, conservando su valor y sin duplicar el control ni revelar la respuesta.
 
 Los iconos pueden ahorrar espacio en acciones conocidas. Deben conservar un nombre accesible, una ayuda breve y un estado activo reconocible. Una palabra corta sigue siendo mejor que un símbolo ambiguo. No convertir el minimalismo en una interfaz que haya que adivinar.
 
