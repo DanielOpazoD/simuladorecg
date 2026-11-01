@@ -176,7 +176,8 @@ try {
   await page.getByRole('button',{name:'Practicar',exact:true}).click();await page.locator('#signal-loading').waitFor({state:'hidden'});
   assert.equal(await page.evaluate(()=>window.__comparisonAudit.workers.find(w=>w.id===window.__comparisonAudit.mainId).last.ecg.presetId),'anterior');
   assert.equal(await page.locator('[data-action=compare]').isHidden(),true);
-  assert.equal(await page.locator('[data-action=automatic]').isHidden(),true);
+  assert.equal(await page.locator('[data-action=automatic]').isDisabled(),true);
+  assert.equal(await page.locator('#automatic-overlay').isHidden(),true);
   assert.equal(await page.locator('#measurement-values').getAttribute('data-ms'),null);
   const workers=await page.evaluate(()=>window.__comparisonAudit.workers.length);
   await page.evaluate(()=>{const button=document.createElement('button');button.dataset.action='compare';document.body.append(button);button.click();button.remove();});
