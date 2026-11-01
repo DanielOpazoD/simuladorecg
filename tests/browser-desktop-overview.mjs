@@ -12,7 +12,6 @@ const geometry=page=>page.evaluate(()=>{
 });
 async function selectFormat(page,format){
  await page.locator('.paper-menu > summary').click();
- if(!await page.locator('[data-key="view.format"]').isVisible())await page.getByText('Escala y señal',{exact:true}).click();
  await page.locator('[data-key="view.format"]').selectOption(format);await page.locator('.paper-menu > summary').click();
 }
 // Read the raster pulse, without importing the renderer or its layout. A missing

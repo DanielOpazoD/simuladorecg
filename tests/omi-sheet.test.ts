@@ -114,12 +114,12 @@ describe("descripción estructurada", () => {
   });
   it("el ejemplo sinusal no convierte la ausencia de hallazgos seleccionados en normalidad clínica", () => {
     const d = read("sinus");
-    expect(line(d, "ST")).toBe("No se destacan cambios del ST con las reglas de esta descripción.");
-    expect(line(d, "T")).toBe("No se destacan alteraciones de la onda T con estas reglas descriptivas.");
+    expect(line(d, "ST")).toBe("ST sin desniveles destacados.");
+    expect(line(d, "T")).toBe("Onda T sin alteraciones destacadas.");
     expect(line(d, "Q")).toBe("Sin ondas Q patológicas.");
     expect(d.summary).not.toMatch(/J\+60|T\/QRS/);
     expect(structuredDescription(preset("sinus"), synthesize(preset("sinus"), 10), "Ritmo sinusal").summary)
-      .toMatch(/^Electrocardiograma de 12 derivaciones \(25 mm\/s, 10 mm\/mV\) en ritmo sinusal, frecuencia 72 lpm, con PR de \d+ ms, QRS de \d+ ms y QTc de \d+ ms, y eje QRS normal \(\d+°\)\. No se destacan cambios del ST con las reglas de esta descripción\. .* En suma: ritmo sinusal\.$/);
+      .toMatch(/^Electrocardiograma de 12 derivaciones \(25 mm\/s, 10 mm\/mV\) en ritmo sinusal, frecuencia 72 lpm, con PR de \d+ ms, QRS de \d+ ms y QTc de \d+ ms, y eje QRS normal \(\d+°\)\. ST sin desniveles destacados\. .* En suma: ritmo sinusal\.$/);
   });
   it("De Winter: descenso ascendente y T prominentes; Wellens: T bifásicas o invertidas", () => {
     const d = read("de_winter");
@@ -169,7 +169,7 @@ describe("descripción estructurada", () => {
     const d = read("old_inferior"), html = structuredDescriptionHtml(d);
     expect(html.match(/data-action="description-info"/g)).toHaveLength(4);
     expect(html).toContain('data-action="st-zoom"');
-    expect(html).toContain('data-action="present-30"');
+    expect(html).not.toContain('data-action="present-30"');
     const axis = descriptionInfoHtml("axis", d.measures, d.axis);
     expect(axis).toContain("<svg class=\"hexaxial\"");
     expect(axis).toContain("De −30° a +90°");
@@ -188,9 +188,13 @@ describe("descripción estructurada", () => {
     const d = read("old_inferior"), html = structuredDescriptionHtml(d, false, true);
     expect(html).not.toContain("<details");
     expect(html).not.toContain('data-action="description-info"');
-    for (const action of ["st-zoom", "st-distribution", "present-30"])
+    expect(html).toContain('data-action="st-reference"');
+    expect(html).toContain('aria-label="Referencia del ST"');
+    expect(html).not.toContain('<dt>Ref. ST</dt>');
+    for (const action of ["st-zoom", "st-distribution"])
       expect(html).toContain(`data-action="${action}"`);
-    expect([...html.matchAll(/<dt>/g)]).toHaveLength(d.lines.length);
+    expect(html).not.toContain("Presentación en 30");
+    expect([...html.matchAll(/<dt>/g)]).toHaveLength(d.lines.length - 1);
     const folded = structuredDescriptionHtml(d, false);
     expect(folded).toContain("<summary>Descripción estructurada</summary>");
     expect(folded).not.toMatch(/<summary>[^]*?<button[^]*?<\/summary>/);

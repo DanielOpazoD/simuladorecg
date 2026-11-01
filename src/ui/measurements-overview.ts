@@ -22,7 +22,7 @@ export function measurementsOverview(s: Signal, m: Measurement, c: ECGCase) {
   return `<div class="measurements-overview"><p class="control-note">Modelo: valores generados. Estimación: resumen del registro. Marcas: cada latido.</p>
     <table class="measurements-summary"><thead><tr><th>Medida</th><th>Modelo</th><th>Estimación</th></tr></thead><tbody>${model.map((x, i) => {
       const estimate = estimates[i], note = x.value === '—' ? '' : x.note.split(' · ').filter(n => n !== 'modelo' && n !== 'Fridericia').join(' · ');
-      return `<tr data-metric="${x.key}"><th scope="row">${x.label}${x.label === 'QTc' ? '<small>Fridericia</small>' : ''}</th><td${x.status === 'unavailable' ? ' aria-label="No aplica"' : ''}>${x.value}${note ? `<small class="measurement-note">${esc(note)}</small>` : ''}</td><td${estimate.status === 'unavailable' ? ' aria-label="No estimable"' : ''}>${estimate.value}${estimate.status === 'review' ? '<small class="measurement-note">Revisar</small>' : ''}</td></tr>`;
+      return `<tr data-metric="${x.key}"><th scope="row">${x.label}${x.label === 'QTc' ? '<small>Fridericia</small>' : ''}</th><td${x.status === 'unavailable' ? ' aria-label="No aplica"' : ''}><span class="measurement-value">${x.value}</span>${note ? `<small class="measurement-note">${esc(note)}</small>` : ''}</td><td${estimate.status === 'unavailable' ? ' aria-label="No estimable"' : ''}><span class="measurement-value">${estimate.value}</span>${estimate.status === 'review' ? '<small class="measurement-note">Revisar</small>' : ''}</td></tr>`;
     }).join('')}</tbody></table>
     <details class="information-section" id="analyzer-info"><summary>Detalle de las estimaciones</summary>${measurementDialog(s, m, c)}</details></div>`;
 }

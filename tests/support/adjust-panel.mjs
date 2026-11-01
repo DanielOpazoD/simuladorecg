@@ -15,10 +15,10 @@ export async function openControlPanel(page, name) {
   await page.locator(`[data-control-panel="${name}"]`).waitFor({ state: 'visible' });
 }
 
-/** View settings and reading aids are folded inside «Vista».
- * A click elsewhere closes the outer menu; open the requested section before use. */
+/** «Vista» is a single flat menu: modes, format, scale, acquisition and reading aids are
+ * visible as soon as it opens, with no nested disclosures. A click elsewhere closes it, so
+ * reopen before use. The `section` argument is kept for existing callers and ignored. */
 export async function openPaper(page, section = 'settings') {
+  void section;
   if (!await page.locator('.paper-menu').evaluate(e => e.open)) await page.locator('.paper-menu > summary').click();
-  const details = page.locator(section === 'aids' ? '.view-aids' : '.view-settings');
-  if (!await details.evaluate(e => e.open)) await details.locator('summary').click();
 }

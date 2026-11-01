@@ -86,7 +86,9 @@ try{
    assert.equal(await page.locator('.trace-tools [data-action=caliper]').isVisible(),true);
    assert.equal(await page.locator('.case-group-count').count(),0);
    assert.equal(await page.locator('#case-subtitle').isHidden(),true);
-   assert.equal(await page.locator('#reading-details > summary').innerText(),'Explicación');
+   assert.equal(await page.locator('#reading-details > h3').innerText(),'Explicación');
+   assert.equal(await page.locator('#reading-details summary').count(),0);
+   assert.equal(await page.locator('[data-action=present-30]').count(),0);
    assert.equal(await page.locator('.workspace-footer [data-product-version]').count(),0);
    const paperTop=(await page.locator('#ecg').boundingBox()).y;if(!v.zoom)assert(paperTop<340,`Paper starts too low: ${paperTop}`);
    const metrics=await page.locator('#metrics .metric').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return {y:r.y,right:r.right,overflow:e.scrollWidth-e.clientWidth};}));
@@ -138,14 +140,15 @@ try{
    report.cases.push({...v,id,paperTop,heightMm:layout.heightMm});await writeFile(resolve(out,'progress.json'),JSON.stringify(report.cases));
   }
   await page.locator('.paper-menu > summary').click();
-  assert.equal(await page.locator('.view-settings').evaluate(e=>e.open),false);assert.equal(await page.locator('.view-aids').evaluate(e=>e.open),false);
+  // Flat «Vista»: every control is visible on open, no nested disclosures to find first.
+  assert.equal(await page.locator('.view-options details').count(),0);
+  assert.equal(await page.locator('[data-key="view.speed"]').isVisible(),true);assert.equal(await page.locator('[data-action=teaching]').isVisible(),true);
   if(!v.zoom){const menu=await page.locator('.view-options').evaluate(e=>{const r=e.getBoundingClientRect();return {x:r.x,right:r.right,bottom:r.bottom,h:innerHeight,w:innerWidth,scroll:e.scrollHeight-e.clientHeight};});assert(menu.x>=-2&&menu.right<=menu.w+2&&menu.bottom<=menu.h+2&&menu.scroll<=2,JSON.stringify(menu));}
   if(v.width===320&&!v.zoom)await page.screenshot({path:resolve(out,'view-menu-320.png')});
-  await page.locator('.view-settings > summary').click();assert.equal(await page.locator('[data-key="view.speed"]').isVisible(),true);await page.locator('.view-settings > summary').click();
-  await page.locator('.view-aids > summary').click();assert.equal(await page.locator('[data-action=teaching]').isVisible(),true);await page.locator('.view-aids > summary').click();await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
   await view('monitor');assert.equal(await page.locator('[data-action=caliper]').isDisabled(),true);assert.equal(await page.locator('[data-action=pause]').isVisible(),true);assert.equal(await page.locator('[data-action=caliper]').isVisible(),true);
-  await view('rhythm');assert.match(await page.locator('#ecg').getAttribute('aria-label'),/ECG sintético/);
-  await view('paper');assert.equal(await page.locator('[data-action=caliper]').isVisible(),true);
+  assert.equal(await page.locator('[data-mode=rhythm]').count(),0,'Rhythm is no longer a standalone mode; the II strip belongs to the format');
+  await view('paper');assert.match(await page.locator('#ecg').getAttribute('aria-label'),/ECG sintético/);assert.equal(await page.locator('[data-action=caliper]').isVisible(),true);
   await page.locator('[data-action=about]').click();assert.deepEqual(await page.locator('.information-content > details > summary').allTextContents(),['Cómo se genera este ECG','Referencias y atribución','Atajos de teclado']);
   await page.getByText('Cómo se genera este ECG',{exact:true}).click();assert.match(await page.locator('#dialog').innerText(),/sin ruido de adquisición añadido/);assert.equal(await page.locator('#analyzer-info').count(),0);await closeDialog();
   await page.locator('[data-action=quiz]').click();await page.locator('#signal-loading').waitFor({state:'hidden'});assert.match(await page.locator('#metrics').innerText(),/\?/);assert.equal(await page.locator('[data-action=automatic]').isDisabled(),true);

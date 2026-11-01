@@ -25,6 +25,8 @@ El programa debe sentirse como una buena mesa de lectura: el papel ocupa el cent
 
 En escritorio, las variantes quedan debajo del título y los valores resumen al otro extremo de esa fila cuando el espacio lo permite. En móvil se reorganizan sin encoger el texto hasta volverlo ilegible.
 
+«Ajustar el caso» muestra solo los controles que actúan en el ritmo elegido y conserva los valores de los que oculta; en escritorio sus campos se reúnen en rejillas compactas en lugar de una columna larga.
+
 La navegación lateral debe priorizar los ejemplos de la familia elegida. Se admite replegar el índice y acceder a la búsqueda bajo demanda si eso libera espacio. Siempre debe ser evidente dónde estamos y cómo volver. El objetivo es reducir decisiones y desplazamientos, no mantener todas las opciones expandidas a cualquier precio.
 
 ## 3. El papel primero
@@ -37,13 +39,15 @@ El fondo de selección abraza el nombre con márgenes equilibrados, mientras tod
 
 En la vista inicial de escritorio, la hoja completa cabe en el ancho y alto disponibles. Se ajusta con una única escala para ambos ejes, sin recortar derivaciones ni alterar muestras, intervalos o calibración. El zoom deliberado permite ampliarla y recorrerla; volver a 100 % recupera la hoja completa. En móvil y ventanas de poca altura se conserva una escala legible. No añadimos avisos visibles de desplazamiento para compensar un encuadre deficiente.
 
-Para aprovechar una pantalla ancha, el escritorio comienza en el formato existente de 3 × 4 con tira de II: 2,5 segundos por derivación y 10 segundos continuos en la tira. Esta disposición permite ampliar las ondas proporcionalmente en lugar de estirarlas o dejar grandes márgenes laterales. El formato de 5 segundos por derivación sigue en «Vista». La elección inicial no se impone otra vez al redimensionar, cambiar de caso o abrir un registro con su propio formato.
+En todos los anchos, el escritorio comienza en el formato compacto de 3 × 4 con tira de II: 2,5 segundos por derivación y 10 segundos continuos en la tira. Esta disposición amplía las ondas proporcionalmente en lugar de estirarlas o dejar grandes márgenes laterales. «Vista» se limita a tres formatos; el de 5 segundos por derivación sigue entre ellos. Un registro importado conserva su propia disposición, y el formato elegido durante la sesión se mantiene al redimensionar o cambiar de caso. No se guarda un formato preferido entre sesiones: la elección inicial se parte siempre del formato compacto.
 
 Reducimos el espacio entre derivaciones donde realmente sobra. La envolvente de las muestras, los picos grandes, el pulso de calibración y las anotaciones determinan el espacio mínimo. Nunca comprimimos verticalmente una onda para que quepa más contenido.
 
 Buscamos una lectura continua, con menos separadores y cortes visuales. Eso no autoriza a unir segmentos de tiempos diferentes ni a dibujar una falsa continuidad entre derivaciones.
 
-La calibración se consulta **debajo del ECG**, de forma discreta y legible. Las etiquetas propias de las derivaciones permanecen en el papel; no repetimos su lista completa en la cabecera. Los datos de filtros, origen y disposición temporal pertenecen al detalle técnico, salvo que sean necesarios para entender una decisión concreta.
+La calibración se consulta **debajo del ECG, alineada al extremo derecho**, de forma discreta y legible. Las etiquetas propias de las derivaciones permanecen en el papel; no repetimos su lista completa en la cabecera. Los datos de filtros, origen y disposición temporal pertenecen al detalle técnico, salvo que sean necesarios para entender una decisión concreta.
+
+Los límites de los controles se reúnen en «Cómo se genera este ECG», dentro del icono de información. La referencia del ST se consulta mediante un superíndice junto a su descripción: abre una nota breve y devuelve el foco al cerrarse, sin desplazar ni regenerar el trazado.
 
 ## 4. Menos texto, mejor colocado
 
@@ -65,7 +69,7 @@ Los controles deben tener nombres y efectos previsibles. Reutilizamos herramient
 - **Medir automáticamente** debe señalar los intervalos sobre el trazado, con sus valores. Una tabla separada por sí sola no satisface esa acción.
 - **Medir manualmente** usa los mismos calibres y unidades en el papel y en la lupa.
 - **Zoom** sirve para ampliar y recorrer el ECG completo. La **lupa** reutiliza la exploración de una derivación para estudiar dos latidos del fragmento elegido.
-- **Vista** reúne los formatos de presentación. Monitor y tira de ritmo no necesitan competir como acciones independientes en todas las barras.
+- **Vista** es un menú plano con dos modos, papel y monitor, los tres formatos, la escala, la adquisición y las ayudas de lectura, sin desplegables anidados. No contiene filtros de señal, «Marcar ondas» ni una tira de ritmo independiente: la tira de II ya forma parte del formato inicial.
 
 Los iconos pueden ahorrar espacio en acciones conocidas. Deben conservar un nombre accesible, una ayuda breve y un estado activo reconocible. Una palabra corta sigue siendo mejor que un símbolo ambiguo. No convertir el minimalismo en una interfaz que haya que adivinar.
 
@@ -91,11 +95,11 @@ Si falta un intervalo estimable, no se inventa. Si en la ventana solo cabe un la
 
 La lupa y los diálogos de lectura deben caber en una pantalla habitual. Si necesitan scroll, primero revisamos contenido, márgenes, duplicaciones y jerarquía. El cierre y la acción principal permanecen accesibles.
 
-Lupa, Medidas y Comparar comparten una cabecera breve, controles de 44 px y el mismo contorno neutro de selección. La compacidad se obtiene reuniendo controles y reduciendo márgenes, sin encoger ondas ni valores. En las tablas, la procedencia y los estados de revisión permanecen junto a la medida; en pantallas estrechas pueden ocupar otra línea. El pie de la lupa reserva espacio para medir sin mover el trazado.
+Lupa, Medidas y Comparar comparten una cabecera breve, controles de 44 px y superficies neutras tenues; los contornos refuerzan la selección, el foco y el alto contraste. La compacidad se obtiene reuniendo controles y reduciendo márgenes, sin encoger ondas ni valores. En las tablas, cifras y unidades tienen una alineación estable; la procedencia y los estados de revisión permanecen junto a la medida y, en pantallas estrechas, pueden ocupar otra línea. El pie de la lupa reserva espacio para medir sin mover el trazado.
 
 Activar medidas, J/ST o una explicación no debe insertar una nueva banda que empuje el papel. Se reserva espacio o se usa una capa superpuesta. Ocultar una marca conserva la posición y el tamaño del trazado.
 
-Los hallazgos de «Qué observar» se reconocen como controles discretos, con el mismo contorno redondeado que las otras herramientas. La selección comparte el acento de la marca sobre el ECG; el foco de teclado se distingue de ella. La explicación contextual puede flotar sin ocupar otra fila. Llevar la lectura hasta el hallazgo mediante desplazamiento no debe cambiar la posición de la hoja dentro del documento ni su escala.
+Los hallazgos de «Qué observar» se reconocen como controles discretos, con una superficie tenue y esquinas suaves. Aprovechan el ancho en una fila que se adapta al texto disponible, sin recuadros en reposo ni columnas vacías impuestas. La selección comparte el acento de la marca sobre el ECG; el foco de teclado se distingue de ella. La explicación contextual puede flotar sin ocupar otra fila. Aparte de esa capa, la «Explicación» estructurada situada debajo de los hallazgos permanece siempre desplegada y no depende de pulsar ningún hallazgo; solo el estado oculto del cuestionario la reserva. La «Presentación 30 s» se ha retirado. Llevar la lectura hasta el hallazgo mediante desplazamiento no debe cambiar la posición de la hoja dentro del documento ni su escala.
 
 Ocultar una medición no es borrarla. Mostrar un hallazgo, cambiar la cuadrícula o volver a pulsar el caso o la vista actuales conserva el trabajo. Al recalcular, el papel mantiene el zoom y la referencia de lectura durante la espera; una respuesta anterior no puede recuperar un estado caducado. Si cambian las muestras o la geometría usada por el calibre, se retira la medición anterior para no atribuirla al nuevo trazado.
 
@@ -119,7 +123,7 @@ Al ampliar el texto, el catálogo puede pasar de dos columnas a una y el indicad
 
 La animación solo se justifica si muestra una relación temporal o ayuda a seguir una acción. Evitamos movimiento decorativo, transiciones que hagan perder la referencia y cambios de posición durante la medición. Respetamos movimiento reducido, contraste y navegación con teclado.
 
-Un ECG limpio facilita aprender. El ruido se incorpora cuando responde al escenario o a un control explícito, no como decoración para aparentar realismo. Tampoco se suavizan muestras para esconder una discrepancia del modelo.
+Un ECG limpio facilita aprender: la adquisición inicial no añade ruido. El ruido se incorpora cuando responde al escenario, a una preferencia explícita del lector o a un registro importado, no como decoración para aparentar realismo. Tampoco se suavizan muestras para esconder una discrepancia del modelo.
 
 ## 9. Profundidad sin ampliar el alcance por inercia
 

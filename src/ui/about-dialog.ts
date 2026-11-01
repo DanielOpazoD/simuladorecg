@@ -2,7 +2,6 @@ export function keyboardHelpHtml() {
   const shortcuts = [
     ["M", "Monitor"],
     ["P", "Papel de 12 derivaciones"],
-    ["R", "Tira de ritmo"],
     ["V", "Cambiar velocidad: 12,5 / 25 / 50 mm/s"],
     ["G", "Cambiar ganancia: 2,5 / 5 / 10 / 20 mm/mV"],
     ["C", "Activar o desactivar los calibres"],

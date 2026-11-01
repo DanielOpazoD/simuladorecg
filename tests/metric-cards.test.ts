@@ -113,14 +113,14 @@ describe('automatic measurement summary',()=>{
   const c=fromPreset(presetById('sinus')!),s=synthesize(c,10);
   const qtRow=(m:Measurement)=>measurementsOverview(s,m,c).split('</table>')[0].match(/<tr data-metric="qt"><th scope="row">QT<\/th>(.*?)<\/tr>/)![1];
   it('shows raw QT separately from corrected QTc using the measured value',()=>{
-    expect(qtRow(measurement())).toContain('<td>380<small>ms</small></td>');
+    expect(qtRow(measurement())).toContain('<td><span class="measurement-value">380<small>ms</small></span></td>');
     expect(measurementsOverview(s,measurement(),c)).toContain('QTc<small>Fridericia</small>');
   });
   it('withdraws retained QT candidates without evidence',()=>{
-    expect(qtRow(measurement({qt:'unavailable'}))).toContain('<td aria-label="No estimable">—</td>');
+    expect(qtRow(measurement({qt:'unavailable'}))).toContain('<td aria-label="No estimable"><span class="measurement-value">—</span></td>');
   });
   it('retains review status instead of presenting a flagged QT as reliable',()=>{
-    expect(qtRow(measurement({qt:'review'}))).toContain('380<small>ms</small><small class="measurement-note">Revisar</small>');
+    expect(qtRow(measurement({qt:'review'}))).toContain('380<small>ms</small></span><small class="measurement-note">Revisar</small>');
   });
 });
 

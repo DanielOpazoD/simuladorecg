@@ -22,7 +22,6 @@ try{
    const paper=await page.locator('#ecg').evaluate(e=>e.toDataURL()),replies=await workerReplies(page);
    const open=async()=>{
     if(workspace==='teaching'&&!await page.locator('.paper-menu').evaluate(e=>e.open))await page.locator('.paper-menu > summary').click();
-    if(workspace==='teaching'&&!await page.locator('.view-aids').evaluate(e=>e.open))await page.locator('.view-aids > summary').click();
     await page.locator(`[data-action=${workspace}]`).click();
    };
    await open();const moduleUrl=await requested;

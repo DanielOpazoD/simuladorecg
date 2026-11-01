@@ -22,7 +22,6 @@ async function snapshot(page) {
 }
 async function chooseAcquisition(page,mode) {
  if(!await page.locator('.paper-menu').evaluate(d=>d.open))await page.locator('.paper-menu > summary').click();
- if(!await page.locator('.view-settings').evaluate(d=>d.open))await page.locator('.view-settings > summary').click();
  const bounds=await page.locator('.view-options').boundingBox();assert(bounds.x>=0&&bounds.x+bounds.width<=page.viewportSize().width);
  const count=await workerReplies(page);await page.locator('[data-key="acquisition"]').selectOption(mode);await waitForReply(page,count);
  await page.locator('.paper-menu > summary').click();
@@ -39,11 +38,12 @@ try {
   await installWorkerTap(page);page.on('pageerror',e=>report.errors.push(e.message));page.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());if(m.type()==='warning')report.warnings.push(m.text());});
   await page.goto(url);await page.locator('#signal-loading').waitFor({state:'hidden'});
   assert.match(await page.title(),/ECG/);assert.equal(await page.locator('vite-error-overlay').count(),0);
-  assert.equal(await page.locator('[data-key="acquisition"]').inputValue(),'realistic','No unrequested default promotion');
+  assert.equal(await page.locator('[data-key="acquisition"]').inputValue(),'ideal','A fresh reader starts with the clean acquisition');
   if(width===320)await page.addStyleTag({content:':root{font-size:200%!important}'});
   let cleanCase;
   for(const family of width===1440?['sinus','lbbb','rbbb','anterior','af','flutter','vvi','vf']:['sinus']) {
    if(family!=='sinus'){await chooseCatalogPreset(page,family);await page.locator('#signal-loading').waitFor({state:'hidden'});}
+   // Explicit realistic baseline: the roundtrip below compares against it, whatever the default.
    if(await page.locator('[data-key="acquisition"]').inputValue()!=='realistic')await chooseAcquisition(page,'realistic');
    const before=await snapshot(page),title=await page.locator('#case-title').innerText(),metrics=await page.locator('#metrics').innerText();
    assert.equal(before.ecg.presetId,family);assert(before.leads.every(l=>l.length===32500));

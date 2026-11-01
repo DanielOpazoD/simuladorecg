@@ -3,7 +3,7 @@ import {DEFAULT_CASE,cloneCase,normalizeCase,LEADS} from '../src/engine/types';
 import {generateEvents} from '../src/engine/rhythm';
 import {synthesize} from '../src/engine/signal';
 import {nominalVentricularRR} from '../src/engine/repolarization';
-import {controls} from '../src/ui/controls';
+import {controls,controlLimitsHtml} from '../src/ui/controls';
 import {rhythmControlState} from '../src/ui/rhythm-controls';
 const demand=()=>({...cloneCase(DEFAULT_CASE),rhythm:'paced' as const,pacing:'VVI' as const,pacingBehavior:'demand' as const,intrinsicRate:0,hr:60});
 describe('VVI demand in the actual generator, with guaranteed capture only',()=>{
@@ -33,7 +33,7 @@ describe('VVI demand in the actual generator, with guaranteed capture only',()=>
  });
  it('labels the controller rate separately from intrinsic ventricular activity',()=>{
   expect(rhythmControlState(demand()).baseRateLabel).toBe('Frecuencia mínima VVI');
-  const html=controls(demand());expect(html).toContain('captura garantizada');
+  const html=controls(demand());expect(controlLimitsHtml(demand())).toContain('captura garantizada');
   expect(html).toMatch(/data-key="intrinsicRate"[^>]*>/);
  });
 });

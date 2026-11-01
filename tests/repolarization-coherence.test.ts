@@ -5,7 +5,7 @@ import {LEADS} from '../src/engine/types';
 import {fromPreset,presetById} from '../src/presets/catalog';
 import {synthesize} from '../src/engine/signal';
 import {qrsKernels,tVector} from '../src/engine/morphology';
-import {controls} from '../src/ui/controls';
+import {controlLimitsHtml} from '../src/ui/controls';
 import {secondaryRepolarization} from '../src/engine/secondary-repolarization';
 // Kernel mechanics (secondary ST source, primary T vector): the learned classes
 // of F3 have their own contracts in tests/realistic-signal.test.ts.
@@ -19,8 +19,8 @@ function setup(id:string):{c:ECGCase;b:Beat}{
 }
 function close(actual:number,expected:number,label:string){assert.ok(Math.abs(actual-expected)<1e-12,`${label}: ${actual} != ${expected}`);}
 describe('A02/A03: independent components, one final T vector',()=>{
-  it('shows the represented ST scope in the actual controls',()=>{
-    const {c}=setup('lbbb');assert.match(controls(c),/El ST secundario sigue esa misma fuente QRS/);
+  it('retains the represented ST scope in the information content',()=>{
+    const {c}=setup('lbbb');assert.match(controlLimitsHtml(c),/El ST secundario sigue esa misma fuente QRS/);
   });
   for(const id of families){
     it(`${id}: applies each existing potassium factor after direction selection`,()=>{

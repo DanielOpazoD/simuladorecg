@@ -68,8 +68,8 @@ export const range = (
   describedBy = "",
 ) =>
   `<label class="range-field"><span>${label}<output data-output="${key}" aria-label="${esc(label)}">${value} <small>${unit}</small></output></span><input type="range" data-key="${key}" min="${min}" max="${max}" step="${step}" value="${value}" aria-label="${label}" ${disabled ? "disabled" : ""}${describedBy ? ` aria-describedby="${esc(describedBy)}"` : ""}/></label>`;
-export const toggle = (key: string, label: string, value: boolean) =>
-  `<label class="toggle"><input type="checkbox" data-key="${key}" ${value ? "checked" : ""}/><span>${label}</span></label>`;
+export const toggle = (key: string, label: string, value: boolean, disabled = false) =>
+  `<label class="toggle"><input type="checkbox" data-key="${key}" ${value ? "checked" : ""}${disabled ? " disabled" : ""}/><span>${label}</span></label>`;
 /** Scroll `wrap` so a client point stays at least `margin` px inside its edges. */
 export function keepInView(wrap: HTMLElement, x: number, y: number, margin = 20) {
   const w = wrap.getBoundingClientRect();

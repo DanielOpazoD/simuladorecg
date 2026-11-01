@@ -6,8 +6,8 @@
 .reading-focus-svg { position:absolute; inset:0; width:100%; height:100%; }
 .reading-dim { fill:var(--surface); opacity:.35; }
 .reading-focus-box { fill:none; stroke:var(--accent); stroke-width:.55; }
-.finding-button { display:block; max-width:100%; min-height:44px; border:0; border-radius:var(--control-radius); padding:10px 12px; font:inherit; line-height:1.5; color:var(--ink); background:none; box-shadow:inset 0 0 0 1px var(--line); cursor:pointer; text-align:left; }
-.finding-button:hover { background:var(--soft); }
+.finding-button { display:block; max-width:100%; min-height:44px; border:0; border-radius:var(--control-radius); padding:10px 12px; font:inherit; line-height:1.5; color:var(--ink); background:var(--soft); cursor:pointer; text-align:left; }
+.finding-button:hover { box-shadow:inset 0 0 0 1px var(--control-ring); }
 .finding-button[aria-pressed=true] { color:var(--accent); background:var(--control-selected); box-shadow:inset 0 0 0 1px var(--accent); }
 .finding-button:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
 @media(forced-colors:active) {
@@ -52,7 +52,7 @@ dialog.lead-dialog { width:min(740px,calc(100% - 24px)); max-height:92dvh; }
 .lead-lens-controls select { min-height:44px; max-width:135px; padding:6px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--ink); font:inherit; }
 .lens-mark { fill:var(--accent); stroke:var(--accent); stroke-width:.35; }
 .lens-mark text { stroke:none; font-family:system-ui,sans-serif; font-weight:650; }
-.lens-guide { stroke-dasharray:1 1; opacity:.5; stroke-width:.2; }
+.lens-guide { stroke-dasharray:1 1.5; opacity:.35; stroke-width:.2; }
 @media(max-height:480px) {
  .lead-dialog #dialog-content { padding:8px 16px; }
  .lead-dialog .dialog-head,.lead-lens-controls { margin-bottom:4px; }

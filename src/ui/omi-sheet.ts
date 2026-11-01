@@ -22,10 +22,15 @@ export function omiReferencesHtml(presetId: string): string {
 }
 
 export function structuredDescriptionHtml(d: StructuredDescription, open = true, flat = false): string {
-  const info = (l: StructuredDescription["lines"][number]) => l.info
+  // The ST reference line is folded into a superscript next to the ST line.
+  const isStReference = (l: StructuredDescription["lines"][number]) => l.key.replace(/\s+/g, "") === "Ref.ST";
+  const hasStReference = d.lines.some(isStReference);
+  const info = (l: StructuredDescription["lines"][number]) =>
+    (l.info === "st" && hasStReference ? `<button type="button" class="st-reference" data-action="st-reference" aria-label="Referencia del ST"><sup>1</sup></button>` : "") +
+    (l.info
     ? (flat ? "" : `<button type="button" class="info-ref" data-action="description-info" data-info="${l.info}" aria-label="Criterios y referencias: ${esc(l.key)}"><sup>?</sup></button>`) +
-      (l.info === "st" ? `<button type="button" class="info-ref" data-action="st-zoom" aria-label="Ampliar el ST y medir a mano">${icon("search")}</button><button type="button" class="text-button st-distribution-link" data-action="st-distribution">Explorar distribución ST ${icon("grid")}</button>` : "") : "";
-  const body = `<dl>${d.lines.map((l) => `<div><dt>${esc(l.key)}</dt><dd>${esc(l.text)}${info(l)}</dd></div>`).join("")}</dl><button type="button" class="text-button present-30-button" data-action="present-30">${icon("book")} Presentación en 30 segundos</button>`;
+      (l.info === "st" ? `<button type="button" class="info-ref" data-action="st-zoom" aria-label="Ampliar el ST y medir a mano">${icon("search")}</button><button type="button" class="text-button st-distribution-link" data-action="st-distribution">Explorar distribución ST ${icon("grid")}</button>` : "") : "");
+  const body = `<dl>${d.lines.filter((l) => !isStReference(l)).map((l) => `<div><dt>${esc(l.key)}</dt><dd>${esc(l.text)}${info(l)}</dd></div>`).join("")}</dl>`;
   return flat
     ? `<section class="structured-description"><h3>Lectura paso a paso</h3>${body}</section>`
     : `<details class="structured-description"${open ? " open" : ""}><summary>Descripción estructurada</summary>${body}</details>`;

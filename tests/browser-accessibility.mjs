@@ -6,6 +6,7 @@ import {resolve} from 'node:path';
 import {isLocalGet} from './support/browser-request-policy.mjs';
 import {openAdjust,openControlPanel,openPaper} from './support/adjust-panel.mjs';
 import {readMeasurements} from './support/measurement-dialog.mjs';
+import {installWorkerTap,workerReplies,waitForReply} from './support/worker-tap.mjs';
 const url=process.env.ECG_TEST_URL||'http://127.0.0.1:5173/';
 const origin=new URL(url).origin;
 const out=resolve(process.env.ECG_EVIDENCE_DIR||'.sites-runtime/accessibility');
@@ -21,7 +22,7 @@ for(const engine of engines) {
     for(const width of [1440,390]) {
       const errors=[],warnings=[],requests=[];
       const context=await browser.newContext({viewport:{width,height:width===390?844:1000},deviceScaleFactor:1,reducedMotion:'reduce',hasTouch:width===390&&engine.name()!=='firefox'});
-      const page=await context.newPage();
+      const page=await context.newPage();await installWorkerTap(page);
       page.on('pageerror',e=>errors.push(e.message));
       page.on('console',m=>{if(m.type()==='error')errors.push(m.text());if(m.type()==='warning')warnings.push(m.text());});
       const stem=engine.name()+'-'+width;
@@ -30,6 +31,14 @@ for(const engine of engines) {
       const active=async selector=>assert.equal(await page.locator(selector).evaluate(e=>e===document.activeElement),true,selector+' must keep/receive focus');
       const file=async(selector,name)=>{
         const waiting=page.waitForEvent('download');await key(selector);const p=resolve(out,`${stem}-${name}`);await(await waiting).saveAs(p);return readFile(p);
+      };
+      // The filter selector is no longer in «Vista»; a case with another filter enters through the real
+      // import, copying the case the worker last rendered so every other field is preserved.
+      const importFilter=async filter=>{
+        const ecg=await page.evaluate(()=>window.__ecgTap.last.ecg);
+        const since=await workerReplies(page);
+        await page.locator('#file-input').setInputFiles({name:'case.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({...ecg,filter}))});
+        await waitForReply(page,since);
       };
       const fits=async scope=>{
         const proof=await page.locator(scope).evaluate(root=>({width:root.clientWidth,scroll:root.scrollWidth,
@@ -48,7 +57,8 @@ for(const engine of engines) {
         // Arrow keys activate tabs; Tab only visits the selected tab. Forms do not use these shortcuts.
         await page.locator('[data-mode=paper]').focus();await page.keyboard.press('ArrowRight');await active('[data-mode=monitor]');
         assert.equal(await page.locator('[data-mode=monitor]').getAttribute('aria-selected'),'true');
-        await page.keyboard.press('End');await active('[data-mode=rhythm]');await page.keyboard.press('Home');await active('[data-mode=paper]');
+        await page.keyboard.press('End');await active('[data-mode=monitor]');await page.keyboard.press('Home');await active('[data-mode=paper]');
+        assert.equal(await page.locator('[data-mode=rhythm]').count(),0,'Rhythm is no longer a standalone mode');
         assert.equal(await page.locator('.view-tabs [tabindex="0"]').count(),1);
         // «Ajustar el caso» is a native disclosure folded at the end of the page: Enter opens it and focus stays on its summary.
         assert.equal(await page.locator('#adjust').evaluate(e=>e.open),false);
@@ -109,12 +119,14 @@ for(const engine of engines) {
         assert.equal(await page.locator('[data-key="flutterRatio"]').isVisible(),false,'stays hidden after field rerender');
         await flutterPattern.selectOption('2-3');await ready();
         const conductionFit=await fits('#control-panel-conduction');
-        // The model's limits are a native disclosure of their own, keyboard operable and closed by default.
-        const limits=page.locator('#control-panel-conduction .control-limits');
-        assert.equal(await limits.evaluate(e=>e.open),false);
-        await key('#control-panel-conduction .control-limits > summary');assert.equal(await limits.evaluate(e=>e.open),true);
-        assert.match(await limits.innerText(),/secuencias variables del flutter/);
-        await key('#control-panel-conduction .control-limits > summary');assert.equal(await limits.evaluate(e=>e.open),false);
+        // Model limits live in the existing information icon, reachable by keyboard.
+        assert.equal(await page.locator('#inspector .control-limits').count(),0);
+        await key('[data-action=about]');
+        const generation=page.locator('.information-section').filter({has:page.getByText('Cómo se genera este ECG',{exact:true})});
+        assert.equal(await generation.evaluate(e=>e.open),false);
+        await generation.locator('summary').press('Enter');
+        assert.match(await generation.innerText(),/secuencias variables del flutter/);
+        await page.keyboard.press('Escape');await page.locator('#dialog').waitFor({state:'hidden'});await active('[data-action=about]');
         await page.locator('#case-title').scrollIntoViewIfNeeded();
         // Native disclosure keeps provenance available without burying the mobile trace.
         const summary=page.locator('#exploration-context summary');
@@ -137,23 +149,22 @@ for(const engine of engines) {
 
         // The cards show the model; what the sample analyzer can say lives in the measurements dialog and
         // must follow the known acquisition filtering (and the monitor keeps the model rate, labelled as such).
-        await openPaper(page);
-        await page.locator('[data-key="filter"]').selectOption('aggressive');await ready();
+        await importFilter('aggressive');
         let measured=await readMeasurements(page);
         assert.ok(Object.values(measured).every(m=>m.status==='unavailable'),'A 2 Hz high-pass leaves no certified measurement: '+JSON.stringify(measured));
-        await key('[data-mode=monitor]');
+        await openPaper(page);await key('[data-mode=monitor]');
         assert.notEqual(await page.locator('#monitor-rate').innerText(),'—');
         assert.equal(await page.locator('#monitor-rate-note').innerText(),'lpm · modelo');
         await page.locator('#monitor-rate').scrollIntoViewIfNeeded();
         await page.screenshot({path:resolve(out,stem+'-filter-scope.png')});
-        await openPaper(page);await page.locator('[data-key="filter"]').selectOption('monitor');await ready();
+        await importFilter('monitor');
         measured=await readMeasurements(page);
         assert.ok(Object.values(measured).every(m=>m.status!=='usable'),'The 0.5-40 Hz monitor filter may distort limits: nothing is certified: '+JSON.stringify(measured));
         assert.equal(measured.hr.status,'review');
-        await openPaper(page);await page.locator('[data-key="filter"]').selectOption('diagnostic');await ready();
+        await importFilter('diagnostic');
         measured=await readMeasurements(page);
         assert.equal(measured.hr.status,'usable');assert.ok(measured.hr.value>0);
-        await key('[data-mode=paper]');await key('[data-panel=conduction]');
+        await openPaper(page);await key('[data-mode=paper]');await key('[data-panel=conduction]');
         // Demand VVI: an intrinsic source faster than the lower rate inhibits pacing.
         await page.locator('[data-key="rhythm"]').selectOption('paced');await ready();
         await page.locator('[data-key="pacing"]').selectOption('VVI');await ready();
@@ -175,7 +186,7 @@ for(const engine of engines) {
         await page.locator('#ecg').focus();await page.keyboard.press('?');
         const keyboardHelp=page.getByRole('dialog',{name:'Atajos de teclado'});
         await keyboardHelp.waitFor();
-        assert.equal(await keyboardHelp.locator('kbd').count(),10);
+        assert.equal(await keyboardHelp.locator('kbd').count(),9);
         assert.equal(await keyboardHelp.evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,'Keyboard help must fit without horizontal scrolling');
         await page.screenshot({path:resolve(out,stem+'-keyboard-help.png')});
         await page.keyboard.press('m');

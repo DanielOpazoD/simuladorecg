@@ -103,7 +103,7 @@ try{
    assert.equal(await workerReplies(page),replies);
    if(id==='brady'&&shortColumn){
     // A longer visible column still has to provide the two-beat detail.
-    const setFormat=async format=>{await page.locator('.paper-menu > summary').click();if(!await page.locator('[data-key="view.format"]').isVisible())await page.getByText('Escala y señal',{exact:true}).click();await page.locator('[data-key="view.format"]').selectOption(format);await page.locator('.paper-menu > summary').click();};
+    const setFormat=async format=>{await page.locator('.paper-menu > summary').click();await page.locator('[data-key="view.format"]').selectOption(format);await page.locator('.paper-menu > summary').click();};
     const originalFormat=await page.locator('[data-key="view.format"]').inputValue();
     await setFormat('6x2');await page.locator('[data-reading-segment="7"]').click();
     assert.equal(await page.locator('#lead-explorer').getAttribute('data-beat-count'),'2');
