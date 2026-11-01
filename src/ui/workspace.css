@@ -464,7 +464,6 @@ dialog { max-height:92dvh; }
 .information-section > summary { min-height:48px; padding:14px 0; font-weight:600; cursor:pointer; }
 .information-section > p, .information-section > div, .information-section > ul, .information-section > ol { margin-bottom:16px; }
 .information-section a { overflow-wrap:anywhere; }
-.trace-scroll-hint { margin:0; padding:7px 14px; font-size:var(--text-xs); color:var(--muted); }
 .workspace-footer { align-items:center; }
 .workspace-footer > .text-button { flex-shrink:0; }
 @media (max-width:800px) {

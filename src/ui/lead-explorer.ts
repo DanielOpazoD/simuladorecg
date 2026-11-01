@@ -47,11 +47,18 @@ export function mountLeadExplorer(root: HTMLElement, s: Signal, c: ECGCase, seg:
   const count=initial.beat===null?0:s.events.beats.filter(b=>b.time>=initial.start&&b.time<=initial.end).length;
   root.dataset.beatCount=String(count);
   root.innerHTML = `<div class="lead-lens-controls"><button type="button" class="btn lens-measure" aria-label="Medir en la lupa" aria-pressed="false" title="Medir arrastrando · ${count} latidos">Medir</button><span class="sr-only">${count===2?'Lupa · 2 latidos':count===1?'Lupa · 1 latido en este tramo':'Lupa · fragmento'}</span><label>Marcas <select aria-label="Marcas de la lupa"><option value="all">PR · QRS · QT</option><option value="qrs">QRS</option><option value="pr">PR</option><option value="qt">QT</option><option value="st">Punto J / ST</option><option value="none">Sin marcas</option></select></label></div><div class="lead-detail-scroll"></div><p class="lead-detail-scale">50 mm/s · 10 mm/mV <span class="lens-status"></span></p><div class="lead-detail-observe"><span class="lead-observation"></span><output class="lens-manual-result" role="status" aria-live="polite"></output><button type="button" class="lens-clear" aria-label="Limpiar medición manual">Limpiar</button></div>`;
+  // Keep the existing tools together in the header; the trace retains its own
+  // measurable container and the header height is counted only once when fitting.
+  const controls=root.querySelector<HTMLElement>('.lead-lens-controls')!;
+  title.after(controls);
+  const footer=document.createElement('div');footer.className='lead-detail-footer';
+  footer.append(root.querySelector('.lead-detail-scale')!,root.querySelector('.lead-detail-observe')!);
+  root.append(footer);
   const manual=new LensCaliper(root,root.querySelector('.lead-detail-scroll')!,s.fs,value=>{
     root.querySelector('.lens-manual-result')!.textContent=value??'';
     root.classList.toggle('has-manual',value!==null);
   });
-  root.querySelector('.lens-measure')!.addEventListener('click',e=>{
+  controls.querySelector('.lens-measure')!.addEventListener('click',e=>{
     manual.setActive(!manual.active);
     const button=e.currentTarget as HTMLElement;
     button.setAttribute('aria-pressed',String(manual.active));
@@ -119,10 +126,10 @@ export function mountLeadExplorer(root: HTMLElement, s: Signal, c: ECGCase, seg:
     fitLabels();manual.refresh();
   };
   title.querySelector("select")!.addEventListener("change", e => { manual.clear(); lead = (e.target as HTMLSelectElement).value as Lead; update(); });
-  root.querySelector('select')!.value=mode;
-  root.querySelector('select')!.addEventListener('change',e=>{mode=(e.target as HTMLSelectElement).value as LensMode;preference.onChange?.(mode);update();});
+  controls.querySelector('select')!.value=mode;
+  controls.querySelector('select')!.addEventListener('change',e=>{mode=(e.target as HTMLSelectElement).value as LensMode;preference.onChange?.(mode);update();});
   update();
-  const observer=new ResizeObserver(fitLabels);observer.observe(root);
+  const observer=new ResizeObserver(fitLabels);observer.observe(root);observer.observe(title.parentElement!);
   window.addEventListener('resize',fitLabels);
   return ()=>{manual.dispose();observer.disconnect();window.removeEventListener('resize',fitLabels);};
 }

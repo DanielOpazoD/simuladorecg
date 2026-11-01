@@ -13,11 +13,11 @@ const available = PRESETS.filter(p => p.strategy !== "pending");
 export function caseComparisonHtml(): string {
   const groups = [...new Set(available.map(p => p.group))];
   return `<section class="case-comparison" aria-label="Comparación de ejemplos ECG">
-    <div class="comparison-controls"><label for="comparison-reference">Comparar con<select id="comparison-reference">${groups.map(group => `<optgroup label="${esc(catalogFamilyLabel(group))}">${available.filter(p => p.group === group).map(p => `<option value="${esc(p.id)}"${p.id === "sinus" ? " selected" : ""}>${esc(presetTitle(p))}</option>`).join("")}</optgroup>`).join("")}</select></label><p>Ejemplos independientes, con la misma escala.</p></div>
     <div class="comparison-sheets">
       <figure class="comparison-sheet"><figcaption>ECG actual <strong id="comparison-current-name"></strong></figcaption><div class="comparison-paper" tabindex="0" role="region" aria-label="ECG actual: desplazamiento sincronizado"><canvas id="comparison-current" role="img"></canvas></div></figure>
-      <figure class="comparison-sheet" id="comparison-reference-sheet" aria-busy="true"><figcaption>Referencia <strong id="comparison-reference-name">Ritmo sinusal</strong></figcaption><p id="comparison-status" role="status" aria-live="polite">Preparando referencia…</p><div class="comparison-paper" tabindex="0" role="region" aria-label="ECG de referencia: desplazamiento sincronizado"><canvas id="comparison-example" role="img" hidden></canvas></div></figure>
+      <figure class="comparison-sheet" id="comparison-reference-sheet" aria-busy="true"><figcaption class="comparison-controls"><label for="comparison-reference">Comparar con<select id="comparison-reference">${groups.map(group => `<optgroup label="${esc(catalogFamilyLabel(group))}">${available.filter(p => p.group === group).map(p => `<option value="${esc(p.id)}"${p.id === "sinus" ? " selected" : ""}>${esc(presetTitle(p))}</option>`).join("")}</optgroup>`).join("")}</select></label></figcaption><p id="comparison-status" role="status" aria-live="polite">Preparando referencia…</p><div class="comparison-paper" tabindex="0" role="region" aria-label="ECG de referencia: desplazamiento sincronizado"><canvas id="comparison-example" role="img" hidden></canvas></div></figure>
     </div>
+    <p class="comparison-scale">Ejemplos independientes, con la misma escala.</p>
     <p id="comparison-acquisition" class="comparison-acquisition" hidden></p>
   </section>`;
 }
@@ -50,7 +50,7 @@ export function mountCaseComparison(host: HTMLElement, currentSignal: Signal, cu
   let disposed = false, pendingId = 0, reference: Signal | null = null;
   let referenceCase = comparisonCase(referenceId, c) ?? comparisonCase("sinus", c)!;
   referenceSelect.value = referenceCase.presetId;
-  find('.comparison-controls p').textContent = `Ejemplos independientes · ${c.view.speed} mm/s · ${c.view.gain} mm/mV${c.view.chestGain!==c.view.gain?` · Precordiales ${c.view.chestGain} mm/mV`:''}`;
+  find('.comparison-scale').textContent = `Ejemplos independientes · ${c.view.speed} mm/s · ${c.view.gain} mm/mV${c.view.chestGain!==c.view.gain?` · Precordiales ${c.view.chestGain} mm/mV`:''}`;
   const currentName = caseReading(c).title;
   find("#comparison-current-name").textContent = currentName;
   currentCanvas.setAttribute("aria-label", `ECG actual: ${currentName}`);
@@ -98,7 +98,6 @@ export function mountCaseComparison(host: HTMLElement, currentSignal: Signal, cu
     status.hidden = false;
     status.textContent = "Preparando referencia…";
     const title = presetTitle(presetById(next.presetId)!);
-    find("#comparison-reference-name").textContent = title;
     referenceCanvas.setAttribute("aria-label", `ECG de referencia: ${title}`);
     const acquisition = find("#comparison-acquisition");
     acquisition.hidden = next.filter === c.filter && next.notch === c.notch;

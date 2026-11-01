@@ -40,7 +40,15 @@ try{
   if(variant.scale===2)await page.addStyleTag({content:':root {font-size:200%!important}'});
   let capturedId='';
   for(const family of variant.width===1440?['sinus','anterior','inferior','lateral','lbbb','af','vf','asystole']:['inferior']){
-   activeFamily=family;const trace=await settledTrace(page,()=>selectTeachingCase(page,family));
+   activeFamily=family;
+   let trace;
+   if(family==='sinus'){
+    // The first exercise reselects the unchanged startup case: reading is a no-op.
+    const initial=await readTrace(page),initialReplies=await workerReplies(page);
+    await selectTeachingCase(page,family);trace=await readTrace(page);
+    assert.equal(await workerReplies(page),initialReplies,'Reselecting the same case must not request another signal');
+    assert.equal(hash(trace),hash(initial));
+   }else trace=await settledTrace(page,()=>selectTeachingCase(page,family));
    assert.equal(trace.case.presetId,family,'The real worker case must match the requested family');
    const before=hash(trace),count=await workerReplies(page);
    await openTeaching(page);await page.locator('#teaching-root').waitFor();

@@ -10,6 +10,7 @@ const out=resolve(process.argv[2]??'../ECG-QA/reading-return');await mkdir(out,{
 const hash=x=>createHash('sha256').update(x).digest('hex');
 const browser=await chromium.launch(),results=[],errors=[];let failure,active;
 const position=page=>page.evaluate(()=>({x:scrollX,y:scrollY,left:document.querySelector('#canvas-wrap').scrollLeft,top:document.querySelector('#canvas-wrap').scrollTop,zoom:document.querySelector('[data-action=zoom-reset]').textContent}));
+const paperBounds=page=>page.locator('#canvas-wrap').evaluate(e=>{const r=e.getBoundingClientRect();return {x:r.x+scrollX,y:r.y+scrollY,width:r.width,height:r.height};});
 async function exportPng(page,name){
  await page.locator('[data-action=export]').click();const download=page.waitForEvent('download');await page.locator('[data-action=png]').click();
  const path=resolve(out,name);await(await download).saveAs(path);await page.locator('#dialog [data-action=close-dialog]').click();return hash(await readFile(path));
@@ -47,6 +48,9 @@ try{
    await page.locator('[data-action=caliper]').scrollIntoViewIfNeeded();
    const measured=await page.locator('#ecg').evaluate(e=>e.toDataURL()),beforeHide=await position(page);
    await page.locator('[data-action=caliper]').click();assert.equal(await page.locator('[data-action=caliper]').getAttribute('aria-label'),'Mostrar medición');
+   assert.deepEqual(await position(page),beforeHide,'Hiding must preserve both scrollports immediately');
+   const toolBox=await page.locator('[data-action=caliper]').boundingBox();
+   assert(toolBox.y>=0&&toolBox.y+toolBox.height<=viewport.height,'The sticky control must remain fully reachable after fields collapse');
    assert.equal(await page.locator('#measurement-values').getAttribute('data-ms'),null);
    assert.equal(await page.locator('#ecg').evaluate(e=>e.toDataURL()),plain,'Hidden calibres must leave the original pixels intact');
    await page.locator('[data-action=caliper]').click();assert.equal(await page.locator('#measurement-values').getAttribute('data-ms'),'322');
@@ -58,7 +62,9 @@ try{
    await page.locator('[data-action=caliper]').click();
    // Start at the bottom of the zoomed paper; the first highlighted area is above it.
    await page.locator('#canvas-wrap').evaluate(e=>e.scrollTop=e.scrollHeight);
+   const beforeFinding=await paperBounds(page);
    await page.locator('[data-finding]').first().click();
+   assert.deepEqual(await paperBounds(page),beforeFinding,'Revealing a finding may scroll to it, but must not shift or resize the paper');
    const visible=await page.evaluate(()=>{
     const box=document.querySelector('.reading-focus-box').getBoundingClientRect(),wrap=document.querySelector('#canvas-wrap').getBoundingClientRect(),note=document.querySelector('#finding-focus').getBoundingClientRect(),tools=document.querySelector('.trace-toolbar').getBoundingClientRect();
     const cx=(box.left+box.right)/2,cy=(box.top+box.bottom)/2;
@@ -67,6 +73,7 @@ try{
    assert(visible.centerVisible&&visible.noteVisible,JSON.stringify({viewport,id,visible}));
    await page.screenshot({path:resolve(out,`${viewport.width}-${id}.png`)});
    await page.getByRole('button',{name:'Quitar explicación',exact:true}).click();
+   assert.deepEqual(await paperBounds(page),beforeFinding,'Closing the explanation must not shift the paper');
    assert.equal(await page.locator('.reading-focus-box').count(),0);assert.equal(await page.locator('#ecg').evaluate(e=>e.toDataURL()),plain);
    if(initialExport)assert.equal(await exportPng(page,'after.png'),initialExport,'Reading state must not alter PNG export');
    // Clear is deliberately destructive; hiding is reversible.

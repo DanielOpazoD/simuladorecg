@@ -44,7 +44,7 @@ export interface Caliper {
 export const palettes = {
   paper: {
     bg: "#fffdfd",
-    fine: "#f4e3e6",
+    fine: "#f7eaec",
     bold: "#dfb7bf",
     trace: "#22353c",
     text: "#514950",
@@ -263,6 +263,10 @@ function workspacePaper(layout: Layout, compact = false): Layout {
   return compact ? {...layout, heightMm: layout.heightMm - 16,
     segments: layout.segments.map(s => ({...s, y: s.y - 16, baseline: s.baseline - 16}))} : layout;
 }
+/** One uniform display scale; physical units, samples and row geometry stay intact. */
+function viewportPaper(layout: Layout, width: number, viewport?: {height: number; zoom: number}): Layout {
+  return viewport ? {...layout, pxPerMm: Math.min(layout.pxPerMm, width / layout.widthMm, viewport.height / layout.heightMm) * viewport.zoom} : layout;
+}
 /** Reserve an empty paper sheet; the new signal may require taller rows. */
 export function renderPaperSkeleton(
   canvas: HTMLCanvasElement,
@@ -273,11 +277,13 @@ export function renderPaperSkeleton(
   amplitudeMm = 2 * Math.max(c.view.gain, c.view.chestGain),
   rowExtents?: Layout["rowExtents"],
   compactHeader = false,
+  pxPerMm?: number,
+  viewport?: {height: number; zoom: number},
 ): Layout {
   const natural = workspacePaper(paperLayout(c, availableWidth, undefined, amplitudeMm, rowExtents), compactHeader),
-    layout = maxHeight && c.view.fit
+    layout = viewport ? viewportPaper(natural, availableWidth, viewport) : maxHeight && c.view.fit
       ? {...natural, pxPerMm: heightFittedPxPerMm(natural, maxHeight)}
-      : natural,
+      : {...natural, pxPerMm: pxPerMm ?? natural.pxPerMm},
     ctx = setup(canvas, layout, Math.min(2, window.devicePixelRatio || 1));
   grid(ctx, layout.widthMm, layout.heightMm, palettes[c.view.palette], c.view.grid);
   return layout;
@@ -308,6 +314,8 @@ export function renderPaper(
     traceNote?: string;
     /** Visible height (px) the whole sheet should fit in; see `heightFittedPxPerMm`. */
     maxHeight?: number;
+    /** Desktop overview, multiplied only by the user's deliberate zoom. */
+    viewport?: {height: number; zoom: number};
   } = {},
 ): Layout {
   let amplitude = 0;
@@ -319,7 +327,7 @@ export function renderPaper(
   const ratio = options.ratio ?? Math.min(2, window.devicePixelRatio || 1);
   const extents = options.rowExtents ?? paperRowExtents(c, s, options.previous);
   const natural = workspacePaper(paperLayout(c, availableWidth, options.pxPerMm, amplitude, extents), options.compactHeader),
-    layout =
+    layout = options.viewport ? viewportPaper(natural, availableWidth, options.viewport) :
       options.maxHeight && options.pxPerMm === undefined && c.view.fit
         ? {...natural, pxPerMm: heightFittedPxPerMm(natural, options.maxHeight)}
         : natural,
@@ -387,7 +395,7 @@ export function renderPaper(
     );
     ctx.restore();
     ctx.fillStyle = palette.text;
-    ctx.font = "600 3.5px ui-monospace,monospace";
+    ctx.font = `600 ${options.viewport ? Math.max(3.5, 10 / layout.pxPerMm) : 3.5}px ui-monospace,monospace`;
     ctx.fillText(
       (seg.polarity < 0 ? "−" : "") + seg.lead,
       seg.x + 1,
