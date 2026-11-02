@@ -52,7 +52,9 @@ try {
     await importCase(page,{...c,rhythm});if(!await page.locator('#adjust').evaluate(e=>e.open))await page.locator('#adjust > summary').click();
     const seen=new Set();for(const tab of ['conduction','base','st','signal']){
      await page.locator(`[data-panel="${tab}"]`).click();
-     const fields=await page.locator('#inspector [data-key]').evaluateAll(es=>es.filter(e=>e.checkVisibility()).map(e=>({key:e.dataset.key,disabled:e.disabled})));
+     // The six common parameters now live in the quick editor; secondary
+     // parameters remain in the inspector. Check the visible editing surface.
+     const fields=await page.locator('#quick-adjust [data-key], #inspector [data-key]').evaluateAll(es=>es.filter(e=>e.checkVisibility()).map(e=>({key:e.dataset.key,disabled:e.disabled})));
      assert(fields.every(e=>!e.disabled),'No disabled controls shown in '+rhythm);fields.forEach(e=>seen.add(e.key));
     }
     hidden.forEach(key=>assert(!seen.has(key),rhythm+' must hide '+key));visible.forEach(key=>assert(seen.has(key),rhythm+' must retain '+key));
