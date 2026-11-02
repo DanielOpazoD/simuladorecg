@@ -16,7 +16,10 @@ assert.equal(info.dirty,false,'production build has uncommitted product changes'
 assert.equal(info.clinicalValidation,false);
 assert.equal(info.packageVersion,JSON.parse(await readFile('package.json','utf8')).version);
 assert.equal(info.revision,`v${info.packageVersion}`,'revision differs from package');
-const inputs=[...await files('src'),...await files('public'),'index.html','package.json','package-lock.json','vite.config.ts'].sort();
+// Same declared inputs as the build, independently hashed here. Canonical names
+// are portable; file bytes remain untouched (including original line endings).
+const inputs=[...await files('src'),...await files('public'),'index.html','package.json','package-lock.json','vite.config.ts','scripts/lib/build-source-identity.ts']
+ .map(file=>file.split(path.sep).join('/')).sort();
 const hash=createHash('sha256');for(const file of inputs)hash.update(file+'\0').update(await readFile(file)).update('\0');
 assert.equal(info.sourceSha256,hash.digest('hex'),'source fingerprint differs');
 const checked=[];
