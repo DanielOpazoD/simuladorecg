@@ -29,3 +29,9 @@ The compact «Ajustar ECG» panel is now the sole owner of the rate input. The
 driver resolves `#quick-adjust input[type=range][data-key=hr]`, brings it into view
 and retains the nine native ArrowRight steps and every 81/min, worker, provenance
 and restoration assertion. It no longer opens a secondary tab to reach that input.
+
+The same driver reads the FA qualification from «Información y fuentes → Cómo
+se genera este ECG» and clears the search field directly. The old warnings block
+is retired and choosing an example already clears the search, so its clear button
+is hidden. These UI paths retain the qualification, search, variant and native
+edit assertions without making hidden controls actionable.

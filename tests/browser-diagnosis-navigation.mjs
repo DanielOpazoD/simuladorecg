@@ -65,11 +65,17 @@ for(const engine of engines){
    assert.equal(variants,36);
    await choose('af');await tab('af_fast');
    assert.equal(await page.locator('#case-title').textContent(),'Fibrilación auricular');
-   assert.match(await page.locator('#warnings').textContent(),/FA (representativa|aprendida)/);
+   // Model qualifications now live in the shared information disclosure.
+   // Read them through its visible UI instead of the retired warnings block.
+   await page.locator('[data-action=about]').click();
+   await page.getByText('Cómo se genera este ECG',{exact:true}).click();
+   assert.match(await page.locator('.information-content .warning').allTextContents().then(es=>es.join('\n')),/FA (representativa|aprendida)/);
+   await page.locator('[data-action=close-dialog]').click();
    await page.locator('#ecg').screenshot({path:resolve(out,`af-gamma-${engine.name()}-${width}.png`)});
    const fast=await trace();assert.equal(fast.case.presetId,'af_fast');assert.equal(fast.case.hr,145);
    if(width<=800)await page.locator('[data-action=catalog]').click();
-   await page.locator('[data-action=clear-search]').click();
+   // Selecting an example already clears its search; the clear button is hidden.
+   await page.locator('#case-search').fill('');
    assert.equal(await page.locator('[data-diagnosis=af]').getAttribute('data-preset'),'af_fast');
    await page.locator('[data-diagnosis=af]').click();await ready();
    assert.equal(await page.locator('#variant-tab-af_fast').getAttribute('aria-selected'),'true','Reopening the same pattern keeps its variant');
@@ -90,7 +96,7 @@ for(const engine of engines){
     tabs:[...root.querySelectorAll('[role=tab]')].map(e=>{const b=e.getBoundingClientRect();return{label:e.textContent,left:b.left,right:b.right,height:b.height};})}));
    assert.ok(geometry.page<=width+1);// Touch widths keep 44 px targets; desktop pills are compact but above the 24 px minimum.
    assert.ok(geometry.tabs.every(t=>t.height>=(width<=800?44:24)&&t.left>=0&&t.right<=width+1));
-   if(width<=800)await page.locator('[data-action=catalog]').click();await page.locator('[data-action=clear-search]').click();
+   if(width<=800)await page.locator('[data-action=catalog]').click();await page.locator('#case-search').fill('');
    await page.screenshot({path:resolve(out,`${stem}-catalog.png`)});
    // A pattern whose example does not exist yet is not offered: the library says so instead of listing a disabled entry.
    await page.locator('#case-search').fill('Brugada');assert.equal(await page.locator('.catalog-empty').isVisible(),true);assert.equal(await page.locator('#case-list [data-preset]').count(),0);
