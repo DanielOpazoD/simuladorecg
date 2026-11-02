@@ -12,10 +12,14 @@
 .brand { gap:8px; }
 .brand > span:first-of-type { font-size:21px; letter-spacing:-.7px; }
 .brand > svg { width:25px; height:25px; }
-.workspace { padding:10px 24px 24px; background:var(--surface); }
+.workspace { padding:10px 24px 24px; background:var(--surface); container-type:inline-size; }
 .case-heading { margin:0 0 4px; align-items:center; gap:12px; }
 .case-heading h1 { font-size:1.375rem; line-height:1.25; text-wrap:pretty; letter-spacing:-.4px; }
 .case-heading > div:first-child { flex:1; }
+/* Título + botón de reinicio en una fila; el botón es solo icono con nombre accesible (aria-label). */
+.case-title-row { display:flex; align-items:center; gap:6px; min-width:0; }
+.case-title-row h1 { flex:initial; min-width:0; }
+.case-reset { display:inline-flex; align-items:center; justify-content:center; flex:0 0 44px; width:44px; height:44px; min-height:44px; padding:0; border-radius:var(--control-radius); }
 .heading-tools { display:flex; align-items:center; flex:0 0 auto; gap:8px; }
 .heading-tools .metrics { display:block; margin:0; padding:0; border:0; border-radius:0; background:none; overflow:visible; }
 .heading-tools .metrics .metric { display:flex; flex-direction:row; padding:8px 4px; min-height:44px; gap:6px; background:none; border:0; white-space:nowrap; }

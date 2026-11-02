@@ -26,9 +26,9 @@ El programa debe sentirse como una buena mesa de lectura: el papel ocupa el cent
 
 En escritorio, las variantes quedan debajo del título y los valores resumen al otro extremo de esa fila cuando el espacio lo permite. En móvil se reorganizan sin encoger el texto hasta volverlo ilegible.
 
-«Ajustar ECG» reúne esos seis parámetros con deslizador y valor escribible, sin duplicarlos en «Más ajustes». Muestra solo los que actúan en el registro actual y conserva los valores de los que oculta. El significado de FC puede ser auricular, de escape o de estímulos y se nombra cuando corresponde. Los complejos ventriculares aprendidos fijan sus duraciones: QRS/QTc permanecen como medidas visibles, mientras sus ajustes inoperantes se ocultan. Las fuentes históricas que sí leen esos objetivos conservan los controles.
+«Ajustar ECG» reúne esos seis parámetros con deslizador y valor escribible. «Más ajustes» y el cuadro de origen se retiran; un único botón Reiniciar queda junto al título del caso. Muestra solo los campos que actúan en el registro actual y conserva los valores de los que oculta. El significado de FC puede ser auricular, de escape o de estímulos y se nombra cuando corresponde. Los complejos ventriculares aprendidos fijan sus duraciones: QRS/QTc permanecen como medidas visibles, mientras sus ajustes inoperantes se ocultan. Las fuentes históricas que sí leen esos objetivos conservan los controles.
 
-El panel solo ocupa una columna derecha cuando queda espacio suficiente para conservar el papel; en el escritorio habitual se integra debajo en una fila compacta. No se estrecha el ECG ni se cambia su escala para hacer sitio. Los campos se reorganizan al ampliar el texto. La entrada numérica y el deslizador representan el mismo objetivo, incluidos valores importados fraccionarios, sin redondear el caso al mostrarlo.
+El panel ocupa una columna derecha compacta de 11 rem, como máximo 200 px, cuando el área de trabajo alcanza 56 rem: se muestra junto al ECG en escritorios de 1280, 1440 y 1920 px. En móvil y con texto ampliado vuelve debajo. La hoja conserva todas sus derivaciones con el encuadre proporcional existente: no se cambian muestras, velocidad ni ganancia para hacer sitio. Los campos se reorganizan al ampliar el texto. La entrada numérica y el deslizador representan el mismo objetivo, incluidos valores importados fraccionarios, sin redondear el caso al mostrarlo.
 
 La navegación lateral debe priorizar los ejemplos de la familia elegida. Se admite replegar el índice y acceder a la búsqueda bajo demanda si eso libera espacio. Siempre debe ser evidente dónde estamos y cómo volver. El objetivo es reducir decisiones y desplazamientos, no mantener todas las opciones expandidas a cualquier precio.
 
@@ -76,9 +76,9 @@ Los controles deben tener nombres y efectos previsibles. Reutilizamos herramient
 - **Medir automáticamente** debe señalar los intervalos sobre el trazado, con sus valores. Una tabla separada por sí sola no satisface esa acción.
 - **Medir manualmente** usa los mismos calibres y unidades en el papel y en la lupa.
 - **Zoom** sirve para ampliar y recorrer el ECG completo. La **lupa** reutiliza la exploración de una derivación para estudiar dos latidos del fragmento elegido.
-- **Vista** es un menú plano con dos modos, papel y monitor, los tres formatos, la escala y la cuadrícula, sin desplegables anidados. La adquisición limpia o con ruido se consulta en «Más ajustes → Artefactos». Vista no contiene filtros de señal, «Marcar ondas» ni una tira de ritmo independiente: la tira de II ya forma parte del formato inicial.
+- **Vista** es un menú plano con dos modos, papel y monitor, los tres formatos, la escala y la cuadrícula, sin desplegables anidados. Fuera de práctica la adquisición no tiene otro ajuste visible; se conservan la preferencia existente y la configuración de los registros importados. Vista no contiene filtros de señal, «Marcar ondas» ni una tira de ritmo independiente: la tira de II ya forma parte del formato inicial.
 
-Durante la práctica, «Señal» permanece en Vista porque los parámetros del caso están ocultos. Al salir vuelve a Artefactos, conservando su valor y sin duplicar el control ni revelar la respuesta.
+Durante la práctica, «Señal» permanece en Vista porque los parámetros del caso están ocultos. Al salir se retira ese control temporal, conservando su valor y sin duplicarlo ni revelar la respuesta.
 
 Los iconos pueden ahorrar espacio en acciones conocidas. Deben conservar un nombre accesible, una ayuda breve y un estado activo reconocible. Una palabra corta sigue siendo mejor que un símbolo ambiguo. No convertir el minimalismo en una interfaz que haya que adivinar.
 

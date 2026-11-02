@@ -72,7 +72,11 @@ export function mountLeadExplorer(root: HTMLElement, s: Signal, c: ECGCase, seg:
   root.querySelector('.lens-clear')!.addEventListener('click',()=>manual.clear());
   const fitLabels=()=>{
     const svg=root.querySelector<SVGSVGElement>('svg');if(!svg)return;
-    const dialog=root.closest('dialog')!,content=dialog.querySelector<HTMLElement>('#dialog-content')!;
+    const dialog=root.closest('dialog');
+    // Late ResizeObserver/resize events arrive with the dialog closed or the
+    // root collapsed to 0 width; leave the previous SVG untouched in that case.
+    if(!dialog||!root.isConnected||!dialog.open||root.clientWidth<=2)return;
+    const content=dialog.querySelector<HTMLElement>('#dialog-content')!;
     const outerHeight=(e:Element)=>{
       const style=getComputedStyle(e);return style.display==='none'||style.position==='absolute'?0:e.getBoundingClientRect().height+parseFloat(style.marginTop)+parseFloat(style.marginBottom);
     };
@@ -83,6 +87,7 @@ export function mountLeadExplorer(root: HTMLElement, s: Signal, c: ECGCase, seg:
     // Uniform scale still governs both waveform axes and the physical grid.
     const budget=Math.max(140,window.innerHeight*.92-chrome-4),footer=annotationRows?annotationRows*30+6:0;
     const scale=Math.min((root.clientWidth-2)/width,(budget-footer)/traceHeight);
+    if(!Number.isFinite(scale)||scale<=0)return;
     const unit=1/scale;
     svg.setAttribute('viewBox',`0 0 ${width} ${traceHeight+footer*unit}`);
     svg.style.width=`${width*scale}px`;

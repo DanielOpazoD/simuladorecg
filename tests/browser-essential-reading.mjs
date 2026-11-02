@@ -5,7 +5,6 @@ import {resolve} from 'node:path';
 import {chromium} from 'playwright';
 import {installWorkerTap,workerReplies} from './support/worker-tap.mjs';
 import {chooseCatalogPreset} from './support/catalog-navigation.mjs';
-import {openControlPanel} from './support/adjust-panel.mjs';
 const out=resolve(process.argv[2]??'../ECG-QA/essential-reading');await mkdir(out,{recursive:true});
 const browser=await chromium.launch(),results=[],errors=[];let active,failure;
 const ready=p=>p.locator('#signal-loading').waitFor({state:'hidden'});
@@ -18,8 +17,13 @@ try{
   await installWorkerTap(page);page.on('pageerror',e=>errors.push(e.message));
   await page.addInitScript(dark=>localStorage.setItem('ecglab-theme',dark?'dark':'light'),!!view.dark);
   await page.goto(process.env.ECG_TEST_URL??'http://127.0.0.1:4173/');await ready(page);await page.evaluate(()=>document.fonts.ready);
-  if(view.text)await page.addStyleTag({content:':root{font-size:200%!important}'});
-  assert.equal(await page.locator('[data-key=acquisition]').count(),1);
+  if(view.text){
+   await page.addStyleTag({content:':root{font-size:200%!important}'});
+   // The existing ResizeObserver schedules the new paper fit after 90 ms.
+   // Read the baseline after that redraw, rather than comparing the old canvas to the new layout.
+   await page.evaluate(()=>new Promise(r=>setTimeout(r,150)));
+  }
+  assert.equal(await page.locator('[data-key=acquisition]').count(),0);
   assert.equal(await page.locator('.view-options [data-key=acquisition],.view-options [data-action=teaching]').count(),0);
   assert.equal(await page.locator('[data-action=teaching]').count(),0);
   assert.deepEqual(await page.locator('#structured-description dt').allTextContents(),['Ritmo','Intervalos','Eje','ST','T','Q']);
@@ -29,15 +33,11 @@ try{
   assert(description.every(r=>r.x>=r.left-1&&r.right<=r.limit+1&&r.overflow<=1),JSON.stringify(description));
   if(view.width>360){const xs=description.filter(r=>r.tag==='DD').map(r=>r.x);assert(Math.max(...xs)-Math.min(...xs)<1,'Description columns align');}
   const before=await paper(page),replies=await workerReplies(page);
-  await openControlPanel(page,'signal');
-  const hitboxes=await page.evaluate(()=>{
-   const a=document.querySelector('#adjust > summary').getBoundingClientRect();
-   return {height:a.height,right:a.right,width:document.documentElement.scrollWidth,viewport:innerWidth};
-  });
-  assert(hitboxes.height>=44&&hitboxes.right<=hitboxes.viewport+1,JSON.stringify(hitboxes));assert(hitboxes.width<=hitboxes.viewport+1,JSON.stringify(hitboxes));
-  assert.equal(await page.locator('[data-key=acquisition]').inputValue(),'ideal');
-  await page.screenshot({path:resolve(out,`adjust-${view.width}-${view.text??100}.png`)});
-  await page.locator('#adjust > summary').click();assert.deepEqual(await paper(page),before);assert.equal(await workerReplies(page),replies);
+  assert.equal(await page.locator('#adjust,#inspector,#exploration-context').count(),0);
+  const hitboxes=await page.locator('#quick-adjust input:visible,#quick-adjust select:visible').evaluateAll(es=>es.map(e=>e.getBoundingClientRect().height));
+  assert(hitboxes.every(h=>h>=44));
+  await page.locator('#quick-adjust').scrollIntoViewIfNeeded();await page.screenshot({path:resolve(out,`adjust-${view.width}-${view.text??100}.png`)});
+  assert.deepEqual(await paper(page),before);assert.equal(await workerReplies(page),replies);
   if(view.width===1440){
    await chooseCatalogPreset(page,'anterior');await ready(page);
    const compact=page.locator('#omi-sheet');
@@ -54,10 +54,10 @@ try{
    await page.locator('#dialog [data-action=st-zoom]').click();await page.locator('.st-zoom').waitFor();await close(page);
    assert(await page.locator('#structured-description [data-action=st-reference]').evaluate(e=>document.activeElement===e));
    assert.deepEqual(await paper(page),image);assert.equal(await workerReplies(page),n);
-   await openControlPanel(page,'base');await page.locator('[data-key=hr]').press('ArrowRight');await ready(page);
-   assert.equal(await page.locator('#case-title').innerText(),'Exploración personalizada');assert.equal(await compact.locator('.omi-sheet').count(),0);
+   await page.locator('#quick-adjust [data-key=hr]').press('ArrowRight');await ready(page);
+   assert(await page.locator('[data-action=reset]').isEnabled());assert(!/Exploración personalizada/.test(await page.locator('#case-title').innerText()));assert.equal(await compact.locator('.omi-sheet').count(),0);
    await source(page);assert.equal(await page.locator('#dialog .omi-sheet').count(),0);await close(page);
-   await chooseCatalogPreset(page,'anterior');await ready(page);await openControlPanel(page,'signal');await page.locator('[data-key="artifacts.reversed"]').check();await ready(page);
+   await chooseCatalogPreset(page,'anterior');await ready(page);const current=await page.evaluate(()=>window.__ecgTap.last.ecg);await page.locator('#file-input').setInputFiles({name:'reversed.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({...current,artifacts:{...current.artifacts,reversed:true}}))});await ready(page);
    assert.equal(await compact.locator('.omi-sheet').count(),0);await source(page);assert.equal(await page.locator('#dialog .omi-sheet').count(),0);await close(page);
    await page.getByRole('button',{name:'Practicar',exact:true}).click();await ready(page);
    assert.equal(await compact.locator('.omi-sheet').count(),0);await source(page);assert.equal(await page.locator('#dialog .omi-sheet').count(),0);await close(page);
@@ -69,18 +69,16 @@ try{
    assert.equal(await page.locator('.view-options [data-key=acquisition]').count(),1);
    const quizReplies=await workerReplies(page);
    await page.getByRole('button',{name:'Salir de práctica'}).click();
-   assert.equal(await page.locator('[data-key=acquisition]').count(),1);
-   assert.equal(await page.locator('#inspector [data-key=acquisition]').count(),1);
-   assert.equal(await page.locator('.view-options [data-key=acquisition]').count(),0);
-   assert.equal(await workerReplies(page),quizReplies,'Leaving practice only relocates its control');
-   // A physiological edit exits answered practice through another route.
+   assert.equal(await page.locator('[data-key=acquisition]').count(),0);
+   assert.equal(await workerReplies(page),quizReplies,'Leaving practice removes its temporary control without generation');
+   // After answered practice, the next case exposes only the retained six-field editor.
    await page.getByRole('button',{name:'Practicar',exact:true}).click();await ready(page);
    await page.locator('#quiz-panel [data-answer]').first().click();
-   await openControlPanel(page,'conduction');
-   const rhythm=page.locator('[data-key=rhythm]');await rhythm.selectOption(await rhythm.inputValue()==='sinus'?'junctional':'sinus');await ready(page);
+   await page.getByRole('button',{name:'Salir de práctica'}).click();
+   await chooseCatalogPreset(page,'sinus');await ready(page);
+   const conduction=page.locator('#quick-adjust [data-key=conduction]');await conduction.selectOption('rbbb');await ready(page);
    assert(await page.locator('#quiz-panel').isHidden());
-   assert.equal(await page.locator('[data-key=acquisition]').count(),1);
-   assert.equal(await page.locator('#inspector [data-key=acquisition]').count(),1);
+   assert.equal(await page.locator('[data-key=acquisition]').count(),0);
    results.push({sourceGates:['unaltered','custom','reversed','quiz'],sourceNotesPreserved:true,stZoomReturnsFocus:true});
   }
   results.push({view,columnsAligned:true,secondaryActionsDoNotOverlap:true,paperUnchanged:true});await page.close();

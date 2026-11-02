@@ -42,27 +42,21 @@ try {
   assert(await reference.evaluate(e=>document.activeElement===e));assert.deepEqual(await geometry(page),beforeReference);
   assert.equal(await page.locator('#ecg').evaluate(e=>e.toDataURL()),pixels);assert.equal(await workerReplies(page),n);
   if(viewport.width===1440){
-   // Scope of controls is about the implemented rhythm, not a clinical prohibition.
+   // Only the six authorized controls remain, with applicability checked per rhythm.
    for(const [rhythm,hidden,visible]of [
-    ['sinus',['atrialRate'],['hr','pr','qrs']],['af',['pr','pAmp','pAxis','variability'],['hr','qrs']],
-    ['flutter',['hr','pr','variability'],['atrialRate','flutterRatio']],['vt',['pr','axis','conduction'],['hr','atrialRate']],
-    ['vf',['hr','pr','qrs','qtc','ischemia','phase','stShape','overload','septalQ'],['rhythm']],
-    ['asystole',['hr','pr','qrs','qtc','ischemia','phase','stShape','overload','septalQ'],['rhythm']]
+    ['sinus',[],['hr','pr','axis','qrs','conduction','qtc']],['af',['pr'],['hr','qrs']],
+    ['flutter',['hr','pr'],['qrs','conduction']],['vt',['pr','axis','conduction','qrs','qtc'],['hr']],
+    ['vf',['hr','pr','qrs','qtc','axis','conduction'],[]],['asystole',['hr','pr','qrs','qtc','axis','conduction'],[]]
    ]){
-    await importCase(page,{...c,rhythm});if(!await page.locator('#adjust').evaluate(e=>e.open))await page.locator('#adjust > summary').click();
-    const seen=new Set();for(const tab of ['conduction','base','st','signal']){
-     await page.locator(`[data-panel="${tab}"]`).click();
-     // The six common parameters now live in the quick editor; secondary
-     // parameters remain in the inspector. Check the visible editing surface.
-     const fields=await page.locator('#quick-adjust [data-key], #inspector [data-key]').evaluateAll(es=>es.filter(e=>e.checkVisibility()).map(e=>({key:e.dataset.key,disabled:e.disabled})));
-     assert(fields.every(e=>!e.disabled),'No disabled controls shown in '+rhythm);fields.forEach(e=>seen.add(e.key));
-    }
-    hidden.forEach(key=>assert(!seen.has(key),rhythm+' must hide '+key));visible.forEach(key=>assert(seen.has(key),rhythm+' must retain '+key));
-    results.push({rhythm,visible:[...seen]});
+    await importCase(page,{...c,rhythm});
+    const fields=await page.locator('#quick-adjust [data-key]').evaluateAll(es=>es.filter(e=>e.checkVisibility()).map(e=>({key:e.dataset.key,disabled:e.disabled})));
+    assert(fields.every(e=>!e.disabled));const seen=new Set(fields.map(e=>e.key));
+    hidden.forEach(key=>assert(!seen.has(key),rhythm+' hides '+key));visible.forEach(key=>assert(seen.has(key),rhythm+' retains '+key));
+    assert.equal(await page.locator('#adjust,#inspector').count(),0);results.push({rhythm,visible:[...seen]});
    }
-   await importCase(page,c);await page.locator('[data-panel=conduction]').click();await page.locator('#adjust').scrollIntoViewIfNeeded();
+   await importCase(page,c);await page.locator('#quick-adjust').scrollIntoViewIfNeeded();
    await page.locator('#toast.visible').waitFor({state:'hidden'});await page.screenshot({path:resolve(out,'adjust-desktop.png')});
-   results.push({adjustHeight:await page.locator('#inspector').evaluate(e=>e.getBoundingClientRect().height)});
+   results.push({adjustHeight:await page.locator('#quick-adjust').evaluate(e=>e.getBoundingClientRect().height)});
    await page.locator('[data-action=about]').click();await page.getByText('Cómo se genera este ECG',{exact:true}).click();
    assert.match(await page.locator('#dialog').innerText(),/Límites del modelo/);assert(await page.locator('#dialog #amplitude-note').isVisible());
    assert.equal(await page.locator('.information-content > details').count(),3);
@@ -71,7 +65,7 @@ try {
    const legacy={...c,view:{...c.view,format:'3x4+3'},filter:'monitor',acquisition:'realistic'};await importCase(page,legacy);
    const actual=await page.evaluate(()=>window.__ecgTap.last.ecg);assert.equal(actual.view.format,legacy.view.format);assert.equal(actual.filter,'monitor');assert.equal(actual.acquisition,'realistic');
    assert.equal(await page.locator('[data-key="view.format"] option:checked').getAttribute('disabled'),'');
-   await page.evaluate(()=>localStorage.setItem('ecglab-acquisition','realistic'));await page.reload();await ready(page);assert.equal(await page.locator('[data-key=acquisition]').inputValue(),'realistic');
+   await page.evaluate(()=>localStorage.setItem('ecglab-acquisition','realistic'));await page.reload();await ready(page);assert.equal(await page.evaluate(()=>window.__ecgTap.last.ecg.acquisition),'realistic');
   }
   results.push({viewport,menu,stablePaper:true});await page.close();
  }

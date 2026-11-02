@@ -1,21 +1,24 @@
-/* Panel 'Ajustar ECG': bajo el papel; a ≥1760px pasa a columna lateral de 13rem. */
+/* Panel 'Ajustar ECG': bajo el papel; cuando el contenedor .workspace (container-type:inline-size) mide ≥56rem pasa a un raíl derecho de 11rem (máx. 200px).
+   En @container el rem se resuelve contra el font-size de html (no el inicial del navegador): con raíz 16px el umbral es 896px (1280/1440/1920 → raíl); con raíz 32px (texto 200%) es 1792px y el panel vuelve bajo el papel. */
 .ecg-workbench{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
 .ecg-workbench>#diagnosis-content{min-width:0}
-#quick-adjust{container-type:inline-size;min-width:0;margin:12px 0 4px;padding:12px 0 4px;border-top:1px solid var(--line);color:var(--ink)}
+#quick-adjust{min-width:0;margin:12px 0 4px;padding:12px 0 4px;border-top:1px solid var(--line);color:var(--ink)}
 #quick-adjust[hidden],#quick-adjust [hidden]{display:none!important}
 #quick-adjust h2{margin:0 0 6px;font-size:var(--text-sm);font-weight:600;line-height:1.3;color:var(--ink)}
-#quick-adjust .qa-fields{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) minmax(10rem,1.35fr) minmax(0,1fr);gap:6px 20px;margin:0;padding:0;border:0;min-width:0}
+#quick-adjust .qa-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 20px;margin:0;padding:0;border:0;min-width:0}
 
-/* Cada campo son dos filas de ≥44px: cabecera (etiqueta + valor) y control.
-   La misma rejilla alinea la etiqueta de Conducción con las demás y su select con los sliders. */
-#quick-adjust .qa-field{display:grid;grid-template-rows:minmax(44px,auto) minmax(44px,auto);align-items:center;min-width:0}
-#quick-adjust label{font-size:var(--text-xs);line-height:1.35;color:var(--muted);overflow-wrap:anywhere}
-#quick-adjust .qa-heading{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0 8px;min-width:0}
-#quick-adjust .qa-value{display:flex;align-items:baseline;gap:3px;margin-left:auto;flex:0 0 auto}
+/* Campo compacto: etiqueta arriba; slider y número en la MISMA fila de 44px.
+   .qa-heading es display:contents para conservar los nodos que usa el sincronizador;
+   columnas: slider ≥44px, número ≥70px, nunca se solapan. */
+#quick-adjust .qa-field{display:grid;grid-template-columns:minmax(44px,1fr) minmax(70px,max-content);grid-template-rows:auto minmax(44px,auto);align-items:center;column-gap:8px;min-width:0}
+#quick-adjust .qa-heading{display:contents}
+#quick-adjust label{grid-column:1/-1;grid-row:1;font-size:var(--text-xs);line-height:1.35;color:var(--muted);overflow-wrap:anywhere}
+#quick-adjust .qa-field>input[type=range]{grid-column:1;grid-row:2;min-width:0}
+#quick-adjust .qa-value{grid-column:2;grid-row:2;display:flex;align-items:baseline;justify-content:flex-end;gap:3px;min-width:0}
 #quick-adjust .qa-value span{font-size:var(--text-xs);line-height:1;color:var(--muted);white-space:nowrap}
 
 /* Valor escribible: aspecto de cifra, borde solo al pasar o enfocar. */
-#quick-adjust input[type=number]{box-sizing:content-box;width:4ch;height:42px;padding:0 4px;border:1px solid transparent;border-radius:5px;background:transparent;color:var(--ink);font:500 1rem/1 ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums;text-align:right;appearance:textfield;-moz-appearance:textfield}
+#quick-adjust input[type=number]{box-sizing:content-box;width:4ch;height:42px;padding:0 2px;border:1px solid transparent;border-radius:5px;background:transparent;color:var(--ink);font:500 1rem/1 ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums;text-align:right;appearance:textfield;-moz-appearance:textfield}
 #quick-adjust input[type=number]::-webkit-inner-spin-button,#quick-adjust input[type=number]::-webkit-outer-spin-button{appearance:none;margin:0}
 #quick-adjust input[type=number]:hover{border-color:var(--line)}
 #quick-adjust input[type=number]:focus-visible{background:var(--surface);border-color:var(--line);outline-offset:0}
@@ -33,28 +36,25 @@
 #quick-adjust input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1px var(--accent),0 0 0 5px var(--soft),0 0 0 7px var(--accent)}
 #quick-adjust input[type=range]:focus-visible::-moz-range-thumb{box-shadow:0 0 0 1px var(--accent),0 0 0 5px var(--soft),0 0 0 7px var(--accent)}
 
-/* Conducción: etiqueta en la fila de cabecera, select en la fila de control. */
-#quick-adjust .qa-conduction label{align-self:center}
+/* Conducción: etiqueta arriba, select de 44px ocupando toda la fila de control. */
+#quick-adjust .qa-conduction select{grid-column:1/-1;grid-row:2}
 #quick-adjust select{width:100%;min-width:0;min-height:44px;padding:0 28px 0 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font:inherit;font-size:1rem;line-height:1.3;cursor:pointer}
 #quick-adjust select:hover{border-color:var(--muted)}
 
 #quick-adjust :is(input,select):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 #quick-adjust :is(input,select):disabled{opacity:.45;cursor:not-allowed}
 
-@media (max-width:1099px){#quick-adjust .qa-fields{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media (max-width:599px){#quick-adjust .qa-fields{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px}}
-@media (max-width:379px){#quick-adjust .qa-fields{grid-template-columns:minmax(0,1fr)}}
-@media (min-width:1760px){
+/* Fuera del raíl (móvil, texto ampliado): 3/2/1 columnas en rem, con los mismos cuidados de 44px. */
+@container (max-width:40rem){#quick-adjust .qa-fields{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px}}
+@container (max-width:24rem){#quick-adjust .qa-fields{grid-template-columns:minmax(0,1fr)}}
+/* Raíl derecho en escritorio (1280/1440/1920): el papel se encuadra solo en la columna minmax(0,1fr). */
+@container (min-width:56rem){
  @supports selector(:has(a)){
-  .ecg-workbench:has(>#quick-adjust:not([hidden])){grid-template-columns:minmax(0,1fr) 13rem;column-gap:24px;align-items:start}
-  #quick-adjust{margin:0;padding:4px 0 0 16px;border-top:0;border-left:1px solid var(--line)}
-  #quick-adjust .qa-fields{grid-template-columns:minmax(0,1fr);gap:2px}
+  .ecg-workbench:has(>#quick-adjust:not([hidden])){grid-template-columns:minmax(0,1fr) min(11rem,200px);column-gap:14px;align-items:start}
+  .ecg-workbench:has(>#quick-adjust:not([hidden]))>#quick-adjust{margin:0;padding:4px 0 0 12px;border-top:0;border-left:1px solid var(--line)}
+  .ecg-workbench:has(>#quick-adjust:not([hidden])) .qa-fields{grid-template-columns:minmax(0,1fr);gap:4px}
  }
 }
-/* Reflow uses font-relative available width, including text zoom. */
-@container (max-width:54rem){#quick-adjust .qa-fields{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@container (max-width:34rem){#quick-adjust .qa-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@container (max-width:20rem){#quick-adjust .qa-fields{grid-template-columns:minmax(0,1fr)}}
 @media (forced-colors:active){
   #quick-adjust input[type=number],#quick-adjust select{border-color:ButtonText}
   #quick-adjust input[type=range]::-webkit-slider-runnable-track{background:CanvasText}

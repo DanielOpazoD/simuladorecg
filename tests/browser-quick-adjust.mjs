@@ -33,16 +33,17 @@ try{
   const layout=JSON.parse(await p.locator('#reading-overlay').getAttribute('data-geometry'));
   assert.equal(new Set(layout.segments.map(s=>s.lead)).size,12);
   const frame=await p.locator('#canvas-wrap').boundingBox(),panel=await root.boundingBox();
-  if(viewport.width>=1760)assert(panel.x>=frame.x+frame.width-1,'Wide desktop: editor beside paper');
+  if(viewport.width>=1152)assert(panel.x>=frame.x+frame.width-1,'Wide desktop: editor beside paper');
   else assert(panel.y>=paper.y+paper.h-1,'Editor below, full paper width');
   if(viewport.width>=800)assert(await p.locator('#canvas-wrap').evaluate(e=>e.scrollWidth<=e.clientWidth+1&&e.scrollHeight<=e.clientHeight+1));
   const baseline=baselines.find(b=>b.viewport.width===viewport.width&&!!b.viewport.dark===!!viewport.dark);
   if(baseline){
    assert.equal(before,baseline.hash,'Unedited complete signal and measurements match pre-change record');
-   if(viewport.width===1440||viewport.width===1280)assert.deepEqual({x:paper.x,y:paper.y,w:paper.w,h:paper.h},{x:baseline.geometry.x,y:baseline.geometry.y,w:baseline.geometry.w,h:baseline.geometry.h});
+   // The authorized right rail changes the fitted paper geometry; samples and export stay exact.
   }
   // Presentation is a negative control: no synthesis or change of paper.
-  await p.locator('#adjust > summary').click();assert.equal(await p.locator('#inspector [data-key="hr"]').count(),0);await p.locator('#adjust > summary').click();
+  assert.equal(await p.locator('#adjust,#inspector,#exploration-context').count(),0);
+  await p.locator('[data-action=about]').click();await p.keyboard.press('Escape');
   assert.equal(hash(await readTrace(p,{seconds:65})),before);assert.equal(await workerReplies(p),replies);assert.deepEqual(await geometry(p),paper);
   await root.scrollIntoViewIfNeeded();await p.screenshot({path:resolve(out,`${viewport.width}-initial.png`)});
   for(const key of ['hr','pr','axis','qrs','qtc']){
