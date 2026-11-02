@@ -8,7 +8,7 @@ const out=resolve(process.argv[2]??'../ECG-QA/desktop-overview');await mkdir(out
 const browser=await chromium.launch(),results=[],errors=[];let failure,page;
 const geometry=page=>page.evaluate(()=>{
  const canvas=document.querySelector('#ecg'),wrap=document.querySelector('#canvas-wrap'),r=canvas.getBoundingClientRect(),cal=document.querySelector('#trace-calibration').getBoundingClientRect();
- return {x:r.x+scrollX,y:r.y+scrollY,width:r.width,height:r.height,bottom:cal.bottom+scrollY,viewport:innerHeight,overflow:wrap.scrollWidth-wrap.clientWidth,verticalOverflow:wrap.scrollHeight-wrap.clientHeight,canvasRatio:canvas.width/canvas.height,displayRatio:r.width/r.height};
+ return {x:r.x+scrollX,y:r.y+scrollY,width:r.width,height:r.height,availableWidth:wrap.clientWidth,bottom:cal.bottom+scrollY,viewport:innerHeight,overflow:wrap.scrollWidth-wrap.clientWidth,verticalOverflow:wrap.scrollHeight-wrap.clientHeight,canvasRatio:canvas.width/canvas.height,displayRatio:r.width/r.height};
 });
 async function selectFormat(page,format){
  await page.locator('.paper-menu > summary').click();
@@ -55,10 +55,12 @@ try{
   await page.locator('[data-action=automatic]').click();await page.screenshot({path:resolve(out,`${viewport.width}-landscape.png`)});await page.locator('[data-action=automatic]').click();
   await selectFormat(page,'6x2');await page.waitForTimeout(250);const portrait=await geometry(page);
   const enlargement=(landscape.width/275)/(portrait.width/273);
-  // When both sheets fill the available width, the 275 mm landscape sheet can
-  // have a slightly smaller scale than the 273 mm portrait sheet. Compacting
-  // the header must not turn that physical width limit into a false regression.
-  assert(enlargement>(viewport.width>=1280?1.1:273/275-.001),JSON.stringify({enlargement,landscape,portrait}));
+  // The right rail can make the compact sheet width-limited even at 1440 px.
+  // Judge the actual paper viewport, not the outer browser width: a 275 mm
+  // sheet filling it can have a slightly smaller scale than the 273 mm sheet.
+  const widthLimited=Math.abs(landscape.width-landscape.availableWidth)<=2;
+  const minimumEnlargement=widthLimited?273/275-.001:1.1;
+  assert(enlargement>minimumEnlargement,JSON.stringify({enlargement,widthLimited,minimumEnlargement,landscape,portrait}));
   results.push({viewport,initialLandscape:true,enlargement,landscape,portrait,landscapeRaster});
   for(const id of ['sinus','lbbb','anterior','lvh']){
    if(id!=='sinus'){await chooseCatalogPreset(page,id);await page.locator('#signal-loading').waitFor({state:'hidden'});}
