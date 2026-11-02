@@ -86,9 +86,17 @@ no reemplaza la revisión clínica humana independiente.
 ## Relación eléctrica y mecánica
 
 Solo algunos ejemplos agudos de isquemia muestran un esquema de contracción en
-la misma página. Una vista de dos cámaras y un control de reproducción bastan;
-no se incluyen segmentos numerados, vistas múltiples ni medidas de función.
-La animación reutiliza el modelo ilustrativo existente: no reconstruye motilidad
-desde las amplitudes del ECG. Comienza únicamente al pulsar «Ver movimiento» y
-se pausa al abrir una ventana o dejar de verla. Con movimiento reducido queda
-disponible el recorrido manual. Sus límites y fuentes están en información.
+la misma página, después de la ficha eléctrica: primero se lee el ECG y su
+descripción; después, la mecánica ilustrativa. El orden coincide en el documento
+y en pantalla; el host se coloca vacío antes de montar su contenido y no se mueve
+mientras solo cambian Vista o tema. La escalera AV conserva su lugar delante de
+la tabla. Una vista de dos cámaras compacta, un título breve y una sola pregunta
+—comparar ambas paredes y reconocer cuál se mueve menos— bastan; no se incluyen
+segmentos numerados, vistas múltiples ni medidas de función. La animación
+reutiliza el modelo ilustrativo existente: no reconstruye motilidad, arteria ni
+función ventricular desde el ECG ni confirma una oclusión. Comienza únicamente
+al pulsar «Ver movimiento» y se pausa al abrir una ventana, dejar de verla o
+cambiar de caso. Con movimiento reducido queda disponible el recorrido manual.
+Sus límites y fuentes están en información. La CI ejecuta, junto a la lectura en
+la página, la prueba de aprendizaje contextual de la coordinación, que comprueba
+ese orden y la conservación de muestras, medidas y papel.

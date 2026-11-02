@@ -10,6 +10,8 @@ dialog.comparison-dialog .dialog-head { flex-shrink:0; margin-bottom:8px; }
 .comparison-controls label select { flex:1 1 200px; width:auto; }
 .comparison-controls select { width:100%; min-width:0; min-height:42px; padding:8px 10px; border:1px solid var(--line); border-radius:6px; color:var(--ink); background:var(--surface); font-size:14px; }
 .comparison-scale,.comparison-acquisition { margin:6px 0 0; color:var(--muted); font-size:13px; line-height:1.4; flex-shrink:0; }
+.comparison-prompt { margin:6px 0 0; color:var(--ink); font-size:14px; line-height:1.5; flex-shrink:0; }
+.comparison-prompt[hidden] { display:none; }
 .comparison-sheets { flex:1; display:grid; grid-template-rows:repeat(2,minmax(0,1fr)); gap:12px; min-height:0; min-width:0; }
 .comparison-sheet { min-width:0; min-height:0; margin:0; display:flex; flex-direction:column; }
 .comparison-sheet figcaption { display:flex; flex-wrap:wrap; align-items:center; gap:2px 8px; color:var(--muted); font-size:13px; margin-bottom:6px; flex-shrink:0; }

@@ -22,6 +22,11 @@ try{
   for(const id of view.width===1440?['anterior','inferior','inferior_lcx']:['anterior']){
    await chooseCatalogPreset(page,id);await page.locator('#signal-loading').waitFor({state:'hidden'});
    const root=page.locator('#reading-lesson');await root.locator('.lesson-echo').waitFor({state:'visible'});
+   // Electrical reading first: the structured sheet precedes the contraction scheme in the DOM and on screen.
+   const order=await page.evaluate(()=>{const d=document.querySelector('#structured-description'),r=document.querySelector('#reading-lesson');return {dom:!!(d.compareDocumentPosition(r)&Node.DOCUMENT_POSITION_FOLLOWING),visual:d.getBoundingClientRect().bottom<=r.getBoundingClientRect().top+1};});
+   assert.deepEqual(order,{dom:true,visual:true},'Electrical sheet precedes the contraction scheme');
+   assert.match(await root.locator('figcaption').innerText(),/ilustrativo/i);assert.equal(await root.locator('.lesson-echo-copy p').count(),1);
+   if(view.width===1440){const f=await root.locator('.lesson-echo figure').boundingBox();assert(f.width>=220&&f.width<=300,'Compact figure on desktop');}
    const source=await readTrace(page,{seconds:65}),before=hash(source),replies=await workerReplies(page),initial=await paper(page);
    assert.equal(await root.locator('button').count(),1);assert.equal(await root.locator('input').count(),1);assert.equal(await root.locator('select,details').count(),0);
    const slider=root.locator('input'),play=root.locator('button');await root.scrollIntoViewIfNeeded();
@@ -48,12 +53,13 @@ try{
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Text 200%: no page overflow');
     const r=await slider.boundingBox();assert(r.height>=44&&r.width>=100);await page.screenshot({path:resolve(out,'320-text-200.png')});
    }
-   results.push({id,view,sourceHash:before,sourceAndMeasuresPreserved:true,paperStable:true,explicitMotion:true,reducedMotion:true});
+   results.push({id,view,sourceHash:before,sourceAndMeasuresPreserved:true,paperStable:true,explicitMotion:true,reducedMotion:true,electricalFirst:true});
   }
   // Unsupported cases have neither empty diagrams nor a notice asking for more settings.
   for(const id of view.width===1440?['sinus','af','av1','lbbb']:['af']){
    await chooseCatalogPreset(page,id);await page.locator('#signal-loading').waitFor({state:'hidden'});
    assert.equal(await page.locator('.lesson-echo').count(),0);if(id!=='av1')assert(await page.locator('#reading-lesson').isHidden());
+   else assert(await page.evaluate(()=>!!(document.querySelector('#reading-lesson').compareDocumentPosition(document.querySelector('#structured-description'))&Node.DOCUMENT_POSITION_FOLLOWING)),'AV ladder keeps its place before the table');
   }
   if(view.width===1440){
    await chooseCatalogPreset(page,'anterior');await page.locator('#signal-loading').waitFor({state:'hidden'});

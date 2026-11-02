@@ -34,7 +34,7 @@ export function omiReferencesHtml(presetId: string): string {
     `<li><span class="ref-level">docente</span> ECGsmith, capítulo «${esc(s.chapter.title)}» (redacción propia a partir de sus conceptos). <a href="${esc(chapterUrl(s.chapter.slug))}" target="_blank" rel="noopener">Abrir</a></li></ol>`;
 }
 
-export function structuredDescriptionHtml(d: StructuredDescription, open = true, flat = false, education = ""): string {
+export function structuredDescriptionHtml(d: StructuredDescription, open = true, flat = false, education = "", omitRows: readonly string[] = []): string {
   // The ST reference line is folded into a superscript next to the ST line.
   const isStReference = (l: StructuredDescription["lines"][number]) => l.key.replace(/\s+/g, "") === "Ref.ST";
   const hasStReference = d.lines.some(isStReference);
@@ -49,7 +49,10 @@ export function structuredDescriptionHtml(d: StructuredDescription, open = true,
   const flatLabels: Record<string, string> = { "B·C": "Ritmo", "D": "Intervalos", "E": "Eje", "ST/QRS": "ST y QRS", "Rec.": "Recíprocos" };
   const compactKey = (l: StructuredDescription["lines"][number]) => l.key.replace(/\s+/g, "");
   const label = (l: StructuredDescription["lines"][number]) => (flat && Object.hasOwn(flatLabels, compactKey(l)) ? flatLabels[compactKey(l)] : l.key);
-  const rows = d.lines.filter((l) => !isStReference(l) && !(flat && compactKey(l) === "A"));
+  // Flat only: rows whose caution the educational paragraph already states are left out of the list.
+  // The nonflat output ignores omitRows; d is never mutated.
+  const omitted = new Set(flat ? omitRows.map((k) => k.replace(/\s+/g, "")) : []);
+  const rows = d.lines.filter((l) => !isStReference(l) && !(flat && compactKey(l) === "A") && !omitted.has(compactKey(l)));
   const body = `<dl>${rows.map((l) => `<div><dt>${esc(label(l))}</dt><dd>${esc(l.text)}${info(l)}</dd></div>`).join("")}</dl>`;
   return flat
     ? `<section class="structured-description"><h3>Lectura paso a paso</h3>${education ? `<p class="reading-education">${esc(education)}</p>` : ""}${body}</section>`

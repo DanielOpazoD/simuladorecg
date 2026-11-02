@@ -28,20 +28,23 @@ export function echoReadingLesson(c: ECGCase, s: Signal): EchoReadingLesson | nu
   return null;
 }
 
-/** Inline support below the acquired ECG. No case controls, worker calls or measurements. */
-export function mountReadingLesson(root: HTMLElement, c: ECGCase, s: Signal): () => void {
+/** Inline support below the acquired ECG. No case controls, worker calls or measurements.
+ * `place` receives the lesson kind while the host is still empty, before any content or listener exists. */
+export function mountReadingLesson(root: HTMLElement, c: ECGCase, s: Signal, place?: (kind: 'av' | 'echo') => void): () => void {
   const abort = new AbortController();
   root.className = 'reading-lesson'; root.replaceChildren(); root.hidden = true;
   const av = avReadingLesson(c, s);
   const clear = () => { root.replaceChildren(); root.hidden = true; for (const k of Object.keys(root.dataset)) delete root.dataset[k]; };
   if (av) {
+    place?.('av');
     root.innerHTML = avReadingHtml(av, s); root.hidden = false; root.dataset.kind = 'av';
     return () => { abort.abort(); clear(); };
   }
   const echo = echoReadingLesson(c, s);
   if (!echo) return clear;
+  place?.('echo');
   root.hidden = false; root.dataset.kind = 'echo';
-  root.innerHTML = `<article class="lesson-echo" aria-labelledby="lesson-echo-title"><div class="lesson-echo-copy"><h3 id="lesson-echo-title">Actividad eléctrica y contracción</h3><p>El ECG muestra la activación eléctrica. Este esquema permite observar el movimiento de las paredes y cómo una de ellas se contrae menos.</p><p class="lesson-echo-note">Ejemplo ilustrativo de la pared ${echo.wall}.</p></div><figure><div class="lesson-echo-image"></div><figcaption>Esquema de contracción · vista de dos cámaras</figcaption></figure><div class="lesson-echo-controls"><button type="button" class="btn" data-lesson-play aria-pressed="false">Ver movimiento</button><label for="lesson-echo-time" class="sr-only">Recorrer la contracción</label><input id="lesson-echo-time" type="range" min="0" max="100" step="1" value="0"/><output class="lesson-phase" aria-live="off"></output></div></article>`;
+  root.innerHTML = `<article class="lesson-echo" aria-labelledby="lesson-echo-title"><div class="lesson-echo-copy"><h3 id="lesson-echo-title">Actividad eléctrica y contracción</h3><p>El ECG registra la activación eléctrica; este esquema ilustra una contracción reducida de la pared ${echo.wall}. Compara ambas paredes: ¿cuál se mueve menos?</p></div><figure><div class="lesson-echo-image"></div><figcaption>Esquema ilustrativo · vista de dos cámaras</figcaption></figure><div class="lesson-echo-controls"><button type="button" class="btn" data-lesson-play aria-pressed="false">Ver movimiento</button><label for="lesson-echo-time" class="sr-only">Recorrer la contracción</label><input id="lesson-echo-time" type="range" min="0" max="100" step="1" value="0"/><output class="lesson-phase" aria-live="off"></output></div></article>`;
   const image = root.querySelector<HTMLElement>('.lesson-echo-image')!;
   const button = root.querySelector<HTMLButtonElement>('[data-lesson-play]')!;
   const slider = root.querySelector<HTMLInputElement>('#lesson-echo-time')!;
