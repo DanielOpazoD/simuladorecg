@@ -4,7 +4,6 @@ import assert from 'node:assert/strict';
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {chooseCatalogPreset} from './support/catalog-navigation.mjs';
-import {openControlPanel} from './support/adjust-panel.mjs';
 import {installWorkerTap,readTrace,waitForReply,workerReplies} from './support/worker-tap.mjs';
 const url=process.env.ECG_TEST_URL||'http://127.0.0.1:5173/';
 const out=resolve(process.env.ECG_EVIDENCE_DIR||'.sites-runtime/browser');await mkdir(out,{recursive:true});
@@ -96,15 +95,15 @@ for(const engine of engines){
    // A pattern whose example does not exist yet is not offered: the library says so instead of listing a disabled entry.
    await page.locator('#case-search').fill('Brugada');assert.equal(await page.locator('.catalog-empty').isVisible(),true);assert.equal(await page.locator('#case-list [data-preset]').count(),0);
    await choose('sinus');
-   await openControlPanel(page,'base');
-   // The panel click rebuilds its controls. Drive the live native input, not
-   // a programmatic event on an element handle that may have been detached.
-   const rate=page.locator('#inspector [data-key=hr]');
+   // Quick adjustment is the single live rate control; no secondary tab is needed.
+   // Keep the native edit and every provenance/worker assertion below.
+   const rate=page.locator('#quick-adjust input[type=range][data-key=hr]');
+   await rate.scrollIntoViewIfNeeded();
    assert.equal(await rate.inputValue(),'72');
    const beforeEdit=await page.evaluate(()=>window.__variantGenerations),repliesBefore=await workerReplies(page);
    await rate.focus();
    for(let step=0;step<9;step++)await rate.press('ArrowRight');
-   await page.waitForFunction(()=>document.querySelector('#inspector [data-key=hr]')?.value==='81');
+   await page.waitForFunction(()=>document.querySelector('#quick-adjust input[type=range][data-key=hr]')?.value==='81');
    await waitForReply(page,repliesBefore);
    assert.ok(await page.evaluate(n=>window.__variantGenerations>n,beforeEdit),'Editing must reach the signal worker');
    assert.equal(await page.locator('#diagnosis-navigation').isVisible(),false,'Edited case must not retain an unverified diagnosis tab');

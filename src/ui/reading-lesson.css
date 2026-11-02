@@ -1,0 +1,47 @@
+.reading-lesson { margin:20px 0 24px; color:var(--ink); min-width:0; }
+.reading-lesson[hidden] { display:none; }
+.reading-lesson h3 { font-size:1rem; margin:0 0 10px; font-weight:650; }
+.reading-lesson figure { margin:0; min-width:0; }
+.reading-lesson figcaption { color:var(--muted); font-size:var(--text-xs); line-height:1.5; margin-top:8px; }
+.reading-lesson .lesson-av { margin:0; }
+.reading-lesson .lesson-av-title { margin:0 0 10px; color:var(--ink); font-size:1rem; font-weight:650; }
+.lesson-av-scroll { max-width:100%; overflow-x:auto; background:var(--paper); overscroll-behavior-x:contain; }
+.lesson-av-svg { display:block; max-width:none; }
+.lesson-av-svg .lesson-grid-fine { stroke:#efdad5; stroke-width:.1; fill:none; }
+.lesson-av-svg .lesson-grid-bold { stroke:#d5aaa3; stroke-width:.18; fill:none; }
+.lesson-av-svg .lesson-wave { stroke:var(--ink); stroke-width:.25; fill:none; stroke-linejoin:round; }
+.lesson-av-svg .av-level { stroke:var(--line); stroke-width:.15; }
+.lesson-av-svg :is(.av-atrial,.av-ventricular,.av-blocked) { stroke:var(--ink); stroke-width:.45; }
+.lesson-av-svg .av-link { stroke:var(--muted); stroke-width:.3; }
+.lesson-av-svg :is(.av-pr,.av-level-label) { fill:var(--ink); font:2.4px system-ui,sans-serif; }
+.lesson-av-svg .av-pr { stroke:var(--paper); stroke-width:.9; paint-order:stroke; }
+.lesson-av :is(.lesson-av-legend,.lesson-av-caption) { color:var(--muted); font-size:var(--text-xs); margin:8px 0 0; line-height:1.5; }
+.lesson-av .lesson-av-caption { text-align:right; }
+.dark .lesson-av-svg .lesson-grid-fine { stroke:#324149; }
+.dark .lesson-av-svg .lesson-grid-bold { stroke:#4b6069; }
+.lesson-echo { display:grid; grid-template-columns:minmax(0,1fr) minmax(240px,360px); gap:12px 28px; align-items:center; max-width:880px; }
+.lesson-echo-copy p { max-width:43ch; margin:0 0 10px; font-size:var(--text-sm); line-height:1.65; }
+.lesson-echo-copy .lesson-echo-note { color:var(--muted); font-size:var(--text-xs); }
+.reading-lesson .echo-image { display:block; width:100%; height:auto; max-height:none; }
+.reading-lesson .echo-number { display:none; }
+.reading-lesson .echo-view-label { display:none; }
+.reading-lesson .lesson-wall-name { fill:#b3c6d1; font:14px system-ui,sans-serif; text-anchor:middle; }
+.reading-lesson .echo-wall { cursor:default; pointer-events:none; }
+.lesson-echo-controls { display:flex; align-items:center; flex-wrap:wrap; gap:4px 14px; grid-column:1/-1; }
+.lesson-echo-controls .btn { min-height:44px; }
+.lesson-phase { color:var(--muted); font-size:var(--text-sm); min-width:90px; }
+#lesson-echo-time { flex:1; min-width:120px; height:44px; min-height:44px; margin:0; padding:0; background:transparent; appearance:none; }
+#lesson-echo-time::-webkit-slider-runnable-track { height:4px; background:var(--line); border-radius:2px; }
+#lesson-echo-time::-moz-range-track { height:4px; background:var(--line); border-radius:2px; }
+#lesson-echo-time::-webkit-slider-thumb { appearance:none; width:16px; height:16px; margin-top:-6px; border:2px solid var(--surface); background:var(--accent); border-radius:50%; }
+#lesson-echo-time::-moz-range-thumb { width:12px; height:12px; border:2px solid var(--surface); background:var(--accent); border-radius:50%; }
+.reading-lesson :is(button,input):focus-visible,.lesson-av-scroll:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+@media(max-width:650px) { .lesson-echo { grid-template-columns:minmax(0,1fr); gap:12px; }.lesson-echo figure { max-width:360px; }.lesson-phase { min-width:0; } }
+@media(forced-colors:active) {
+  .reading-lesson .lesson-wall-name { fill:CanvasText; }
+  .lesson-av-svg :is(.lesson-wave,.av-level,.av-link,.av-atrial,.av-ventricular,.av-blocked) { stroke:CanvasText; }
+  #lesson-echo-time::-webkit-slider-runnable-track { background:CanvasText; }
+  #lesson-echo-time::-moz-range-track { background:CanvasText; }
+  #lesson-echo-time::-webkit-slider-thumb { background:Highlight; border-color:Canvas; }
+  #lesson-echo-time::-moz-range-thumb { background:Highlight; border-color:Canvas; }
+}

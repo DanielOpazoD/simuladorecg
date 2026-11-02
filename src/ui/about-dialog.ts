@@ -20,6 +20,7 @@ export function aboutDialogHtml(context = '', references = '') {
     <p>Activaciones auriculares y ventriculares → kernels vectoriales XYZ → 8 derivaciones independientes → filtros → 12 derivaciones. No utiliza trazados grabados ni imágenes de pacientes.</p>
     ${context ? '' : '<p>Todos los patrones son aproximaciones educativas. Las pruebas técnicas no constituyen validación clínica.</p>'}
     <p>Las ayudas de «Qué observar» señalan ventanas del modelo sobre las muestras mostradas: QRS, ST entre J y J+80 ms, o repolarización desde J+80 hasta el final del QT. No son delimitaciones clínicas independientes.</p>
+    <p>La escalera de conducción relaciona P y QRS del calendario del modelo, sin localizar el bloqueo. El esquema de contracción reutiliza una asignación ilustrativa del escenario: su geometría, hipocinesia y retraso de 80 ms no se deducen del ECG ni cuantifican la función de un paciente. Los valores estimados de los intervalos siguen en Medidas.</p>
     <p>Describe primero el patrón observado. Integra territorio, reciprocidad, proporcionalidad respecto del QRS y contexto; la etiqueta del caso no demuestra una arteria ocluida. Las fases son estados paramétricos y no una cronología de un paciente.</p>
     <p>V7–V9 y V3R–V4R; captura/fusión en TV; comienzo corto–largo–corto de torsades: pendientes. VVI a demanda y secuencias programadas de flutter son modelos idealizados. La pérdida total de captura VVI solo se representa sin escape intrínseco; no simula umbrales ni captura mecánica.</p>
     <ul class="about-list">
@@ -33,6 +34,7 @@ export function aboutDialogHtml(context = '', references = '') {
     ${references}
     <p>Morfología normal aprendida de <a href="https://physionet.org/content/ptb-xl/1.0.3/" target="_blank" rel="noopener">PTB-XL</a> y <a href="https://physionet.org/content/ptb-xl-plus/1.0.1/" target="_blank" rel="noopener">PTB-XL+</a> (Wagner et al. 2020; Strodthoff et al. 2023), <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>; se distribuyen solo coeficientes derivados.</p>
     <ol class="references">
+      <li><a href="https://asecho.org/wp-content/uploads/2016/02/2015_ChamberQuantificationREV.pdf" target="_blank" rel="noopener">ASE/EACVI (2015), secciones 3.1–3.2</a> · Nomenclatura de segmentos y evaluación de motilidad; los parámetros gráficos del esquema son ilustrativos.</li>
       <li><a href="https://physionet.org/content/ecgsyn/1.0.0/" target="_blank" rel="noopener">McSharry et al. ECGSYN (2003)</a> · Ritmo, variabilidad y generación sintética.</li>
       <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2927500/" target="_blank" rel="noopener">Clifford, Nemati y Sameni (2010)</a> · Modelo vectorial de ritmos anormales.</li>
       <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9106114/" target="_blank" rel="noopener">Vondrak et al. (2022), tabla 2</a> · Matriz inversa de Dower; comprobación algebraica indirecta de los coeficientes.</li>

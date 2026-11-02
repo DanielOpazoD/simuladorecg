@@ -61,7 +61,7 @@ export const range = (
   label: string,
   min: number,
   max: number,
-  step: number,
+  step: number | 'any',
   value: number,
   unit: string,
   disabled = false,

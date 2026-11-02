@@ -24,3 +24,8 @@ Firefox and WebKit at desktop/mobile widths, and the postmerge verification must
 also complete. A passing repeated run alone does not explain the old failure;
 this change strengthens the action and its postconditions without changing the
 physiological model or relaxing the failed assertion.
+
+The compact «Ajustar ECG» panel is now the sole owner of the rate input. The
+driver resolves `#quick-adjust input[type=range][data-key=hr]`, brings it into view
+and retains the nine native ArrowRight steps and every 81/min, worker, provenance
+and restoration assertion. It no longer opens a secondary tab to reach that input.

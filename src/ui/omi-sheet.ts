@@ -34,7 +34,7 @@ export function omiReferencesHtml(presetId: string): string {
     `<li><span class="ref-level">docente</span> ECGsmith, capítulo «${esc(s.chapter.title)}» (redacción propia a partir de sus conceptos). <a href="${esc(chapterUrl(s.chapter.slug))}" target="_blank" rel="noopener">Abrir</a></li></ol>`;
 }
 
-export function structuredDescriptionHtml(d: StructuredDescription, open = true, flat = false): string {
+export function structuredDescriptionHtml(d: StructuredDescription, open = true, flat = false, education = ""): string {
   // The ST reference line is folded into a superscript next to the ST line.
   const isStReference = (l: StructuredDescription["lines"][number]) => l.key.replace(/\s+/g, "") === "Ref.ST";
   const hasStReference = d.lines.some(isStReference);
@@ -52,6 +52,6 @@ export function structuredDescriptionHtml(d: StructuredDescription, open = true,
   const rows = d.lines.filter((l) => !isStReference(l) && !(flat && compactKey(l) === "A"));
   const body = `<dl>${rows.map((l) => `<div><dt>${esc(label(l))}</dt><dd>${esc(l.text)}${info(l)}</dd></div>`).join("")}</dl>`;
   return flat
-    ? `<section class="structured-description"><h3>Lectura paso a paso</h3>${body}</section>`
+    ? `<section class="structured-description"><h3>Lectura paso a paso</h3>${education ? `<p class="reading-education">${esc(education)}</p>` : ""}${body}</section>`
     : `<details class="structured-description"${open ? " open" : ""}><summary>Descripción estructurada</summary>${body}</details>`;
 }

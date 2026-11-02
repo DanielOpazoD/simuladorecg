@@ -20,12 +20,15 @@ El programa debe sentirse como una buena mesa de lectura: el papel ocupa el cent
 | --- | --- | --- |
 | Lectura inmediata | Caso, variantes, ECG y FC, PR, QRS, QTc y eje QRS | Visibles, compactos y con jerarquía consistente |
 | Acciones habituales | Medir, marcas automáticas, J/ST, comparar y vista/zoom | Acceso directo, pocos controles y estados claros |
+| Edición contextual | FC, PR, eje QRS, QRS, conducción intraventricular y QTc | Una sola superficie «Ajustar ECG», junto al papel cuando hay espacio y debajo en anchos menores |
 | Exploración contextual | Una derivación ampliada, un hallazgo, una comparación | Cerca de aquello que explica, sin abrir otra ruta equivalente |
 | Ajustes y profundidad | Parámetros, herramientas docentes menos frecuentes, generación y fuentes | Desplegables o espacios secundarios bien nombrados |
 
 En escritorio, las variantes quedan debajo del título y los valores resumen al otro extremo de esa fila cuando el espacio lo permite. En móvil se reorganizan sin encoger el texto hasta volverlo ilegible.
 
-«Ajustar el caso» muestra solo los controles que actúan en el ritmo elegido y conserva los valores de los que oculta; en escritorio sus campos se reúnen en rejillas compactas en lugar de una columna larga.
+«Ajustar ECG» reúne esos seis parámetros con deslizador y valor escribible, sin duplicarlos en «Más ajustes». Muestra solo los que actúan en el registro actual y conserva los valores de los que oculta. El significado de FC puede ser auricular, de escape o de estímulos y se nombra cuando corresponde. Los complejos ventriculares aprendidos fijan sus duraciones: QRS/QTc permanecen como medidas visibles, mientras sus ajustes inoperantes se ocultan. Las fuentes históricas que sí leen esos objetivos conservan los controles.
+
+El panel solo ocupa una columna derecha cuando queda espacio suficiente para conservar el papel; en el escritorio habitual se integra debajo en una fila compacta. No se estrecha el ECG ni se cambia su escala para hacer sitio. Los campos se reorganizan al ampliar el texto. La entrada numérica y el deslizador representan el mismo objetivo, incluidos valores importados fraccionarios, sin redondear el caso al mostrarlo.
 
 La navegación lateral debe priorizar los ejemplos de la familia elegida. Se admite replegar el índice y acceder a la búsqueda bajo demanda si eso libera espacio. Siempre debe ser evidente dónde estamos y cómo volver. El objetivo es reducir decisiones y desplazamientos, no mantener todas las opciones expandidas a cualquier precio.
 
@@ -63,6 +66,8 @@ No repetimos avisos genéricos de uso educativo o falta de validación por toda 
 
 La explicación visible usa nombres como «Ritmo», «Intervalos» y «Eje», conserva los valores y los estados no valorables y evita repetir la calibración. Las herramientas de exploración ST se consultan al pie de su nota de referencia. Las fichas de isquemia separan el escenario de la descripción obtenida del trazado: muestran contexto, clave de lectura y cautela específica, mientras su contenido íntegro se conserva junto a las fuentes. Una exploración modificada o con brazos invertidos no debe presentar la ficha original como interpretación del registro actual; tampoco debe revelarla un ejercicio sin responder.
 
+La explicación puede incorporar hasta dos frases educativas: relacionar el rasgo actual con su mecanismo y orientar la observación. Se redactan para el estado y los eventos disponibles, sin repetir cifras ni convertir el nombre del preset en evidencia. Una explicación teórica no atribuye al programa una propagación anatómica calculada. Se conservan las incertidumbres, las restricciones de aplicabilidad y la ocultación de respuestas en práctica.
+
 ## 5. Una acción, un propósito
 
 Los controles deben tener nombres y efectos previsibles. Reutilizamos herramientas, cálculos y patrones de interacción antes de crear alternativas paralelas.
@@ -71,7 +76,7 @@ Los controles deben tener nombres y efectos previsibles. Reutilizamos herramient
 - **Medir automáticamente** debe señalar los intervalos sobre el trazado, con sus valores. Una tabla separada por sí sola no satisface esa acción.
 - **Medir manualmente** usa los mismos calibres y unidades en el papel y en la lupa.
 - **Zoom** sirve para ampliar y recorrer el ECG completo. La **lupa** reutiliza la exploración de una derivación para estudiar dos latidos del fragmento elegido.
-- **Vista** es un menú plano con dos modos, papel y monitor, los tres formatos, la escala y la cuadrícula, sin desplegables anidados. La adquisición limpia o con ruido se consulta en «Ajustar el caso → Artefactos»; Aula y las marcas personales quedan junto a los ajustes. Vista no contiene filtros de señal, «Marcar ondas» ni una tira de ritmo independiente: la tira de II ya forma parte del formato inicial.
+- **Vista** es un menú plano con dos modos, papel y monitor, los tres formatos, la escala y la cuadrícula, sin desplegables anidados. La adquisición limpia o con ruido se consulta en «Más ajustes → Artefactos». Vista no contiene filtros de señal, «Marcar ondas» ni una tira de ritmo independiente: la tira de II ya forma parte del formato inicial.
 
 Durante la práctica, «Señal» permanece en Vista porque los parámetros del caso están ocultos. Al salir vuelve a Artefactos, conservando su valor y sin duplicar el control ni revelar la respuesta.
 
@@ -90,6 +95,8 @@ La cabecera distingue navegación y herramientas sin repetir cajas: variantes co
 En la lupa, PR, QRS y QT pueden verse juntos. Tienen colores diferentes, nombre y valor: azul para PR, verde para QRS y violeta para QT. El color ayuda, pero no es la única forma de distinguirlos. Las filas se mantienen compactas, cerca de las ondas y sin cruces entre etiquetas.
 
 Las etiquetas necesitan un tamaño de lectura estable; no deben crecer como si fueran milímetros de papel y terminar encogiendo el trazado. Las mediciones manuales se distinguen de las automáticas y pueden limpiarse sin cerrar la lupa.
+
+El recorrido lento del latido mueve únicamente un cursor sobre las muestras de la lupa. Comparte los límites estimados de las marcas, conserva su incertidumbre y no inventa el final de P ni el inicio de T. Se inicia por decisión del lector, puede pausarse o recorrerse a mano y se detiene al medir, cerrar o dejar la página. Su espacio se comparte con la observación y el resultado del calibre para no desplazar las ondas al cambiar de herramienta. Con movimiento reducido se mantiene el recorrido manual.
 
 Una explicación de hallazgo se presenta cada vez para evitar acumular recuadros y textos. Esta regla no impide comparar simultáneamente varios intervalos. Toda capa debe poder ocultarse con facilidad, sin recargar ni desplazar el ECG.
 
@@ -134,6 +141,10 @@ Un ECG limpio facilita aprender: la adquisición inicial no añade ruido. El rui
 La ambición consiste en hacer mejor lo que el simulador ya permite: coherencia clínica, continuidad causal de los controles, lectura, medidas y fidelidad entre pantalla y exportación.
 
 La anatomía y el esquema de ecocardiografía son apoyos contextuales. Deben aclarar una relación y distinguir lo ilustrativo de lo respaldado; no convertirse en otro producto dentro de la página ni insinuar diagnósticos que el ECG no permite establecer.
+
+El destinatario es cualquier clínico interesado en aprender ECG y sus fundamentos. La lectura avanza en la misma página: trazado, qué observar, explicación breve y apoyo visual pertinente. El antiguo Aula como editor separado se retira, junto con sus Ajustes, Anotaciones y duplicados de comparación, práctica y exportación. La lupa, los calibres, las medidas y la comparación principal conservan su propósito.
+
+La escalera AV comparte reloj y muestras con su tira de ritmo y explica asociaciones eléctricas sin inventar localización anatómica. El apoyo ecográfico representa mecánica: solo aparece cuando el escenario lo admite y existe un objetivo docente concreto. Una vista suficiente tiene prioridad sobre planos, rotaciones o segmentos manipulables. El movimiento requiere una acción del lector. Un caso sin esquema útil no recibe un panel vacío ni un aviso de no disponible. Los parámetros ilustrativos y las fuentes se reúnen en la información existente.
 
 La inspiración externa —por ejemplo, la exploración de derivaciones y patrones de [Culprit](https://www.cliffreid.com/culprit/)— se adapta a esta jerarquía. No copiamos todas sus secciones ni añadimos controles solo porque existen en otra página.
 

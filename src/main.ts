@@ -12,16 +12,15 @@ import { mountLeadExplorer, type LensMode } from "./ui/lead-explorer";
 import { presetTitle } from "./presets/nomenclature";
 import { APP_VERSION } from "./ui/version";
 import { catalogGroup, familyLabel } from "./ui/catalog-presentation";
-import { lesionBaseline } from "./engine/lesion-baseline";
 import { omiSheetHtml, omiReferencesHtml, structuredDescriptionHtml } from "./ui/omi-sheet";
 import { structuredDescription, type DescriptionInfo, type StructuredDescription } from "./ui/structured-description";
+import { educationalReading } from "./ui/educational-reading";
+import { mountReadingLesson } from "./ui/reading-lesson";
+import { quickAdjustHtml, syncQuickAdjust } from "./ui/quick-adjust";
 import { descriptionInfoHtml, descriptionInfoTitle } from "./ui/description-info";
 import { concealMetricCards, modelMetricCards } from "./ui/metric-cards";
 import { defaultZoomLead, mountStZoom, stZoomHtml } from "./ui/st-zoom";
 import { mountStDistribution, stDistributionHtml } from "./ui/st-distribution";
-import type { TeachingSnapshot } from "./ui/teaching-workspace";
-import { signalFingerprint, teachingCaseIdentity, type TeachingNote } from "./ui/teaching-notes";
-import { drawTeachingNotes, projectTeachingNote } from "./ui/teaching-export";
 import { visiblePaperLeads, capturePaperAnchor, restorePaperAnchor, type PaperAnchor } from "./render/paper-viewport";
 import type { Lead } from "./engine/types";
 import { openDialog, closeDialog, requestDialog } from "./ui/dialog";
@@ -82,16 +81,8 @@ import {
 const $ = <T extends Element = HTMLElement>(selector: string) =>
   document.querySelector<T>(selector)!;
 const session = new TraceSession();
-const teachingNotes = new Map<string, TeachingNote[]>(), teachingSnapshots: TeachingSnapshot[] = [];
-const teachingSignalKeys = new WeakMap<Signal, string>();
-let teachingMarksVisible = true;
 let activeFinding: string | null = null;
 let leadMarkMode:LensMode='all';
-function teachingKey(signal: Signal) {
-  let key = teachingSignalKeys.get(signal);
-  if (!key) { key = signalFingerprint(signal); teachingSignalKeys.set(signal, key); }
-  return key + teachingCaseIdentity(c);
-}
 // Start on the sinus preset itself (textbook patient, resting HRV), not on the
 // bare defaults it is built from.
 let c = fromPreset(presetById("sinus")!),
@@ -107,8 +98,6 @@ c.view.format = "3x4+1";
 c.acquisition = readAcquisitionPreference() ?? "ideal";
 let stHighlight = false, automaticOn = false, paperZoom = 1;
 let pendingPaperAnchor: PaperAnchor | null = null;
-// The contrafactual remains inside the advanced Aula, never presented as a prior recording.
-let previousSignal: Signal | null = null;
 let annotations = false,
   caliper: Caliper | null = null,
   dragging = false,
@@ -135,14 +124,14 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><h2 class="sr-only">Biblioteca de patrones</h2><button class="text-button" data-action="catalog-index" aria-controls="catalog-families">Casos</button><span id="catalog-family-title"></span>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><nav id="catalog-families" class="catalog-families" aria-label="Familias de ECG"></nav><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Buscar ECG…" aria-label="Buscar caso"/></label></aside>
  <main class="workspace"><section class="case-heading"><div><div class="case-category sr-only" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><div id="exploration-context" class="exploration-context" hidden></div></div></section>
  <div class="case-summary-row"><section id="diagnosis-navigation" class="diagnosis-navigation" aria-label="Variantes del patrón" hidden></section>
- <div class="heading-tools"><section id="metrics" class="metrics" aria-label="Valores del modelo que generó el ECG"><div class="loading-metrics">Generando señal…</div></section><div class="case-state">${btn("reset", "Restablecer", "reset", "subtle")}</div></div></div><div id="diagnosis-content">
+ <div class="heading-tools"><section id="metrics" class="metrics" aria-label="Valores del modelo que generó el ECG"><div class="loading-metrics">Generando señal…</div></section><div class="case-state">${btn("reset", "Restablecer", "reset", "subtle")}</div></div></div><div class="ecg-workbench"><div id="diagnosis-content">
  <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="trace-tools">${btn("automatic", "Medir automáticamente", "intervals")}${btn("caliper", "Medir", "ruler")}${btn("lens-st", "Punto J / ST", "jpoint")}${btn("compare", "Comparar", "strip")}${btn("pause", "Congelar", "pause")}<details class="paper-menu"><summary class="btn" data-action="paper" aria-label="Vista" title="Vista">${icon("settings")}<span>Vista</span>${icon("chevron")}</summary><div class="view-options"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button></div><div class="scale-toolbar" id="scale-toolbar"></div></div></details><div class="paper-zoom-controls" role="group" aria-label="Zoom del ECG"><button type="button" class="btn" data-action="zoom-out" aria-label="Reducir zoom" title="Reducir zoom">−</button><button type="button" class="btn zoom-value" data-action="zoom-reset" title="Restablecer al 100 %">100 %</button><button type="button" class="btn" data-action="zoom-in" aria-label="Ampliar zoom" title="Ampliar zoom">+</button></div></div></div>
  <div id="quiz-panel" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small id="monitor-rate-note">No estimable</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
  <p class="sr-only" id="trace-context" hidden></p><div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-context trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div><p id="trace-calibration" class="trace-calibration"></p>
  <div id="caliper-editor" class="caliper-editor" hidden></div><div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><p id="trace-keyboard-help" class="sr-only">Con foco en el trazado: M y P cambian la vista; V y G, la escala; C activa los calibres y espacio congela el monitor. Con calibres, las flechas mueven el extremo seleccionado; Mayús mueve diez pasos. Con zoom, arrastra el papel o usa las flechas para desplazarte; con calibres activos, el arrastre mide. Pulsa ? para abrir la ayuda de atajos.</p></section>
- </div>
- <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><h2 id="finding-title">Qué observar</h2><p id="case-subtitle" class="guide-lead">Activación auricular sinusal seguida de conducción AV 1:1.</p><ul id="findings"></ul><section id="reading-details" aria-labelledby="reading-details-title"><h3 id="reading-details-title">Explicación</h3><div class="reading-detail-content"><div id="structured-description"></div><div id="omi-sheet"></div></div></section></div></section>
- <div class="adjust-row"><details id="adjust" class="adjust-panel"><summary><span>Ajustar el caso</span></summary><div id="inspector" class="inspector"></div></details><div class="secondary-actions" role="group" aria-label="Aula y marcas">${btn("teaching-marks", "Mostrar mis marcas", "eye")}${btn("teaching", "Aula: anotar y explorar", "book")}</div></div>
+ </div><aside id="quick-adjust" aria-label="Ajustar ECG" hidden></aside></div>
+ <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><h2 id="finding-title">Qué observar</h2><p id="case-subtitle" class="guide-lead">Activación auricular sinusal seguida de conducción AV 1:1.</p><ul id="findings"></ul><section id="reading-details" aria-labelledby="reading-details-title"><h3 id="reading-details-title">Explicación</h3><p id="reading-education" class="reading-education" hidden></p><section id="reading-lesson" aria-label="Mecanismo del ECG" hidden></section><div class="reading-detail-content"><div id="structured-description"></div><div id="omi-sheet"></div></div></section></div></section>
+ <div class="adjust-row"><details id="adjust" class="adjust-panel"><summary><span>Más ajustes</span></summary><div id="inspector" class="inspector"></div></details></div>
  <footer class="workspace-footer"><button class="text-button information-button" data-action="about" aria-label="Información y fuentes" title="Información y fuentes">${icon("info")}</button></footer></main></div>
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
 
@@ -220,12 +209,29 @@ function renderExplorationContext(concealed:boolean) {
 function showExplorationChanges(){if(!explorationOrigin)return;const changes=explorationChanges(explorationOrigin,c);openDialog("Cambios respecto al origen",`<p class="dialog-lead">Origen: <strong>${esc(explorationOrigin.presetName)}</strong>. Se muestran diferencias reales del modelo; la vista no cuenta como ajuste.</p><div class="measurement-table-wrap"><table><thead><tr><th>Parámetro</th><th>Origen</th><th>Actual</th></tr></thead><tbody>${changes.map(x=>`<tr><td>${esc(x.label)}</td><td>${esc(formatExplorationValue(x.before))}${x.beforeLabel?`<br><small>${esc(x.beforeLabel)}</small>`:""}</td><td>${esc(formatExplorationValue(x.after))}${x.afterLabel?`<br><small>${esc(x.afterLabel)}</small>`:""}</td></tr>`).join("")}</tbody></table></div><p class="control-note">Una acción puede cambiar varios parámetros coordinados; el recuento describe diferencias del estado resultante, no el número de clics.</p>`)}
 /** The description is read from the signal shown: empty while a new one is computed. */
 let description: StructuredDescription | null = null;
+let disposeReadingLesson: (()=>void) | null = null, readingLessonSignal: Signal | null = null;
+let readingLessonKey = "", publishedLessonKey = "";
+const lessonKey = () => JSON.stringify({...c, view:{cabrera:c.view.cabrera}});
+function renderReadingLesson() {
+  const host = $("#reading-lesson"), signal = session.signal, key = lessonKey();
+  const ready = !!description && session.canExport && signal && key === publishedLessonKey;
+  if (ready && signal === readingLessonSignal && key === readingLessonKey) return;
+  disposeReadingLesson?.(); disposeReadingLesson = null;
+  host.replaceChildren(); host.hidden = true; readingLessonSignal = null; readingLessonKey = "";
+  if (!ready || !signal) return;
+  disposeReadingLesson = mountReadingLesson(host, c, signal);
+  readingLessonSignal = signal; readingLessonKey = key;
+}
 function renderDescription() {
   const concealed = quiz && !quiz.answer;
   const preset = caseContext(c).preset;
   description = !concealed && session.signal ? structuredDescription(c, session.signal, preset && !c.artifacts.reversed ? caseReading(c).title : undefined) : null;
-  $("#structured-description").innerHTML = description ? structuredDescriptionHtml(description, true, true) : "";
+  $("#structured-description").innerHTML = description && session.signal ? structuredDescriptionHtml(description, true, true) : "";
+  const education = $("#reading-education");
+  education.textContent = description && session.signal ? educationalReading(c, session.signal, description) : "";
+  education.hidden = !education.textContent;
   $("#reading-details").hidden = !description;
+  renderReadingLesson();
 }
 function renderInfo() {
   const context = caseContext(c),
@@ -270,6 +276,7 @@ function renderInfo() {
   $<HTMLButtonElement>('[data-action="reset"]').hidden = !!concealed || (!!explorationOrigin && !customExploration);
   $<HTMLButtonElement>('[data-action="export"]').disabled = !!concealed;
   $("#adjust").hidden = !!concealed;
+  syncQuickControls();
   $(".case-state").hidden = $<HTMLButtonElement>('[data-action="reset"]').hidden;
   $("#catalog").classList.toggle("quiz-concealed", !!concealed);
 }
@@ -284,6 +291,25 @@ function renderMetrics() {
   $("#monitor-rate").textContent = rate.value === "—" ? "—" : rate.value.replace(/<small>.*<\/small>/, "");
   $("#monitor-rate-note").textContent = concealed ? "oculto en práctica" : rate.value === "—" ? "No estimable" : "lpm · modelo";
 }
+function renderQuickControls() {
+  const host = $("#quick-adjust"), active = document.activeElement as HTMLElement | null;
+  const focused = active && host.contains(active)
+    ? { key: active.dataset.key, number: active.dataset.quickNumber } : null;
+  host.innerHTML = quiz && !quiz.answer ? '' : quickAdjustHtml(c);
+  host.hidden = !host.childElementCount;
+  if (focused) {
+    const field = focused.number
+      ? host.querySelector<HTMLInputElement>(`[data-quick-number="${focused.number}"]`)
+      : host.querySelector<HTMLInputElement | HTMLSelectElement>(`[data-key="${focused.key}"]`);
+    if (field && !field.disabled && !field.closest('[hidden]')) field.focus({preventScroll: true});
+  }
+}
+function syncQuickControls() {
+  const host = $("#quick-adjust");
+  if (quiz && !quiz.answer) { host.replaceChildren(); host.hidden = true; return; }
+  if (!host.childElementCount) renderQuickControls();
+  else syncQuickAdjust(host, c);
+}
 function renderControls() {
   const previous = activePanel;
   const inspector = $("#inspector");
@@ -293,7 +319,8 @@ function renderControls() {
     .map(el => el.dataset.controlDetails);
   // During practice the acquisition select is offered by the Vista toolbar
   // (renderScales) instead of Artefactos, which is hidden while concealed.
-  inspector.innerHTML = controls(c, !quiz);
+  inspector.innerHTML = controls(c, !quiz, false);
+  renderQuickControls();
   for (const group of inspector.querySelectorAll<HTMLDetailsElement>("details[data-control-details]")) {
     group.open = openGroups.includes(group.dataset.controlDetails);
   }
@@ -441,15 +468,9 @@ function syncTraceTools() {
   resetZoom.setAttribute("aria-label", `Restablecer zoom al 100 %, actual ${Math.round(paperZoom*100)} %`);
   $("#canvas-wrap").classList.toggle("paper-zoomed", paper && paperZoom > 1);
   $("#canvas-wrap").classList.toggle("paper-pannable", ready && paper && paperZoom > 1 && !measuring);
-  const teaching = $<HTMLButtonElement>('[data-action="teaching"]');
-  teaching.disabled = !ready || practice;
-  teaching.hidden = practice;
   const compare = $<HTMLButtonElement>('[data-action="compare"]');
   compare.disabled = !ready || practice;
   compare.hidden = practice;
-  const marks = $<HTMLButtonElement>('[data-action="teaching-marks"]');
-  marks.hidden = !ready || practice || !paper || !session.signal || !teachingNotes.get(teachingKey(session.signal))?.length;
-  marks.setAttribute("aria-pressed", String(teachingMarksVisible));
   const st = $<HTMLButtonElement>('[data-action="lens-st"]');
   st.disabled = !paper || !ready || practice || !session.signal?.events.beats.some(b => b.qrs !== undefined);
   st.hidden = practice;
@@ -485,6 +506,7 @@ function publishSignal(next: Signal, measured: Measurement, requestId: number, c
     }
     if (!session.accept(requestId, next, audited, c.view.mode,
       representativeBeat(audited, visibleSegmentEnd()))) return;
+    publishedLessonKey = lessonKey();
     resetTracePresentation();
     $("#signal-loading").hidden = true;
     renderMetrics();
@@ -501,8 +523,7 @@ function publishSignal(next: Signal, measured: Measurement, requestId: number, c
     pendingPaperAnchor = null;
 }
 const controller = new SignalController(
-  (next, measured, requestId, previous) => {
-    if (session.isCurrentRequest(requestId)) previousSignal = previous ?? null;
+  (next, measured, requestId) => {
     publishSignal(next, measured, requestId);
   },
   (message, requestId) => {
@@ -573,7 +594,6 @@ function generate() {
   timer = 0;
   invalidateSignal();
   // Worker messages are asynchronous; register the returned ID before delivery.
-  previousSignal = null;
   session.expectRequest(controller.request(c, 65));
 }
 /** Preserve native paper scale; describe horizontal overflow without fading the trace. */
@@ -653,15 +673,6 @@ function draw() {
   );
   if (caliper && layout && session.caliperOn) drawCaliper(canvas, layout, caliper, c);
   syncTraceOverflow();
-  if (layout && c.view.mode === "paper" && !(quiz && !quiz.answer) && teachingMarksVisible) {
-    const all = teachingNotes.get(teachingKey(session.signal)) ?? [];
-    const visible = all.filter(n => layout!.segments.some(segment => projectTeachingNote(n, segment, c.view)));
-    if (visible.length) {
-      const ctx = canvas.getContext("2d")!, scale = canvas.width / layout.widthMm;
-      ctx.save(); ctx.setTransform(scale, 0, 0, scale, 0, 0); drawTeachingNotes(ctx, layout, c.view, visible, visible.map(n => all.indexOf(n) + 1)); ctx.restore();
-    }
-    if (all.length) $("#trace-context").textContent += ` · ${visible.length}/${all.length} marcas personales visibles; abre Aula ECG para verlas todas.`;
-  }
   caliperEditor.update({active:session.caliperOn, layout, caliper, view:c.view, fs:session.signal.fs});
   syncReadingAids();
   const autoLayer = $("#automatic-overlay");
@@ -822,12 +833,44 @@ document.addEventListener("input", (e) => {
   const output = document.querySelector(`[data-output="${key}"]`);
   if (output)
     output.innerHTML = `${el.value} <small>${output.querySelector("small")?.textContent || ""}</small>`;
+  syncQuickControls();
   if (key.startsWith("view.")) {
     draw();
   } else {
     invalidateSignal();
     window.clearTimeout(timer);
     timer = window.setTimeout(generate, 130);
+  }
+});
+/** Numeric fields commit through the existing slider pipeline. Invalid drafts
+ * never reach the case or worker; editing a number remains local until commit. */
+function commitQuickNumber(input: HTMLInputElement, report = true) {
+  const key = input.dataset.quickNumber;
+  if (!key || !isCaseControlKey(key) || input.disabled || $("#quick-adjust").hidden) return;
+  const value = input.valueAsNumber;
+  if (!Number.isFinite(value) || !input.checkValidity()) { if (report) input.reportValidity(); return; }
+  if (value === c[key as keyof ECGCase]) return;
+  const slider = $("#quick-adjust").querySelector<HTMLInputElement>(`input[type="range"][data-key="${key}"]`);
+  if (!slider || slider.disabled) return;
+  slider.value = String(value);
+  slider.dispatchEvent(new Event('input', {bubbles: true}));
+  input.value = String(c[key as keyof ECGCase]);
+}
+$("#quick-adjust").addEventListener('change', event => {
+  const input = event.target;
+  if (input instanceof HTMLInputElement && input.dataset.quickNumber) commitQuickNumber(input, false);
+});
+$("#quick-adjust").addEventListener('focusout', event => {
+  const input = event.target;
+  if (!(input instanceof HTMLInputElement) || !input.dataset.quickNumber) return;
+  const key = input.dataset.quickNumber;
+  if (isCaseControlKey(key) && (!Number.isFinite(input.valueAsNumber) || !input.checkValidity()))
+    input.value = String(c[key as keyof ECGCase]);
+});
+$("#quick-adjust").addEventListener('keydown', event => {
+  const e = event as KeyboardEvent, input = e.target;
+  if (e.key === 'Enter' && !e.isComposing && input instanceof HTMLInputElement && input.dataset.quickNumber) {
+    e.preventDefault(); commitQuickNumber(input);
   }
 });
 document.addEventListener("change", (e) => {
@@ -1013,51 +1056,6 @@ async function openComparison() {
     dialog.addEventListener("close", cleanup);
   } catch { if (opened || isCurrent()) toast("No se pudo abrir la comparación. Inténtalo de nuevo."); }
 }
-async function openTeachingWorkspace() {
-  if (!session.signal || !session.canExport || (quiz && !quiz.answer)) return;
-  const signal = session.signal, ecg = cloneCase(c), key = teachingKey(signal);
-  const isCurrent = requestDialog();
-  let mountTeachingWorkspace: typeof import("./ui/teaching-workspace").mountTeachingWorkspace;
-  try { ({ mountTeachingWorkspace } = await import("./ui/teaching-workspace")); }
-  catch { if (isCurrent()) toast("No se pudo cargar el Aula ECG. Inténtalo de nuevo."); return; }
-  // A new case or practice question may have arrived while the optional module loaded.
-  if (!isCurrent() || signal !== session.signal || !session.canExport || (quiz && !quiz.answer)) return;
-  const menu = $<HTMLDetailsElement>(".paper-menu");
-  menu.open = false;
-  menu.querySelector<HTMLElement>("summary")!.focus({ preventScroll: true });
-  openDialog("Aula ECG · observar, anotar y relacionar", '<div id="teaching-root"></div>');
-  const dialog = $<HTMLDialogElement>("#dialog"), host = $("#teaching-root");
-  dialog.classList.add("teaching-dialog"); dialog.setAttribute("aria-label", "Aula ECG");
-  let auxiliary: SignalController | null = null, cancelLoad: (() => void) | null = null;
-  const dispose = mountTeachingWorkspace(host, {
-    signal, c: ecg, previous: previousSignal,
-    loadPrevious: lesionBaseline(ecg) ? () => new Promise<Signal>((resolve, reject) => {
-      if (previousSignal && signal === session.signal) { resolve(previousSignal); return; }
-      auxiliary = new SignalController((current, _m, _id, previous) => {
-        auxiliary?.dispose(); auxiliary = null; cancelLoad = null;
-        if (!previous || signalFingerprint(current) !== signalFingerprint(signal)) { reject(new Error("No se puede vincular el basal a estas muestras. El registro actual se conserva.")); return; }
-        if (signal === session.signal) previousSignal = previous;
-        resolve(previous);
-      }, message => { auxiliary?.dispose(); auxiliary = null; cancelLoad = null; reject(new Error(message)); });
-      cancelLoad = () => reject(new Error("Comparación cancelada al cerrar el Aula."));
-      auxiliary.request(ecg, signal.duration, { previous: true });
-    }) : undefined,
-    notes: teachingNotes.get(key) ?? [],
-    onNotesChange: notes => { teachingNotes.set(key, notes); draw(); },
-    snapshots: teachingSnapshots,
-    onSnapshot: snapshot => { teachingSnapshots.push(snapshot); },
-  });
-  let finished = false;
-  const cleanup = () => {
-    if (finished) return; finished = true;
-    dispose(); auxiliary?.dispose(); cancelLoad?.(); observer.disconnect();
-    dialog.classList.remove("teaching-dialog"); dialog.removeAttribute("aria-label"); dialog.removeEventListener("close", cleanup);
-  };
-  const observer = new MutationObserver(() => { if (!host.isConnected) cleanup(); });
-  observer.observe($("#dialog-content"), { childList: true });
-  dialog.addEventListener("close", cleanup);
-  $("#dialog-content [data-action=close-dialog]").focus();
-}
 const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
   "catalog-index": () => {
     catalogIndexOpen = !!search || !catalogIndexOpen; search = ""; group = "";
@@ -1074,8 +1072,6 @@ const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
     $("[data-action=catalog-index]").focus({preventScroll:true});
   },
   compare: () => openComparison(),
-  teaching: () => openTeachingWorkspace(),
-  "teaching-marks": () => { teachingMarksVisible = !teachingMarksVisible; draw(); },
   "clear-search": () => {
     search = ""; group = "";
     $<HTMLInputElement>("#case-search").value = "";
