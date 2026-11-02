@@ -12,6 +12,7 @@ for(const viewport of [{width:1440,height:900},{width:390,height:844},{width:320
  await page.addInitScript(()=>{localStorage.setItem('ecglab-acquisition','ideal');localStorage.setItem('ecglab-theme','light');});
  await page.goto(process.env.ECG_TEST_URL??'http://127.0.0.1:4173/');await page.locator('#signal-loading').waitFor({state:'hidden'});
  const canvas=await page.locator('#ecg').evaluate(e=>e.toDataURL()),replies=await workerReplies(page);
+ const originalPaperWidth=await page.locator('#ecg').evaluate(e=>e.getBoundingClientRect().width);
  await page.locator('[data-reading-segment="7"]').click();
  const svg=page.locator('.lead-detail-trace'),root=page.locator('#lead-explorer'),plot=page.locator('.lead-detail-scroll');
  const path=await page.locator('.lead-sample-path').getAttribute('d'),original=await svg.boundingBox();
@@ -65,6 +66,10 @@ for(const viewport of [{width:1440,height:900},{width:390,height:844},{width:320
  await page.getByLabel('Derivación ampliada',{exact:true}).selectOption('aVL');assert.equal(await root.getAttribute('data-manual-ms'),null);
  await page.getByRole('button',{name:'Ocultar medición manual',exact:true}).click();assert.equal(await page.locator('.lens-manual-mark').count(),0);
  await page.getByRole('button',{name:'Medir en la lupa',exact:true}).click();assert.equal(await root.getAttribute('data-manual-ms'),null,'A new lead cannot resurrect the previous measurement');
+ // The main sheet now fits the space beside the rail, so shrinking the viewport
+ // legitimately redraws it. Restore that viewport before comparing exact pixels.
+ await page.setViewportSize(viewport);
+ await page.waitForFunction(width=>Math.abs(document.querySelector('#ecg').getBoundingClientRect().width-width)<.01,originalPaperWidth);
  await page.keyboard.press('Escape');assert.equal(await workerReplies(page),replies);assert.equal(await page.locator('#ecg').evaluate(e=>e.toDataURL()),canvas);
  results.push(viewport);await page.close();
 }
