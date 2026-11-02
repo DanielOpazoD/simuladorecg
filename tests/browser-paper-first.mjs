@@ -90,7 +90,16 @@ try{
    assert.equal(await page.locator('#reading-details summary').count(),0);
    assert.equal(await page.locator('[data-action=present-30]').count(),0);
    assert.equal(await page.locator('.workspace-footer [data-product-version]').count(),0);
-   const paperTop=(await page.locator('#ecg').boundingBox()).y;if(!v.zoom)assert(paperTop<340,`Paper starts too low: ${paperTop}`);
+   const paperTop=(await page.locator('#ecg').boundingBox()).y;
+   if(!v.zoom){
+    // The persistent reset target now shares the title row. Budget only the
+    // extra height it needs beyond the title, keeping its 44px interaction area.
+    const titleHeight=await page.locator('#case-title').evaluate(e=>e.getBoundingClientRect().height);
+    const resetHeight=await page.locator('[data-action=reset]').evaluate(e=>e.getBoundingClientRect().height);
+    assert(resetHeight>=44&&resetHeight<=44.5,'Reset must keep its compact 44px target');
+    const compactHeaderLimit=340+Math.max(0,resetHeight-titleHeight);
+    assert(paperTop<compactHeaderLimit,JSON.stringify({paperTop,compactHeaderLimit,titleHeight,resetHeight}));
+   }
    const metrics=await page.locator('#metrics .metric').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return {y:r.y,right:r.right,overflow:e.scrollWidth-e.clientWidth};}));
    if(!v.zoom){assert(metrics.every(m=>m.y===metrics[0].y&&m.overflow<=2&&m.right<=v.width),JSON.stringify(metrics));}
    const jButton=page.locator('[data-action=lens-st]');assert.equal(await jButton.isVisible(),true);
