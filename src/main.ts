@@ -14,7 +14,8 @@ import { APP_VERSION } from "./ui/version";
 import { catalogGroup, familyLabel } from "./ui/catalog-presentation";
 import { omiSheetHtml, omiReferencesHtml, structuredDescriptionHtml } from "./ui/omi-sheet";
 import { structuredDescription, type DescriptionInfo, type StructuredDescription } from "./ui/structured-description";
-import { educationalReading } from "./ui/educational-reading";
+import { educationalReadingDetail } from "./ui/educational-reading";
+import { adjustmentFeedback, adjustmentSnapshot, isAdjustmentKey, type AdjustmentKey, type AdjustmentSnapshot } from "./ui/adjust-feedback";
 import { mountReadingLesson } from "./ui/reading-lesson";
 import { quickAdjustHtml, syncQuickAdjust } from "./ui/quick-adjust";
 import { descriptionInfoHtml, descriptionInfoTitle } from "./ui/description-info";
@@ -111,6 +112,16 @@ let timer = 0,
   group = "",
   quiz: PracticeState | null = null;
 let explorationOrigin: ExplorationOrigin | null = null;
+// Feedback for a real adjustment: the accepted signal before the edit, the keys
+// edited until the worker answers, and the sentence computed on publication.
+let adjustmentBaseline: AdjustmentSnapshot | null = null;
+const adjustmentKeys = new Set<AdjustmentKey>();
+let adjustmentText: string | null = null;
+function clearAdjustmentContext() {
+  adjustmentBaseline = null;
+  adjustmentKeys.clear();
+  adjustmentText = null;
+}
 let initialError = "";
 try {
   const decoded = decodeCase(location.hash);
@@ -130,7 +141,7 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  <p class="sr-only" id="trace-context" hidden></p><div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-context trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div><p id="trace-calibration" class="trace-calibration"></p>
  <div id="caliper-editor" class="caliper-editor" hidden></div><div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><p id="trace-keyboard-help" class="sr-only">Con foco en el trazado: M y P cambian la vista; V y G, la escala; C activa los calibres y espacio congela el monitor. Con calibres, las flechas mueven el extremo seleccionado; Mayús mueve diez pasos. Con zoom, arrastra el papel o usa las flechas para desplazarte; con calibres activos, el arrastre mide. Pulsa ? para abrir la ayuda de atajos.</p></section>
  </div><aside id="quick-adjust" aria-label="Ajustar ECG" hidden></aside></div>
- <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><h2 id="finding-title">Qué observar</h2><p id="case-subtitle" class="guide-lead">Activación auricular sinusal seguida de conducción AV 1:1.</p><ul id="findings"></ul><section id="reading-details" aria-labelledby="reading-details-title"><h3 id="reading-details-title">Explicación</h3><p id="reading-education" class="reading-education" hidden></p><section id="reading-lesson" aria-label="Mecanismo del ECG" hidden></section><div class="reading-detail-content"><div id="structured-description"></div><div id="omi-sheet"></div></div></section></div></section>
+ <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><h2 id="finding-title">Qué observar</h2><p id="case-subtitle" class="guide-lead">Activación auricular sinusal seguida de conducción AV 1:1.</p><ul id="findings"></ul><section id="reading-details" aria-labelledby="reading-details-title"><h3 id="reading-details-title">Explicación</h3><p id="reading-education" class="reading-education" hidden></p><div class="reading-detail-content"><div id="structured-description"></div><div id="omi-sheet"></div></div><section id="reading-lesson" aria-label="Mecanismo del ECG" hidden></section></section></div></section>
  <div class="adjust-row"><details id="adjust" class="adjust-panel"><summary><span>Más ajustes</span></summary><div id="inspector" class="inspector"></div></details></div>
  <footer class="workspace-footer"><button class="text-button information-button" data-action="about" aria-label="Información y fuentes" title="Información y fuentes">${icon("info")}</button></footer></main></div>
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
@@ -219,16 +230,28 @@ function renderReadingLesson() {
   disposeReadingLesson?.(); disposeReadingLesson = null;
   host.replaceChildren(); host.hidden = true; readingLessonSignal = null; readingLessonKey = "";
   if (!ready || !signal) return;
-  disposeReadingLesson = mountReadingLesson(host, c, signal);
+  // The lesson reports its kind while the host is still empty: the AV ladder keeps its place before
+  // the table and the contraction scheme follows the electrical sheet. A compatible re-render never gets here.
+  const content = $(".reading-detail-content");
+  disposeReadingLesson = mountReadingLesson(host, c, signal, kind => {
+    if (kind === "av") { if (host.nextElementSibling !== content) content.before(host); }
+    else if (host.previousElementSibling !== content) content.after(host);
+  });
   readingLessonSignal = signal; readingLessonKey = key;
 }
 function renderDescription() {
   const concealed = quiz && !quiz.answer;
   const preset = caseContext(c).preset;
   description = !concealed && session.signal ? structuredDescription(c, session.signal, preset && !c.artifacts.reversed ? caseReading(c).title : undefined) : null;
-  $("#structured-description").innerHTML = description && session.signal ? structuredDescriptionHtml(description, true, true) : "";
+  // One detail per render: its text feeds the separate paragraph and the rows it already covers
+  // leave the flat list, so the same caution is never printed twice. Export is untouched.
+  const detail = description && session.signal ? educationalReadingDetail(c, session.signal, description) : null;
+  // The adjustment sentence replaces the explanation only for the published signal it describes;
+  // the rows the explanation covered then stay in the table with their caution.
+  const feedback = !concealed && description && session.canExport && session.signal ? adjustmentText : null;
+  $("#structured-description").innerHTML = description && session.signal ? structuredDescriptionHtml(description, true, true, "", feedback ? [] : detail?.coversRows ?? []) : "";
   const education = $("#reading-education");
-  education.textContent = description && session.signal ? educationalReading(c, session.signal, description) : "";
+  education.textContent = feedback ?? detail?.text ?? "";
   education.hidden = !education.textContent;
   $("#reading-details").hidden = !description;
   renderReadingLesson();
@@ -500,12 +523,18 @@ function publishSignal(next: Signal, measured: Measurement, requestId: number, c
     const audited = auditMeasurement(next, measured);
     if (candidate) {
       pendingPaperAnchor = null;
+      clearAdjustmentContext();
       c = cloneCase(candidate); annotations = false;
       session.expectRequest(requestId);
       clearToast(); renderCatalog(); renderControls();
     }
     if (!session.accept(requestId, next, audited, c.view.mode,
       representativeBeat(audited, visibleSegmentEnd()))) return;
+    // Accepted result: answer the edits that produced it, then retire the pending context.
+    const feedback = adjustmentBaseline && adjustmentKeys.size
+      ? adjustmentFeedback(adjustmentBaseline, adjustmentSnapshot(c, next), [...adjustmentKeys]) : null;
+    clearAdjustmentContext();
+    adjustmentText = feedback;
     publishedLessonKey = lessonKey();
     resetTracePresentation();
     $("#signal-loading").hidden = true;
@@ -529,6 +558,7 @@ const controller = new SignalController(
   (message, requestId) => {
     if (!session.fail(requestId)) return;
     pendingPaperAnchor = null;
+    clearAdjustmentContext();
     // The persistent live region below carries the error. A duplicate long
     // toast can cover that explanation on mobile and announce it twice.
     clearToast();
@@ -767,6 +797,7 @@ function selectPreset(id: string) {
   if (same && session.canExport && !quiz) {
     renderCatalog(); $("#catalog").classList.remove("open"); return;
   }
+  clearAdjustmentContext();
   c = next;
   explorationOrigin=createExplorationOrigin(p,c);
   caliper = null;
@@ -783,6 +814,14 @@ function setValue(key: string, value: unknown) {
   if (quiz && !keepsPractice(key)) { leavePractice(); renderInfo(); }
   if (key.startsWith("view.") && key !== "view.grid" && key !== "view.palette") {
     caliper = null; pendingPaperAnchor = null;
+  }
+  if (!key.startsWith("view.")) {
+    if (isAdjustmentKey(key)) {
+      // A burst keeps the first baseline: session.signal is the accepted result only before the edit.
+      if (!adjustmentKeys.size) adjustmentBaseline = session.canExport && session.signal ? adjustmentSnapshot(c, session.signal) : null;
+      adjustmentKeys.add(key);
+      adjustmentText = null;
+    } else clearAdjustmentContext();
   }
   c = changeCase(c, key, value);
   if (session.measurement && (key === "view.timing" || key === "view.format"))
@@ -995,6 +1034,7 @@ function leavePractice() {
 }
 /** A whole case from outside the catalog (saved, imported file or shared link). */
 function openCase(next: ECGCase) {
+  clearAdjustmentContext();
   c = withInterfaceView(next);
   explorationOrigin = null;
   leavePractice();
@@ -1005,6 +1045,7 @@ function openCase(next: ECGCase) {
 }
 /** Back to the preset the exploration started from, keeping the current view. */
 function restoreOrigin(origin: ExplorationOrigin) {
+  clearAdjustmentContext();
   c = restoreExplorationOrigin(origin, c);
   caliper = null;
   session.resetTools();
@@ -1134,7 +1175,7 @@ const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
     else { selectPreset(c.presetId === "custom" ? "sinus" : c.presetId); toast("Parámetros restablecidos"); }
   },
   quiz: () => startQuiz(),
-  "end-quiz": () => { leavePractice(); renderInfo(); draw(); },
+  "end-quiz": () => { clearAdjustmentContext(); leavePractice(); renderInfo(); draw(); },
 };
 document.addEventListener("click", async (e) => {
   const target = e.target as HTMLElement,

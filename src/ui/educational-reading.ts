@@ -2,6 +2,7 @@ import type { ECGCase, Signal } from '../engine/types';
 import { modelIntervals } from './model-intervals';
 import { dominantBeats, type StructuredDescription } from './structured-description';
 import { avReadingLesson } from './av-reading';
+import { conductionObservation, type ConductionObservation } from './terminal-qrs';
 
 /** Original Spanish teaching copy, developed with Fable and reviewed against current events.
  * Conceptual references: HITL chapters 06 (intervals), 09 (sinus), 10 (atrial),
@@ -13,8 +14,50 @@ function wenckebachVerified(c: ECGCase, s: Signal): boolean {
   return avReadingLesson(c, s) !== null;
 }
 
-/** Read-only: no synthesis, measurement or changes to the structured/exported description. */
+export interface EducationalReadingDetail { text: string; coversRows: readonly string[] }
+
+const NO_ROWS: readonly string[] = Object.freeze([]);
+/** The conduction copy already carries the ST–T caution, so it covers that row. */
+const CONDUCTION_ROWS: readonly string[] = Object.freeze(['ST/QRS']);
+
+type ObservedLead = 'V1' | 'I' | 'V6';
+
+function listLeads(xs: readonly string[]): string {
+  return xs.length > 1 ? `${xs.slice(0, -1).join(', ')} y ${xs[xs.length - 1]}` : xs[0];
+}
+
+/** Describes only what the terminal-window reader saw in V1, I and V6: the preset's
+ * conduction orients the lesson, the observation justifies the facts. Flat is never
+ * called negative, and no R'/S, BRD or BRI is inferred from these three signs. */
+function conductionCopy(o: ConductionObservation): string {
+  const leads: readonly [ObservedLead, string][] = [['V1', o.v1], ['I', o.i], ['V6', o.v6]];
+  const by = (p: string) => leads.filter(([, q]) => q === p).map(([l]) => l);
+  const pos = by('positive'), neg = by('negative'), flat = by('flat');
+  const caution = 'un QRS ancho no explica por sí solo todos los cambios del ST–T.';
+  if (!pos.length && !neg.length)
+    return `El tramo final del QRS queda sin polaridad terminal clara en ${listLeads(flat)}. Observa el final de cada complejo en esas derivaciones antes de atribuirle un patrón y compáralo con la T: ${caution}`;
+  const parts = [pos.length ? `positivo en ${listLeads(pos)}` : '', neg.length ? `negativo en ${listLeads(neg)}` : ''].filter(Boolean);
+  const rest = flat.length ? `, sin polaridad terminal clara en ${listLeads(flat)}` : '';
+  return `El tramo final del QRS es ${parts.join(' y ')}${rest}. Compara esas direcciones con la T: ${caution}`;
+}
+
+/** Read-only copy plus the rows its own caution already covers. Measurements, summary and export are untouched. */
+export function educationalReadingDetail(c: ECGCase, s: Signal, d: StructuredDescription): EducationalReadingDetail {
+  if (c.conduction === 'rbbb' || c.conduction === 'lbbb') {
+    // The helper is null outside its sinus domain (reversed arms, pacing, ectopy, ischemia...),
+    // so every earlier priority of the fallback keeps its current copy.
+    const obs = conductionObservation(c, s);
+    if (obs) return { text: conductionCopy(obs), coversRows: CONDUCTION_ROWS };
+  }
+  return { text: fallbackEducationalReading(c, s, d), coversRows: NO_ROWS };
+}
+
 export function educationalReading(c: ECGCase, s: Signal, d: StructuredDescription): string {
+  return educationalReadingDetail(c, s, d).text;
+}
+
+/** Read-only: no synthesis, measurement or changes to the structured/exported description. */
+function fallbackEducationalReading(c: ECGCase, s: Signal, d: StructuredDescription): string {
   if (c.artifacts.reversed)
     return 'La inversión de los brazos cambia las polaridades de las derivaciones de miembros. Comprueba la conexión antes de relacionar el eje del registro con la anatomía.';
   if (c.rhythm === 'paced' && s.events.spikes.length)

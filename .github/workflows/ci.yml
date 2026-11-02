@@ -128,6 +128,8 @@ jobs:
         run: node tests/browser-av-ladder.mjs "$RUNNER_TEMP/ecg-teaching/av-ladder"
       - name: Lectura en la página, correlación y herramientas principales
         run: node tests/browser-inline-reading.mjs "$RUNNER_TEMP/ecg-teaching/inline-reading"
+      - name: Explicación contextual, orden de lectura y registro conservado
+        run: node tests/browser-contextual-learning.mjs "$RUNNER_TEMP/ecg-teaching/contextual-learning"
       - name: Ajustar ECG, controles nativos, casos y papel conservado
         run: node tests/browser-quick-adjust.mjs "$RUNNER_TEMP/ecg-teaching/quick-adjust"
       - name: Conservar pruebas de lectura y compatibilidad, incluidos fallos

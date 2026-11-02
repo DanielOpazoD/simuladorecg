@@ -34,6 +34,17 @@ describe("about dialog content", () => {
   });
 
 
+  it("explains the terminal-QRS provenance inside the generation section without new controls", () => {
+    const html = aboutDialogHtml();
+    const generation = html.split("<summary>Referencias y atribución</summary>")[0];
+    expect(generation).toContain("tramo final del QRS (últimos 40 ms) en V1, I y V6");
+    expect(generation).toContain("umbral de legibilidad de 0,1 mV es ilustrativo");
+    expect(generation).toContain("no es una delineación independiente ni un detector clínico");
+    expect(generation).toContain("las estimaciones del analizador siguen en Medidas");
+    expect(generation).not.toContain("<button");
+    expect(generation).not.toContain("title=");
+  });
+
   it("retains references as HTTPS links opening with noopener", () => {
     const html = aboutDialogHtml();
     const links = [...html.matchAll(/<a href="([^"]+)" target="_blank" rel="noopener">/g)];
