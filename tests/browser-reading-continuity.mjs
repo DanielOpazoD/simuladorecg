@@ -5,7 +5,6 @@ import {resolve} from 'node:path';
 import {chromium} from 'playwright';
 import {installWorkerTap,workerReplies} from './support/worker-tap.mjs';
 import {chooseCatalogPreset} from './support/catalog-navigation.mjs';
-import {openControlPanel} from './support/adjust-panel.mjs';
 const out=resolve(process.argv[2]??'../ECG-QA/reading-continuity');await mkdir(out,{recursive:true});
 const browser=await chromium.launch(),results=[],errors=[];let failure,active;
 const value=p=>p.locator('#measurement-values').getAttribute('data-ms');
@@ -42,7 +41,7 @@ try{
     const wrap=document.querySelector('#canvas-wrap'),canvas=document.querySelector('#ecg');
     wrap.scrollTop=Math.min(500,wrap.scrollHeight-wrap.clientHeight);wrap.scrollLeft=Math.min(400,wrap.scrollWidth-wrap.clientWidth);
     const pos=()=>({left:wrap.scrollLeft,top:wrap.scrollTop,width:canvas.clientWidth,height:canvas.clientHeight});
-    const before=pos(),select=document.querySelector('[data-key=acquisition]');select.value='realistic';select.dispatchEvent(new Event('change',{bubbles:true}));
+    const before=pos(),select=document.querySelector('#quick-adjust [data-key=pr]');select.value=String(+select.value+10);select.dispatchEvent(new Event('input',{bubbles:true}));
     return {before,loading:pos(),pending:!document.querySelector('#signal-loading').hidden};
    });
    assert(pending.pending);assert.deepEqual(pending.loading,pending.before,'Loading must preserve zoom geometry and scroll');
@@ -50,17 +49,15 @@ try{
    const after=await p.locator('#canvas-wrap').evaluate(e=>({left:e.scrollLeft,top:e.scrollTop}));
    assert(Math.abs(after.left-pending.before.left)<2&&Math.abs(after.top-pending.before.top)<10,JSON.stringify({pending,after}));
    assert.equal(await value(p),null,'New samples must discard old caliper');
-   // Two requests before delivery must retain one anchor and publish only the latest state.
-   await p.evaluate(()=>{for(const v of ['ideal','realistic']){const s=document.querySelector('[data-key=acquisition]');s.value=v;s.dispatchEvent(new Event('change',{bubbles:true}));}});
+   // Two native edits before delivery must retain one anchor and publish only the latest state.
+   await p.evaluate(()=>{const s=document.querySelector('#quick-adjust [data-key=pr]'),v=+s.value;for(const n of [v+2,v+4]){s.value=String(n);s.dispatchEvent(new Event('input',{bubbles:true}));}});
    await p.locator('#signal-loading').waitFor({state:'hidden'});
    const afterRapid=await p.locator('#canvas-wrap').evaluate(e=>({left:e.scrollLeft,top:e.scrollTop}));
    assert(Math.abs(afterRapid.left-after.left)<=1&&Math.abs(afterRapid.top-after.top)<=1,JSON.stringify({message:'Superseded requests must retain the anchor within native scroll rounding',viewport,id,after,afterRapid}));
    await p.locator('.paper-menu > summary').click();await measure(p);await settings(p);
    await p.locator('[data-key="view.speed"]').selectOption('50');assert.equal(await value(p),null,'New scale must discard pixel-based caliper');
    await p.locator('[data-key="view.speed"]').selectOption('25');
-   await openControlPanel(p,'signal');
-   await p.locator('[data-key=acquisition]').selectOption('ideal');await p.locator('#signal-loading').waitFor({state:'hidden'});
-   await p.locator('#adjust > summary').click();await measure(p);
+   await p.keyboard.press('Escape');await measure(p);
    await chooseCatalogPreset(p,id==='sinus'?'lbbb':'sinus');await p.locator('#signal-loading').waitFor({state:'hidden'});assert.equal(await value(p),null);
    results.push({viewport,id,pending,after,afterRapid,readingRetainsMeasurement:true,newSamplesAndScaleInvalidate:true});
   }

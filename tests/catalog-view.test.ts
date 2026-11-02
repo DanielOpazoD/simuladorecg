@@ -82,8 +82,13 @@ describe("catalog presentation", () => {
 
 function navigationFixture() {
   let html = "";
+  const navigationAttributes: Record<string, string> = {};
   const navigation = {
     hidden: false,
+    style: { visibility: "" },
+    setAttribute: (key: string, value: string) => { navigationAttributes[key] = value; },
+    removeAttribute: (key: string) => { delete navigationAttributes[key]; },
+    toggleAttribute: (key: string, enabled: boolean) => { if (enabled) navigationAttributes[key] = ""; else delete navigationAttributes[key]; },
     get innerHTML() { return html; },
     set innerHTML(value: string) { html = value; },
   };
@@ -94,7 +99,7 @@ function navigationFixture() {
     removeAttribute: (key: string) => { delete attributes[key]; },
   };
   const view = new VariantNavigation(navigation as unknown as HTMLElement, content as unknown as HTMLElement);
-  return { view, navigation, setHtml, attributes };
+  return { view, navigation, setHtml, attributes, navigationAttributes };
 }
 
 describe("variant navigation", () => {
@@ -128,10 +133,30 @@ describe("variant navigation", () => {
     const { view, navigation, attributes } = navigationFixture();
     view.update(presetById("af"), false, false);
     view.update(preset, concealed, reversed);
-    expect(navigation).toEqual({ hidden: true, innerHTML: "" });
+    expect(navigation).toMatchObject({ hidden: true, innerHTML: "" });
     expect(attributes).toEqual({});
     view.update(presetById("af"), false, false);
     expect(navigation.hidden).toBe(false);
     expect(attributes.role).toBe("tabpanel");
+  });
+
+  it("reserves edited-family space without exposing a selected or focusable tab, then restores normal navigation", () => {
+    const { view, navigation, attributes, navigationAttributes } = navigationFixture();
+    const origin = presetById("sinus");
+    view.update(origin, false, false);
+    view.update(undefined, false, false, origin);
+    expect(navigation.hidden).toBe(false);
+    expect(navigation.style.visibility).toBe("hidden");
+    expect(navigationAttributes).toEqual({ inert: "", "aria-hidden": "true" });
+    expect(navigation.innerHTML).not.toContain('aria-selected="true"');
+    expect(navigation.innerHTML).not.toContain('tabindex="0"');
+    expect(attributes).toEqual({});
+    view.update(undefined, true, false, origin);
+    expect(navigation.hidden).toBe(true);
+    expect(navigation.innerHTML).toBe("");
+    view.update(origin, false, false);
+    expect(navigation.style.visibility).toBe("");
+    expect(navigationAttributes).toEqual({});
+    expect(navigation.innerHTML.match(/aria-selected="true"/g)).toHaveLength(1);
   });
 });

@@ -75,15 +75,25 @@ export class VariantNavigation {
     private readonly content: HTMLElement,
   ) {}
 
-  update(preset: Preset | undefined, concealed: boolean, reversed: boolean) {
-    const diagnosis = preset && !concealed && !reversed ? diagnosisForPreset(preset) : null;
+  update(preset: Preset | undefined, concealed: boolean, reversed: boolean, reserve?: Preset) {
+    const visible = !concealed && !reversed;
+    const diagnosis = visible && preset ? diagnosisForPreset(preset) : null;
     const multi = diagnosis && diagnosis.variants.length > 1;
-    const key = multi ? `${diagnosis.id}/${preset!.id}` : "";
-    this.navigation.hidden = !multi;
+    // Custom exploration: the origin pattern's variants only reserve their space (invisible and inert),
+    // so the ECG keeps its position while editing. No tab is marked active.
+    const reserved = !multi && visible && reserve ? diagnosisForPreset(reserve) : null;
+    const placeholder = !!reserved && reserved.variants.length > 1;
+    const shown = multi ? diagnosis : placeholder ? reserved : null;
+    const key = multi ? `${diagnosis.id}/${preset!.id}` : placeholder ? `${reserved.id}/reserve` : "";
+    this.navigation.hidden = !shown;
     if (key !== this.renderedKey) {
-      this.navigation.innerHTML = multi ? `<span id="variant-label" class="sr-only">Variantes del patrón</span><div class="variant-tabs" role="tablist" aria-labelledby="variant-label" data-activation="manual">${diagnosis.variants.map(v => `<button type="button" role="tab" id="variant-tab-${esc(v.id)}" data-variant="${esc(v.id)}" aria-selected="${v.id === preset!.id}" aria-controls="diagnosis-content" tabindex="${v.id === preset!.id ? 0 : -1}">${esc(v.label)}</button>`).join("")}</div>` : "";
+      this.navigation.innerHTML = shown ? `<span id="variant-label" class="sr-only">Variantes del patrón</span><div class="variant-tabs" role="tablist" aria-labelledby="variant-label" data-activation="manual">${shown.variants.map(v => { const active = !!multi && v.id === preset!.id; return `<button type="button" role="tab" id="variant-tab-${esc(v.id)}" data-variant="${esc(v.id)}" aria-selected="${active}" aria-controls="diagnosis-content" tabindex="${active ? 0 : -1}">${esc(v.label)}</button>`; }).join("")}</div>` : "";
       this.renderedKey = key;
     }
+    this.navigation.style.visibility = placeholder ? "hidden" : "";
+    this.navigation.toggleAttribute("inert", placeholder);
+    if (placeholder) this.navigation.setAttribute("aria-hidden", "true");
+    else this.navigation.removeAttribute("aria-hidden");
     if (multi) {
       this.content.setAttribute("role", "tabpanel");
       this.content.setAttribute("aria-labelledby", `variant-tab-${preset!.id}`);

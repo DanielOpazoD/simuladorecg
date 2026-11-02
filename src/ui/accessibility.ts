@@ -45,9 +45,9 @@ export function installAccessibility() {
   const title = document.querySelector<HTMLElement>('#case-title')!;
   title.tabIndex = -1;
   document.querySelector<HTMLElement>('.sidebar-head h2')!.id = 'catalog-title';
-  document.querySelector<HTMLElement>('#inspector')!.tabIndex = -1;
+  document.querySelector<HTMLElement>('#quick-adjust')!.tabIndex = -1;
   trigger.setAttribute('aria-controls','catalog');
-  topbar.insertAdjacentHTML('beforebegin', '<nav class="skip-links" aria-label="Accesos directos"><a href="#case-title">Ir al simulador</a><a href="#inspector">Ir a parámetros</a></nav>');
+  topbar.insertAdjacentHTML('beforebegin', '<nav class="skip-links" aria-label="Accesos directos"><a href="#case-title">Ir al simulador</a><a href="#quick-adjust">Ir a Ajustar ECG</a></nav>');
   const skips = document.querySelector<HTMLElement>('.skip-links')!;
   skips.addEventListener('click', e => {
     const anchor = (e.target as Element).closest<HTMLAnchorElement>('a');
@@ -69,7 +69,7 @@ export function installAccessibility() {
     const node = e.target as HTMLElement;
     const dialog = node.closest<HTMLDialogElement>('dialog');
     if (dialog && last && last.root !== dialog && !dialog.contains(last.root) && !dialog.contains(last.node)) returns.set(dialog, last);
-    last = {node, selector:selectorFor(node), root:node.closest<HTMLElement>('#diagnosis-navigation,#inspector,#scale-toolbar,#caliper-editor,#catalog') ?? dialog ?? app};
+    last = {node, selector:selectorFor(node), root:node.closest<HTMLElement>('#diagnosis-navigation,#quick-adjust,#scale-toolbar,#caliper-editor,#catalog') ?? dialog ?? app};
   });
   function restoreFocus() {
     if (!last || last.node.isConnected || document.activeElement !== document.body) return;
@@ -96,6 +96,8 @@ export function installAccessibility() {
     const concealed = catalog.classList.contains('quiz-concealed');
     const open = mobile.matches && !concealed && catalog.classList.contains('open');
     trigger.disabled = concealed;
+    // The adjust panel is hidden during practice; its skip link goes with it.
+    skips.querySelector<HTMLAnchorElement>('a[href="#quick-adjust"]')!.hidden = concealed;
     trigger.setAttribute('aria-expanded', String(open));
     catalog.inert = concealed || (mobile.matches && !open);
     if (catalog.inert) catalog.setAttribute('aria-hidden','true'); else catalog.removeAttribute('aria-hidden');

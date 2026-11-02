@@ -6,7 +6,7 @@ type WorkspaceActions = Record<
 export class WorkspaceNavigation {
   constructor(
     private readonly catalog: Pick<HTMLElement, "classList">,
-    private readonly inspector: Pick<HTMLElement, "scrollIntoView" | "focus">,
+    private readonly adjustment: Pick<HTMLElement, "scrollIntoView" | "focus">,
     private readonly actions: WorkspaceActions,
   ) {}
 
@@ -14,8 +14,8 @@ export class WorkspaceNavigation {
     switch (action) {
       case "parameters":
         if (!concealed) {
-          this.inspector.scrollIntoView({ block: "start" });
-          this.inspector.focus({ preventScroll: true });
+          this.adjustment.scrollIntoView({ block: "start" });
+          this.adjustment.focus({ preventScroll: true });
         }
         return true;
       case "catalog":

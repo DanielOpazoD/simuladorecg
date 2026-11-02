@@ -1,7 +1,6 @@
 import { applyTheme, currentTheme, readTheme } from "./ui/theme";
 import { acquisitionDescription, readAcquisitionPreference, saveAcquisitionPreference } from "./ui/acquisition-preference";
 import { aboutDialogHtml, keyboardHelpHtml } from "./ui/about-dialog";
-import { regionalActivationControls } from "./ui/regional-activation";
 import "./style.css";
 import "./ui/reading-interactions.css";
 import "./ui/measurement-presentation.css";
@@ -30,7 +29,7 @@ import { handleExportAction } from "./ui/export-actions";
 import { diagnosisForPreset } from "./ui/diagnosis-navigation";
 import { catalogView, catalogFamilyLabel, catalogFamilyForPreset, VariantNavigation } from "./ui/catalog-view";
 import { WorkspaceNavigation } from "./ui/workspace-navigation";
-import { createExplorationOrigin, explorationContextHtml, explorationChanges, restoreExplorationOrigin, type ExplorationOrigin } from "./ui/exploration-origin";
+import { createExplorationOrigin, explorationChanges, restoreExplorationOrigin, type ExplorationOrigin } from "./ui/exploration-origin";
 import {
   cloneCase,
   NATURAL_CONTROLS,
@@ -69,7 +68,7 @@ import {
 import { icon, btn, esc, keepInView, select } from "./ui/helpers";
 import { GAINS, SPEEDS, gainOptions, nextInCycle, speedOptions } from "./ui/view-scales";
 import { syncPauseControl } from "./ui/pause-control";
-import { controls, controlLimitsHtml, leadOptions, amplitudeControlState, tAxisControlState } from "./ui/controls";
+import { controlLimitsHtml, leadOptions } from "./ui/controls";
 import { caseContext, caseReading, normalizeImportedCase } from "./presets/case-context";
 import { modelProvenance } from "./presets/model-provenance";
 import { usesRealisticBase } from "./engine/realistic/scope";
@@ -107,7 +106,6 @@ let annotations = false,
   audioContext: AudioContext | null = null,
   lastBeep = -1;
 let timer = 0,
-  activePanel = "conduction",
   search = "",
   group = "",
   quiz: PracticeState | null = null;
@@ -133,16 +131,15 @@ applyTheme(readTheme());
 const root = $("#app");
 root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="ECG Lab, inicio">${icon("pulse")}<span>ECG<span class="brand-light">lab</span></span></a><nav aria-label="Herramientas"><button class="btn mobile-cases" data-action="catalog">${icon("menu")}<span>Casos</span></button>${btn("quiz", "Practicar", "quiz")}${btn("export", "Exportar", "download")}${btn("theme", "Tema", "sun", "icon-button")}</nav></header>
  <div class="app-layout"><aside class="sidebar" id="catalog"><div class="sidebar-head"><h2 class="sr-only">Biblioteca de patrones</h2><button class="text-button" data-action="catalog-index" aria-controls="catalog-families">Casos</button><span id="catalog-family-title"></span>${btn("close-catalog", "Cerrar", "close", "mobile-cases icon-button")}</div><nav id="catalog-families" class="catalog-families" aria-label="Familias de ECG"></nav><div class="catalog-result-bar"><span id="catalog-count" role="status" aria-live="polite"></span><button type="button" class="catalog-clear" data-action="clear-search" hidden>Limpiar filtros</button></div><div id="case-list" class="case-list"></div><label class="search-box">${icon("search")}<input id="case-search" type="search" placeholder="Buscar ECG…" aria-label="Buscar caso"/></label></aside>
- <main class="workspace"><section class="case-heading"><div><div class="case-category sr-only" id="case-category">RITMOS</div><h1 id="case-title">Ritmo sinusal</h1><p id="case-variant-title" class="case-variant-title" hidden></p><div id="exploration-context" class="exploration-context" hidden></div></div></section>
+ <main class="workspace"><section class="case-heading"><div><div class="case-category sr-only" id="case-category">RITMOS</div><div class="case-title-row"><h1 id="case-title">Ritmo sinusal</h1><button type="button" class="btn icon-button case-reset" data-action="reset" aria-label="Reiniciar ECG" title="Reiniciar ECG">${icon("reset")}</button></div><p id="case-variant-title" class="case-variant-title" hidden></p></div></section>
  <div class="case-summary-row"><section id="diagnosis-navigation" class="diagnosis-navigation" aria-label="Variantes del patrón" hidden></section>
- <div class="heading-tools"><section id="metrics" class="metrics" aria-label="Valores del modelo que generó el ECG"><div class="loading-metrics">Generando señal…</div></section><div class="case-state">${btn("reset", "Restablecer", "reset", "subtle")}</div></div></div><div class="ecg-workbench"><div id="diagnosis-content">
+ <div class="heading-tools"><section id="metrics" class="metrics" aria-label="Valores del modelo que generó el ECG"><div class="loading-metrics">Generando señal…</div></section></div></div><div class="ecg-workbench"><div id="diagnosis-content">
  <section class="trace-panel" aria-label="Trazado electrocardiográfico"><div class="trace-toolbar"><div class="trace-tools">${btn("automatic", "Medir automáticamente", "intervals")}${btn("caliper", "Medir", "ruler")}${btn("lens-st", "Punto J / ST", "jpoint")}${btn("compare", "Comparar", "strip")}${btn("pause", "Congelar", "pause")}<details class="paper-menu"><summary class="btn" data-action="paper" aria-label="Vista" title="Vista">${icon("settings")}<span>Vista</span>${icon("chevron")}</summary><div class="view-options"><div class="view-tabs" role="tablist" aria-label="Vista del ECG"><button role="tab" data-mode="paper" aria-selected="true">${icon("grid")}12 derivaciones</button><button role="tab" data-mode="monitor" aria-selected="false">${icon("monitor")}Monitor</button></div><div class="scale-toolbar" id="scale-toolbar"></div></div></details><div class="paper-zoom-controls" role="group" aria-label="Zoom del ECG"><button type="button" class="btn" data-action="zoom-out" aria-label="Reducir zoom" title="Reducir zoom">−</button><button type="button" class="btn zoom-value" data-action="zoom-reset" title="Restablecer al 100 %">100 %</button><button type="button" class="btn" data-action="zoom-in" aria-label="Ampliar zoom" title="Ampliar zoom">+</button></div></div></div>
  <div id="quiz-panel" hidden></div><div class="monitor-vitals" id="monitor-vitals" hidden><div><span>FRECUENCIA VENTRICULAR</span><strong id="monitor-rate">72</strong><small id="monitor-rate-note">No estimable</small></div><div class="monitor-controls">${btn("sound", "Sonido", "volume")}<span id="monitor-state">REPRODUCCIÓN</span></div></div>
  <p class="sr-only" id="trace-context" hidden></p><div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-context trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div><p id="trace-calibration" class="trace-calibration"></p>
  <div id="caliper-editor" class="caliper-editor" hidden></div><div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><p id="trace-keyboard-help" class="sr-only">Con foco en el trazado: M y P cambian la vista; V y G, la escala; C activa los calibres y espacio congela el monitor. Con calibres, las flechas mueven el extremo seleccionado; Mayús mueve diez pasos. Con zoom, arrastra el papel o usa las flechas para desplazarte; con calibres activos, el arrastre mide. Pulsa ? para abrir la ayuda de atajos.</p></section>
  </div><aside id="quick-adjust" aria-label="Ajustar ECG" hidden></aside></div>
  <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><h2 id="finding-title">Qué observar</h2><p id="case-subtitle" class="guide-lead">Activación auricular sinusal seguida de conducción AV 1:1.</p><ul id="findings"></ul><section id="reading-details" aria-labelledby="reading-details-title"><h3 id="reading-details-title">Explicación</h3><p id="reading-education" class="reading-education" hidden></p><div class="reading-detail-content"><div id="structured-description"></div><div id="omi-sheet"></div></div><section id="reading-lesson" aria-label="Mecanismo del ECG" hidden></section></section></div></section>
- <div class="adjust-row"><details id="adjust" class="adjust-panel"><summary><span>Más ajustes</span></summary><div id="inspector" class="inspector"></div></details></div>
  <footer class="workspace-footer"><button class="text-button information-button" data-action="about" aria-label="Información y fuentes" title="Información y fuentes">${icon("info")}</button></footer></main></div>
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
 
@@ -168,7 +165,7 @@ function toast(message: string) {
   $("#toast").classList.add("visible");
   toastTimer = window.setTimeout(clearToast, 3500);
 }
-const workspaceNavigation = new WorkspaceNavigation($("#catalog"), $<HTMLElement>("#inspector"), {
+const workspaceNavigation = new WorkspaceNavigation($("#catalog"), $<HTMLElement>("#quick-adjust"), {
   about: showAbout,
   measurements: showMeasurements,
   export: exportDialog,
@@ -208,16 +205,6 @@ function renderCatalog() {
   // The result count only matters while searching.
   $(".catalog-result-bar").hidden = !view.clearFiltersVisible;
 }
-function formatExplorationValue(value:unknown){if(typeof value==="boolean")return value?"Sí":"No";return value==null?"—":String(value)}
-function renderExplorationContext(concealed:boolean) {
-  const root=$("#exploration-context"), changes=explorationOrigin?explorationChanges(explorationOrigin,c):[];
-  const custom=!!explorationOrigin && changes.length>0 && !concealed;
-  const open=root.querySelector("details")?.open ?? false;
-  root.hidden=!custom;
-  root.innerHTML=custom ? explorationContextHtml(explorationOrigin!,changes,open) : "";
-}
-
-function showExplorationChanges(){if(!explorationOrigin)return;const changes=explorationChanges(explorationOrigin,c);openDialog("Cambios respecto al origen",`<p class="dialog-lead">Origen: <strong>${esc(explorationOrigin.presetName)}</strong>. Se muestran diferencias reales del modelo; la vista no cuenta como ajuste.</p><div class="measurement-table-wrap"><table><thead><tr><th>Parámetro</th><th>Origen</th><th>Actual</th></tr></thead><tbody>${changes.map(x=>`<tr><td>${esc(x.label)}</td><td>${esc(formatExplorationValue(x.before))}${x.beforeLabel?`<br><small>${esc(x.beforeLabel)}</small>`:""}</td><td>${esc(formatExplorationValue(x.after))}${x.afterLabel?`<br><small>${esc(x.afterLabel)}</small>`:""}</td></tr>`).join("")}</tbody></table></div><p class="control-note">Una acción puede cambiar varios parámetros coordinados; el recuento describe diferencias del estado resultante, no el número de clics.</p>`)}
 /** The description is read from the signal shown: empty while a new one is computed. */
 let description: StructuredDescription | null = null;
 let disposeReadingLesson: (()=>void) | null = null, readingLessonSignal: Signal | null = null;
@@ -264,19 +251,22 @@ function renderInfo() {
   const diagnosis = p && !c.artifacts.reversed ? diagnosisForPreset(p) : undefined;
   const grouped = diagnosis && diagnosis.variants.length > 1;
   const customExploration=!!explorationOrigin&&explorationChanges(explorationOrigin,c).length>0&&!concealed;
-  $("#case-title").textContent = concealed ? "Interpreta este ECG" : customExploration ? "Exploración personalizada" : grouped ? diagnosis.title : reading.title;
-  $("#case-variant-title").hidden = !!concealed || !grouped || (p ? presetTitle(p) : "") === diagnosis?.title;
+  // While editing, the heading keeps the name of the case the exploration started from.
+  const originPreset = customExploration && explorationOrigin ? presetById(explorationOrigin.presetId) : undefined;
+  const originDiagnosis = originPreset ? diagnosisForPreset(originPreset) : undefined;
+  const originTitle = originDiagnosis && originDiagnosis.variants.length > 1 ? originDiagnosis.title : explorationOrigin?.presetName ?? reading.title;
+  const shownPreset = p ?? originPreset;
+  $("#case-title").textContent = concealed ? "Interpreta este ECG" : customExploration ? originTitle : grouped ? diagnosis.title : reading.title;
+  $("#case-variant-title").hidden = !!concealed || customExploration || !grouped || (p ? presetTitle(p) : "") === diagnosis?.title;
   $("#case-variant-title").textContent = !concealed && grouped ? presetTitle(p!) : "";
-  variantNavigation.update(p, !!concealed, c.artifacts.reversed);
+  variantNavigation.update(p, !!concealed, c.artifacts.reversed, customExploration ? originPreset : undefined);
   $("#case-category").textContent = concealed
     ? "PRÁCTICA"
-    : customExploration ? "EXPLORACIÓN"
-    : p ? familyLabel(catalogGroup(p)) : "Caso personalizado";
+    : shownPreset ? familyLabel(catalogGroup(shownPreset)) : "Caso personalizado";
   $("#case-subtitle").textContent = concealed
     ? "Identifica el patrón. Puedes cambiar la vista y utilizar los calibres."
-    : customExploration ? "Interpreta la señal actual; el origen solo indica procedencia." : reading.subtitle;
-  $("#case-subtitle").hidden = !concealed && !customExploration && !c.artifacts.reversed;
-  renderExplorationContext(!!concealed);
+    : reading.subtitle;
+  $("#case-subtitle").hidden = !concealed && !c.artifacts.reversed;
   $("#finding-title").textContent = concealed
     ? "Análisis sistemático"
     : "Qué observar";
@@ -296,11 +286,12 @@ function renderInfo() {
   // With reversed arm electrodes the trace no longer shows the sheet's picture.
   $("#omi-sheet").innerHTML = !concealed && p && !customExploration && !c.artifacts.reversed ? omiSheetHtml(p.id, false, false, true) : "";
   renderDescription();
-  $<HTMLButtonElement>('[data-action="reset"]').hidden = !!concealed || (!!explorationOrigin && !customExploration);
+  // Reset keeps its place next to the title; it only acts once something changed.
+  const resetButton = $<HTMLButtonElement>('[data-action="reset"]');
+  resetButton.hidden = !!concealed;
+  resetButton.disabled = !customExploration && !!explorationOrigin;
   $<HTMLButtonElement>('[data-action="export"]').disabled = !!concealed;
-  $("#adjust").hidden = !!concealed;
   syncQuickControls();
-  $(".case-state").hidden = $<HTMLButtonElement>('[data-action="reset"]').hidden;
   $("#catalog").classList.toggle("quiz-concealed", !!concealed);
 }
 function renderMetrics() {
@@ -333,72 +324,10 @@ function syncQuickControls() {
   if (!host.childElementCount) renderQuickControls();
   else syncQuickAdjust(host, c);
 }
+/** The quick controls next to the paper and the Vista toolbar are the only editors. */
 function renderControls() {
-  const previous = activePanel;
-  const inspector = $("#inspector");
-  const focused = inspector.contains(document.activeElement)
-    ? (document.activeElement as HTMLElement).dataset.key : undefined;
-  const openGroups = Array.from(inspector.querySelectorAll<HTMLDetailsElement>("details[data-control-details][open]"))
-    .map(el => el.dataset.controlDetails);
-  // During practice the acquisition select is offered by the Vista toolbar
-  // (renderScales) instead of Artefactos, which is hidden while concealed.
-  inspector.innerHTML = controls(c, !quiz, false);
   renderQuickControls();
-  for (const group of inspector.querySelectorAll<HTMLDetailsElement>("details[data-control-details]")) {
-    group.open = openGroups.includes(group.dataset.controlDetails);
-  }
-  setPanel(previous);
-  hideInactiveControls();
-  if (focused) {
-    const field = Array.from(inspector.querySelectorAll<HTMLInputElement | HTMLSelectElement>("[data-key]"))
-      .find(el => el.dataset.key === focused);
-    if (field && !field.disabled) field.focus({ preventScroll: true });
-  }
   renderScales();
-}
-/** Controls with no effect in the current rhythm or pattern are not shown (their
- * value is kept for other rhythms); so are their notes. */
-function hideInactiveControls() {
-  for (const field of $("#inspector").querySelectorAll<HTMLElement>(".range-field, .field, .toggle")) {
-    const input = field.querySelector<HTMLInputElement | HTMLSelectElement>("[data-key]");
-    if (input) field.hidden = input.disabled;
-  }
-  // A panel left without any control says so instead of looking empty.
-  for (const panel of $("#inspector").querySelectorAll<HTMLElement>("[data-control-panel]")) {
-    const any = [...panel.querySelectorAll<HTMLElement>(".range-field, .field, .toggle")].some((f) => !f.hidden && !f.closest(".inactive-controls, #regional-activation-controls[hidden]"));
-    let note = panel.querySelector<HTMLElement>(".controls-empty");
-    if (!any && !note) { note = document.createElement("p"); note.className = "control-note controls-empty"; note.textContent = "Ningún control de esta pestaña actúa en este ritmo."; panel.prepend(note); }
-    if (note) note.hidden = any;
-  }
-  const tAxis = document.querySelector<HTMLInputElement>('[data-key="tAxis"]');
-  const tNote = document.querySelector<HTMLElement>("#t-axis-note");
-  if (tAxis && tNote) tNote.hidden = tAxis.disabled;
-  // The wrapper of the T-axis slider and its note must not leave a hole in the grid.
-  const tWrap = document.querySelector<HTMLElement>(".t-axis-control");
-  if (tAxis && tWrap) tWrap.hidden = tAxis.disabled;
-}
-function syncAmplitudeControls() {
-  const state = amplitudeControlState(c);
-  $<HTMLInputElement>('[data-key="st"]').disabled = state.stDisabled;
-  $<HTMLInputElement>('[data-key="tAmp"]').disabled = state.tDisabled;
-  for (const [key, disabled] of Object.entries(state.patterns))
-    $<HTMLInputElement>(`[data-key="${key}"]`).disabled = disabled;
-  const direction = tAxisControlState(c);
-  $<HTMLInputElement>('[data-key="tAxis"]').disabled = direction.disabled;
-  $("#t-axis-note").textContent = direction.reason;
-  $("#regional-activation-controls").innerHTML = regionalActivationControls(c);
-  hideInactiveControls();
-}
-function setPanel(name: string) {
-  activePanel = name;
-  document
-    .querySelectorAll<HTMLElement>("[data-control-panel]")
-    .forEach((el) => (el.hidden = el.dataset.controlPanel !== name));
-  document
-    .querySelectorAll<HTMLElement>("[data-panel]")
-    .forEach((el) =>
-      el.setAttribute("aria-selected", String(el.dataset.panel === name)),
-    );
 }
 function renderScales() {
   const paper = c.view.mode === "paper",
@@ -415,9 +344,8 @@ function renderScales() {
   const legacyFormat = paper && !formats.some(([value]) => value === c.view.format);
   if (legacyFormat) formats.push([c.view.format, "Configuración importada"]);
   // Reading order of the sheet: mode, then the sheet itself (format or lead),
-  // then its scale, then the grid. Signal acquisition lives with Artefactos, except
-  // during practice: Adjust is hidden while the answer is concealed, so the same
-  // select (identical options/value/data-key) is offered here and omitted there.
+  // then its scale, then the grid. During practice only, Vista offers acquisition;
+  // the six-field editor does not configure it. Saved and imported settings stay intact.
   toolbar.innerHTML = `${
     paper
       ? select(
@@ -868,7 +796,6 @@ document.addEventListener("input", (e) => {
     if (slider) slider.value = String(c[k]);
     if (out) out.innerHTML = `${c[k]} <small>${out.querySelector("small")?.textContent || ""}</small>`;
   }
-  if (!key.startsWith("view.")) syncAmplitudeControls();
   const output = document.querySelector(`[data-output="${key}"]`);
   if (output)
     output.innerHTML = `${el.value} <small>${output.querySelector("small")?.textContent || ""}</small>`;
@@ -1020,17 +947,9 @@ function leavePractice() {
   quiz = null;
   renderQuiz();
   if (!wasActive) return;
-  // Practice offered the acquisition select in Vista. Callers that rebuild the
-  // inspector (openCase, selectPreset) will place it back in Artefactos; the ones
-  // that do not (end-quiz, a parameter change that ends practice, the unchanged-
-  // preset early return) must not leave it stale in the toolbar or missing from
-  // Artefactos. Moving the existing element keeps the live control (and any
-  // in-progress slider interaction) without a rebuild and without a second copy.
-  const field = $("#scale-toolbar").querySelector<HTMLElement>('[data-key="acquisition"]')?.closest<HTMLElement>(".field");
-  if (!field) return;
-  const grid = $("#inspector").querySelector<HTMLElement>('[data-control-panel="signal"] .field-grid');
-  if (grid && !grid.querySelector('[data-key="acquisition"]')) grid.prepend(field);
-  else field.remove();
+  // Practice offered the acquisition select in Vista; rebuilding the toolbar
+  // withdraws it outside practice. The value and the saved preference are kept.
+  renderScales();
 }
 /** A whole case from outside the catalog (saved, imported file or shared link). */
 function openCase(next: ECGCase) {
@@ -1054,7 +973,7 @@ function restoreOrigin(origin: ExplorationOrigin) {
   renderControls();
   renderInfo();
   generate();
-  toast("Origen restaurado; se conserva la vista actual.");
+  toast("ECG reiniciado");
 }
 /** Buttons ([data-action]) owned here; workspace navigation and export have their own. */
 /** Magnified beat for reading J and the ST by hand (not during practice). */
@@ -1118,7 +1037,6 @@ const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
     $<HTMLInputElement>("#case-search").value = "";
     renderCatalog(); $("#case-search").focus();
   },
-  "exploration-changes": () => showExplorationChanges(),
   "description-info": (target) => {
     if (!description) return;
     const kind = target.closest<HTMLElement>("[data-info]")!.dataset.info as DescriptionInfo;
@@ -1136,7 +1054,6 @@ const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
     const zoom = target.closest<HTMLElement>(".st-zoom");
     openStDistribution(zoom?.dataset.selectedLead as Lead | undefined, zoom?.dataset.zoomBeat === undefined ? undefined : Number(zoom.dataset.zoomBeat));
   },
-  "restore-origin": () => { if (explorationOrigin) restoreOrigin(explorationOrigin); },
   pause: () => {
     if (!session.signal || c.view.mode !== "monitor") return;
     session.togglePause(c.view.mode);
@@ -1172,7 +1089,7 @@ const ACTIONS: Record<string, (target: HTMLElement) => void | Promise<void>> = {
   },
   reset: () => {
     if (explorationOrigin && explorationChanges(explorationOrigin, c).length) restoreOrigin(explorationOrigin);
-    else { selectPreset(c.presetId === "custom" ? "sinus" : c.presetId); toast("Parámetros restablecidos"); }
+    else { selectPreset(c.presetId === "custom" ? "sinus" : c.presetId); toast("ECG reiniciado"); }
   },
   quiz: () => startQuiz(),
   "end-quiz": () => { clearAdjustmentContext(); leavePractice(); renderInfo(); draw(); },
@@ -1181,7 +1098,6 @@ document.addEventListener("click", async (e) => {
   const target = e.target as HTMLElement,
     variant = target.closest<HTMLElement>("[data-variant]"),
     preset = target.closest<HTMLElement>("[data-preset]"),
-    panel = target.closest<HTMLElement>("[data-panel]"),
     mode = target.closest<HTMLElement>("[data-mode]"),
     answer = target.closest<HTMLElement>("[data-answer]"),
     saved = target.closest<HTMLElement>("[data-saved]");
@@ -1215,10 +1131,6 @@ document.addEventListener("click", async (e) => {
     selectPreset(preset.dataset.preset!);
     return;
   }
-  if (panel) {
-    setPanel(panel.dataset.panel!);
-    return;
-  }
   if (mode) {
     if (c.view.mode === mode.dataset.mode) return;
     c.view.mode = mode.dataset.mode as ECGCase["view"]["mode"];
@@ -1244,7 +1156,6 @@ document.addEventListener("click", async (e) => {
   }
   const action = target.closest<HTMLElement>("[data-action]")?.dataset.action;
   if (!action) return;
-  if (action === "parameters" && !(quiz && !quiz.answer)) $<HTMLDetailsElement>("#adjust").open = true;
   if (workspaceNavigation.handle(action, !!quiz && !quiz.answer)) return;
   if (Object.hasOwn(ACTIONS, action)) await ACTIONS[action](target);
   await handleExportAction(action, {

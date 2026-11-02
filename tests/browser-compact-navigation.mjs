@@ -37,16 +37,13 @@ try{
   if(view.zoom)await page.addStyleTag({content:'html{font-size:200%!important}'});
   const skipCanvas=await page.locator('#ecg').evaluate(e=>e.toDataURL()),skipReplies=await workerReplies(page);
   for(let attempt=0;attempt<2;attempt++){
-   assert.equal(await page.locator('#adjust').evaluate(e=>e.open),false);
-   await page.locator('a[href="#inspector"]').focus();await page.keyboard.press('Enter');
-   assert.equal(await page.locator('#adjust').evaluate(e=>e.open),true,'Parameter access must reveal the folded destination');
-   assert.equal(await page.locator('#inspector').evaluate(e=>e===document.activeElement),true);
+   assert.equal(await page.locator('#adjust,#inspector,#exploration-context').count(),0);
+   await page.locator('a[href="#quick-adjust"]').focus();await page.keyboard.press('Enter');
+   assert.equal(await page.locator('#quick-adjust').evaluate(e=>e===document.activeElement),true);
    await page.keyboard.press('Tab');
-   assert.equal(await page.locator('#inspector').evaluate(e=>e.contains(document.activeElement)&&document.activeElement.checkVisibility()),true,'Tab must reach a visible control');
-   await page.locator('#adjust > summary').click();
+   assert.equal(await page.locator('#quick-adjust').evaluate(e=>e.contains(document.activeElement)&&document.activeElement.checkVisibility()),true);
    await page.locator('a[href="#case-title"]').focus();await page.keyboard.press('Enter');
    assert.equal(await page.locator('#case-title').evaluate(e=>e===document.activeElement),true);
-   assert.equal(await page.locator('#adjust').evaluate(e=>e.open),false,'Returning to reading must leave unrelated disclosures folded');
   }
   assert.equal(await page.locator('#ecg').evaluate(e=>e.toDataURL()),skipCanvas);
   assert.equal(await workerReplies(page),skipReplies,'Skip navigation must not generate a signal');

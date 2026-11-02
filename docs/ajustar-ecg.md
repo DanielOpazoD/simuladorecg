@@ -7,8 +7,8 @@ la lectura educativa. La señal, el analizador y la exportación se conservan.
 
 - Un único panel «Ajustar ECG» contiene FC, PR, eje QRS, duración QRS, conducción
   intraventricular y QTc. Sin ritmo, ST, ondas ni otras variables en ese panel.
-  Los ajustes menos frecuentes permanecen en el desplegable secundario existente;
-  los seis campos no se duplican allí.
+  Desde el 2 de noviembre se retira «Más ajustes», junto al cuadro de origen,
+  recuento de cambios y sus dos acciones. Reiniciar queda junto al título.
 - Cada campo actúa mediante `changeCase` y el mismo pipeline de generación. Los
   límites, opciones y aplicabilidad se comparten con los controles existentes.
   La frecuencia conserva su significado contextual (auricular, escape o estímulos);
@@ -35,10 +35,11 @@ la lectura educativa. La señal, el analizador y la exportación se conservan.
   generaliza «estimulación» a una única fuente ni se ocultan por el nombre del ritmo.
 - Los controles sin efecto se ocultan y conservan sus valores. El panel completo
   desaparece si no hay controles aplicables o la práctica tiene respuesta oculta.
-- En escritorio amplio el panel queda a la derecha; su breakpoint debe conservar
-  para el papel al menos el espacio del escritorio habitual de 1440 px. En anchos
-  menores va debajo del papel. No se cambia formato, ganancia, velocidad o muestras
-  para hacer sitio. En el formato inicial y zoom 100%, las doce derivaciones deben
+- En escritorio habitual (1280, 1440 y 1920 px) el panel queda a la derecha,
+  con una columna de 11 rem y un máximo de 200 px cuando el contenedor mide
+  al menos 56 rem. En móvil y con texto ampliado vuelve debajo. No se cambia
+  formato, ganancia, velocidad o muestras para hacer sitio. En el formato inicial
+  y zoom 100%, las doce derivaciones deben
   seguir completas en escritorio.
 - La cabecera, las medidas resumen y el inicio del ECG mantienen su posición en
   escritorio habitual. El panel admite texto ampliado y teclado sin recortar ni

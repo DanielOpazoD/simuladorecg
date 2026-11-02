@@ -252,6 +252,7 @@ section.structured-description dt { text-transform:none; letter-spacing:0; }
 }
 .omi-sheet-rows dt, .structured-description dt { font-size:var(--text-2xs); font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; padding-top:2px; }
 .omi-sheet-rows dd, .structured-description dd { margin:0; font-size:var(--text-sm); line-height:1.5; color:var(--ink); }
+.structured-description dd { min-width:0; overflow-wrap:anywhere; }
 .omi-notes { display:grid; gap:8px; }
 .omi-note { border:1px solid var(--line); border-radius:8px; padding:9px 11px; }
 .omi-note span { font-size:var(--text-2xs); font-weight:650; text-transform:uppercase; letter-spacing:.05em; }
