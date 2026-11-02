@@ -1,8 +1,8 @@
-/** «Ajustar el caso» is a native disclosure folded at the end of the page. These helpers
+/** «Más ajustes» is a native disclosure folded at the end of the page. These helpers
  * drive it the way a reader does: open the disclosure, then pick one of its tabs
  * (Ritmo = conduction, Intervalos = base, ST y ondas = st, Artefactos = signal).
- * Controls inside a closed disclosure are not visible, so every script that touches
- * [data-key] parameters opens it first.
+ * The six quick parameters live in #quick-adjust and no longer require disclosure.
+ * These helpers remain for secondary parameters and existing callers.
  */
 export async function openAdjust(page) {
   if (await page.locator('#adjust').evaluate(e => e.open)) return;

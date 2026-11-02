@@ -132,18 +132,12 @@
 .reading-guide #findings > li:not(:has(.finding-button)) { padding:10px 12px; min-height:44px; }
 .reading-guide #reading-details { margin-top:4px; border-top:0; }
 .reading-guide #reading-details > h3 { margin:8px 0 4px; padding:0 12px; }
+.reading-education { max-width:76ch; margin:4px 0 12px; font-size:var(--text-sm); line-height:1.55; color:var(--ink); }
 /* Secondary access: the classroom actions share the row with "Ajustar el caso".
    They stay at the top when the panel opens; the summary keeps its own hit area. */
-.adjust-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; column-gap:12px; margin-top:8px; }
-.adjust-row > .adjust-panel { grid-column:1 / -1; grid-row:1; margin-top:0; }
+.adjust-row { margin-top:8px; }
+.adjust-row > .adjust-panel { margin-top:0; }
 .adjust-row > .adjust-panel > summary { width:max-content; max-width:100%; }
-.adjust-row > .secondary-actions { grid-column:2; grid-row:1; justify-self:end; padding-top:3px; }
-.adjust-row > .secondary-actions .btn { border:0; border-radius:var(--control-radius); }
-@media(max-width:640px) {
- .adjust-row { grid-template-columns:minmax(0,1fr); }
- .adjust-row > .secondary-actions { grid-column:1; grid-row:1; justify-self:start; padding-top:0; }
- .adjust-row > .adjust-panel { grid-row:2; }
-}
 .adjust-panel { border:0; border-top:1px solid var(--line); border-radius:0; }
 .adjust-panel > summary { padding-inline:0; }
 .adjust-panel .inspector { padding:10px 0 16px; border:0; border-radius:0; }

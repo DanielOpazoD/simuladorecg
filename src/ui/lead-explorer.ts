@@ -7,6 +7,7 @@ import { acceptedBeatIntervals } from './automatic-intervals';
 import { stMarks } from '../render/st-lens';
 import { LensCaliper } from './lens-caliper';
 import { intervalValue, intervalDescription, MEASUREMENT_STATE } from './measurement-presentation';
+import { beatPlayback, mountBeatPlayback } from './beat-playback';
 
 export type LensMode = 'all' | 'pr' | 'qrs' | 'qt' | 'st' | 'none';
 export interface LensMark { key:'pr'|'qrs'|'qt'|'st'; start:number; end:number; value:string; detail:string }
@@ -46,6 +47,7 @@ export function mountLeadExplorer(root: HTMLElement, s: Signal, c: ECGCase, seg:
   title.innerHTML = `<label class="lead-detail-select">Derivación <select aria-label="Derivación ampliada">${LEADS.map(l=>`<option value="${l}"${l === lead ? " selected" : ""}>${c.view.cabrera && l === 'aVR' ? '−' : ''}${l}</option>`).join("")}</select></label>`;
   const count=initial.beat===null?0:s.events.beats.filter(b=>b.time>=initial.start&&b.time<=initial.end).length;
   root.dataset.beatCount=String(count);
+  root.dataset.reversed=String(c.artifacts.reversed);
   root.innerHTML = `<div class="lead-lens-controls"><button type="button" class="btn lens-measure" aria-label="Medir en la lupa" aria-pressed="false" title="Medir arrastrando · ${count} latidos">Medir</button><span class="sr-only">${count===2?'Lupa · 2 latidos':count===1?'Lupa · 1 latido en este tramo':'Lupa · fragmento'}</span><label>Marcas <select aria-label="Marcas de la lupa"><option value="all">PR · QRS · QT</option><option value="qrs">QRS</option><option value="pr">PR</option><option value="qt">QT</option><option value="st">Punto J / ST</option><option value="none">Sin marcas</option></select></label></div><div class="lead-detail-scroll"></div><p class="lead-detail-scale">50 mm/s · 10 mm/mV <span class="lens-status"></span></p><div class="lead-detail-observe"><span class="lead-observation"></span><output class="lens-manual-result" role="status" aria-live="polite"></output><button type="button" class="lens-clear" aria-label="Limpiar medición manual">Limpiar</button></div>`;
   // Keep the existing tools together in the header; the trace retains its own
   // measurable container and the header height is counted only once when fitting.
@@ -54,11 +56,13 @@ export function mountLeadExplorer(root: HTMLElement, s: Signal, c: ECGCase, seg:
   const footer=document.createElement('div');footer.className='lead-detail-footer';
   footer.append(root.querySelector('.lead-detail-scale')!,root.querySelector('.lead-detail-observe')!);
   root.append(footer);
+  let playback: ReturnType<typeof mountBeatPlayback> | null = null;
   const manual=new LensCaliper(root,root.querySelector('.lead-detail-scroll')!,s.fs,value=>{
     root.querySelector('.lens-manual-result')!.textContent=value??'';
     root.classList.toggle('has-manual',value!==null);
   });
   controls.querySelector('.lens-measure')!.addEventListener('click',e=>{
+    playback?.pause();
     manual.setActive(!manual.active);
     const button=e.currentTarget as HTMLElement;
     button.setAttribute('aria-pressed',String(manual.active));
@@ -107,6 +111,7 @@ export function mountLeadExplorer(root: HTMLElement, s: Signal, c: ECGCase, seg:
     manual.refresh();
   };
   const update = () => {
+    playback?.pause();
     const w = sampleExtent(s, lead, initial.start, initial.end), polarity = c.view.cabrera && lead === "aVR" ? -1 : 1;
     root.dataset.lead = lead; root.dataset.start = String(initial.start); root.dataset.end = String(initial.end); root.dataset.polarity = String(polarity);
     const finding = !c.artifacts.reversed && polarity > 0 && caseReading(c).findings.find(f => findingTarget(f)?.leads.includes(lead));
@@ -121,15 +126,18 @@ export function mountLeadExplorer(root: HTMLElement, s: Signal, c: ECGCase, seg:
     annotationRows=Math.max(annotationLanes.length,st.length?1:0);
     const marks=mode==='st'?st:mode==='none'?[]:intervals.filter(mark=>mode==='all'||mark.key===mode);
     root.dataset.markMode=mode;
-    root.querySelector('.lens-status')!.textContent=mode!=='none'&&!marks.length?`· ${MEASUREMENT_STATE.unavailable}`:marks.some(m=>m.value.endsWith('*'))?`· * ${MEASUREMENT_STATE.review}`:'';
+    const review=marks.some(m=>m.value.endsWith('*'))||beatPlayback(measurement,initial.start,initial.end)?.review;
+    root.querySelector('.lens-status')!.textContent=mode!=='none'&&!marks.length?`· ${MEASUREMENT_STATE.unavailable}`:review?`· * ${MEASUREMENT_STATE.review}`:'';
     root.querySelector(".lead-detail-scroll")!.innerHTML = w ? enlargedTrace(s, lead, w, polarity,marks) : "Muestras no disponibles en esta derivación.";
-    fitLabels();manual.refresh();
+    fitLabels();manual.refresh();playback?.refresh();
   };
   title.querySelector("select")!.addEventListener("change", e => { manual.clear(); lead = (e.target as HTMLSelectElement).value as Lead; update(); });
   controls.querySelector('select')!.value=mode;
   controls.querySelector('select')!.addEventListener('change',e=>{mode=(e.target as HTMLSelectElement).value as LensMode;preference.onChange?.(mode);update();});
   update();
+  playback=mountBeatPlayback(root,beatPlayback(measurement,initial.start,initial.end),s.fs);
+  fitLabels();
   const observer=new ResizeObserver(fitLabels);observer.observe(root);observer.observe(title.parentElement!);
   window.addEventListener('resize',fitLabels);
-  return ()=>{manual.dispose();observer.disconnect();window.removeEventListener('resize',fitLabels);};
+  return ()=>{playback?.dispose();manual.dispose();observer.disconnect();window.removeEventListener('resize',fitLabels);controls.remove();};
 }

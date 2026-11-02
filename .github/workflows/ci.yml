@@ -90,6 +90,8 @@ jobs:
         run: node tests/browser-lead-lens.mjs "$RUNNER_TEMP/ecg-reading/lead-lens"
       - name: Calibres de la lupa con ratón, tacto y teclado
         run: node tests/browser-lead-lens-manual.mjs "$RUNNER_TEMP/ecg-reading/lead-lens-manual"
+      - name: Descripción educativa y recorrido lento sin alterar el registro
+        run: node tests/browser-educational-reading.mjs "$RUNNER_TEMP/ecg-reading/educational-reading"
       - name: Conservar pruebas de lectura interactiva, incluidos fallos
         if: always()
         uses: actions/upload-artifact@v4
@@ -120,15 +122,19 @@ jobs:
           if-no-files-found: ignore
       - name: Metrología independiente de pantalla y PNG
         run: node scripts/check-pixel-metrology.mjs "$RUNNER_TEMP/ecg-pixel-metrology"
-      - name: Aula ECG, anotaciones, comparación y eco ilustrativo
-        run: node tests/browser-teaching-workspace.mjs "$RUNNER_TEMP/ecg-teaching"
-      - name: Medir anotaciones del PNG desde sus píxeles
+      - name: Compatibilidad de archivos anotados desde sus píxeles
         run: node tests/browser-teaching-pixels.mjs "$RUNNER_TEMP/ecg-teaching/pixels"
-      - name: Conservar pruebas del Aula, incluidos fallos
+      - name: Escalera AV en la lectura, muestras y geometría
+        run: node tests/browser-av-ladder.mjs "$RUNNER_TEMP/ecg-teaching/av-ladder"
+      - name: Lectura en la página, correlación y herramientas principales
+        run: node tests/browser-inline-reading.mjs "$RUNNER_TEMP/ecg-teaching/inline-reading"
+      - name: Ajustar ECG, controles nativos, casos y papel conservado
+        run: node tests/browser-quick-adjust.mjs "$RUNNER_TEMP/ecg-teaching/quick-adjust"
+      - name: Conservar pruebas de lectura y compatibilidad, incluidos fallos
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: teaching-workspace-results
+          name: educational-reading-results
           path: ${{ runner.temp }}/ecg-teaching
           if-no-files-found: ignore
       - name: Conservar resultados de metrología, incluidos fallos

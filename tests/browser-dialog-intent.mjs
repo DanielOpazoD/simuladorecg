@@ -9,12 +9,12 @@ const out=resolve(process.argv[2]??'../ECG-QA/dialog-intent');await mkdir(out,{r
 const browser=await chromium.launch(),results=[],errors=[];let failure,activePage;
 try{
  for(const viewport of [{width:1440,height:900},{width:390,height:844}]){
-  for(const workspace of ['compare','teaching'])for(const intent of ['unchanged','measurements','closed','reselected']){
+  for(const workspace of ['compare'])for(const intent of ['unchanged','measurements','closed','reselected']){
    const page=await browser.newPage({viewport,reducedMotion:'reduce'});activePage=page;await installWorkerTap(page);
    page.on('pageerror',e=>errors.push(e.message));
    let release,intercepted;
    const gate=new Promise(resolve=>{release=resolve;}),requested=new Promise(resolve=>{intercepted=resolve;});
-   await page.route(`**/${workspace==='compare'?'case-comparison':'teaching-workspace'}-*.js`,async route=>{
+   await page.route('**/case-comparison-*.js',async route=>{
     intercepted(route.request().url());await gate;await route.continue();
    });
    await page.goto(process.env.ECG_TEST_URL??'http://127.0.0.1:4173/');
@@ -35,7 +35,7 @@ try{
    // Await actual module evaluation, then the browser's next paint; no arbitrary network sleep.
    await page.evaluate(async url=>{await import(url);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));},moduleUrl);
    if(intent==='unchanged'||intent==='reselected'){
-    assert.match(await page.locator('#dialog h2').innerText(),workspace==='compare'?/Comparar ECG/:/Aula ECG/);
+    assert.match(await page.locator('#dialog h2').innerText(),/Comparar ECG/);
     assert.equal(await page.locator('#dialog').evaluate(d=>d.open&&d.contains(document.activeElement)),true);
    }else{
     assert.equal(await page.locator('#dialog').evaluate(d=>d.open),intent==='measurements','A closed dialog must not reopen when an old request completes');
@@ -48,7 +48,7 @@ try{
    if(await page.locator('#dialog').evaluate(d=>d.open))await page.keyboard.press('Escape');
    // A discarded request must not prevent the next deliberate opening.
    await open();
-   await page.locator(workspace==='compare'?'#comparison-reference-sheet[aria-busy=false]':'#teaching-root').waitFor();
+   await page.locator('#comparison-reference-sheet[aria-busy=false]').waitFor();
    assert.equal(await page.locator('#dialog').evaluate(d=>d.open&&d.contains(document.activeElement)),true);
    await page.keyboard.press('Escape');
    assert.equal(await page.locator('#ecg').evaluate(e=>e.toDataURL()),paper);

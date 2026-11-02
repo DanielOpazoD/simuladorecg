@@ -21,7 +21,7 @@ try{
   if(view.text)await page.addStyleTag({content:':root{font-size:200%!important}'});
   assert.equal(await page.locator('[data-key=acquisition]').count(),1);
   assert.equal(await page.locator('.view-options [data-key=acquisition],.view-options [data-action=teaching]').count(),0);
-  assert.equal(await page.locator('.secondary-actions [data-action=teaching]').count(),1);
+  assert.equal(await page.locator('[data-action=teaching]').count(),0);
   assert.deepEqual(await page.locator('#structured-description dt').allTextContents(),['Ritmo','Intervalos','Eje','ST','T','Q']);
   const description=await page.locator('#structured-description').evaluate(root=>{
    const r=root.getBoundingClientRect();return [...root.querySelectorAll('dt,dd')].map(e=>{const b=e.getBoundingClientRect();return {tag:e.tagName,x:b.x,left:r.left,right:b.right,limit:r.right,overflow:e.scrollWidth-e.clientWidth};});
@@ -31,10 +31,10 @@ try{
   const before=await paper(page),replies=await workerReplies(page);
   await openControlPanel(page,'signal');
   const hitboxes=await page.evaluate(()=>{
-   const a=document.querySelector('#adjust > summary').getBoundingClientRect(),b=document.querySelector('[data-action=teaching]').getBoundingClientRect();
-   return {overlap:Math.min(a.right,b.right)>Math.max(a.left,b.left)&&Math.min(a.bottom,b.bottom)>Math.max(a.top,b.top),width:document.documentElement.scrollWidth,viewport:innerWidth};
+   const a=document.querySelector('#adjust > summary').getBoundingClientRect();
+   return {height:a.height,right:a.right,width:document.documentElement.scrollWidth,viewport:innerWidth};
   });
-  assert(!hitboxes.overlap,JSON.stringify(hitboxes));assert(hitboxes.width<=hitboxes.viewport+1,JSON.stringify(hitboxes));
+  assert(hitboxes.height>=44&&hitboxes.right<=hitboxes.viewport+1,JSON.stringify(hitboxes));assert(hitboxes.width<=hitboxes.viewport+1,JSON.stringify(hitboxes));
   assert.equal(await page.locator('[data-key=acquisition]').inputValue(),'ideal');
   await page.screenshot({path:resolve(out,`adjust-${view.width}-${view.text??100}.png`)});
   await page.locator('#adjust > summary').click();assert.deepEqual(await paper(page),before);assert.equal(await workerReplies(page),replies);

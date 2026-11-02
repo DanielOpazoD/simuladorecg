@@ -37,9 +37,10 @@ describe("about dialog content", () => {
   it("retains references as HTTPS links opening with noopener", () => {
     const html = aboutDialogHtml();
     const links = [...html.matchAll(/<a href="([^"]+)" target="_blank" rel="noopener">/g)];
-    expect(links).toHaveLength(12);
+    expect(links).toHaveLength(13);
     expect(links.every((link) => link[1].startsWith("https://"))).toBe(true);
     expect(html).toContain("https://physionet.org/content/ecgsyn/1.0.0/");
+    expect(html).toContain("https://asecho.org/wp-content/uploads/2016/02/2015_ChamberQuantificationREV.pdf");
     expect(html).toContain("Quinta Definición Universal de Infarto (2026)");
     for (const source of ["ptb-xl/1.0.3", "ptb-xl-plus/1.0.1", "creativecommons.org/licenses/by/4.0"])
       expect(html).toContain(source);

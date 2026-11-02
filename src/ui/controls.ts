@@ -5,7 +5,7 @@ import { regionalActivationControls } from "./regional-activation";
 import { isNatural, LEADS, type ECGCase, type NaturalControl } from "../engine/types";
 import { lesionControlEffect, tVector } from "../engine/morphology";
 import { range, select, toggle } from "./helpers";
-import { learnedSecondaryRepolarization, noConductedBeats, realisticModelFor, usesRealisticBase } from "../engine/realistic/scope";
+import { learnedEctopicModel, learnedSecondaryRepolarization, noConductedBeats, realisticModelFor, usesRealisticBase } from "../engine/realistic/scope";
 import { learnedIschemiaArtery } from "../engine/realistic/ischemia";
 
 /** On the learned base, P and T follow the patient until their slider is moved. */
@@ -18,6 +18,53 @@ function learnedNatural(c: ECGCase, wave: "p" | "t") {
  * value; the first move fixes it. */
 function naturalLabel(c: ECGCase, control: NaturalControl, label: string) {
   return realisticModelFor(c) === "NORM" && !noConductedBeats(c) && isNatural(c, control) ? `${label} (natural del paciente)` : label;
+}
+
+export type QuickAdjustmentKey = 'hr' | 'pr' | 'axis' | 'qrs' | 'conduction' | 'qtc';
+export interface QuickNumberControl {
+  kind: 'number'; key: Exclude<QuickAdjustmentKey, 'conduction'>;
+  label: string; accessibleLabel: string; legacyLabel: string;
+  value: number; min: number; max: number; step: number | 'any'; unit: string; disabled: boolean;
+}
+export interface QuickSelectControl {
+  kind: 'select'; key: 'conduction'; label: string; accessibleLabel: string;
+  value: string; options: [string, string][]; disabled: boolean;
+}
+/** A single source for the six existing controls. Targets are case parameters,
+ * not the sample analyzer's measurements; availability follows this engine. */
+export function quickAdjustmentControls(c: ECGCase): (QuickNumberControl | QuickSelectControl)[] {
+  const state = rhythmControlState(c), regional = regionalActivationState(c);
+  // Entirely learned ventricular/paced records use their patient's QRS/ST-T,
+  // not these two targets. Explicit historical sources still read them.
+  // VVI demand's intrinsic beats use the historical escape, even when its paced
+  // beats are learned. The two targets still act on that escape in a mixed trace.
+  const historicalEscape = isVviDemand(c) && (c.intrinsicRate ?? 0) > 0;
+  const learnedVentricularOnly = !historicalEscape && noConductedBeats(c) &&
+    (learnedEctopicModel(c, 'ventricular') !== null || learnedEctopicModel(c, 'paced') !== null);
+  const rateLabel: Record<string, string> = {
+    'Frecuencia auricular': 'FC auricular', 'Frecuencia de escape': 'FC escape',
+    'Frecuencia mínima VVI': 'FC mínima', 'Frecuencia de estímulos VVI': 'FC estímulos',
+    'Frecuencia de estimulación': 'FC estímulos',
+  };
+  const number = (key: QuickNumberControl['key'], label: string, accessibleLabel: string,
+    min: number, max: number, step: number, unit: string, disabled: boolean): QuickNumberControl => ({
+      kind: 'number', key, label, accessibleLabel,
+      legacyLabel: key === 'hr' ? accessibleLabel : naturalLabel(c, key, accessibleLabel),
+      value: c[key], min, max, step: Number.isInteger(c[key]) ? step : 'any', unit, disabled,
+    });
+  return [
+    number('hr', rateLabel[state.baseRateLabel] ?? 'FC', state.baseRateLabel, 20, 250, 1, 'lpm', state.baseRateDisabled),
+    number('pr', 'PR', 'Intervalo PR', 80, 400, 1, 'ms', state.prDisabled),
+    number('axis', 'Eje QRS', 'Eje QRS solicitado', -180, 180, 1, '°', state.qrsAxisDisabled),
+    number('qrs', historicalEscape ? 'QRS escape' : 'QRS', historicalEscape ? 'Duración QRS del escape' : 'Duración QRS', regional.active ? regional.minimumQrsMs : 60, 240, 1, 'ms', state.noOrganizedBeats || learnedVentricularOnly),
+    {kind: 'select', key: 'conduction', label: 'Conducción', accessibleLabel: 'Conducción intraventricular',
+      value: c.conduction, disabled: state.conductionDisabled, options: [
+        ['normal', 'Normal'], ['rbbb', 'BRD completo'], ['irbbb', 'BRD incompleto'],
+        ['lbbb', 'BRI completo'], ['lafb', 'BFAI'], ['lpfb', 'BFPI'],
+        ['rbbb_lafb', 'BRD + BFAI'], ['rbbb_lpfb', 'BRD + BFPI'], ['wpw', 'Preexcitación'],
+      ]},
+    number('qtc', historicalEscape ? 'QTc escape' : 'QTc', historicalEscape ? 'QTc del escape · Fridericia' : 'QTc · Fridericia', 260, 650, 1, 'ms', state.noOrganizedBeats || learnedVentricularOnly),
+  ];
 }
 /** Chronic phase of a territory with a learned old-infarction population. */
 const oldInfarction = (c: ECGCase) => {
@@ -99,7 +146,7 @@ export function tAxisControlState(c: ECGCase) {
  * during practice (answered or concealed) the same select is rendered by the Vista
  * toolbar instead, because Adjust stays hidden while the answer is concealed. Exactly
  * one [data-key="acquisition"] exists either way. */
-export function controls(c: ECGCase, includeAcquisition = true) {
+export function controls(c: ECGCase, includeAcquisition = true, includeQuick = true) {
   const amplitude = amplitudeControlState(c), rhythm = rhythmControlState(c), tAxis = tAxisControlState(c), patterns = amplitude.patterns;
   const inactiveConduction: string[] = [];
   const contextualSelect = (...args: Parameters<typeof select>) => {
@@ -112,12 +159,18 @@ export function controls(c: ECGCase, includeAcquisition = true) {
     if (args[7]) { inactiveConduction.push(html); return ""; }
     return html;
   };
+  const quick = (key: QuickAdjustmentKey) => {
+    if (!includeQuick) return '';
+    const field = quickAdjustmentControls(c).find(f => f.key === key)!;
+    return field.kind === 'number'
+      ? range(field.key, field.legacyLabel, field.min, field.max, field.step, field.value, field.unit, field.disabled)
+      : contextualSelect(field.key, field.accessibleLabel, field.options, field.value, field.disabled);
+  };
   // Values the model is programmed with, not measurements of the trace. Controls with
   // no effect in the current rhythm fold away; the model's limits stay one click away.
   return `<div class="control-tabs" role="tablist" aria-label="Parámetros"><button role="tab" aria-selected="true" data-panel="conduction">Ritmo</button><button role="tab" aria-selected="false" data-panel="base">Intervalos</button><button role="tab" aria-selected="false" data-panel="st">ST y ondas</button><button role="tab" aria-selected="false" data-panel="signal">Artefactos</button></div>
  <div class="control-panel" data-control-panel="base" hidden><div class="range-grid">
- ${range("hr", rhythm.baseRateLabel, 20, 250, 1, c.hr, "lpm", rhythm.baseRateDisabled)}
- ${range("pr", naturalLabel(c, "pr", "Intervalo PR"), 80, 400, 5, c.pr, "ms", rhythm.prDisabled)}${range("qrs", naturalLabel(c, "qrs", "Duración QRS"), regionalActivationState(c).active ? regionalActivationState(c).minimumQrsMs : 60, 240, 5, c.qrs, "ms", rhythm.noOrganizedBeats)}${range("qtc", naturalLabel(c, "qtc", "QTc · Fridericia"), 260, 650, 5, c.qtc, "ms", rhythm.noOrganizedBeats)}${range("axis", naturalLabel(c, "axis", "Eje QRS solicitado"), -180, 180, 5, c.axis, "°", rhythm.qrsAxisDisabled)}${range("variability", "Variabilidad sinusal RR", 0, 0.3, 0.01, c.variability, "", rhythm.variabilityDisabled)}
+ ${quick('hr')}${quick('pr')}${quick('qrs')}${quick('qtc')}${quick('axis')}${range("variability", "Variabilidad sinusal RR", 0, 0.3, 0.01, c.variability, "", rhythm.variabilityDisabled)}
  ${range("atrialRate", "FC auricular independiente", 40, 350, 5, c.atrialRate, "lpm", rhythm.atrialRateDisabled)}
  </div></div>
  <div class="control-panel" data-control-panel="conduction"><div class="field-grid">
@@ -153,23 +206,7 @@ export function controls(c: ECGCase, includeAcquisition = true) {
    c.av,
    c.rhythm !== "sinus",
  )}
- ${contextualSelect(
-   "conduction",
-   "Conducción intraventricular",
-   [
-     ["normal", "Normal"],
-     ["rbbb", "BRD completo"],
-     ["irbbb", "BRD incompleto"],
-     ["lbbb", "BRI completo"],
-     ["lafb", "BFAI"],
-     ["lpfb", "BFPI"],
-     ["rbbb_lafb", "BRD + BFAI"],
-     ["rbbb_lpfb", "BRD + BFPI"],
-     ["wpw", "Preexcitación"],
-   ],
-   c.conduction,
-   rhythm.conductionDisabled,
- )}
+ ${quick('conduction')}
  ${contextualSelect(
    "ectopy",
    "Ectopia",

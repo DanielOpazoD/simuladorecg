@@ -1,31 +1,72 @@
-# Aula ECG: criterios fijados antes de implementar
+# Lectura en la misma página
 
-Base: main `105d4f2` (2026-10-26). Objetivo: observar, anotar, comparar y relacionar el ECG final con una representación anatómica y mecánica docente. La señal y el analizador no se modifican.
+Actualización del 1 de noviembre de 2026. La ventana Aula se retira: su editor de
+anotaciones, ajustes de escala y latido, comparación secundaria y ejercicio de
+revelar añadían decisiones para un público de clínicos generales. El contenido
+útil se encuentra ahora bajo «Qué observar», en el recorrido habitual de lectura.
+La lupa, las medidas, la comparación principal y la exportación existente continúan
+en sus lugares. No se añade un segundo recorrido de herramientas.
 
-## Entregas iterativas
+## Criterios fijados antes del cambio
 
-1. Selección de un mismo latido en las doce derivaciones, ventanas QRS/ST/repolarización y anotaciones personales en segundos/mV. Referencias del modelo diferenciadas de medidas de muestras.
-2. Comparación a escala común con el basal contrafactual existente o estados guardados, cursor común, superposición y diferencia únicamente cuando los registros son compatibles. Sin inventar tiempo clínico entre estados.
-3. Eco y anatomía ilustrativos: vistas estándar, movimiento regional, selección vinculada, pausa/cámara lenta. Sin inferir eco a partir del ST ni ofrecer FEVI clínica.
-4. Marcar antes de revelar; devolución descriptiva sin certificación de competencia. Exportación PNG anotada calibrada y sesión de anotaciones vinculada al registro exacto.
+- Cero modificaciones de las muestras finales, eventos, analizador o parámetros
+  por leer, recorrer o reproducir una ayuda. Comparar muestras y medidas del worker,
+  imagen del papel y posición del ECG antes y después de las interacciones.
+- Una explicación breve y, cuando aporta, una figura contextual. Sin pestañas de
+  Aula, editor, selectores de escala, latido o vista ecográfica. Sin panel vacío de
+  «no disponible» cuando un esquema no corresponde al caso.
+- Las ayudas utilizan el caso y la señal aceptados juntos. Se destruyen al invalidar
+  el registro, cambiar de caso o entrar en práctica oculta. Cambiar el tema no debe
+  reiniciar el apoyo de lectura.
+- AV: eventos explícitos P → QRS, en segundos desde el origen adquirido; PR mostrado
+  en milisegundos. Nunca elegir el QRS más cercano. En bloqueo completo, ninguna
+  diagonal, aunque P y QRS coincidan. No inferir localización anatómica ni clasificar
+  un bloqueo 2:1 como Mobitz I o II.
+- Wenckebach: mostrar un ciclo comprobable, con al menos tres PR crecientes,
+  una P no conducida y la respuesta de la siguiente P con PR más corto. Si no cabe
+  completo en los primeros diez segundos, no fabricar una demostración.
+- La tira II contiene las muestras finales sin suavizado, normalización ni cambio
+  de amplitud. Tira y escalera comparten un eje temporal a 50 mm/s y 10 mm/mV.
+  Ventana elegida por eventos, bordes finitos y QRS final completo.
+- Un juez separado lee las capturas PNG y recupera la escala de la grilla. Se
+  contrastan las marcas con los eventos del worker. El encaje debe superar 90%
+  con al menos seis marcas; los controles negativos de +40 ms y +10% de escala
+  deben quedar bajo 50%. Se conservan imágenes, resultados y fallos anteriores.
+- Eco: exclusivamente un esquema de contracción en los ejemplos agudos anterior,
+  inferior derecho e inferior circunflejo compatibles. Una vista de dos cámaras,
+  sin segmentos seleccionables ni valores de función ventricular. No inferir
+  motilidad, FEVI o tiempo electromecánico a partir del ST o del trazado.
+- Movimiento explícito, a un cuarto de velocidad y sin bucle. Pausar al salir de
+  pantalla, abrir una ventana o cambiar de contexto. Movimiento reducido conserva
+  el control manual y desactiva la reproducción. No hay autoplay.
+- Escritorio y móvil: teclado, tema claro/oscuro y texto al 200%. La página puede
+  crecer hacia abajo; solo la secuencia AV puede desplazarse horizontalmente para
+  conservar su escala. Ninguna nueva ventana ni desplazamiento vertical anidado.
 
-## Jueces y umbrales previos
+## Procedencia y límites
 
-- Cero modificaciones de muestras, eventos o parámetros por uso de ayudas, anotaciones, reproducción o exportación; hashes externos antes/después.
-- Tiempo y voltaje anclados a muestras, error máximo temporal 0,5 muestra por cuantización y error numérico de medida 1e-9 mV en fixtures analíticos independientes. No sustitución silenciosa de ventanas inválidas.
-- Selección del mismo índice de evento entre derivaciones. No cuadros de ST medible cuando PR/J no están disponibles, son no finitos o se solapan con el latido vecino.
-- Comparación: frecuencia, longitud y calendario de eventos comprobados antes de permitir sustracción. Estados con distinto calendario pueden visualizarse a escala común, nunca presentarse como delta causal.
-- Notas personales: límites finitos, texto escapado, rechazo de sesiones ajenas, máximo 50 notas. Anotaciones fuera de la lámina exportable producen explicación, no pérdida silenciosa.
-- PNG: verificación geométrica independiente de grilla, tiempos, voltaje y cajas, con controles negativos de desplazamiento/escala. Conservar exportación limpia existente.
-- Eco: 16 segmentos de motilidad; no puntuación del casquete apical. Sin FEVI/WMSI numéricos, sin ruido ecográfico decorativo. El cambio de ST no prescribe motilidad. Contextos no cubiertos explícitos. Movimiento reducido, pausa y destrucción de animación comprobados.
-- No filtración de respuestas en la práctica existente. En el ejercicio de Aula, revelar es una acción explícita y no modifica lo marcado por el usuario.
-- Navegador: escritorio, 390 y 320 px, tema claro/oscuro, texto al 200%, teclado, cierre/reapertura, sin errores de consola. El papel puede desplazarse horizontalmente; controles y explicaciones no.
-- Suite existente, TypeScript y build sin regresiones. Resultados adversos se preservan fuera del repositorio en `ECG-QA/teaching-iterations-20261026`.
+`av-reading.ts` fue desarrollado con Claude Fable y revisado localmente; Fable
+participa además en el contraste técnico. La escalera explica el calendario de
+activación del modelo, no una medición independiente del ECG ni un estudio
+electrofisiológico. La ilustración mecánica reutiliza la geometría docente
+existente y un retardo fijo de 80 ms; no simula una imagen ultrasónica.
+Las fuentes y los límites se reúnen en el icono de información.
 
-## Profundidad y perspectivas
+Los criterios anatómicos de los segmentos siguen
+[ASE/EACVI 2015](https://asecho.org/wp-content/uploads/2016/02/2015_ChamberQuantificationREV.pdf).
+La asociación orientativa entre ejemplos ECG y motilidad no prueba esa relación
+en un paciente. El movimiento normal o anormal de esta ilustración no confirma
+ni descarta una causa clínica.
 
-Material original: muestras finales y eventos del worker, geometría del papel, referencia pública inspeccionada y recomendaciones ASE/EACVI. Métodos: pruebas analíticas, control negativo, navegador real y medición de imagen independiente. Revisión técnica separada de implementación; revisión clínica humana independiente aún no disponible.
+La utilidad para aprender y la claridad para clínicos generales requieren
+observación de usuarios. Las comprobaciones de código, eventos e imagen no la
+demuestran. Tampoco sustituyen revisión clínica humana independiente, aún pendiente.
 
-Prompt operativo: «Implementa iterativamente las ayudas autorizadas para que cada marca tenga una procedencia y cada interacción conserve la señal. Usa métodos independientes para comprobar mediciones, geometría y contratos causales. Acepta únicamente funciones que pasen esos controles; conserva fallos y no eleves plausibilidad clínica sin revisión humana independiente».
+## Evidencia y compatibilidad
 
-La implementación visual es original. La referencia es inspiración funcional, no fuente de código ni de activos reutilizados. El eco es un esquema docente y no un simulador de formación de imagen ultrasónica.
+Los resultados de esta iteración se guardan fuera del repositorio en
+`ECG-QA/inline-*20261101*`. Las versiones previas de Aula y sus pruebas retiradas
+se conservan en `ECG-QA/retired-aula-20261101`; los fallos de rondas anteriores
+permanecen en sus directorios de QA. Las funciones puras de exportación anotada
+histórica conservan sus pruebas de compatibilidad, pero no se ofrecen como editor.
+No se modifica la exportación limpia principal.
