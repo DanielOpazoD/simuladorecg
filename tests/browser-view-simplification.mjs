@@ -15,10 +15,12 @@ try {
   const page=active=await browser.newPage({viewport,reducedMotion:'reduce'});await installWorkerTap(page);page.on('pageerror',e=>errors.push(e.message));
   await page.goto(url);await ready(page);await page.evaluate(()=>document.fonts.ready);
   const c=await page.evaluate(()=>window.__ecgTap.last.ecg);assert.equal(c.view.format,'3x4+1');assert.equal(c.acquisition,'ideal');
-  assert.equal(await page.locator('#reading-details > h3').innerText(),'Explicación');
+  assert.equal(await page.locator('#reading-details > h3').count(),0);
+  assert(await page.getByRole('region',{name:'Lectura del ECG',exact:true}).isVisible());
   assert(await page.locator('#structured-description').isVisible());assert.equal(await page.locator('#reading-details > summary,[data-action=present-30]').count(),0);
   assert.equal(await page.locator('#inspector .control-limits').count(),0);
-  assert(!(await page.locator('#structured-description dt').allTextContents()).includes('Ref. ST'));
+  assert.equal(await page.locator('#structured-description dt,#structured-description dl,#structured-description h3').count(),0);
+  assert(!(await page.locator('#structured-description').innerText()).includes('Ref. ST'));
   assert.equal(await page.locator('#trace-calibration').evaluate(e=>getComputedStyle(e).textAlign),'right');
   assert.equal(await page.locator('[data-mode=rhythm],[data-action=annotations],[data-key=filter],.view-settings,.view-aids').count(),0);
   const before=await geometry(page),pixels=await page.locator('#ecg').evaluate(e=>e.toDataURL()),n=await workerReplies(page);

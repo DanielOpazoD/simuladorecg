@@ -86,7 +86,8 @@ try{
    assert.equal(await page.locator('.trace-tools [data-action=caliper]').isVisible(),true);
    assert.equal(await page.locator('.case-group-count').count(),0);
    assert.equal(await page.locator('#case-subtitle').isHidden(),true);
-   assert.equal(await page.locator('#reading-details > h3').innerText(),'Explicación');
+   assert.equal(await page.locator('#reading-details > h3').count(),0);
+   assert(await page.getByRole('region',{name:'Lectura del ECG',exact:true}).isVisible());
    assert.equal(await page.locator('#reading-details summary').count(),0);
    assert.equal(await page.locator('[data-action=present-30]').count(),0);
    assert.equal(await page.locator('.workspace-footer [data-product-version]').count(),0);

@@ -135,7 +135,6 @@
 .reading-guide #findings > li { max-width:100%; margin:0; color:var(--ink); }
 .reading-guide #findings > li:not(:has(.finding-button)) { padding:10px 12px; min-height:44px; }
 .reading-guide #reading-details { margin-top:4px; border-top:0; }
-.reading-guide #reading-details > h3 { margin:8px 0 4px; padding:0 12px; }
 .reading-education { max-width:76ch; margin:4px 0 12px; font-size:var(--text-sm); line-height:1.55; color:var(--ink); }
 /* Secondary access: the classroom actions share the row with "Ajustar el caso".
    They stay at the top when the panel opens; the summary keeps its own hit area. */

@@ -4,8 +4,8 @@
 .ecg-workbench>#diagnosis-content{min-width:0}
 #quick-adjust{min-width:0;margin:12px 0 4px;padding:12px 0 4px;border-top:1px solid var(--line);color:var(--ink)}
 #quick-adjust[hidden],#quick-adjust [hidden]{display:none!important}
-#quick-adjust h2{margin:0 0 6px;font-size:var(--text-sm);font-weight:600;line-height:1.3;color:var(--ink)}
-#quick-adjust .qa-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 20px;margin:0;padding:0;border:0;min-width:0}
+#quick-adjust h2{margin:0 0 4px;font-size:var(--text-sm);font-weight:600;line-height:1.3;color:var(--ink)}
+#quick-adjust .qa-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 20px;margin:0;padding:0;border:0;min-width:0}
 
 /* Campo compacto: etiqueta arriba; slider y número en la MISMA fila de 44px.
    .qa-heading es display:contents para conservar los nodos que usa el sincronizador;
@@ -15,7 +15,7 @@
 #quick-adjust label{grid-column:1/-1;grid-row:1;font-size:var(--text-xs);line-height:1.35;color:var(--muted);overflow-wrap:anywhere}
 #quick-adjust .qa-field>input[type=range]{grid-column:1;grid-row:2;min-width:0}
 #quick-adjust .qa-value{grid-column:2;grid-row:2;display:flex;align-items:baseline;justify-content:flex-end;gap:3px;min-width:0}
-#quick-adjust .qa-value span{font-size:var(--text-xs);line-height:1;color:var(--muted);white-space:nowrap}
+#quick-adjust .qa-value span{min-width:3ch;text-align:left;font-size:var(--text-xs);line-height:1;color:var(--muted);white-space:nowrap}
 
 /* Valor escribible: aspecto de cifra, borde solo al pasar o enfocar. */
 #quick-adjust input[type=number]{box-sizing:content-box;width:4ch;height:42px;padding:0 2px;border:1px solid transparent;border-radius:5px;background:transparent;color:var(--ink);font:500 1rem/1 ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums;text-align:right;appearance:textfield;-moz-appearance:textfield}
@@ -38,8 +38,8 @@
 
 /* Conducción: etiqueta arriba, select de 44px ocupando toda la fila de control. */
 #quick-adjust .qa-conduction select{grid-column:1/-1;grid-row:2}
-#quick-adjust select{width:100%;min-width:0;min-height:44px;padding:0 28px 0 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font:inherit;font-size:1rem;line-height:1.3;cursor:pointer}
-#quick-adjust select:hover{border-color:var(--muted)}
+#quick-adjust select{width:100%;min-width:0;min-height:44px;padding:0 28px 0 10px;border:1px solid transparent;border-radius:6px;background:var(--soft);color:var(--ink);font:inherit;font-size:1rem;line-height:1.3;cursor:pointer}
+#quick-adjust select:hover{border-color:var(--line);background:var(--surface)}
 
 #quick-adjust :is(input,select):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 #quick-adjust :is(input,select):disabled{opacity:.45;cursor:not-allowed}
@@ -52,7 +52,7 @@
  @supports selector(:has(a)){
   .ecg-workbench:has(>#quick-adjust:not([hidden])){grid-template-columns:minmax(0,1fr) min(11rem,200px);column-gap:14px;align-items:start}
   .ecg-workbench:has(>#quick-adjust:not([hidden]))>#quick-adjust{margin:0;padding:4px 0 0 12px;border-top:0;border-left:1px solid var(--line)}
-  .ecg-workbench:has(>#quick-adjust:not([hidden])) .qa-fields{grid-template-columns:minmax(0,1fr);gap:4px}
+  .ecg-workbench:has(>#quick-adjust:not([hidden])) .qa-fields{grid-template-columns:minmax(0,1fr);gap:0}
  }
 }
 @media (forced-colors:active){

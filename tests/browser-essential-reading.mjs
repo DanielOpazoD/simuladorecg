@@ -26,12 +26,11 @@ try{
   assert.equal(await page.locator('[data-key=acquisition]').count(),0);
   assert.equal(await page.locator('.view-options [data-key=acquisition],.view-options [data-action=teaching]').count(),0);
   assert.equal(await page.locator('[data-action=teaching]').count(),0);
-  assert.deepEqual(await page.locator('#structured-description dt').allTextContents(),['Ritmo','Intervalos','Eje','ST','T','Q']);
-  const description=await page.locator('#structured-description').evaluate(root=>{
-   const r=root.getBoundingClientRect();return [...root.querySelectorAll('dt,dd')].map(e=>{const b=e.getBoundingClientRect();return {tag:e.tagName,x:b.x,left:r.left,right:b.right,limit:r.right,overflow:e.scrollWidth-e.clientWidth};});
-  });
-  assert(description.every(r=>r.x>=r.left-1&&r.right<=r.limit+1&&r.overflow<=1),JSON.stringify(description));
-  if(view.width>360){const xs=description.filter(r=>r.tag==='DD').map(r=>r.x);assert(Math.max(...xs)-Math.min(...xs)<1,'Description columns align');}
+  assert.equal(await page.locator('#structured-description dt,#structured-description dl,#structured-description h3').count(),0);
+  const prose=page.locator('#structured-description .reading-prose');assert.equal(await prose.count(),1);assert(await prose.isVisible());
+  const description=await prose.evaluate(p=>{const r=p.parentElement.getBoundingClientRect(),b=p.getBoundingClientRect();return {x:b.x,left:r.left,right:b.right,limit:r.right,overflow:p.scrollWidth-p.clientWidth,text:p.innerText};});
+  assert(description.x>=description.left-1&&description.right<=description.limit+1&&description.overflow<=1,JSON.stringify(description));
+  for(const figure of ['144','84','397'])assert(!description.text.includes(figure),'Header figure '+figure+' repeated in the prose');
   const before=await paper(page),replies=await workerReplies(page);
   assert.equal(await page.locator('#adjust,#inspector,#exploration-context').count(),0);
   const hitboxes=await page.locator('#quick-adjust input:visible,#quick-adjust select:visible').evaluateAll(es=>es.map(e=>e.getBoundingClientRect().height));
