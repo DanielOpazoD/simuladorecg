@@ -1,7 +1,22 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { openDialog, closeDialog, requestDialog } from "../src/ui/dialog";
 
-afterEach(() => vi.unstubAllGlobals());
+const documentElement = { scrollHeight: 4000 };
+
+beforeEach(() => {
+  vi.stubGlobal("scrollX", 0);
+  vi.stubGlobal("scrollY", 1204);
+  vi.stubGlobal("innerWidth", 1440);
+  vi.stubGlobal("innerHeight", 900);
+  vi.stubGlobal("requestAnimationFrame", (callback: (time: number) => void) => { callback(0); return 0; });
+  vi.stubGlobal("scrollTo", vi.fn());
+});
+
+// Drains the close-event microtask (and its synchronous fake frame) before retiring the globals it reads.
+afterEach(async () => {
+  await Promise.resolve();
+  vi.unstubAllGlobals();
+});
 
 describe("shared dialog", () => {
   it("sets the existing heading and close action before opening", () => {
@@ -15,6 +30,7 @@ describe("shared dialog", () => {
       }),
     };
     vi.stubGlobal("document", {
+      documentElement,
       querySelector: (selector: string) =>
         selector === "#dialog-content" ? content : dialog,
     });
@@ -32,7 +48,7 @@ describe("shared dialog", () => {
   it("invalidates deferred work after another request, opening or closing", () => {
     const content = { innerHTML: "" };
     const dialog = Object.assign(new EventTarget(), { open: false, showModal() { this.open = true; }, close() { this.open = false; } });
-    vi.stubGlobal("document", { querySelector: (s: string) => s === "#dialog-content" ? content : dialog });
+    vi.stubGlobal("document", { documentElement, querySelector: (s: string) => s === "#dialog-content" ? content : dialog });
     const first = requestDialog(), second = requestDialog();
     expect(first()).toBe(false); expect(second()).toBe(true);
     openDialog("Medidas", ""); expect(second()).toBe(false);

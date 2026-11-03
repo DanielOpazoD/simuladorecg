@@ -84,6 +84,8 @@ jobs:
         run: node tests/browser-paper-first.mjs "$RUNNER_TEMP/ecg-reading/paper-first"
       - name: Vista simplificada, formato compacto y explicación siempre visible
         run: node tests/browser-view-simplification.mjs "$RUNNER_TEMP/ecg-reading/view-simplification"
+      - name: Retorno exacto de ventanas y control de desplazamiento
+        run: node tests/browser-dialog-return.mjs "$RUNNER_TEMP/ecg-reading/dialog-return"
       - name: Lectura esencial, fuentes conservadas y controles secundarios
         run: node tests/browser-essential-reading.mjs "$RUNNER_TEMP/ecg-reading/essential-reading"
       - name: Lupa de dos latidos, intervalos y geometría adaptable
