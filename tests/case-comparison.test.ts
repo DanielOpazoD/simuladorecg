@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { PRESETS, fromPreset, presetById } from "../src/presets/catalog";
 import { caseComparisonHtml, comparisonCase } from "../src/ui/case-comparison";
+import { catalogFamilies } from "../src/ui/catalog-presentation";
+import { catalogFamilyLabel } from "../src/ui/catalog-view";
+import { esc } from "../src/ui/helpers";
 
 describe("independent catalog comparison", () => {
   it("retains the reference physiology while sharing the current paper calibration", () => {
@@ -46,5 +49,18 @@ describe("independent catalog comparison", () => {
     expect(ids).toHaveLength(new Set(ids).size);
     expect(html).not.toContain("ECG previo");
     expect(html).not.toContain("Actual − referencia");
+  });
+
+  it("groups references by catalog family, in catalog order, listing each available preset once", () => {
+    const html = caseComparisonHtml();
+    const families = catalogFamilies(PRESETS.filter(p => p.strategy !== "pending"));
+    const labels = [...html.matchAll(/<optgroup label="([^"]+)">/g)].map(m => m[1]);
+    expect(labels).toEqual(families.map(f => esc(catalogFamilyLabel(f.id))));
+    const expected = families.flatMap(f => f.sections.filter(s => !s.crossListed).flatMap(s => s.presets.map(p => p.id)));
+    const ids = [...html.matchAll(/<option value="([^"]+)"/g)].map(m => m[1]);
+    expect(ids).toEqual(expected);
+    expect(ids).toHaveLength(63);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(html).toContain('value="sinus" selected');
   });
 });

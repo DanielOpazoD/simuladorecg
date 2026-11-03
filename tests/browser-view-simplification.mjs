@@ -10,15 +10,20 @@ const url=process.env.ECG_TEST_URL??'http://127.0.0.1:4173/';
 const ready=p=>p.locator('#signal-loading').waitFor({state:'hidden'});
 const geometry=p=>p.evaluate(()=>{const b=document.querySelector('#canvas-wrap').getBoundingClientRect();return {x:b.x,y:b.y,w:b.width,h:b.height,scrollY,doc:document.documentElement.scrollHeight};});
 async function importCase(page,c){const n=await workerReplies(page);await page.locator('#file-input').setInputFiles({name:'case.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(c))});await waitForReply(page,n);}
+// Closing is asynchronous: the close event is a later task and the focus return a microtask after it; compare only once settled.
+const armClose=p=>p.evaluate(()=>{const d=document.querySelector('#dialog');window.__dialogClose={fired:false,done:new Promise(r=>d.addEventListener('close',()=>{window.__dialogClose.fired=true;queueMicrotask(()=>requestAnimationFrame(()=>r()));},{once:true}))};});
+async function settleClose(p,action){await armClose(p);await action();const hiddenFirst=await p.evaluate(()=>!document.querySelector('#dialog').open&&!window.__dialogClose.fired);await p.evaluate(()=>window.__dialogClose.done);return hiddenFirst;}
 try {
  for(const viewport of [{width:1440,height:900},{width:1280,height:720},{width:390,height:844},{width:320,height:568},{width:844,height:390}]){
   const page=active=await browser.newPage({viewport,reducedMotion:'reduce'});await installWorkerTap(page);page.on('pageerror',e=>errors.push(e.message));
   await page.goto(url);await ready(page);await page.evaluate(()=>document.fonts.ready);
   const c=await page.evaluate(()=>window.__ecgTap.last.ecg);assert.equal(c.view.format,'3x4+1');assert.equal(c.acquisition,'ideal');
-  assert.equal(await page.locator('#reading-details > h3').innerText(),'Explicación');
+  assert.equal(await page.locator('#reading-details > h3').count(),0);
+  assert(await page.getByRole('region',{name:'Lectura del ECG',exact:true}).isVisible());
   assert(await page.locator('#structured-description').isVisible());assert.equal(await page.locator('#reading-details > summary,[data-action=present-30]').count(),0);
   assert.equal(await page.locator('#inspector .control-limits').count(),0);
-  assert(!(await page.locator('#structured-description dt').allTextContents()).includes('Ref. ST'));
+  assert.equal(await page.locator('#structured-description dt,#structured-description dl,#structured-description h3').count(),0);
+  assert(!(await page.locator('#structured-description').innerText()).includes('Ref. ST'));
   assert.equal(await page.locator('#trace-calibration').evaluate(e=>getComputedStyle(e).textAlign),'right');
   assert.equal(await page.locator('[data-mode=rhythm],[data-action=annotations],[data-key=filter],.view-settings,.view-aids').count(),0);
   const before=await geometry(page),pixels=await page.locator('#ecg').evaluate(e=>e.toDataURL()),n=await workerReplies(page);
@@ -33,13 +38,13 @@ try {
   assert.equal(await page.locator('#ecg').evaluate(e=>e.toDataURL()),pixels);assert.equal(await workerReplies(page),n);
   await page.locator('#ecg').focus();await page.keyboard.press('r');assert.equal(await page.locator('[data-mode=paper]').getAttribute('aria-selected'),'true');assert.equal(await workerReplies(page),n);
   const reference=page.getByRole('button',{name:'Referencia del ST',exact:true});await reference.scrollIntoViewIfNeeded();
-  const beforeReference=await geometry(page);await reference.click();await page.locator('#dialog').waitFor({state:'visible'});
+  const beforeReference=await geometry(page);await reference.click();await page.locator('#dialog').waitFor({state:'visible'});const openReference=await geometry(page);
   assert.match(await page.locator('#dialog').innerText(),/V2–V3.*2 mm.*varón/);
   const dialog=await page.locator('#dialog').evaluate(e=>({scroll:e.scrollHeight-e.clientHeight,h:e.getBoundingClientRect().height}));
   assert(dialog.scroll<=1&&dialog.h<=viewport.height,'The reference is a short note without scrolling');
   await page.screenshot({path:resolve(out,`reference-${viewport.width}.png`)});
-  await page.keyboard.press('Escape');await page.locator('#dialog').waitFor({state:'hidden'});
-  assert(await reference.evaluate(e=>document.activeElement===e));assert.deepEqual(await geometry(page),beforeReference);
+  const closeAsync=await settleClose(page,()=>page.keyboard.press('Escape'));await page.locator('#dialog').waitFor({state:'hidden'});
+  assert(await reference.evaluate(e=>document.activeElement===e));assert.deepEqual(await geometry(page),beforeReference,JSON.stringify({viewport,beforeReference,openReference,closeAsync}));
   assert.equal(await page.locator('#ecg').evaluate(e=>e.toDataURL()),pixels);assert.equal(await workerReplies(page),n);
   if(viewport.width===1440){
    // Only the six authorized controls remain, with applicability checked per rhythm.
@@ -67,7 +72,7 @@ try {
    assert.equal(await page.locator('[data-key="view.format"] option:checked').getAttribute('disabled'),'');
    await page.evaluate(()=>localStorage.setItem('ecglab-acquisition','realistic'));await page.reload();await ready(page);assert.equal(await page.evaluate(()=>window.__ecgTap.last.ecg.acquisition),'realistic');
   }
-  results.push({viewport,menu,stablePaper:true});await page.close();
+  results.push({viewport,menu,stablePaper:true,closeAsync});await page.close();
  }
  assert.deepEqual(errors,[]);
 }catch(e){failure=String(e.stack??e);if(active&&!active.isClosed())await active.screenshot({path:resolve(out,'failure.png')}).catch(()=>{});}

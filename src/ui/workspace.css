@@ -477,12 +477,11 @@ dialog { max-height:92dvh; }
 }
 
 /* One reading path; the explanation always follows the findings. */
-#reading-details { margin-top:16px; border-top:1px solid var(--line); }
-#reading-details > h3 { margin:12px 0 6px; font-size:var(--text-sm); font-weight:600; line-height:1.4; }
+#reading-details { margin-top:4px; }
+.reading-prose { margin:0 0 12px; max-width:76ch; font-size:var(--text-sm); line-height:1.6; overflow-wrap:anywhere; }
 .reading-detail-content { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; }
 .reading-detail-content:has(#omi-sheet:empty) { grid-template-columns:minmax(0,1fr); }
 .reading-detail-content > div { min-width:0; }
-.reading-detail-content .structured-description h3 { display:none; }
 .information-content { font-size:var(--text-sm); line-height:1.65; }
 .information-section { border-bottom:1px solid var(--line); }
 .information-section > summary { min-height:48px; padding:14px 0; font-weight:600; cursor:pointer; }

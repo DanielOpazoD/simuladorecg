@@ -3,6 +3,7 @@ import { PRESETS, fromPreset, presetById } from "../presets/catalog";
 import { presetTitle } from "../presets/nomenclature";
 import { caseReading } from "../presets/case-context";
 import { catalogFamilyLabel } from "./catalog-view";
+import { catalogFamilies } from "./catalog-presentation";
 import { filterLabel, paperLayout, paperRowExtents, renderPaper } from "../render/ecg";
 import { esc } from "./helpers";
 import { conductionObservation } from "./terminal-qrs";
@@ -12,11 +13,11 @@ import "./case-comparison.css";
 const available = PRESETS.filter(p => p.strategy !== "pending");
 
 export function caseComparisonHtml(): string {
-  const groups = [...new Set(available.map(p => p.group))];
+  const families = catalogFamilies(available);
   return `<section class="case-comparison" aria-label="Comparación de ejemplos ECG">
     <div class="comparison-sheets">
       <figure class="comparison-sheet"><figcaption>ECG actual <strong id="comparison-current-name"></strong></figcaption><div class="comparison-paper" tabindex="0" role="region" aria-label="ECG actual: desplazamiento sincronizado"><canvas id="comparison-current" role="img"></canvas></div></figure>
-      <figure class="comparison-sheet" id="comparison-reference-sheet" aria-busy="true"><figcaption class="comparison-controls"><label for="comparison-reference">Comparar con<select id="comparison-reference">${groups.map(group => `<optgroup label="${esc(catalogFamilyLabel(group))}">${available.filter(p => p.group === group).map(p => `<option value="${esc(p.id)}"${p.id === "sinus" ? " selected" : ""}>${esc(presetTitle(p))}</option>`).join("")}</optgroup>`).join("")}</select></label></figcaption><p id="comparison-status" role="status" aria-live="polite">Preparando referencia…</p><div class="comparison-paper" tabindex="0" role="region" aria-label="ECG de referencia: desplazamiento sincronizado"><canvas id="comparison-example" role="img" hidden></canvas></div></figure>
+      <figure class="comparison-sheet" id="comparison-reference-sheet" aria-busy="true"><figcaption class="comparison-controls"><label for="comparison-reference">Comparar con<select id="comparison-reference">${families.map(f => `<optgroup label="${esc(catalogFamilyLabel(f.id))}">${f.sections.filter(s => !s.crossListed).flatMap(s => s.presets).map(p => `<option value="${esc(p.id)}"${p.id === "sinus" ? " selected" : ""}>${esc(presetTitle(p))}</option>`).join("")}</optgroup>`).join("")}</select></label></figcaption><p id="comparison-status" role="status" aria-live="polite">Preparando referencia…</p><div class="comparison-paper" tabindex="0" role="region" aria-label="ECG de referencia: desplazamiento sincronizado"><canvas id="comparison-example" role="img" hidden></canvas></div></figure>
     </div>
     <p id="comparison-prompt" class="comparison-prompt" hidden></p>
     <p class="comparison-scale">Ejemplos independientes, con la misma escala.</p>

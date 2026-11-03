@@ -59,10 +59,19 @@ export function automaticIntervals(m: Measurement, layout: Layout, c: ECGCase) {
   });
 }
 
+/** Static footer text for the marks actually drawn. Pure: never presumes QT or review beyond the marks given. */
+export function automaticIntervalNote(marks: readonly {key:string;review:boolean}[]): string {
+  if(!marks.length)return '';
+  return `Estimados por latido${marks.some(mark=>mark.key==='qt')?' · QT sin corregir':''}${marks.some(mark=>mark.review)?` · * ${MEASUREMENT_STATE.review}`:''}`;
+}
+
 export function renderAutomaticIntervals(root:HTMLElement,m:Measurement|null,layout:Layout|null,c:ECGCase,active:boolean) {
   root.hidden=!active || !m || !layout;
   if(root.hidden){root.replaceChildren();return;}
   const marks=automaticIntervals(m!,layout!,c);
+  // DOM-only footer (not part of the SVG, so it never enters the exported PNG).
+  const reviewSuffix=` · * ${MEASUREMENT_STATE.review}`, note=automaticIntervalNote(marks), hasReview=note.endsWith(reviewSuffix);
+  const noteHtml=note?`<span class="auto-note">${esc(hasReview?note.slice(0,-reviewSuffix.length):note)}${hasReview?`<span class="auto-review">${esc(reviewSuffix)}</span>`:''}</span>`:'';
   root.style.width=`${layout!.widthMm*layout!.pxPerMm}px`;root.style.height=`${layout!.heightMm*layout!.pxPerMm}px`;
-  root.innerHTML=`<svg viewBox="0 0 ${layout!.widthMm} ${layout!.heightMm}" role="img" aria-label="${esc(`Intervalos estimados del latido marcado. ${marks.map(mark=>`${mark.lead}: ${mark.key.toUpperCase()} ${mark.ms} ms${mark.review?': revisar':'.'}`).join(' ')}`)}">${marks.map(mark=>`<g class="auto-${mark.key}" data-interval="${mark.key}" data-start="${mark.start}" data-end="${mark.end}" data-ms="${mark.ms}" data-segment="${mark.segment}"><title>${esc(intervalDescription(mark.key,mark.ms,mark.review,mark.reason))}</title><path d="M${mark.x1} ${mark.y-1}v2M${mark.x1} ${mark.y}H${mark.x2}M${mark.x2} ${mark.y-1}v2"/><path class="auto-guide" d="M${mark.x1} ${mark.y+1}V${layout!.segments[mark.segment].y+layout!.segments[mark.segment].height-2}M${mark.x2} ${mark.y+1}V${layout!.segments[mark.segment].y+layout!.segments[mark.segment].height-2}"/><text class="auto-value" x="${mark.labelX}" y="${mark.labelY}" text-anchor="${mark.labelAnchor}" style="font-size:${mark.fontMm}px">${mark.key.toUpperCase()} ${intervalValue(mark.ms,mark.review)}</text></g>`).join('')}</svg>${marks.some(mark=>mark.review)?`<span class="auto-review">* ${MEASUREMENT_STATE.review}</span>`:''}${!marks.length?'<span class="auto-unavailable">Sin intervalos estimables en esta vista</span>':''}`;
+  root.innerHTML=`<svg viewBox="0 0 ${layout!.widthMm} ${layout!.heightMm}" role="img" aria-label="${esc(`Intervalos estimados del latido marcado. ${marks.map(mark=>`${mark.lead}: ${mark.key.toUpperCase()} ${mark.ms} ms${mark.review?': revisar':'.'}`).join(' ')}`)}">${marks.map(mark=>`<g class="auto-${mark.key}" data-interval="${mark.key}" data-start="${mark.start}" data-end="${mark.end}" data-ms="${mark.ms}" data-segment="${mark.segment}"><title>${esc(intervalDescription(mark.key,mark.ms,mark.review,mark.reason))}</title><path d="M${mark.x1} ${mark.y-1}v2M${mark.x1} ${mark.y}H${mark.x2}M${mark.x2} ${mark.y-1}v2"/><path class="auto-guide" d="M${mark.x1} ${mark.y+1}V${layout!.segments[mark.segment].y+layout!.segments[mark.segment].height-2}M${mark.x2} ${mark.y+1}V${layout!.segments[mark.segment].y+layout!.segments[mark.segment].height-2}"/><text class="auto-value" x="${mark.labelX}" y="${mark.labelY}" text-anchor="${mark.labelAnchor}" style="font-size:${mark.fontMm}px">${mark.key.toUpperCase()} ${intervalValue(mark.ms,mark.review)}</text></g>`).join('')}</svg>${noteHtml}${!marks.length?'<span class="auto-unavailable">Sin intervalos estimables en esta vista</span>':''}`;
 }

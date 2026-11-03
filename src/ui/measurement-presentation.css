@@ -6,7 +6,10 @@
 .auto-qrs,.lens-qrs,.metrics .metric[data-metric="qrs"] > span,.measurements-summary [data-metric="qrs"] > th { color:var(--interval-qrs); }
 .auto-qt,.lens-qt,.metrics .metric[data-metric="qt"] > span,.measurements-summary [data-metric="qt"] > th { color:var(--interval-qt); }
 .lens-pr,.lens-qrs,.lens-qt { fill:currentColor; stroke:currentColor; }
-.auto-review { position:absolute; bottom:3px; right:12px; color:var(--muted); background:var(--paper,var(--surface)); font-size:14px; line-height:1.2; }
+/* Static, non-interactive footer in the paper's free bottom margin. One line, never clipped or shrunk;
+   width is bounded proportionally so enlarged text stays on the paper instead of over the tracing. */
+.auto-note { position:absolute; bottom:3px; right:12px; max-width:calc(100% - 24px); white-space:nowrap; text-align:right; color:var(--muted); background:var(--paper,var(--surface)); font-size:14px; line-height:1.2; pointer-events:none; }
+.auto-review { display:inline; }
 @media(forced-colors:active) {
  .auto-pr,.auto-qrs,.auto-qt,.lens-pr,.lens-qrs,.lens-qt,.metrics .metric[data-metric] > span,.measurements-summary [data-metric] > th { color:CanvasText; }
 }

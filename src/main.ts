@@ -11,7 +11,8 @@ import { mountLeadExplorer, type LensMode } from "./ui/lead-explorer";
 import { presetTitle } from "./presets/nomenclature";
 import { APP_VERSION } from "./ui/version";
 import { catalogGroup, familyLabel } from "./ui/catalog-presentation";
-import { omiSheetHtml, omiReferencesHtml, structuredDescriptionHtml } from "./ui/omi-sheet";
+import { omiSheetHtml, omiReferencesHtml } from "./ui/omi-sheet";
+import { briefReadingHtml } from "./ui/brief-reading";
 import { structuredDescription, type DescriptionInfo, type StructuredDescription } from "./ui/structured-description";
 import { educationalReadingDetail } from "./ui/educational-reading";
 import { adjustmentFeedback, adjustmentSnapshot, isAdjustmentKey, type AdjustmentKey, type AdjustmentSnapshot } from "./ui/adjust-feedback";
@@ -139,7 +140,7 @@ root.innerHTML = `<header class="topbar"><a class="brand" href="#" aria-label="E
  <p class="sr-only" id="trace-context" hidden></p><div class="canvas-scroll" id="canvas-wrap"><canvas id="ecg" tabindex="0" aria-describedby="trace-context trace-keyboard-help" role="img" aria-label="ECG sintético de 12 derivaciones"></canvas><div class="signal-loading" id="signal-loading" aria-live="polite">Calculando señal…</div></div><p id="trace-calibration" class="trace-calibration"></p>
  <div id="caliper-editor" class="caliper-editor" hidden></div><div id="measurement-readout" class="caliper-readout" hidden><output id="measurement-values" role="status" aria-live="polite" aria-atomic="true"></output><button type="button" data-action="clear-caliper">Limpiar</button></div><p id="trace-keyboard-help" class="sr-only">Con foco en el trazado: M y P cambian la vista; V y G, la escala; C activa los calibres y espacio congela el monitor. Con calibres, las flechas mueven el extremo seleccionado; Mayús mueve diez pasos. Con zoom, arrastra el papel o usa las flechas para desplazarte; con calibres activos, el arrastre mide. Pulsa ? para abrir la ayuda de atajos.</p></section>
  </div><aside id="quick-adjust" aria-label="Ajustar ECG" hidden></aside></div>
- <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><h2 id="finding-title">Qué observar</h2><p id="case-subtitle" class="guide-lead">Activación auricular sinusal seguida de conducción AV 1:1.</p><ul id="findings"></ul><section id="reading-details" aria-labelledby="reading-details-title"><h3 id="reading-details-title">Explicación</h3><p id="reading-education" class="reading-education" hidden></p><div class="reading-detail-content"><div id="structured-description"></div><div id="omi-sheet"></div></div><section id="reading-lesson" aria-label="Mecanismo del ECG" hidden></section></section></div></section>
+ <section class="reading-guide" aria-labelledby="finding-title"><div class="guide-main"><h2 id="finding-title">Qué observar</h2><p id="case-subtitle" class="guide-lead">Activación auricular sinusal seguida de conducción AV 1:1.</p><ul id="findings"></ul><section id="reading-details" aria-label="Lectura del ECG"><p id="reading-education" class="reading-education" hidden></p><div class="reading-detail-content"><div id="structured-description"></div><div id="omi-sheet"></div></div><section id="reading-lesson" aria-label="Mecanismo del ECG" hidden></section></section></div></section>
  <footer class="workspace-footer"><button class="text-button information-button" data-action="about" aria-label="Información y fuentes" title="Información y fuentes">${icon("info")}</button></footer></main></div>
  <dialog id="dialog"><div id="dialog-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div><input type="file" id="file-input" accept=".json,application/json" hidden/>`;
 
@@ -236,7 +237,7 @@ function renderDescription() {
   // The adjustment sentence replaces the explanation only for the published signal it describes;
   // the rows the explanation covered then stay in the table with their caution.
   const feedback = !concealed && description && session.canExport && session.signal ? adjustmentText : null;
-  $("#structured-description").innerHTML = description && session.signal ? structuredDescriptionHtml(description, true, true, "", feedback ? [] : detail?.coversRows ?? []) : "";
+  $("#structured-description").innerHTML = description && session.signal ? briefReadingHtml(description, feedback ? [] : detail?.coversRows ?? []) : "";
   const education = $("#reading-education");
   education.textContent = feedback ?? detail?.text ?? "";
   education.hidden = !education.textContent;
